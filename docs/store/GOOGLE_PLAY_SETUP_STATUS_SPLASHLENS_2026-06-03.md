@@ -28,6 +28,12 @@
 - Health apps saved as no health features.
 - Category saved as Tools.
 - Store contact details published with email and website.
+- Main store listing saved after asset upload.
+- Closed testing track configured with:
+  - Countries / regions added for Alpha closed testing.
+  - Existing `Internal testers` email list selected. At save time the list showed 1 user.
+  - Closed testing release `1 (1)` created with app bundle version code 1 / version name 1, target SDK 35, API 21+, and release notes for en-US.
+- Publishing overview submitted with 13 changes for Google review on 2026-06-03. Play Console showed `Changes in review` after confirmation; Google quick checks were still running and indicated changes would be sent for review as soon as checks completed successfully.
 
 ## Store listing text staged in Play Console
 
@@ -50,16 +56,16 @@ Files:
 - `03-pool-volume.png` - 1080 x 1920 phone screenshot.
 - `04-scanner-assistance.png` - 1080 x 1920 phone screenshot.
 
-## Current blocker
+## Review status
 
-The Play Console file upload picker cannot be completed through the in-chat browser automation layer. Manual upload is required from the prepared folder:
+Submitted to Google Play review from Publishing overview on 2026-06-03:
 
-1. App icon: upload `app-icon-512.png`.
-2. Feature graphic: upload `feature-graphic-1024x500.png`.
-3. Phone screenshots: upload the four numbered phone screenshots.
-4. After uploads, save the main store listing.
-5. Return to the dashboard, confirm setup reaches 11 of 11 complete, then proceed to closed testing setup.
+- 13 changes sent for review.
+- Closed testing - Alpha release `1 (1)` included.
+- Countries / regions, tester list, store listing, app content, and store settings included.
+- Play Console status after confirmation: `Changes in review`.
+- Managed publishing was off, so approved changes are expected to publish automatically when Google approves them.
 
-## Production access note
+## Current blocker / production access note
 
-This account cannot publish directly to production yet. After app setup is complete, Google requires a closed test with at least 12 opted-in testers for at least 14 days before production access can be requested.
+This account cannot publish directly to production yet. Google requires a closed test with at least 12 opted-in testers for at least 14 days before production access can be requested. At tester setup time, the selected `Internal testers` list showed 1 user, so 11+ more opted-in testers are still needed for the production-access gate.
