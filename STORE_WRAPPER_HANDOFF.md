@@ -42,6 +42,8 @@ Review framing:
 
 ## Store Screenshot Checklist
 
+Before final screenshots, run `docs/ASO_THUMBNAIL_GATE_2026-05-28.md` and save the competitor board, screenshot frame plan, metadata drafts, and claim-parity check under `aso/`.
+
 Capture these screens on phone dimensions:
 
 - Home/rescue screen with quick actions.

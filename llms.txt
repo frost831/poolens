@@ -1,6 +1,6 @@
 ﻿# SplashLens App
 
-> Free-core, offline-first PWA field reference tool for pool service technicians. 500+ error codes, chemical dosing calculators, online AI equipment scanner (error codes, parts ID, test strips), SLAM multi-day tracker, filter guides, checklists, and route tracking. No account required. Manual tools work offline after first load; AI scanner requires internet.
+> Free-core, offline-first PWA field reference tool for pool service technicians. 180+ current equipment error-code entries, chemical dosing calculators, online AI scanner support (error codes, parts ID, test-strip triage), SLAM multi-day tracker, filter guides, checklists, and route tracking. No account required. Manual tools work offline after first load; AI scanner requires internet.
 
 ## App URL
 
@@ -9,7 +9,7 @@ https://app.splashlens.com
 ## What This App Does
 
 SplashLens is a Progressive Web App that pool service technicians use poolside to:
-- Look up equipment error codes (Hayward, Pentair, Jandy, Maytronics/Dolphin, Polaris, Aiper, Raypak, IntelliFlo, AquaCal, Sta-Rite, Waterway, Beatbot, Betta â€” 13 brands, 500+ codes)
+- Look up equipment error codes (15 brands, 180+ current entries in the app database)
 - Calculate chemical doses (FC, pH, alkalinity, calcium, CYA, salt, SLAM)
 - Identify pool parts by camera using AI (PartSnap)
 - Read test strips via AI camera scan
@@ -23,11 +23,11 @@ Manual lookup, calculators, guides, checklists, and route tools work offline aft
 ## How the AI Scanner Works
 
 Three camera modes:
-1. Error Scan â€” aim at any equipment error display, AI reads the code and returns full diagnosis
-2. PartSnap â€” aim at any pool part, AI identifies manufacturer, model, OEM part number, replacement notes
-3. Test Strip â€” aim at a wet test strip, AI estimates FC/pH/TA/CH/CYA readings with range flags
+1. Error Scan â€” aim at an equipment error display; AI attempts to read the code and return a reference-style summary
+2. PartSnap â€” aim at a pool part; AI attempts to identify manufacturer, model, OEM part number, and useful search terms
+3. Test Strip â€” aim at a wet test strip; AI estimates FC/pH/TA/CH/CYA ranges for field triage
 
-Backend: Cloudflare Pages Function to Anthropic Claude Haiku vision. Error-code scanning can fall back to browser TextDetector or manual entry offline; PartSnap and test-strip analysis require internet.
+Backend: Cloudflare Pages Function to Anthropic Claude Haiku vision. Error-code scanning can fall back to browser TextDetector or manual entry offline; PartSnap and test-strip analysis require internet. AI scanner output is reference assistance only and should be verified against equipment manuals, calibrated tests, and field judgment.
 
 ## Marketing Site
 

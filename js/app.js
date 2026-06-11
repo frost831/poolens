@@ -23,10 +23,95 @@ const CL_MAP = {
   monthly: { data: () => window.MONTHLY_CHECKLIST, key: 'poolens-cl-monthly', label: 'Monthly Checklist', freq: 'This Month'      },
 };
 
+const PRODUCT_LINE_HELPER = {
+  generic: {
+    label: 'Generic / active ingredient',
+    notes: {
+      fc: ['Liquid chlorine 10-12.5% is the cleanest default; cal-hypo is fine when calcium can rise.', 'Generic equivalent: sodium hypochlorite or calcium hypochlorite.'],
+      ph_lower: ['Use muriatic acid 31.45% or dry acid. Verify strength before dosing.', 'Generic equivalent: hydrochloric acid or sodium bisulfate.'],
+      ph_raise: ['Use soda ash for pH up. Do not confuse it with baking soda.', 'Generic equivalent: sodium carbonate.'],
+      ta: ['Use alkalinity increaser or baking soda.', 'Generic equivalent: sodium bicarbonate.'],
+      ch: ['Use calcium hardness increaser. Pre-dissolve carefully because it gets hot.', 'Generic equivalent: calcium chloride.'],
+      cya: ['Use stabilizer/conditioner in a sock or feeder path.', 'Generic equivalent: cyanuric acid.']
+    }
+  },
+  hasa: {
+    label: 'HASA',
+    notes: {
+      fc: ['Likely truck match: HASA liquid chlorine / Sani-Clor. Verify % on the label.', 'Generic equivalent: sodium hypochlorite.'],
+      ph_lower: ['Likely truck match: HASA muriatic acid if stocked. Verify strength.', 'Generic equivalent: hydrochloric acid.'],
+      default: ['HASA is strongest for sanitizer/acid basics. Use the generic active ingredient for balance products if that line is not on the truck.']
+    }
+  },
+  orenda: {
+    label: 'Orenda',
+    notes: {
+      fc: ['Orenda is not the primary chlorine line. Use your sanitizer, then use Orenda for LSI and specialty support.', 'Support products may include enzyme, phosphate, scale, and metal programs.'],
+      ph_lower: ['Use your acid product, then check LSI/CSI impact. Orenda guidance is very LSI-driven.', 'Generic equivalent: muriatic acid or dry acid.'],
+      default: ['Orenda is best treated as a water-balance/specialty layer, not a full primary chemical shelf. Use generic equivalents for the actual dose.']
+    }
+  },
+  bioguard: {
+    label: 'BioGuard',
+    notes: {
+      fc: ['Likely matches: Smart Shock, Burnout, or liquid/solid sanitizer depending on dealer line.', 'Check active ingredient because CYA and calcium side effects change.'],
+      ph_lower: ['Likely match: Lo N Slo or acid product.', 'Generic equivalent: sodium bisulfate or muriatic acid.'],
+      ph_raise: ['Likely match: Balance Pak 200.', 'Generic equivalent: sodium carbonate.'],
+      ta: ['Likely match: Balance Pak 100.', 'Generic equivalent: sodium bicarbonate.'],
+      ch: ['Likely match: Balance Pak 300.', 'Generic equivalent: calcium chloride.'],
+      cya: ['Likely match: Stabilizer 100.', 'Generic equivalent: cyanuric acid.']
+    }
+  },
+  natural: {
+    label: 'Natural Chemistry',
+    notes: {
+      default: ['Natural Chemistry is usually enzymes, phosphate, metal, and scale support. Use generic equivalents for primary balance dosing.', 'Do not substitute specialty products for sanitizer, alkalinity, calcium, or stabilizer unless the label says so.']
+    }
+  },
+  leslie: {
+    label: "Leslie's / private label",
+    notes: {
+      fc: ['Likely matches: liquid chlorine, Power Powder/cal-hypo, or Chlor Brite/dichlor.', 'Check active ingredient to avoid unexpected CYA or calcium rise.'],
+      ph_lower: ['Likely matches: muriatic acid or dry acid.', 'Generic equivalent: hydrochloric acid or sodium bisulfate.'],
+      ph_raise: ['Likely match: Soda Ash / pH Up.', 'Generic equivalent: sodium carbonate.'],
+      ta: ['Likely match: Alkalinity Up.', 'Generic equivalent: sodium bicarbonate.'],
+      ch: ['Likely match: Hardness Plus.', 'Generic equivalent: calcium chloride.'],
+      cya: ['Likely match: Conditioner/Stabilizer.', 'Generic equivalent: cyanuric acid.']
+    }
+  },
+  poolife: {
+    label: 'Poolife',
+    notes: {
+      fc: ['Likely matches: TurboShock/cal-hypo or NST/trichlor depending on pool need.', 'Check side effects: cal-hypo raises CH; stabilized chlorine raises CYA.'],
+      ph_lower: ['Likely match: pH Minus.', 'Generic equivalent: sodium bisulfate or acid.'],
+      ph_raise: ['Likely match: pH Plus.', 'Generic equivalent: sodium carbonate.'],
+      ta: ['Likely match: Alkalinity Plus.', 'Generic equivalent: sodium bicarbonate.'],
+      ch: ['Likely match: Calcium Plus.', 'Generic equivalent: calcium chloride.'],
+      cya: ['Likely match: Stabilizer.', 'Generic equivalent: cyanuric acid.']
+    }
+  },
+  jacks: {
+    label: "Jack's Magic",
+    notes: {
+      default: ["Jack's Magic is a stain/metal specialty line. Use it for stain and metal context, not as the primary dose line.", 'Use generic active ingredients for sanitizer, pH, TA, CH, and CYA.']
+    }
+  }
+};
+
+const DOSE_NEED_LABELS = {
+  fc: 'Raise free chlorine',
+  ph_lower: 'Lower pH',
+  ph_raise: 'Raise pH',
+  ta: 'Raise alkalinity',
+  ch: 'Raise calcium hardness',
+  cya: 'Raise stabilizer'
+};
+
 // ═══════════════════════════════════════════
 // BOOT
 // ═══════════════════════════════════════════
 document.addEventListener('DOMContentLoaded', () => {
+  captureScanEntitlementFromUrl();
   initErrors();
   initDosing();
   initVolume();
@@ -38,6 +123,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initRoute();
   checkOfflineStatus();
   initDeepLink();
+  trackSplashLensEvent('app_open', { tab: S.tab });
 });
 
 // ═══════════════════════════════════════════
@@ -307,6 +393,7 @@ function initDosing() {
   renderAdditionOrder();
   renderSaltSection();
   renderDangerSection();
+  renderProductLineHelper();
 }
 
 function onParamChange() {
@@ -317,7 +404,7 @@ function onParamChange() {
      <input type="number" id="${id}" placeholder="${ph}" min="0" inputmode="decimal" ${extra}></div>`;
   const sel = (label, id, opts) =>
     `<div class="field-group"><label class="field-label">${label}</label>
-     <select id="${id}">${opts}</select></div>`;
+     <select id="${id}" onchange="renderProductLineHelper()">${opts}</select></div>`;
 
   switch (p) {
     case 'fc':
@@ -354,6 +441,8 @@ function onParamChange() {
   }
   document.getElementById('dose-fields').innerHTML = html;
   document.getElementById('dose-result').innerHTML = '';
+  renderProductLineHelper();
+  seedLsiFromDoseInputs();
 }
 
 function calculateDose() {
@@ -446,7 +535,10 @@ function calculateDose() {
   }
 
   if (!amount || amount <= 0) return setEl('dose-result', errorBox('No addition needed or check your inputs.'));
-  setEl('dose-result', resultCard(amount, unit, product, note, basis));
+  setEl('dose-result', resultCard(amount, unit, product, note, basis) + doseSupportCard(param, product, amount, unit));
+  renderProductLineHelper();
+  seedLsiFromDoseInputs();
+  calculateLsiPreview({ quiet: true });
 }
 
 function resultCard(amount, unit, product, note, basis) {
@@ -464,6 +556,132 @@ function resultCard(amount, unit, product, note, basis) {
       ${note ? `<div class="result-note">${note}</div>` : ''}
       <p class="result-basis">${basis}</p>
     </div>`;
+}
+
+function getDoseNeed() {
+  const param = gv('dose-param');
+  return param || '';
+}
+
+function productLineNotes(lineKey, needKey) {
+  const line = PRODUCT_LINE_HELPER[lineKey] || PRODUCT_LINE_HELPER.generic;
+  return line.notes[needKey] || line.notes.default || PRODUCT_LINE_HELPER.generic.notes[needKey] || [];
+}
+
+function renderProductLineHelper() {
+  const el = document.getElementById('dose-line-helper');
+  if (!el) return;
+  const need = getDoseNeed();
+  const lineKey = gv('dose-line') || 'generic';
+  const line = PRODUCT_LINE_HELPER[lineKey] || PRODUCT_LINE_HELPER.generic;
+  if (!need) {
+    el.innerHTML = 'Select what you are adjusting, then choose the product line on the truck. SplashLens will translate the chemistry need into likely product names and active ingredients.';
+    return;
+  }
+  const notes = productLineNotes(lineKey, need);
+  el.innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr;gap:7px;">
+      <div style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;padding:9px;">
+        <p style="color:#0f172a;font-weight:900;font-size:12px;margin-bottom:3px;">${escHtml(line.label)} - ${escHtml(DOSE_NEED_LABELS[need] || 'Dose')}</p>
+        ${notes.map(n => `<p style="color:#334155;font-size:12px;line-height:1.45;margin-top:4px;">${escHtml(n)}</p>`).join('')}
+      </div>
+    </div>`;
+}
+
+function doseSupportCard(param, product, amount, unit) {
+  const lineKey = gv('dose-line') || 'generic';
+  const notes = productLineNotes(lineKey, param);
+  const formatted = fmtAmt(amount, unit).main;
+  return `
+    <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:12px;margin-top:10px;">
+      <p style="color:#0369a1;font-weight:900;font-size:12px;margin-bottom:6px;">Field Dose Check</p>
+      <p style="color:#334155;font-size:12px;line-height:1.45;">Add <strong>${escHtml(formatted)}</strong> of <strong>${escHtml(product)}</strong>. Match the product label to the active ingredient before pouring.</p>
+      ${notes[0] ? `<p style="color:#64748b;font-size:11px;line-height:1.45;margin-top:6px;">${escHtml(notes[0])}</p>` : ''}
+    </div>`;
+}
+
+function seedLsiFromDoseInputs() {
+  const param = gv('dose-param');
+  const cur = gf('dose-cur');
+  const tgt = gf('dose-tgt');
+  const ta = gf('dose-ta');
+  const setIfEmpty = (id, value) => {
+    const el = document.getElementById(id);
+    if (el && !el.value && !isNaN(value) && value > 0) el.value = value;
+  };
+  if (param === 'ph_lower' || param === 'ph_raise') setIfEmpty('lsi-ph', cur || tgt);
+  if (param === 'ta') setIfEmpty('lsi-ta', cur || tgt);
+  if (param === 'ch') setIfEmpty('lsi-ch', cur || tgt);
+  if (param === 'cya') setIfEmpty('lsi-cya', cur || tgt);
+  if (param === 'ph_lower' && !isNaN(ta) && ta > 0) setIfEmpty('lsi-ta', ta);
+}
+
+function calculateLsiValue(v) {
+  const ph = Number(v.ph);
+  const ch = Math.max(Number(v.ch) || 0, 1);
+  const cya = Math.max(Number(v.cya) || 0, 0);
+  const taRaw = Math.max(Number(v.ta) || 0, 1);
+  const temp = Number(v.temp) || 80;
+  const salt = Number(v.salt) || 1000;
+  const adjTa = Math.max(taRaw - (cya * 0.33), 1);
+  const tempFactor = temp < 60 ? 0.6 : temp < 70 ? 0.7 : temp < 80 ? 0.8 : temp < 90 ? 0.9 : 1.0;
+  const calciumFactor = Math.log10(ch) - 0.4;
+  const alkalinityFactor = Math.log10(adjTa);
+  const tdsFactor = salt > 3000 ? 12.2 : 12.1;
+  return ph + tempFactor + calciumFactor + alkalinityFactor - tdsFactor;
+}
+
+function lsiVerdict(v) {
+  if (v < -0.3) return { label: 'corrosive risk', color: '#991b1b', bg: '#fee2e2' };
+  if (v > 0.3) return { label: 'scale risk', color: '#9a3412', bg: '#ffedd5' };
+  return { label: 'balanced', color: '#166534', bg: '#dcfce7' };
+}
+
+function calculateLsiPreview(opts = {}) {
+  const base = {
+    ph: gf('lsi-ph'), ta: gf('lsi-ta'), ch: gf('lsi-ch'), cya: gf('lsi-cya'),
+    temp: gf('lsi-temp') || 80, salt: gf('lsi-salt') || 1000
+  };
+  if ([base.ph, base.ta, base.ch].some(v => isNaN(v) || v <= 0)) {
+    if (!opts.quiet) setEl('lsi-preview', errorBox('Enter at least pH, TA, and CH for a balance preview.'));
+    return null;
+  }
+
+  const after = { ...base };
+  const param = gv('dose-param');
+  const tgt = gf('dose-tgt');
+  if (!isNaN(tgt) && tgt > 0) {
+    if (param === 'ph_lower' || param === 'ph_raise') after.ph = tgt;
+    if (param === 'ta') after.ta = tgt;
+    if (param === 'ch') after.ch = tgt;
+    if (param === 'cya') after.cya = tgt;
+  }
+
+  const beforeVal = calculateLsiValue(base);
+  const afterVal = calculateLsiValue(after);
+  const before = lsiVerdict(beforeVal);
+  const afterVerdict = lsiVerdict(afterVal);
+  const pill = document.getElementById('lsi-status-pill');
+  if (pill) {
+    pill.textContent = afterVerdict.label;
+    pill.style.background = afterVerdict.bg;
+    pill.style.color = afterVerdict.color;
+  }
+  setEl('lsi-preview', `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+      <div style="background:${before.bg};border-radius:8px;padding:10px;">
+        <p style="color:${before.color};font-size:10px;font-weight:900;text-transform:uppercase;">Before</p>
+        <p style="color:${before.color};font-size:22px;font-weight:900;">${beforeVal.toFixed(2)}</p>
+        <p style="color:${before.color};font-size:11px;font-weight:800;">${before.label}</p>
+      </div>
+      <div style="background:${afterVerdict.bg};border-radius:8px;padding:10px;">
+        <p style="color:${afterVerdict.color};font-size:10px;font-weight:900;text-transform:uppercase;">After dose</p>
+        <p style="color:${afterVerdict.color};font-size:22px;font-weight:900;">${afterVal.toFixed(2)}</p>
+        <p style="color:${afterVerdict.color};font-size:11px;font-weight:800;">${afterVerdict.label}</p>
+      </div>
+    </div>
+    <p style="color:#64748b;font-size:11px;line-height:1.45;margin-top:8px;">Uses cyanurate-adjusted alkalinity and field factors. If the after number is outside -0.30 to +0.30, retest and split the dose.</p>`);
+  return { before: beforeVal, after: afterVal };
 }
 
 // ═══════════════════════════════════════════
@@ -1144,6 +1362,12 @@ function initReport() {
   const dateEl = document.getElementById('rpt-date');
   if (dateEl && !dateEl.value) dateEl.value = today;
   addChemRow();
+  ['rpt-fc','rpt-cc','rpt-ph','rpt-ta','rpt-ch','rpt-cya','rpt-customer-summary','rpt-issue-note','rpt-photo-proof'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('input', () => validateReportProof({ quiet: true }));
+  });
+  updateReportCostSummary();
+  validateReportProof({ quiet: true });
   // Show share button only when Web Share API is available (iOS Safari, Android Chrome)
   const shareBtn = document.getElementById('rpt-share-btn');
   if (shareBtn && !navigator.share) shareBtn.style.display = 'none';
@@ -1156,20 +1380,88 @@ function addChemRow() {
   if (!container) return;
   const div = document.createElement('div');
   div.id = `chem-row-${id}`;
-  div.style.cssText = 'display:grid;grid-template-columns:1fr 90px 36px;gap:6px;margin-bottom:8px;align-items:center;';
+  div.style.cssText = 'display:grid;grid-template-columns:minmax(92px,1fr) 60px 54px 64px 36px;gap:4px;margin-bottom:8px;align-items:center;';
   div.innerHTML = `
-    <input type="text" id="cr-name-${id}" placeholder="Chemical name..." style="background:#ffffff;border:1px solid #cbd5e1;color:#0f172a;border-radius:9px;padding:10px 12px;font-size:14px;font-family:inherit;width:100%;">
-    <input type="text" id="cr-amt-${id}"  placeholder="Amount" inputmode="decimal" style="background:#ffffff;border:1px solid #cbd5e1;color:#0f172a;border-radius:9px;padding:10px 12px;font-size:14px;font-family:inherit;width:100%;">
+    <input type="text" id="cr-name-${id}" placeholder="Chemical..." oninput="updateReportCostSummary()" style="background:#ffffff;border:1px solid #cbd5e1;color:#0f172a;border-radius:9px;padding:10px 10px;font-size:13px;font-family:inherit;width:100%;min-width:0;">
+    <input type="text" id="cr-amt-${id}"  placeholder="Amt" inputmode="decimal" oninput="updateReportCostSummary()" style="background:#ffffff;border:1px solid #cbd5e1;color:#0f172a;border-radius:9px;padding:10px 8px;font-size:13px;font-family:inherit;width:100%;min-width:0;">
+    <input type="number" id="cr-cost-${id}" placeholder="$" inputmode="decimal" step="0.01" min="0" oninput="updateReportCostSummary()" style="background:#ffffff;border:1px solid #cbd5e1;color:#0f172a;border-radius:9px;padding:10px 8px;font-size:13px;font-family:inherit;width:100%;min-width:0;">
+    <select id="cr-stock-${id}" onchange="updateReportCostSummary()" style="background:#ffffff;border:1px solid #cbd5e1;color:#0f172a;border-radius:9px;padding:10px 6px;font-size:12px;font-family:inherit;width:100%;min-width:0;">
+      <option>Truck</option>
+      <option>Restock</option>
+      <option>Customer</option>
+    </select>
     <button type="button" onclick="removeChemRow(${id})" style="background:#fee2e2;border:1px solid #fca5a5;color:#991b1b;border-radius:8px;padding:0;height:36px;width:36px;cursor:pointer;font-size:18px;line-height:1;">×</button>`;
   container.appendChild(div);
+  updateReportCostSummary();
 }
 
 function removeChemRow(id) {
   const row = document.getElementById(`chem-row-${id}`);
   if (row) row.remove();
+  updateReportCostSummary();
 }
 
 function _rptVal(id) { const el = document.getElementById(id); return el ? el.value.trim() : ''; }
+
+function _rptChecked(id) { const el = document.getElementById(id); return !!(el && el.checked); }
+
+function getReportChemRows() {
+  const chems = [];
+  document.querySelectorAll('[id^="chem-row-"]').forEach(row => {
+    const rid = row.id.replace('chem-row-', '');
+    const name = _rptVal(`cr-name-${rid}`);
+    const amt = _rptVal(`cr-amt-${rid}`);
+    const costRaw = _rptVal(`cr-cost-${rid}`);
+    const cost = parseFloat(costRaw);
+    const stock = _rptVal(`cr-stock-${rid}`) || 'Truck';
+    if (name || amt || costRaw) chems.push({ name, amt, cost: isNaN(cost) ? 0 : cost, stock });
+  });
+  return chems;
+}
+
+function updateReportCostSummary() {
+  const chems = getReportChemRows();
+  const total = chems.reduce((sum, c) => sum + (c.cost || 0), 0);
+  const totalEl = document.getElementById('rpt-cost-total');
+  if (totalEl) totalEl.textContent = `$${total.toFixed(2)}`;
+  const byStock = chems.reduce((acc, c) => {
+    const key = c.stock || 'Truck';
+    acc[key] = (acc[key] || 0) + 1;
+    return acc;
+  }, {});
+  const summary = Object.keys(byStock).length
+    ? Object.entries(byStock).map(([k, v]) => `${v} from ${k.toLowerCase()}`).join(', ')
+    : 'Add chemical costs and stock source to estimate stop cost.';
+  setEl('rpt-inventory-summary', `${summary}${total ? ` - estimated chemical cost for this stop: $${total.toFixed(2)}.` : ''}`);
+}
+
+function hasAnyReportReading() {
+  return ['rpt-fc','rpt-cc','rpt-ph','rpt-ta','rpt-ch','rpt-cya'].some(id => _rptVal(id));
+}
+
+function validateReportProof(opts = {}) {
+  const missing = [];
+  const source = _rptVal('rpt-reading-source') || 'manual';
+  const hasReading = hasAnyReportReading();
+  const waterOk = _rptChecked('rpt-proof-water') || hasReading;
+  const photoOk = _rptChecked('rpt-proof-equipment') || !!_rptVal('rpt-photo-proof');
+  const summaryOk = _rptChecked('rpt-proof-summary') || !!_rptVal('rpt-customer-summary');
+  if (!waterOk) missing.push('water reading');
+  if (!photoOk) missing.push('equipment/photo proof');
+  if (!summaryOk) missing.push('customer summary');
+  if (source.includes('spintouch') && !hasReading) missing.push('SpinTouch values');
+
+  const complete = missing.length === 0;
+  const pill = document.getElementById('rpt-proof-pill');
+  if (pill) {
+    pill.textContent = complete ? 'proof ready' : 'incomplete';
+    pill.style.background = complete ? '#dcfce7' : '#fee2e2';
+    pill.style.color = complete ? '#166534' : '#991b1b';
+  }
+  setEl('rpt-proof-missing', complete ? '' : `Missing: ${missing.join(', ')}`);
+  if (!complete && !opts.quiet) alert(`Stop proof is incomplete: ${missing.join(', ')}`);
+  return { complete, missing, source };
+}
 
 function buildReportText() {
   const customer = _rptVal('rpt-customer') || 'Customer';
@@ -1183,12 +1475,19 @@ function buildReportText() {
   const rec      = _rptVal('rpt-rec');
   const rawNext  = _rptVal('rpt-next');
   const next     = rawNext ? new Date(rawNext + 'T12:00:00').toLocaleDateString() : '';
+  const readingSource = _rptVal('rpt-reading-source') || 'manual';
+  const photoProof = _rptVal('rpt-photo-proof');
+  const issueNote = _rptVal('rpt-issue-note');
+  const customerSummary = _rptVal('rpt-customer-summary');
+  const proof = validateReportProof({ quiet: true });
 
   const readings = [
     ['FC', _rptVal('rpt-fc')], ['CC', _rptVal('rpt-cc')], ['pH', _rptVal('rpt-ph')],
     ['TA', _rptVal('rpt-ta')], ['CH', _rptVal('rpt-ch')], ['CYA', _rptVal('rpt-cya')]
   ].filter(([,v]) => v).map(([l,v]) => `${l}: ${v}`).join('  |  ');
 
+  const chemRows = getReportChemRows();
+  const totalCost = chemRows.reduce((sum, c) => sum + (c.cost || 0), 0);
   const chems = [];
   document.querySelectorAll('[id^="chem-row-"]').forEach(row => {
     const rid  = row.id.replace('chem-row-', '');
@@ -1206,8 +1505,16 @@ function buildReportText() {
     `Tech     : ${tech}`,
     `Visit    : ${type}`,
     '',
-    ...(readings ? ['WATER READINGS:', readings, ''] : []),
+    ...(readings ? ['WATER READINGS:', readings, `Source: ${readingSource}`, ''] : []),
+    'STOP PROOF:',
+    `Status   : ${proof.complete ? 'Proof ready' : 'Incomplete'}`,
+    ...(proof.missing.length ? [`Missing  : ${proof.missing.join(', ')}`] : []),
+    ...(photoProof ? [`Photos   : ${photoProof}`] : []),
+    ...(issueNote ? [`Tech note : ${issueNote}`] : []),
+    ...(customerSummary ? [`Customer : ${customerSummary}`] : []),
+    '',
     ...(chems.length ? ['CHEMICALS ADDED:', ...chems, ''] : []),
+    ...(chemRows.length ? [`EST. CHEMICAL COST: $${totalCost.toFixed(2)}`, ''] : []),
     ...(work  ? ['WORK PERFORMED:', work, '']  : []),
     ...(equip ? ['EQUIPMENT NOTES:', equip, ''] : []),
     ...(rec   ? ['RECOMMENDATIONS:', rec, '']  : []),
@@ -1219,6 +1526,8 @@ function buildReportText() {
 }
 
 function copyReport() {
+  const proof = validateReportProof({ quiet: true });
+  if (!proof.complete && !confirm(`Stop proof is incomplete: ${proof.missing.join(', ')}. Copy anyway?`)) return;
   const text = buildReportText();
   navigator.clipboard.writeText(text).then(() => {
     const el = document.getElementById('rpt-copy-confirm');
@@ -1227,6 +1536,8 @@ function copyReport() {
 }
 
 function shareReport() {
+  const proof = validateReportProof({ quiet: true });
+  if (!proof.complete && !confirm(`Stop proof is incomplete: ${proof.missing.join(', ')}. Share anyway?`)) return;
   const text = buildReportText();
   if (navigator.share) {
     navigator.share({ title: 'Pool Service Report', text }).catch(() => {});
@@ -1240,6 +1551,8 @@ function shareReport() {
 }
 
 function printReport() {
+  const proof = validateReportProof({ quiet: true });
+  if (!proof.complete && !confirm(`Stop proof is incomplete: ${proof.missing.join(', ')}. Print anyway?`)) return;
   const text = buildReportText();
   const safe = text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   const win  = window.open('', '_blank');
@@ -1829,7 +2142,17 @@ function poolReadingDetailGrid(r) {
        <p style="color:#0f172a;font-size:16px;font-weight:900;margin-top:2px;">${val}</p>
      </div>`
   ).join('') +
+  (r.source ? `<div style="grid-column:1/-1;background:#f0f9ff;border:1px solid #bae6fd;border-radius:6px;padding:8px;font-size:11px;color:#0369a1;font-weight:800;">Source: ${escHtml(readingSourceLabel(r.source))}</div>` : '') +
   (r.note ? `<div style="grid-column:1/-1;background:#eff6ff;border-radius:6px;padding:8px;font-size:12px;color:#0369a1;margin-top:2px;">${escHtml(r.note)}</div>` : '');
+}
+
+function readingSourceLabel(source) {
+  return {
+    manual: 'Manual entry',
+    spintouch: 'LaMotte SpinTouch - device reading',
+    'spintouch-edited': 'LaMotte SpinTouch - edited after import',
+    admin: 'Office/admin edited'
+  }[source] || source;
 }
 
 function toggleReadingDetail(uid) {
@@ -1861,6 +2184,15 @@ function showChemForm(poolId) {
       <div class="field-group">
         <label class="field-label">Date</label>
         <input type="date" id="cf-date-${poolId}" value="${today}" style="color-scheme:light;">
+      </div>
+      <div class="field-group">
+        <label class="field-label">Reading Source</label>
+        <select id="cf-source-${poolId}">
+          <option value="manual">Manual entry</option>
+          <option value="spintouch">LaMotte SpinTouch - device reading</option>
+          <option value="spintouch-edited">LaMotte SpinTouch - edited after import</option>
+          <option value="admin">Office/admin edited</option>
+        </select>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px;">
         <div><label class="field-label">FC</label><input type="number" id="cf-fc-${poolId}" placeholder="—" inputmode="decimal" step="0.1" min="0"></div>
@@ -1898,6 +2230,7 @@ function saveChemReading(poolId) {
   const ch   = getF(`cf-ch-${poolId}`);
   const cya  = getF(`cf-cya-${poolId}`);
   const note = get(`cf-note-${poolId}`);
+  const source = get(`cf-source-${poolId}`) || 'manual';
 
   if ([fc, cc, ph, ta, ch, cya].every(v => v === null)) {
     alert('Enter at least one reading value.');
@@ -1911,6 +2244,7 @@ function saveChemReading(poolId) {
   if (ta  !== null) reading.ta  = ta;
   if (ch  !== null) reading.ch  = ch;
   if (cya !== null) reading.cya = cya;
+  reading.source = source;
   if (note) reading.note = note;
 
   const pools = getPools();
@@ -2324,9 +2658,9 @@ let _flashTrack    = null;
 const SCAN_LIMIT_FREE = 10;
 const SCAN_USAGE_KEY = 'pl_scans_month';
 const SCAN_PRO_KEY = 'sl_partsnap_pro_local';
+const SCAN_ENTITLEMENT_TOKEN_KEY = 'sl_scan_entitlement_token';
 const PARTSNAP_MONTHLY_LINK = '/api/checkout?plan=monthly';
 const PARTSNAP_YEARLY_LINK = '/api/checkout?plan=yearly';
-const AFFILIATE_TAG = 'YOUR_TAG';
 const SPLASHLENS_EVENT_ENDPOINT = 'https://splashlens.com/api/event';
 const STORE_SHELL_KEY = 'sl_store_shell_mode';
 
@@ -2343,7 +2677,9 @@ function updateAIStatusBar() {
   if (navigator.onLine) {
     const usage = getScanUsage();
     dot.style.background   = '#16a34a';
-    label.textContent      = isPartSnapPro() ? 'PARTSNAP PRO READY' : `AI READY - ${Math.max(0, SCAN_LIMIT_FREE - usage.count)} FREE SCANS LEFT`;
+    label.textContent      = getScanEntitlementToken()
+      ? 'SIGNED SCANNER ACCESS READY'
+      : isPartSnapPro() ? 'PARTSNAP PRO READY' : `AI READY - ${Math.max(0, SCAN_LIMIT_FREE - usage.count)} FREE SCANS LEFT`;
     label.style.color      = '#4ade80';
   } else {
     dot.style.background   = '#64748b';
@@ -2527,7 +2863,24 @@ function saveScanUsage(usage) {
 }
 
 function isPartSnapPro() {
-  return localStorage.getItem(SCAN_PRO_KEY) === '1';
+  return localStorage.getItem(SCAN_PRO_KEY) === '1' || Boolean(getScanEntitlementToken());
+}
+
+function getScanEntitlementToken() {
+  const token = localStorage.getItem(SCAN_ENTITLEMENT_TOKEN_KEY) || '';
+  return token.startsWith('sl_scan_v1.') ? token : '';
+}
+
+function captureScanEntitlementFromUrl() {
+  try {
+    const url = new URL(window.location.href);
+    const token = url.searchParams.get('scan_token') || '';
+    if (!token.startsWith('sl_scan_v1.')) return;
+    localStorage.setItem(SCAN_ENTITLEMENT_TOKEN_KEY, token);
+    localStorage.setItem(SCAN_PRO_KEY, '1');
+    url.searchParams.delete('scan_token');
+    window.history.replaceState({}, '', `${url.pathname}${url.search}${url.hash}`);
+  } catch {}
 }
 
 function getStoreShellMode() {
@@ -2565,13 +2918,13 @@ function recordAIScan(mode) {
 }
 
 function unlockPartSnapProLocal() {
-  localStorage.setItem(SCAN_PRO_KEY, '1');
+  if (!getScanEntitlementToken()) localStorage.setItem(SCAN_PRO_KEY, '1');
   updateAIStatusBar();
   const result = document.getElementById('scan-result');
   if (result) {
     result.innerHTML = `<div style="background:#052e16;border:1px solid #16a34a;border-radius:12px;padding:18px;text-align:center;">
       <p style="color:#86efac;font-size:15px;font-weight:900;margin-bottom:6px;">PartSnap Pro enabled on this device</p>
-      <p style="color:#bbf7d0;font-size:12px;line-height:1.5;">Unlimited AI scans are unlocked locally. If you use another phone, unlock it there after checkout too.</p>
+      <p style="color:#bbf7d0;font-size:12px;line-height:1.5;">Scanner access is enabled on this device. Signed entitlement links sync access without trusting caller-supplied identity.</p>
     </div>`;
   }
 }
@@ -2595,13 +2948,12 @@ function showScanLimitModal(result, status) {
     result.innerHTML = `
       <div style="background:#1e293b;border:1px solid #7c3aed;border-radius:14px;padding:18px;margin:0 0 14px;text-align:center;border-left:4px solid #7c3aed;">
         <p style="color:#f1f5f9;font-size:19px;font-weight:900;margin-bottom:6px;">You've used ${usage.count} of ${SCAN_LIMIT_FREE} free AI scans this month.</p>
-        <p style="color:#94a3b8;font-size:13px;line-height:1.5;margin-bottom:14px;">Manual code lookup, dosing, reports, filters, and checklists stay free. Upgrade PartSnap Pro for unlimited AI scanner use.</p>
+        <p style="color:#94a3b8;font-size:13px;line-height:1.5;margin-bottom:14px;">Manual code lookup, dosing, reports, filters, and checklists stay free. Upgrade PartSnap Pro for extended web scanner access on this device.</p>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
           <a href="${PARTSNAP_MONTHLY_LINK}" target="_blank" rel="noopener" onclick="trackSplashLensEvent('upgrade_click',{plan:'monthly'})" style="background:#0284c7;color:#fff;text-decoration:none;border-radius:10px;padding:12px 8px;font-size:13px;font-weight:900;">$4.99 / mo</a>
           <a href="${PARTSNAP_YEARLY_LINK}" target="_blank" rel="noopener" onclick="trackSplashLensEvent('upgrade_click',{plan:'yearly'})" style="background:#16a34a;color:#fff;text-decoration:none;border-radius:10px;padding:12px 8px;font-size:13px;font-weight:900;">$39 / yr</a>
         </div>
-        <button onclick="unlockPartSnapProLocal()" style="background:#334155;color:#cbd5e1;border:1px solid #475569;border-radius:10px;padding:11px 14px;font-size:12px;font-weight:800;cursor:pointer;width:100%;">I already upgraded - unlock this device</button>
-        <p style="color:#64748b;font-size:10px;line-height:1.4;margin-top:10px;">Launch note: checkout is live; device unlock keeps the season launch fast while account sync is built.</p>
+        <p style="color:#64748b;font-size:10px;line-height:1.4;margin-top:10px;">After web checkout, use the signed activation link issued by SplashLens support. Store builds remain free-core until native billing is added.</p>
       </div>`;
   }
 }
@@ -2635,10 +2987,13 @@ function trackSplashLensEvent(name, props = {}) {
 async function callAIScan(canvas, mode, result, status) {
   try {
     const base64 = canvas.toDataURL('image/jpeg', 0.85).replace(/^data:image\/jpeg;base64,/, '');
+    const headers = { 'Content-Type': 'application/json' };
+    const entitlementToken = getScanEntitlementToken();
+    if (entitlementToken) headers['X-SplashLens-Entitlement-Token'] = entitlementToken;
     const res = await fetch('/api/scan', {
       method:  'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({ image: base64, mode }),
+      headers,
+      body:    JSON.stringify({ image: base64, mode, clientId: getScanClientId() }),
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const { result: aiResult } = await res.json();
@@ -2656,16 +3011,17 @@ async function callAIScan(canvas, mode, result, status) {
     // error_code mode
     const { codes = [], brand, model, context, confidence } = aiResult;
     if (codes.length && confidence !== 'low') {
-      if (status) status.textContent = `AI FOUND: ${codes.join(', ')}`;
+      if (status) status.textContent = `AI READ - VERIFY: ${codes.join(', ')}`;
       const hits = searchErrorDB(codes[0], null);
       if (result) result.innerHTML = `
         <div style="background:#1e293b;border:1px solid #334155;border-radius:10px;padding:12px;margin-bottom:10px;">
           <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px;">
-            <span style="background:#7c3aed;color:#fff;padding:2px 10px;border-radius:100px;font-size:10px;font-weight:700;">AI DETECTED</span>
+            <span style="background:#7c3aed;color:#fff;padding:2px 10px;border-radius:100px;font-size:10px;font-weight:700;">AI READ - VERIFY</span>
             ${brand ? `<span style="color:#94a3b8;font-size:11px;">${brand}${model ? ' · '+model : ''}</span>` : ''}
           </div>
           <p style="color:#f1f5f9;font-size:18px;font-weight:900;letter-spacing:.08em;margin-bottom:4px;">${codes.join('  ')}</p>
           ${context ? `<p style="color:#7dd3fc;font-size:12px;">${context}</p>` : ''}
+          <p style="color:#94a3b8;font-size:11px;line-height:1.45;margin-top:8px;">Reference only. Confirm the code, model, and procedure against the current manufacturer manual before repair or parts ordering.</p>
         </div>
         ${renderScanHits(hits, codes[0])}
         ${!hits.length ? `<div style="text-align:center;padding:16px 0;"><button onclick="showCaptureWithManualEntry(document.getElementById('scan-canvas'),'${codes[0]}',document.getElementById('scan-result'),document.getElementById('scan-camera-status'))" style="background:#334155;color:#94a3b8;border:none;border-radius:8px;padding:10px 20px;font-size:13px;cursor:pointer;">Edit Code Manually</button></div>` : ''}
@@ -2707,12 +3063,33 @@ async function callAIScan(canvas, mode, result, status) {
   }
 }
 
+function getScanClientId() {
+  const key = 'splashlens-scan-client-id';
+  let id = localStorage.getItem(key);
+  if (!id) {
+    if (crypto.randomUUID) {
+      id = crypto.randomUUID();
+    } else {
+      const bytes = new Uint32Array(4);
+      crypto.getRandomValues(bytes);
+      id = `scan-${Array.from(bytes, n => n.toString(16)).join('')}`;
+    }
+    localStorage.setItem(key, id);
+  }
+  return id;
+}
+
 function renderPartsSnapResult(ai, result, status) {
   if (!result) return;
-  const { manufacturer, category, component, model, partNumber, description, condition, replacementNotes, searchTerms, confidence } = ai;
+  const { manufacturer, category, component, model, partNumber, description, condition, replacementNotes, verificationNotes, searchTerms, confidence } = ai;
   const low = confidence === 'low';
+  const notes = verificationNotes || replacementNotes;
 
-  if (status) status.textContent = low ? 'PART NOT IDENTIFIED — TRY CLOSER' : `IDENTIFIED: ${component || 'Unknown part'}`;
+  if (status) status.textContent = low ? 'PART NOT IDENTIFIED — TRY CLOSER' : `POSSIBLE MATCH: ${component || 'Unknown part'}`;
+
+  if (status && status.textContent.startsWith('POSSIBLE MATCH:')) {
+    status.textContent = status.textContent.replace('POSSIBLE MATCH:', 'POSSIBLE MATCH:');
+  }
 
   const condColor = { new:'#16a34a', good:'#16a34a', worn:'#d97706', damaged:'#dc2626', unknown:'#64748b' }[condition] || '#64748b';
 
@@ -2732,11 +3109,12 @@ function renderPartsSnapResult(ai, result, status) {
       ${description ? `<p style="color:#94a3b8;font-size:13px;line-height:1.5;margin-bottom:10px;">${description}</p>` : ''}
       ${partNumber ? `
         <div style="background:#0f172a;border-radius:8px;padding:10px 12px;margin-bottom:10px;">
-          <p style="color:#64748b;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px;">OEM PART NUMBER</p>
+          <p style="color:#64748b;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px;">POSSIBLE OEM / MODEL NUMBER</p>
           <p style="color:#fbbf24;font-size:16px;font-weight:800;letter-spacing:.05em;">${partNumber}</p>
         </div>
       ` : ''}
       ${replacementNotes ? `<p style="color:#fbbf24;font-size:12px;font-weight:600;margin-bottom:10px;">⚠ ${replacementNotes}</p>` : ''}
+      ${verificationNotes ? `<p style="color:#fbbf24;font-size:12px;font-weight:600;margin-bottom:10px;">Check: ${verificationNotes}</p>` : ''}
       ${searchTerms?.length ? `
         <p style="color:#64748b;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">SEARCH ONLINE</p>
         <div style="display:flex;flex-wrap:wrap;gap:6px;">
@@ -2744,6 +3122,7 @@ function renderPartsSnapResult(ai, result, status) {
         </div>
       ` : ''}
       ${buyLinks}
+      <p style="color:#94a3b8;font-size:11px;line-height:1.45;margin-top:10px;">Reference only. Confirm model, dimensions, and the current manufacturer parts diagram before ordering.</p>
       ${low ? `<p style="color:#64748b;font-size:12px;margin-top:12px;text-align:center;">Try getting closer, better lighting, or a different angle</p>` : ''}
     </div>
     <div style="text-align:center;padding:8px 0 16px;">
@@ -2756,14 +3135,17 @@ function renderPartBuyLinks(searchTerms, partNumber, manufacturer, component) {
   const rawTerm = partNumber || searchTerms?.[0] || [manufacturer, component].filter(Boolean).join(' ');
   if (!rawTerm) return '';
   const q = encodeURIComponent(rawTerm);
-  const tag = AFFILIATE_TAG && AFFILIATE_TAG !== 'YOUR_TAG' ? `&tag=${encodeURIComponent(AFFILIATE_TAG)}` : '';
+  const outbound = (store) => `/api/outbound?store=${encodeURIComponent(store)}&q=${q}`;
   return `
     <div style="margin-top:12px;padding-top:12px;border-top:1px solid #334155;">
-      <p style="color:#64748b;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">BUY / PRICE CHECK</p>
+      <p style="color:#64748b;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">VERIFY FIT / PRICE CHECK</p>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-        <a href="https://www.amazon.com/s?k=${q}${tag}" target="_blank" rel="noopener" onclick="trackSplashLensEvent('affiliate_click',{store:'amazon'})" style="background:#f59e0b;color:#111827;text-decoration:none;text-align:center;border-radius:8px;padding:9px 6px;font-size:12px;font-weight:900;">Amazon</a>
-        <a href="https://www.google.com/search?q=${q}+pool+part" target="_blank" rel="noopener" onclick="trackSplashLensEvent('part_search_click',{store:'google'})" style="background:#0f172a;color:#7dd3fc;text-decoration:none;text-align:center;border-radius:8px;padding:9px 6px;font-size:12px;font-weight:900;border:1px solid #334155;">Search Web</a>
+        <a href="${outbound('leslies')}" target="_blank" rel="noopener" onclick="trackSplashLensEvent('affiliate_click',{store:'leslies'})" style="background:#0284c7;color:#fff;text-decoration:none;text-align:center;border-radius:8px;padding:9px 6px;font-size:12px;font-weight:900;">Leslie's</a>
+        <a href="${outbound('intheswim')}" target="_blank" rel="noopener" onclick="trackSplashLensEvent('affiliate_click',{store:'intheswim'})" style="background:#0ea5e9;color:#fff;text-decoration:none;text-align:center;border-radius:8px;padding:9px 6px;font-size:12px;font-weight:900;">In The Swim</a>
+        <a href="${outbound('poolsupplyworld')}" target="_blank" rel="noopener" onclick="trackSplashLensEvent('affiliate_click',{store:'poolsupplyworld'})" style="background:#334155;color:#e2e8f0;text-decoration:none;text-align:center;border-radius:8px;padding:9px 6px;font-size:12px;font-weight:900;">Pool Supply World</a>
+        <a href="${outbound('web')}" target="_blank" rel="noopener" onclick="trackSplashLensEvent('part_search_click',{store:'web'})" style="background:#0f172a;color:#7dd3fc;text-decoration:none;text-align:center;border-radius:8px;padding:9px 6px;font-size:12px;font-weight:900;border:1px solid #334155;">Search Web</a>
       </div>
+      <p style="color:#64748b;font-size:10px;line-height:1.4;margin-top:8px;">Search links are for convenience only. Verify fit before ordering. If an affiliate tag is configured, SplashLens may earn a commission.</p>
     </div>`;
 }
 
@@ -2851,12 +3233,18 @@ function setScanBrand(brand) {
 function scanCodeSearch(val) {
   const el = document.getElementById('scan-lookup-results');
   if (!el) return;
-  if (!val.trim()) {
+  const query = val.trim();
+  if (!query) {
     el.innerHTML = `<p style="color:#475569;font-size:13px;text-align:center;padding:24px 0;">Enter an error code to search</p>`;
     return;
   }
-  const hits = searchErrorDB(val.trim(), _scanBrand);
-  el.innerHTML = renderScanHits(hits, val.trim());
+  const safeQuery = query.replace(/[^a-zA-Z0-9 ._-]/g, '').slice(0, 40);
+  if (safeQuery.length >= 2 && scanCodeSearch._lastTracked !== safeQuery) {
+    scanCodeSearch._lastTracked = safeQuery;
+    trackSplashLensEvent('manual_code_search', { query: safeQuery, brand: _scanBrand || 'all' });
+  }
+  const hits = searchErrorDB(query, _scanBrand);
+  el.innerHTML = renderScanHits(hits, query);
 }
 
 function searchErrorDB(query, brandFilter) {
@@ -2899,10 +3287,11 @@ function renderScanHits(hits, query) {
         <ul style="margin:0 0 10px;padding-left:16px;">${h.causes.map(c=>`<li style="color:#94a3b8;font-size:13px;line-height:1.5;">${c}</li>`).join('')}</ul>
       ` : ''}
       ${h.fix?.length ? `
-        <p style="color:#64748b;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;">Fix Steps</p>
+        <p style="color:#64748b;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;">Next Checks</p>
         <ol style="margin:0;padding-left:16px;">${h.fix.map(f=>`<li style="color:#e2e8f0;font-size:13px;line-height:1.6;margin-bottom:2px;">${f}</li>`).join('')}</ol>
       ` : ''}
       ${h.callpro ? `<p style="color:#fbbf24;font-size:12px;font-weight:700;margin-top:10px;">⚠ Recommend calling a certified technician for this fault.</p>` : ''}
+      <p style="color:#64748b;font-size:10px;line-height:1.45;margin-top:10px;">Reference only. Confirm the code, model, and procedure against the current manufacturer manual before repair or parts ordering.</p>
     </div>
   `).join('');
 }
@@ -2942,7 +3331,8 @@ function renderStripResult(ai, result, status) {
           </div>`).join('')}
       </div>
       ${notes ? `<p style="color:#7dd3fc;font-size:13px;line-height:1.5;margin-bottom:10px;">${notes}</p>` : ''}
-      ${disclaimer ? `<p style="color:#475569;font-size:10px;line-height:1.4;font-style:italic;">${disclaimer}</p>` : ''}
+      <p style="color:#475569;font-size:10px;line-height:1.4;font-style:italic;">${disclaimer || 'AI strip readings are rough field triage. Confirm with a calibrated kit before dosing.'}</p>
+      <p style="color:#fbbf24;font-size:10px;line-height:1.4;margin-top:6px;">Confirm readings with a calibrated kit before using the dosing calculator.</p>
     </div>
     <div style="text-align:center;padding:0 0 16px;">
       <button onclick="showTab('dosing')" style="background:#0284c7;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;margin-right:8px;">Calculate Doses →</button>

@@ -13,7 +13,23 @@
   <meta name="apple-mobile-web-app-title" content="SplashLens">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    body { background: #f0f9ff; color: #0f172a; font-family: system-ui, -apple-system, 'Segoe UI', sans-serif; -webkit-font-smoothing: antialiased; min-height: 100vh; }
+    :root {
+      --field-ink: #0f172a;
+      --field-panel: #ffffff;
+      --field-shell: #eff8fb;
+      --field-muted: #64748b;
+      --field-border: #d8e3ea;
+      --field-blue: #0369a1;
+      --field-blue-bright: #0284c7;
+      --field-blue-soft: #dff3fb;
+      --field-green: #15803d;
+      --field-warn: #b45309;
+      --field-danger: #b91c1c;
+      --field-radius: 8px;
+      --field-shadow: 0 1px 2px rgba(15,23,42,.06), 0 10px 24px rgba(15,23,42,.08);
+      --field-shadow-tight: 0 1px 2px rgba(15,23,42,.08);
+    }
+    body { background: var(--field-shell); color: var(--field-ink); font-family: system-ui, -apple-system, 'Segoe UI', sans-serif; -webkit-font-smoothing: antialiased; min-height: 100dvh; }
 
     /* Tabs */
     .tab-panel { display: none; }
@@ -25,7 +41,7 @@
     .nav-btn span { font-size: 10px; font-weight: 700; letter-spacing: 0.04em; }
 
     /* Brand buttons */
-    .brand-btn { background: #ffffff; border: 1px solid #cbd5e1; border-radius: 10px; padding: 11px 6px; text-align: center; cursor: pointer; font-size: 12px; font-weight: 700; color: #374151; transition: all 0.15s; width: 100%; letter-spacing: 0.02em; -webkit-tap-highlight-color: transparent; box-shadow: 0 1px 2px rgba(0,0,0,0.06); }
+    .brand-btn { background: var(--field-panel); border: 1px solid var(--field-border); border-radius: var(--field-radius); padding: 11px 6px; text-align: center; cursor: pointer; font-size: 12px; font-weight: 700; color: #374151; transition: all 0.15s; width: 100%; letter-spacing: 0.02em; -webkit-tap-highlight-color: transparent; box-shadow: var(--field-shadow-tight); }
     .brand-btn:active { transform: scale(0.95); }
 
     /* Category pills */
@@ -33,7 +49,7 @@
     .cat-pill.active { background: #dbeafe; border-color: #3b82f6; color: #1d4ed8; }
 
     /* Error cards */
-    .error-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; overflow: hidden; margin-bottom: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+    .error-card { background: var(--field-panel); border: 1px solid var(--field-border); border-radius: var(--field-radius); overflow: hidden; margin-bottom: 8px; box-shadow: var(--field-shadow-tight); }
     .error-toggle { width: 100%; background: none; border: none; cursor: pointer; padding: 13px 14px; text-align: left; display: flex; align-items: flex-start; gap: 10px; -webkit-tap-highlight-color: transparent; }
     .error-detail { display: none; padding: 0 14px 14px; border-top: 1px solid #f1f5f9; }
     .error-detail.open { display: block; }
@@ -60,19 +76,19 @@
     .field-group { margin-bottom: 14px; }
 
     /* Buttons */
-    .btn-calc { background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: white; border: none; border-radius: 10px; padding: 14px; font-weight: 800; font-size: 15px; width: 100%; cursor: pointer; letter-spacing: 0.03em; transition: all 0.15s; -webkit-tap-highlight-color: transparent; }
+    .btn-calc { background: linear-gradient(135deg, var(--field-blue-bright) 0%, var(--field-blue) 100%); color: white; border: none; border-radius: var(--field-radius); padding: 14px; font-weight: 800; font-size: 15px; width: 100%; cursor: pointer; letter-spacing: 0.03em; transition: all 0.15s; -webkit-tap-highlight-color: transparent; }
     .btn-calc:active { transform: scale(0.98); opacity: 0.88; }
 
     /* Field rescue home */
-    .rescue-hero { background: #0f172a; border: 1px solid #1e293b; border-radius: 12px; padding: 16px; margin-bottom: 12px; box-shadow: 0 8px 22px rgba(15,23,42,0.18); }
+    .rescue-hero { background: linear-gradient(145deg, #102033 0%, #0d2535 58%, #12384b 100%); border: 1px solid rgba(125,211,252,.24); border-radius: var(--field-radius); padding: 16px; margin-bottom: 12px; box-shadow: var(--field-shadow); }
     .rescue-kicker { color: #7dd3fc; font-size: 10px; font-weight: 900; letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 7px; }
     .rescue-title { color: #ffffff; font-size: 24px; line-height: 1.05; font-weight: 900; margin-bottom: 7px; letter-spacing: 0; }
     .rescue-sub { color: #cbd5e1; font-size: 13px; line-height: 1.45; margin-bottom: 14px; }
     .rescue-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-    .rescue-action { background: #ffffff; color: #0f172a; border: 1px solid #bae6fd; border-radius: 10px; padding: 12px 10px; min-height: 84px; cursor: pointer; text-align: left; display: flex; flex-direction: column; justify-content: space-between; -webkit-tap-highlight-color: transparent; box-shadow: 0 1px 2px rgba(0,0,0,0.08); }
+    .rescue-action { background: #ffffff; color: #0f172a; border: 1px solid #bae6fd; border-radius: var(--field-radius); padding: 12px 10px; min-height: 84px; cursor: pointer; text-align: left; display: flex; flex-direction: column; justify-content: space-between; -webkit-tap-highlight-color: transparent; box-shadow: var(--field-shadow-tight); }
     .rescue-action strong { display: block; font-size: 14px; line-height: 1.15; font-weight: 900; letter-spacing: 0; }
     .rescue-action span { display: block; color: #64748b; font-size: 11px; line-height: 1.25; margin-top: 7px; }
-    .rescue-action.primary { background: #0284c7; color: #ffffff; border-color: #38bdf8; }
+    .rescue-action.primary { background: var(--field-blue-bright); color: #ffffff; border-color: #38bdf8; }
     .rescue-action.primary span { color: #dff6ff; }
     .rescue-proof { color: #94a3b8; font-size: 11px; line-height: 1.4; margin-top: 12px; padding-top: 12px; border-top: 1px solid #334155; }
     .rescue-proof strong { color: #ffffff; }
@@ -80,6 +96,9 @@
     .rescue-chip { background: #ffffff; border: 1px solid #bae6fd; border-radius: 9px; padding: 8px 6px; text-align: center; }
     .rescue-chip strong { display: block; color: #0369a1; font-size: 14px; font-weight: 900; line-height: 1; }
     .rescue-chip span { display: block; color: #64748b; font-size: 10px; font-weight: 700; margin-top: 3px; }
+    .route-ready-card { background:#ffffff; border:1px solid #c7e5f3; border-left:4px solid #0284c7; border-radius:9px; padding:12px; margin-bottom:12px; box-shadow:var(--field-shadow-tight); }
+    .route-ready-card strong { display:block; color:#0f172a; font-size:14px; font-weight:900; margin-bottom:4px; }
+    .route-ready-card span { display:block; color:#64748b; font-size:12px; line-height:1.45; }
     @media (max-width: 360px) {
       .rescue-actions { grid-template-columns: 1fr; }
       .rescue-strip { grid-template-columns: 1fr 1fr; }
@@ -159,7 +178,7 @@
 <body>
 
   <!-- ═══ HEADER ═══ -->
-  <header style="background:#0369a1;padding:11px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;box-shadow:0 2px 6px rgba(3,105,161,0.3);">
+  <header style="background:var(--field-blue);padding:11px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;box-shadow:0 2px 10px rgba(3,105,161,0.22);">
     <div style="display:flex;align-items:center;gap:10px;">
       <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 32 32">
         <rect width="32" height="32" rx="7" fill="rgba(255,255,255,0.2)"/>
@@ -187,9 +206,9 @@
     <div id="tab-errors" class="tab-panel active" style="padding:14px;">
 
       <section class="rescue-hero">
-        <p class="rescue-kicker">Field rescue</p>
+        <p class="rescue-kicker">SplashLens field rescue - formerly PoolLens tools</p>
         <h1 class="rescue-title">Stuck at the equipment pad?</h1>
-        <p class="rescue-sub">Scan the display, search the code, calculate the dose, or write the service note. No account. Core tools are free.</p>
+        <p class="rescue-sub">SplashLens carries the PoolLens field toolkit forward with Route Ready service authority: scan the display, search the code, calculate the dose, or write the service note. No account. Core tools are free.</p>
         <div class="rescue-actions">
           <button type="button" class="rescue-action primary" onclick="showTab('scan')">
             <strong>Scan Error Code</strong>
@@ -197,7 +216,7 @@
           </button>
           <button type="button" class="rescue-action" onclick="focusErrorSearch()">
             <strong>Search Code</strong>
-            <span>500+ codes across major pool brands.</span>
+            <span>180+ current entries across major pool brands.</span>
           </button>
           <button type="button" class="rescue-action" onclick="focusVolumeInput()">
             <strong>Calculate Dose</strong>
@@ -212,9 +231,14 @@
       </section>
 
       <div class="rescue-strip" aria-label="SplashLens field tools">
-        <div class="rescue-chip"><strong>500+</strong><span>Error codes</span></div>
+        <div class="rescue-chip"><strong>180+</strong><span>Current entries</span></div>
         <div class="rescue-chip"><strong>$0</strong><span>No card</span></div>
         <div class="rescue-chip"><strong>Offline</strong><span>Manual tools</span></div>
+      </div>
+
+      <div class="route-ready-card" aria-label="Route Ready service authority">
+        <strong>Route Ready service authority</strong>
+        <span>Use SplashLens at the stop today. Route Ready training remains a pilot layer until field usage proves the modules; PartSnap Pro is the paid web scanner upgrade for extended online scans.</span>
       </div>
 
       <div style="position:relative;margin-bottom:12px;">
@@ -259,8 +283,46 @@
         </select>
       </div>
       <div id="dose-fields"></div>
+      <div style="background:#ffffff;border:1px solid #bae6fd;border-radius:10px;padding:12px;margin:12px 0;box-shadow:0 1px 3px rgba(0,0,0,0.05);">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px;">
+          <p style="color:#0369a1;font-weight:900;font-size:13px;">Product Line Helper</p>
+          <span style="background:#e0f2fe;color:#0369a1;border:1px solid #7dd3fc;border-radius:999px;padding:3px 8px;font-size:10px;font-weight:900;">truck-aware</span>
+        </div>
+        <div class="field-group" style="margin-bottom:10px;">
+          <label class="field-label">Line on the Truck</label>
+          <select id="dose-line" onchange="renderProductLineHelper()">
+            <option value="generic">Generic / active ingredient</option>
+            <option value="hasa">HASA</option>
+            <option value="orenda">Orenda</option>
+            <option value="bioguard">BioGuard</option>
+            <option value="natural">Natural Chemistry</option>
+            <option value="leslie">Leslie's / private label</option>
+            <option value="poolife">Poolife</option>
+            <option value="jacks">Jack's Magic</option>
+          </select>
+        </div>
+        <div id="dose-line-helper" style="font-size:12px;color:#334155;line-height:1.55;"></div>
+      </div>
       <button class="btn-calc" onclick="calculateDose()">Calculate Dose</button>
       <div id="dose-result" style="margin-top:14px;"></div>
+
+      <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:12px;margin-top:14px;box-shadow:0 1px 3px rgba(0,0,0,0.05);">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px;">
+          <p style="color:#0369a1;font-weight:900;font-size:13px;">LSI / CSI Sanity Check</p>
+          <span id="lsi-status-pill" style="background:#e2e8f0;color:#475569;border-radius:999px;padding:3px 8px;font-size:10px;font-weight:900;">field estimate</span>
+        </div>
+        <p style="color:#64748b;font-size:11px;line-height:1.45;margin-bottom:10px;">Before dosing, preview whether the change pushes water toward scale or corrosion. This is a field sanity check, not a lab certificate.</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px;">
+          <div><label class="field-label">pH</label><input type="number" id="lsi-ph" placeholder="7.5" step="0.1" inputmode="decimal"></div>
+          <div><label class="field-label">TA</label><input type="number" id="lsi-ta" placeholder="80" inputmode="decimal"></div>
+          <div><label class="field-label">CH</label><input type="number" id="lsi-ch" placeholder="250" inputmode="decimal"></div>
+          <div><label class="field-label">CYA</label><input type="number" id="lsi-cya" placeholder="40" inputmode="decimal"></div>
+          <div><label class="field-label">Temp F</label><input type="number" id="lsi-temp" placeholder="80" inputmode="decimal"></div>
+          <div><label class="field-label">Salt/TDS</label><input type="number" id="lsi-salt" placeholder="1000" inputmode="decimal"></div>
+        </div>
+        <button type="button" onclick="calculateLsiPreview()" style="width:100%;background:#eff6ff;border:1px solid #93c5fd;color:#0369a1;border-radius:9px;padding:10px;font-size:13px;font-weight:900;cursor:pointer;">Preview Balance Impact</button>
+        <div id="lsi-preview" style="margin-top:10px;"></div>
+      </div>
 
       <hr class="section-div">
       <p style="color:#0369a1;font-weight:900;font-size:15px;margin-bottom:12px;">Target Ranges</p>
@@ -474,6 +536,15 @@
 
       <hr class="section-div">
       <p style="color:#0369a1;font-weight:900;font-size:14px;margin-bottom:12px;">Water Readings</p>
+      <div class="field-group">
+        <label class="field-label">Reading Source</label>
+        <select id="rpt-reading-source" onchange="validateReportProof({quiet:true})">
+          <option value="manual">Manual entry</option>
+          <option value="spintouch">LaMotte SpinTouch - device reading</option>
+          <option value="spintouch-edited">LaMotte SpinTouch - edited after import</option>
+          <option value="admin">Office/admin edited</option>
+        </select>
+      </div>
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px;">
         <div><label class="field-label">FC (ppm)</label><input type="number" id="rpt-fc" placeholder="—" inputmode="decimal" step="0.1"></div>
         <div><label class="field-label">CC (ppm)</label><input type="number" id="rpt-cc" placeholder="—" inputmode="decimal" step="0.1"></div>
@@ -483,12 +554,44 @@
         <div><label class="field-label">CYA (ppm)</label><input type="number" id="rpt-cya" placeholder="—" inputmode="decimal"></div>
       </div>
 
+      <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:12px;margin-bottom:14px;box-shadow:0 1px 3px rgba(0,0,0,0.05);">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px;">
+          <p style="color:#0369a1;font-weight:900;font-size:13px;">Stop Proof Checklist</p>
+          <span id="rpt-proof-pill" style="background:#fee2e2;color:#991b1b;border-radius:999px;padding:3px 8px;font-size:10px;font-weight:900;">incomplete</span>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr;gap:8px;">
+          <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:#334155;font-weight:800;"><input type="checkbox" id="rpt-proof-water" onchange="validateReportProof({quiet:true})"> Water reading captured</label>
+          <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:#334155;font-weight:800;"><input type="checkbox" id="rpt-proof-equipment" onchange="validateReportProof({quiet:true})"> Equipment photo captured</label>
+          <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:#334155;font-weight:800;"><input type="checkbox" id="rpt-proof-summary" onchange="validateReportProof({quiet:true})"> Customer-safe summary ready</label>
+        </div>
+        <div class="field-group" style="margin-top:10px;">
+          <label class="field-label">Attach Photo Names / Proof Notes</label>
+          <input type="text" id="rpt-photo-proof" placeholder="e.g. pad-photo.jpg, spintouch-screen.jpg" oninput="validateReportProof({quiet:true})">
+        </div>
+        <div class="field-group">
+          <label class="field-label">Issue Note for Tech Record</label>
+          <textarea id="rpt-issue-note" rows="2" placeholder="Heater fault code visible; customer advised..." oninput="validateReportProof({quiet:true})" style="background:#ffffff;border:1px solid #cbd5e1;color:#0f172a;border-radius:9px;padding:12px 14px;width:100%;font-size:14px;font-family:inherit;resize:vertical;-webkit-appearance:none;"></textarea>
+        </div>
+        <div class="field-group" style="margin-bottom:0;">
+          <label class="field-label">Customer-Visible Summary</label>
+          <textarea id="rpt-customer-summary" rows="2" placeholder="Water tested and balanced. Equipment is running normally..." oninput="validateReportProof({quiet:true})" style="background:#ffffff;border:1px solid #cbd5e1;color:#0f172a;border-radius:9px;padding:12px 14px;width:100%;font-size:14px;font-family:inherit;resize:vertical;-webkit-appearance:none;"></textarea>
+        </div>
+        <div id="rpt-proof-missing" style="margin-top:8px;color:#991b1b;font-size:11px;font-weight:800;"></div>
+      </div>
+
       <hr class="section-div">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
         <p style="color:#0369a1;font-weight:900;font-size:14px;">Chemicals Added</p>
         <button type="button" onclick="addChemRow()" style="background:#eff6ff;border:1px solid #93c5fd;color:#0369a1;font-size:12px;font-weight:700;padding:5px 12px;border-radius:6px;cursor:pointer;">+ Add</button>
       </div>
       <div id="chem-rows"></div>
+      <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:12px;margin:10px 0 14px;box-shadow:0 1px 3px rgba(0,0,0,0.05);">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px;">
+          <p style="color:#0369a1;font-weight:900;font-size:13px;">Chemical Cost + Truck Inventory</p>
+          <span id="rpt-cost-total" style="background:#dcfce7;color:#166534;border-radius:999px;padding:3px 8px;font-size:10px;font-weight:900;">$0.00</span>
+        </div>
+        <p id="rpt-inventory-summary" style="color:#64748b;font-size:12px;line-height:1.45;">Add chemical costs and stock source to estimate stop cost.</p>
+      </div>
 
       <hr class="section-div">
       <div class="field-group">

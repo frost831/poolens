@@ -1,0 +1,31 @@
+name: SplashLens
+options:
+  bundleIdPrefix: com.splashlens
+  deploymentTarget:
+    iOS: "17.0"
+settings:
+  base:
+    DEVELOPMENT_TEAM: 2XSLXV9H74
+    CODE_SIGN_STYLE: Automatic
+    MARKETING_VERSION: "1.0"
+    CURRENT_PROJECT_VERSION: 7
+targets:
+  SplashLens:
+    type: application
+    platform: iOS
+    sources:
+      - ios/SplashLens
+      - ios/Assets.xcassets
+      - ios/Base.lproj
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.splashlens.app
+        PRODUCT_NAME: SplashLens
+        INFOPLIST_FILE: ios/SplashLens/Info.plist
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        TARGETED_DEVICE_FAMILY: "1"
+        SUPPORTS_MACCATALYST: false
+        SWIFT_VERSION: "5.0"
+        LD_RUNPATH_SEARCH_PATHS:
+          - "$(inherited)"
+          - "@executable_path/Frameworks"

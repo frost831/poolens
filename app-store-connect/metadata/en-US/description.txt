@@ -1,0 +1,13 @@
+SplashLens is a pool-service field reference app for technicians who need fast lookup, service math, notes, and lightweight field tools.
+
+Use SplashLens to:
+
+- Search pool equipment error codes and symptoms
+- Calculate common chemical dosing adjustments
+- Build service notes and report-style field records
+- Check filter guides, service checklists, and manual reference tools
+- Use optional online AI scan assistance for equipment displays, pool parts, and test strips
+
+Manual lookup, calculators, notes, filters, and checklists are designed for field use and can work from the app shell after first load. Online AI scan features require internet access and are assistance only. Always verify AI scan output against equipment manuals, calibrated tests, label directions, and professional field judgment.
+
+SplashLens does not guarantee diagnosis, repair, chemical safety, manufacturer support, or training certification.

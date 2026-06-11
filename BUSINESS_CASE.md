@@ -5,11 +5,24 @@
 
 ---
 
+## Current Truth Before Reading Legacy Sections
+
+- SplashLens is the public brand. PoolLens is the source repo / earlier field-app name.
+- Current public app: `https://app.splashlens.com`; fallback Pages host: `https://poolens.pages.dev`.
+- Current public site: `https://splashlens.com`; fallback Pages host: `https://poolens-site.pages.dev`.
+- Use `500+ error codes` in public-facing copy until the database count is automatically measured and updated.
+- The online AI scanner is live, but production must keep server-side scan metering enabled. Do not rely only on browser localStorage limits.
+- PartSnap Pro web checkout exists through Stripe Payment Links. Account-based paid entitlement is not production-grade yet.
+- Route Ready is a planned training layer collecting free pilot interest. Do not describe certificates, verification, or completed modules as already built.
+- Older PoolLens Pro / PoolLens Learn language below is legacy planning context, not the active launch claim.
+
+---
+
 ## 1. Executive Summary
 
-PoolLens is a free, offline-first Progressive Web App (PWA) for pool service technicians. It is the most comprehensive free field reference tool in the industry: 600+ error codes across 13 equipment brands, full chemical dosing calculators, filter references, maintenance checklists, visit reporting, pool profiles, and route management — all usable with zero signal in a basement equipment room.
+SplashLens is a free, offline-first Progressive Web App (PWA) for pool service technicians. It is a broad field reference tool: 500+ error codes across major equipment brands, full chemical dosing calculators, filter references, maintenance checklists, visit reporting, pool profiles, and route management - all usable with zero signal after first load.
 
-The app is live at poolens.pages.dev. The marketing site with 300 SEO/AEO-optimized blog posts is live at poolens-site.pages.dev. No money has been spent on advertising. The product is distributing itself on brand authority and utility.
+The app is live at app.splashlens.com, with poolens.pages.dev as the Cloudflare Pages fallback. The marketing site is live at splashlens.com, with poolens-site.pages.dev as the fallback. No money has been spent on advertising. The product is distributing itself on brand authority and utility.
 
 The business model is a four-tier stack built on top of a free product that will never be paywalled:
 
@@ -31,7 +44,7 @@ The moat is distribution: every free user is a future paid conversion opportunit
 The app is a single-page PWA with 9 fully functional tabs. All features work offline via service worker cache. The app is installable from the browser on iOS and Android without going through an app store.
 
 **Error Codes (Scan + Errors tabs)**
-- 600+ fault codes across 13 brands: Hayward, Pentair (including IntelliFlo variable speed), Jandy, Maytronics/Dolphin, Aiper, Raypak, AquaCal, Sta-Rite, Waterway, Beatbot, Betta, Polaris, Zodiac
+- 500+ fault codes across major brands: Hayward, Pentair (including IntelliFlo variable speed), Jandy, Maytronics/Dolphin, Aiper, Raypak, AquaCal, Sta-Rite, Waterway, Beatbot, Betta, Polaris, Zodiac
 - Full-text search across all codes
 - Live camera with frame capture and Web TextDetector OCR for code recognition
 - Code Lookup returns manufacturer, fault description, diagnosis steps, and fix guidance
@@ -79,8 +92,8 @@ The app is a single-page PWA with 9 fully functional tabs. All features work off
 ### What the Product Is Not (Yet)
 - No native app store listing (Play Store / App Store) — currently browser-install only
 - No backend/accounts — all data is local to the device
-- No AI vision calls yet — camera capture is live but the /api/scan Cloudflare Worker is not deployed
-- No payment integration — all tiers are conceptual, not yet purchasable
+- AI vision calls are live online through `/api/scan`; production must keep `ANTHROPIC_API_KEY` and server-side metering configured.
+- PartSnap Pro web checkout exists through Stripe Payment Links. Account-based paid entitlement is not production-grade yet; store wrappers must stay free-core unless native billing is added.
 - No multi-device sync — pool profiles and routes live in localStorage only
 
 ---
@@ -101,7 +114,7 @@ Key characteristics of the market:
 
 | Tool | Price | Error Codes | Offline | Chemistry Calcs | Field UX |
 |---|---|---|---|---|---|
-| **PoolLens** | Free | 600+ (13 brands) | Yes (SW cache) | Full suite | Yes |
+| **SplashLens** | Free | 500+ | Yes (SW cache) | Full suite | Yes |
 | Skimmer | $1–2/pool/month | No | No | No | Partial |
 | Pool Brain | $55/tech/month | No | No | Basic | Partial |
 | Jobber | $69+/month | No | No | No | Generic |
@@ -270,7 +283,7 @@ The Scan tab is live. Users can:
 - Open a live camera feed
 - Capture a frame
 - Run Web TextDetector OCR for text recognition on the image
-- Search the 600+ code database via full-text search
+- Search the 500+ code database via full-text search
 
 What's missing: the AI vision call. The frontend is wired. The backend does not exist yet.
 

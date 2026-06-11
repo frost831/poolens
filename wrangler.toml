@@ -1,0 +1,7 @@
+name = "poolens"
+compatibility_date = "2026-05-28"
+pages_build_output_dir = "."
+
+[[kv_namespaces]]
+binding = "SCAN_USAGE_KV"
+id = "05a02cae79bc40039fb7b29559b0a271"

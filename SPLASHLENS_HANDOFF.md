@@ -150,9 +150,10 @@ SplashLens is a free, offline-first PWA for pool service technicians. No account
 | `parts_snap` | Photo of pool equipment or part | Part name, brand, part number if visible, what it does, where to buy |
 | `test_strip` | Photo of chemical test strip | Estimated readings for FC, pH, TA, CYA with interpretation |
 
-**CORS:** Allows `app.splashlens.com`, `poolens.pages.dev`, and localhost for dev.  
+**CORS:** Exact-origin allowlist for `app.splashlens.com`, `splashlens.com`, `www.splashlens.com`, and `poolens.pages.dev`; localhost is dev-only.
 **Cost:** ~$0.003–0.015 per scan (Haiku vision pricing, depends on image size).  
 **Auth:** `ANTHROPIC_API_KEY` must be set as a CF Pages secret on the `poolens` project.
+**Metering:** Production should bind `SCAN_USAGE_KV` for monthly anonymous scan limits and `SCAN_RATE_LIMITER` for burst protection. If production has neither binding, `/api/scan` fails closed instead of allowing unlimited anonymous calls.
 
 ---
 
