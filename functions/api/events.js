@@ -28,7 +28,12 @@ function notifyConfig(env) {
 }
 
 function authOk(request, env) {
-  const secret = String(env.SPLASHLENS_STATS_SECRET || env.SPLASHLENS_ADMIN_SECRET || '').trim();
+  const secret = String(
+    env.SPLASHLENS_STATS_SECRET ||
+    env.SPLASHLENS_ADMIN_SECRET ||
+    env.SPLASHLENS_ENTITLEMENT_ADMIN_SECRET ||
+    '',
+  ).trim();
   if (!secret) return false;
 
   const auth = request.headers.get('Authorization') || '';
