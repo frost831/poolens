@@ -2661,7 +2661,7 @@ const SCAN_PRO_KEY = 'sl_partsnap_pro_local';
 const SCAN_ENTITLEMENT_TOKEN_KEY = 'sl_scan_entitlement_token';
 const PARTSNAP_MONTHLY_LINK = '/api/checkout?plan=monthly';
 const PARTSNAP_YEARLY_LINK = '/api/checkout?plan=yearly';
-const SPLASHLENS_EVENT_ENDPOINT = 'https://splashlens.com/api/event';
+const SPLASHLENS_EVENT_ENDPOINT = '/api/events';
 const STORE_SHELL_KEY = 'sl_store_shell_mode';
 
 function initScanTab() {
