@@ -1,2 +1,2 @@
-/dashboard /owner-dashboard.html 200
-/dashboad /owner-dashboard.html 200
+/dashboad /dashboard 301
+/owner-dashboard /dashboard 301
