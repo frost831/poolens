@@ -4,6 +4,8 @@ splashlens-upload.keystore
 *.p12
 *.properties
 local.properties
+!gradle.properties
+!gradle/wrapper/gradle-wrapper.properties
 app/build/
 .gradle/
 build/

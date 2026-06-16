@@ -17,11 +17,11 @@
   "maskableIconUrl": "https://app.splashlens.com/icons/maskable-512.png",
   "splashScreenFadeOutDuration": 300,
   "signingKey": {
-    "path": "C:\\Users\\sales\\Documents\\Codex\\2026-05-26\\can-you-research-github-and-scrape\\github-projects\\poolens\\android-twa\\splashlens-upload.keystore",
+    "path": "C:\\Users\\sales\\.keystores\\splashlens\\splashlens-upload.keystore",
     "alias": "splashlens_upload"
   },
-  "appVersionName": "1",
-  "appVersionCode": "1",
+  "appVersionName": "1.0.1",
+  "appVersionCode": "2",
   "shortcuts": [],
   "generatorApp": "bubblewrap-cli",
   "webManifestUrl": "https://app.splashlens.com/manifest.json",
@@ -43,5 +43,5 @@
   "fileHandlers": [],
   "launchHandlerClientMode": "",
   "displayOverride": [],
-  "appVersion": "1"
+  "appVersion": "1.0.1"
 }

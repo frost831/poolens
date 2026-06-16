@@ -69,3 +69,16 @@ Submitted to Google Play review from Publishing overview on 2026-06-03:
 ## Current blocker / production access note
 
 This account cannot publish directly to production yet. Google requires a closed test with at least 12 opted-in testers for at least 14 days before production access can be requested. At tester setup time, the selected `Internal testers` list showed 1 user, so 11+ more opted-in testers are still needed for the production-access gate.
+
+## June 16, 2026 parity update
+
+- iOS and Android wrappers both load the live SplashLens PWA, so June 16 app/dashboard/usage-alert changes are available through the Android wrapper without a native feature rewrite.
+- Privacy policy source was updated to disclose anonymous app usage events, owner-side usage notifications, and usage-event retention up to 120 days.
+- Android wrapper source was bumped for a new upload candidate:
+  - Version code: `2`
+  - Version name: `1.0.1`
+- Signed AAB candidate:
+  - `C:\Users\sales\Dropbox\Projects\poolens\play-store-artifacts\SplashLens-Field-Tools-1.0.1-v2-signed.aab`
+  - SHA-256: `0258B8AC8785FD22C36924E3265FF49A99B414929AEADE61A6937DA7EB645BCD`
+- New Play/iOS parity packet:
+  - `C:\Users\sales\Dropbox\Projects\poolens\docs\store\GOOGLE_PLAY_IOS_PARITY_2026-06-16.md`
