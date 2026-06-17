@@ -25,7 +25,8 @@ function appOrigin(request, env) {
 }
 
 async function createCheckoutSession(request, env, plan) {
-  if (!env.STRIPE_SECRET_KEY) return null;
+  const stripeSecret = String(env.STRIPE_SECRET_KEY || '').trim();
+  if (!stripeSecret) return null;
 
   const origin = appOrigin(request, env);
   const params = new URLSearchParams();
@@ -45,14 +46,15 @@ async function createCheckoutSession(request, env, plan) {
   const response = await fetch('https://api.stripe.com/v1/checkout/sessions', {
     method: 'POST',
     headers: {
-      Authorization: `Bearer ${env.STRIPE_SECRET_KEY}`,
+      Authorization: `Bearer ${stripeSecret}`,
       'Content-Type': 'application/x-www-form-urlencoded',
     },
     body: params,
   });
 
   if (!response.ok) {
-    console.error('SplashLens checkout session creation failed', response.status, await response.text());
+    const body = await response.text();
+    console.error('SplashLens checkout session creation failed', response.status, body);
     return null;
   }
 
@@ -64,8 +66,22 @@ export async function onRequestGet({ request, env }) {
   const url = new URL(request.url);
   const plan = (url.searchParams.get('plan') || 'monthly').toLowerCase();
   const sessionUrl = await createCheckoutSession(request, env, plan);
-  if (sessionUrl) return Response.redirect(sessionUrl, 302);
+  if (sessionUrl) {
+    return new Response(null, {
+      status: 302,
+      headers: {
+        Location: sessionUrl,
+        'X-SplashLens-Checkout-Mode': 'stripe_checkout',
+      },
+    });
+  }
 
   const target = LINKS[plan] || LINKS.monthly;
-  return Response.redirect(target, 302);
+  return new Response(null, {
+    status: 302,
+    headers: {
+      Location: target,
+      'X-SplashLens-Checkout-Mode': 'payment_link_fallback',
+    },
+  });
 }
