@@ -74,6 +74,9 @@
 
     .field-label { display: block; color: #64748b; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px; }
     .field-group { margin-bottom: 14px; }
+    .language-bar { background:#e0f2fe; border-bottom:1px solid #bae6fd; padding:8px 14px; display:flex; align-items:center; justify-content:space-between; gap:10px; }
+    .language-bar span { color:#075985; font-size:12px; font-weight:800; }
+    .language-bar select { width:auto; min-width:138px; padding:8px 32px 8px 10px; font-size:13px; border-color:#7dd3fc; color:#075985; font-weight:800; }
 
     /* Buttons */
     .btn-calc { background: linear-gradient(135deg, var(--field-blue-bright) 0%, var(--field-blue) 100%); color: white; border: none; border-radius: var(--field-radius); padding: 14px; font-weight: 800; font-size: 15px; width: 100%; cursor: pointer; letter-spacing: 0.03em; transition: all 0.15s; -webkit-tap-highlight-color: transparent; }
@@ -173,6 +176,13 @@
     .inline-chem-form { background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 10px; padding: 14px; margin-top: 10px; }
     textarea.pool-textarea { background: #ffffff; border: 1px solid #cbd5e1; color: #0f172a; border-radius: 9px; padding: 12px 14px; width: 100%; font-size: 14px; font-family: inherit; resize: vertical; -webkit-appearance: none; transition: border-color 0.15s; }
     textarea.pool-textarea:focus { outline: none; border-color: #0284c7; box-shadow: 0 0 0 3px rgba(2,132,199,0.12); }
+    .note-tools { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:6px; }
+    .note-tools .field-label { margin-bottom:0; }
+    .mic-btn { background:#eff6ff; border:1px solid #93c5fd; color:#0369a1; border-radius:999px; padding:6px 10px; min-height:30px; display:inline-flex; align-items:center; gap:6px; font-size:11px; font-weight:900; cursor:pointer; -webkit-tap-highlight-color:transparent; }
+    .mic-btn svg { width:13px; height:13px; flex-shrink:0; }
+    .mic-btn.listening { background:#fee2e2; border-color:#fca5a5; color:#991b1b; }
+    .mic-btn:disabled { background:#f1f5f9; border-color:#e2e8f0; color:#94a3b8; cursor:not-allowed; }
+    .mic-status { min-height:16px; margin-top:5px; color:#64748b; font-size:11px; font-weight:700; line-height:1.35; }
   </style>
 </head>
 <body>
@@ -198,6 +208,15 @@
       </button>
     </div>
   </header>
+  <div class="language-bar">
+    <span>Preferred language</span>
+    <select id="language-select" aria-label="Preferred language">
+      <option value="en">English</option>
+      <option value="es">Español</option>
+      <option value="pt-BR">Português</option>
+      <option value="fr">Français</option>
+    </select>
+  </div>
 
   <!-- ═══ MAIN ═══ -->
   <main style="padding-bottom:70px;">
@@ -208,7 +227,7 @@
       <section class="rescue-hero">
         <p class="rescue-kicker">SplashLens field rescue - formerly PoolLens tools</p>
         <h1 class="rescue-title">Stuck at the equipment pad?</h1>
-        <p class="rescue-sub">SplashLens carries the PoolLens field toolkit forward with Route Ready service authority: scan the display, search the code, calculate the dose, or write the service note. No account. Core tools are free.</p>
+        <p class="rescue-sub">SplashLens helps pool techs finish the stop faster, document it cleaner, and get more of the day back. Scan the display, search the code, calculate the dose, or dictate the service note. No account. Core tools are free.</p>
         <div class="rescue-actions">
           <button type="button" class="rescue-action primary" onclick="showTab('scan')">
             <strong>Scan Error Code</strong>
@@ -224,10 +243,10 @@
           </button>
           <button type="button" class="rescue-action" onclick="quickServiceNote()">
             <strong>Make Service Note</strong>
-            <span>Copy, share, or print a clean visit report.</span>
+            <span>Talk it once, clean it up, copy or share the report.</span>
           </button>
         </div>
-        <p class="rescue-proof"><strong>Manual lookup works offline after first load.</strong> AI camera scan requires internet. PoolBrain and Skimmer run the company; SplashLens saves the stop.</p>
+        <p class="rescue-proof"><strong>Manual lookup works offline after first load.</strong> AI camera scan and voice dictation need device support. PoolBrain and Skimmer run the company; SplashLens saves the stop.</p>
       </section>
 
       <div class="rescue-strip" aria-label="SplashLens field tools">
@@ -501,6 +520,9 @@
         <button onclick="toggleReportPoolPicker()" style="background:#eff6ff;border:1px solid #93c5fd;color:#0369a1;font-size:11px;font-weight:800;padding:6px 12px;border-radius:7px;cursor:pointer;">↓ Load Pool</button>
       </div>
       <div id="rpt-pool-picker" style="display:none;margin-bottom:14px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:10px;"></div>
+      <div class="info-box" style="margin-bottom:14px;">
+        Built for the tech at the stop: fewer taps, faster notes, cleaner proof, and less after-hours paperwork.
+      </div>
 
       <div class="field-group">
         <label class="field-label">Customer Name</label>
@@ -569,12 +591,26 @@
           <input type="text" id="rpt-photo-proof" placeholder="e.g. pad-photo.jpg, spintouch-screen.jpg" oninput="validateReportProof({quiet:true})">
         </div>
         <div class="field-group">
-          <label class="field-label">Issue Note for Tech Record</label>
+          <div class="note-tools">
+            <label class="field-label">Issue Note for Tech Record</label>
+            <button type="button" class="mic-btn" data-mic-target="rpt-issue-note" onclick="toggleVoiceNote('rpt-issue-note', this)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><path d="M12 19v3"/></svg>
+              Dictate
+            </button>
+          </div>
           <textarea id="rpt-issue-note" rows="2" placeholder="Heater fault code visible; customer advised..." oninput="validateReportProof({quiet:true})" style="background:#ffffff;border:1px solid #cbd5e1;color:#0f172a;border-radius:9px;padding:12px 14px;width:100%;font-size:14px;font-family:inherit;resize:vertical;-webkit-appearance:none;"></textarea>
+          <div id="voice-status-rpt-issue-note" class="mic-status"></div>
         </div>
         <div class="field-group" style="margin-bottom:0;">
-          <label class="field-label">Customer-Visible Summary</label>
+          <div class="note-tools">
+            <label class="field-label">Customer-Visible Summary</label>
+            <button type="button" class="mic-btn" data-mic-target="rpt-customer-summary" onclick="toggleVoiceNote('rpt-customer-summary', this)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><path d="M12 19v3"/></svg>
+              Dictate
+            </button>
+          </div>
           <textarea id="rpt-customer-summary" rows="2" placeholder="Water tested and balanced. Equipment is running normally..." oninput="validateReportProof({quiet:true})" style="background:#ffffff;border:1px solid #cbd5e1;color:#0f172a;border-radius:9px;padding:12px 14px;width:100%;font-size:14px;font-family:inherit;resize:vertical;-webkit-appearance:none;"></textarea>
+          <div id="voice-status-rpt-customer-summary" class="mic-status"></div>
         </div>
         <div id="rpt-proof-missing" style="margin-top:8px;color:#991b1b;font-size:11px;font-weight:800;"></div>
       </div>
@@ -595,16 +631,37 @@
 
       <hr class="section-div">
       <div class="field-group">
-        <label class="field-label">Work Performed</label>
+        <div class="note-tools">
+          <label class="field-label">Work Performed</label>
+          <button type="button" class="mic-btn" data-mic-target="rpt-work" onclick="toggleVoiceNote('rpt-work', this)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><path d="M12 19v3"/></svg>
+            Dictate
+          </button>
+        </div>
         <textarea id="rpt-work" rows="3" placeholder="Vacuumed, brushed walls, backwashed filter..." style="background:#ffffff;border:1px solid #cbd5e1;color:#0f172a;border-radius:9px;padding:12px 14px;width:100%;font-size:14px;font-family:inherit;resize:vertical;-webkit-appearance:none;transition:border-color 0.15s;"></textarea>
+        <div id="voice-status-rpt-work" class="mic-status"></div>
       </div>
       <div class="field-group">
-        <label class="field-label">Equipment Notes</label>
+        <div class="note-tools">
+          <label class="field-label">Equipment Notes</label>
+          <button type="button" class="mic-btn" data-mic-target="rpt-equip" onclick="toggleVoiceNote('rpt-equip', this)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><path d="M12 19v3"/></svg>
+            Dictate
+          </button>
+        </div>
         <textarea id="rpt-equip" rows="2" placeholder="Filter PSI: 18. Pump normal. Salt cell clean..." style="background:#ffffff;border:1px solid #cbd5e1;color:#0f172a;border-radius:9px;padding:12px 14px;width:100%;font-size:14px;font-family:inherit;resize:vertical;-webkit-appearance:none;transition:border-color 0.15s;"></textarea>
+        <div id="voice-status-rpt-equip" class="mic-status"></div>
       </div>
       <div class="field-group">
-        <label class="field-label">Recommendations</label>
+        <div class="note-tools">
+          <label class="field-label">Recommendations</label>
+          <button type="button" class="mic-btn" data-mic-target="rpt-rec" onclick="toggleVoiceNote('rpt-rec', this)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><path d="M12 19v3"/></svg>
+            Dictate
+          </button>
+        </div>
         <textarea id="rpt-rec" rows="2" placeholder="Schedule filter cleaning. Replace pump lid O-ring..." style="background:#ffffff;border:1px solid #cbd5e1;color:#0f172a;border-radius:9px;padding:12px 14px;width:100%;font-size:14px;font-family:inherit;resize:vertical;-webkit-appearance:none;transition:border-color 0.15s;"></textarea>
+        <div id="voice-status-rpt-rec" class="mic-status"></div>
       </div>
       <div class="field-group">
         <label class="field-label">Next Visit</label>

@@ -197,6 +197,8 @@ async function sendEventAlert(env, record) {
           `Event: ${record.event}`,
           `Source: ${record.source}`,
           `Path: ${record.path}`,
+          `Preferred language: ${record.language.preferredLanguage}`,
+          `Locale: ${record.language.locale}`,
           `Created: ${record.createdAt}`,
           '',
           `Props: ${record.propsJson}`,
@@ -224,6 +226,11 @@ export async function onRequestPost({ request, env }) {
     event,
     source: clean(body.source || props.source || 'app', 60),
     path: clean(body.path || props.path || '', 300),
+    language: {
+      preferredLanguage: clean(body.preferred_language || props.preferred_language || request.headers.get('X-BZM-Language') || 'en', 16),
+      locale: clean(body.locale || props.locale || request.headers.get('X-BZM-Locale') || 'en', 32),
+      autoTranslate: String(request.headers.get('X-BZM-Auto-Translate') || body.language_profile?.autoTranslate || props.language_profile?.autoTranslate || '') === 'true',
+    },
     createdAt: new Date().toISOString(),
     propsJson: JSON.stringify(props).slice(0, 2000),
   };

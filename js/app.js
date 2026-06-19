@@ -16,6 +16,74 @@ const S = {
   poolView: 'list',
 };
 
+const LANGUAGE_STORAGE_KEY = 'splashlens_language_profile';
+const LANGUAGE_OPTIONS = ['en', 'es', 'pt-BR', 'fr'];
+
+function normalizeLanguage(value) {
+  const code = String(value || 'en');
+  return LANGUAGE_OPTIONS.find((lang) => code === lang || code.toLowerCase().startsWith(lang.toLowerCase())) || 'en';
+}
+
+function getLanguageProfile() {
+  try {
+    const stored = localStorage.getItem(LANGUAGE_STORAGE_KEY);
+    if (stored) return { preferredLanguage: 'en', locale: 'en', nativeLanguage: 'en', autoTranslate: false, ...JSON.parse(stored) };
+  } catch {}
+  const preferredLanguage = normalizeLanguage((navigator.languages && navigator.languages[0]) || navigator.language || 'en');
+  return {
+    nativeLanguage: preferredLanguage,
+    preferredLanguage,
+    locale: preferredLanguage,
+    autoTranslate: preferredLanguage !== 'en',
+    productKey: 'splashlens',
+  };
+}
+
+function setPreferredLanguage(language) {
+  const preferredLanguage = normalizeLanguage(language);
+  const profile = {
+    ...getLanguageProfile(),
+    nativeLanguage: preferredLanguage,
+    preferredLanguage,
+    locale: preferredLanguage,
+    autoTranslate: preferredLanguage !== 'en',
+    productKey: 'splashlens',
+    updatedAt: new Date().toISOString(),
+  };
+  localStorage.setItem(LANGUAGE_STORAGE_KEY, JSON.stringify(profile));
+  return profile;
+}
+
+function withLanguageMetadata(payload = {}) {
+  const profile = getLanguageProfile();
+  return {
+    ...payload,
+    source_language: payload.source_language || profile.preferredLanguage,
+    preferred_language: payload.preferred_language || profile.preferredLanguage,
+    locale: payload.locale || profile.locale,
+    language_profile: payload.language_profile || profile,
+  };
+}
+
+function getLanguageHeaders() {
+  const profile = getLanguageProfile();
+  return {
+    'X-BZM-Language': profile.preferredLanguage,
+    'X-BZM-Locale': profile.locale,
+    'X-BZM-Auto-Translate': profile.autoTranslate ? 'true' : 'false',
+  };
+}
+
+function initLanguageLayer() {
+  const select = document.getElementById('language-select');
+  if (!select) return;
+  select.value = getLanguageProfile().preferredLanguage;
+  select.addEventListener('change', () => {
+    const profile = setPreferredLanguage(select.value);
+    trackSplashLensEvent('language_preference_set', { preferred_language: profile.preferredLanguage, locale: profile.locale });
+  });
+}
+
 const CL_MAP = {
   opening: { data: () => window.OPENING_CHECKLIST, key: 'poolens-cl-opening', label: 'Opening Checklist', freq: 'Season Progress' },
   closing: { data: () => window.CLOSING_CHECKLIST, key: 'poolens-cl-closing', label: 'Closing Checklist', freq: 'Season Progress' },
@@ -111,6 +179,7 @@ const DOSE_NEED_LABELS = {
 // BOOT
 // ═══════════════════════════════════════════
 document.addEventListener('DOMContentLoaded', () => {
+  initLanguageLayer();
   captureScanEntitlementFromUrl();
   initErrors();
   initDosing();
@@ -207,6 +276,114 @@ function quickServiceNote() {
 // ═══════════════════════════════════════════
 // ERROR CODES
 // ═══════════════════════════════════════════
+let activeVoiceNote = null;
+
+function speechRecognitionCtor() {
+  return window.SpeechRecognition || window.webkitSpeechRecognition || null;
+}
+
+function voiceStatus(targetId, text, tone = 'muted') {
+  let el = document.getElementById(`voice-status-${targetId}`);
+  if (!el) {
+    const target = document.getElementById(targetId);
+    if (!target) return;
+    el = document.createElement('div');
+    el.id = `voice-status-${targetId}`;
+    el.className = 'mic-status';
+    target.insertAdjacentElement('afterend', el);
+  }
+  if (!el) return;
+  el.textContent = text || '';
+  el.style.color = tone === 'error' ? '#991b1b' : tone === 'ok' ? '#166534' : '#64748b';
+}
+
+function appendVoiceText(target, text) {
+  const clean = String(text || '').trim();
+  if (!target || !clean) return;
+  const joiner = target.value && !/\s$/.test(target.value) ? ' ' : '';
+  target.value = `${target.value}${joiner}${clean}`;
+  target.dispatchEvent(new Event('input', { bubbles: true }));
+  target.dispatchEvent(new Event('change', { bubbles: true }));
+}
+
+function micSvg() {
+  return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><path d="M12 19v3"/></svg>`;
+}
+
+function setMicButtonState(btn, listening) {
+  if (!btn) return;
+  btn.classList.toggle('listening', listening);
+  btn.innerHTML = `${micSvg()} ${listening ? 'Stop' : 'Dictate'}`;
+}
+
+function voiceNoteButton(targetId) {
+  const safeTarget = escAttr(targetId);
+  return `<button type="button" class="mic-btn" data-mic-target="${safeTarget}" onclick="toggleVoiceNote('${safeTarget}', this)">${micSvg()} Dictate</button>`;
+}
+
+function toggleVoiceNote(targetId, btn) {
+  const target = document.getElementById(targetId);
+  const Recognition = speechRecognitionCtor();
+  if (!target) return;
+  if (!Recognition) {
+    voiceStatus(targetId, 'Voice dictation is not available in this browser. Use the keyboard mic if your phone shows one.', 'error');
+    if (btn) btn.disabled = true;
+    return;
+  }
+  if (activeVoiceNote?.targetId === targetId) {
+    activeVoiceNote.recognition.stop();
+    return;
+  }
+  if (activeVoiceNote) activeVoiceNote.recognition.stop();
+
+  const recognition = new Recognition();
+  const profile = getLanguageProfile();
+  recognition.lang = profile.locale || profile.preferredLanguage || 'en-US';
+  recognition.interimResults = true;
+  recognition.continuous = false;
+
+  let finalText = '';
+  activeVoiceNote = { targetId, recognition, btn };
+  setMicButtonState(btn, true);
+  target.focus();
+  voiceStatus(targetId, 'Listening... say the note, then pause.', 'muted');
+  trackSplashLensEvent('voice_note_started', { target: targetId });
+
+  recognition.onresult = (event) => {
+    let interim = '';
+    for (let i = event.resultIndex; i < event.results.length; i++) {
+      const text = event.results[i][0]?.transcript || '';
+      if (event.results[i].isFinal) finalText += text;
+      else interim += text;
+    }
+    voiceStatus(targetId, interim ? `Heard: ${interim.trim()}` : 'Listening...', 'muted');
+  };
+  recognition.onerror = (event) => {
+    voiceStatus(targetId, event.error === 'not-allowed'
+      ? 'Microphone permission was blocked. Allow mic access or use the keyboard mic.'
+      : 'Voice note stopped. Try again or use the keyboard mic.', 'error');
+  };
+  recognition.onend = () => {
+    if (finalText.trim()) {
+      appendVoiceText(target, finalText);
+      voiceStatus(targetId, 'Added to note. Review before sending to a customer.', 'ok');
+      trackSplashLensEvent('voice_note_completed', { target: targetId });
+    } else {
+      voiceStatus(targetId, 'No voice text captured. Try again or use the keyboard mic.', 'error');
+    }
+    setMicButtonState(btn, false);
+    if (activeVoiceNote?.targetId === targetId) activeVoiceNote = null;
+  };
+
+  try {
+    recognition.start();
+  } catch {
+    setMicButtonState(btn, false);
+    activeVoiceNote = null;
+    voiceStatus(targetId, 'Voice dictation could not start. Try the keyboard mic.', 'error');
+  }
+}
+
 function initErrors() {
   renderBrandGrid();
 }
@@ -2100,7 +2277,10 @@ function renderPoolDetail(id) {
 
     <!-- Notes -->
     <div class="pool-form-panel" style="padding:12px;margin-bottom:14px;">
-      <p style="color:#64748b;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;">Notes</p>
+      <div class="note-tools">
+        <p class="field-label">Notes</p>
+        ${voiceNoteButton('pool-notes-ta')}
+      </div>
       <textarea id="pool-notes-ta" class="pool-textarea" rows="3" placeholder="Gate code, special instructions…" onblur="savePoolNotes('${id}')">${escHtml(p.notes || '')}</textarea>
     </div>
 
@@ -2203,7 +2383,10 @@ function showChemForm(poolId) {
         <div><label class="field-label">CYA</label><input type="number" id="cf-cya-${poolId}" placeholder="—" inputmode="decimal" min="0"></div>
       </div>
       <div class="field-group">
-        <label class="field-label">Note (optional)</label>
+        <div class="note-tools">
+          <label class="field-label">Note (optional)</label>
+          ${voiceNoteButton(`cf-note-${poolId}`)}
+        </div>
         <textarea id="cf-note-${poolId}" class="pool-textarea" rows="2" placeholder="Backwashed filter, added shock…"></textarea>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
@@ -2329,7 +2512,10 @@ function renderPoolForm(id) {
         <input type="text" id="pf-heater" placeholder="e.g. Hayward H250" value="${escAttr(v('heater'))}">
       </div>
       <div class="field-group">
-        <label class="field-label">Notes</label>
+        <div class="note-tools">
+          <label class="field-label">Notes</label>
+          ${voiceNoteButton('pf-notes')}
+        </div>
         <textarea id="pf-notes" class="pool-textarea" rows="3" placeholder="Gate code, special instructions…">${escHtml(v('notes'))}</textarea>
       </div>
 
@@ -2963,12 +3149,12 @@ function trackSplashLensEvent(name, props = {}) {
   window.dataLayer.push({ event: name, ...props, ts: new Date().toISOString() });
   if (window.plausible) window.plausible(name, { props });
 
-  const payload = JSON.stringify({
+  const payload = JSON.stringify(withLanguageMetadata({
     event: name,
     source: 'app',
     path: `${window.location.pathname}${window.location.search}`,
-    props,
-  });
+    props: withLanguageMetadata(props),
+  }));
 
   try {
     if (navigator.sendBeacon) {
@@ -2977,7 +3163,7 @@ function trackSplashLensEvent(name, props = {}) {
     }
     fetch(SPLASHLENS_EVENT_ENDPOINT, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...getLanguageHeaders() },
       body: payload,
       keepalive: true,
     }).catch(() => {});
@@ -2987,13 +3173,13 @@ function trackSplashLensEvent(name, props = {}) {
 async function callAIScan(canvas, mode, result, status) {
   try {
     const base64 = canvas.toDataURL('image/jpeg', 0.85).replace(/^data:image\/jpeg;base64,/, '');
-    const headers = { 'Content-Type': 'application/json' };
+    const headers = { 'Content-Type': 'application/json', ...getLanguageHeaders() };
     const entitlementToken = getScanEntitlementToken();
     if (entitlementToken) headers['X-SplashLens-Entitlement-Token'] = entitlementToken;
     const res = await fetch('/api/scan', {
       method:  'POST',
       headers,
-      body:    JSON.stringify({ image: base64, mode, clientId: getScanClientId() }),
+      body:    JSON.stringify(withLanguageMetadata({ image: base64, mode, clientId: getScanClientId() })),
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const { result: aiResult } = await res.json();

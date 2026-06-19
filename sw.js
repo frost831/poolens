@@ -1,4 +1,4 @@
-const CACHE = 'splashlens-v4';
+const CACHE = 'splashlens-v5';
 const ASSETS = ['/', '/index.html', '/js/errors.js', '/js/data.js', '/js/app.js', '/favicon.svg', '/manifest.json'];
 
 self.addEventListener('install', e => {

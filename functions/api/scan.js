@@ -131,7 +131,7 @@ function corsHeaders(request, env) {
   return {
     'Access-Control-Allow-Origin': allowOrigin,
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Headers': 'Content-Type, X-BZM-Language, X-BZM-Locale, X-BZM-Auto-Translate',
     'Access-Control-Max-Age': '86400',
     'Vary': 'Origin',
     'Content-Type': 'application/json',
@@ -427,6 +427,10 @@ export async function onRequestPost({ request, env }) {
 
   const { image, mode = 'error_code' } = body;
   if (!PROMPTS[mode]) return json({ error: 'Unknown mode' }, 400, headers);
+  const preferredLanguage = String(body.preferred_language || request.headers.get('X-BZM-Language') || body.language_profile?.preferredLanguage || 'en').slice(0, 16);
+  const promptLanguageInstruction = preferredLanguage === 'en'
+    ? ''
+    : `\nUser preferred language: ${preferredLanguage}. Keep JSON keys exactly as specified. Translate short human-readable values such as context, description, notes, disclaimer, and verificationNotes into that language when safe. Preserve brand names, model names, part numbers, codes, and chemical units exactly.`;
 
   const normalized = normalizeImage(image);
   if (normalized.error) return json({ error: normalized.error }, 400, headers);
@@ -449,7 +453,7 @@ export async function onRequestPost({ request, env }) {
           role: 'user',
           content: [
             { type: 'image', source: { type: 'base64', media_type: normalized.mediaType, data: normalized.base64 } },
-            { type: 'text', text: PROMPTS[mode] }
+            { type: 'text', text: `${PROMPTS[mode]}${promptLanguageInstruction}` }
           ]
         }]
       })
@@ -472,7 +476,7 @@ export async function onRequestPost({ request, env }) {
       return json({ error: 'AI response parse failed', raw: text.slice(0, 200) }, 502, headers);
     }
 
-    return json({ ok: true, mode, result: parsed, usage: meter.usage }, 200, headers);
+    return json({ ok: true, mode, result: parsed, usage: meter.usage, preferred_language: preferredLanguage }, 200, headers);
   } catch (err) {
     console.error('Scan worker error:', err);
     return json({ error: 'Internal error' }, 500, headers);
