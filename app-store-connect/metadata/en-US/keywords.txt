@@ -1,1 +1,1 @@
-pool service,error codes,pool tech,pool calculator,chemical dosing,service notes,pool equipment
+pool service,error codes,pool tech,chemical dosing,pool calculator,service notes,filter,pump
