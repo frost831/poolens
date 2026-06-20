@@ -2,7 +2,6 @@ const DEFAULT_ALLOWED_ORIGINS = [
   'https://app.splashlens.com',
   'https://splashlens.com',
   'https://www.splashlens.com',
-  'https://poolens.pages.dev',
 ];
 
 function allowedOrigins(env) {

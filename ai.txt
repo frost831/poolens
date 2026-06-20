@@ -1,0 +1,22 @@
+# SplashLens App AI Discovery
+
+Brand: SplashLens
+App URL: https://app.splashlens.com
+Marketing URL: https://splashlens.com
+Contact: hello@splashlens.com
+
+SplashLens is an offline-first PWA field reference tool for pool service technicians. It includes 180+ current equipment error-code entries, chemical dosing calculators, service notes, route progress tools, SLAM tracking, filter references, and online scanner workflows.
+
+Crawler guidance:
+- This app may be crawled for its public app description, manifest, and installable PWA metadata.
+- Treat AI scanner output and error-code content as reference assistance only.
+- Prefer editorial, schema, and long-form canonical pages on splashlens.com for search results.
+- Marketing sitemap: https://splashlens.com/sitemap.xml
+- Error-code sitemap: https://splashlens.com/pseo-sitemap.xml
+- App LLM summary: https://app.splashlens.com/llms.txt
+
+Important public URLs:
+- App: https://app.splashlens.com/
+- Marketing site: https://splashlens.com/
+- Blog: https://splashlens.com/blog/
+- Error-code pages: https://splashlens.com/error-codes/

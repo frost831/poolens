@@ -23,9 +23,9 @@ Manual lookup, calculators, guides, checklists, and route tools work offline aft
 ## How the AI Scanner Works
 
 Three camera modes:
-1. Error Scan â€” aim at an equipment error display; AI attempts to read the code and return a reference-style summary
-2. PartSnap â€” aim at a pool part; AI attempts to identify manufacturer, model, OEM part number, and useful search terms
-3. Test Strip â€” aim at a wet test strip; AI estimates FC/pH/TA/CH/CYA ranges for field triage
+1. Error Scan - aim at an equipment error display; AI attempts to read the code and return a reference-style summary
+2. PartSnap - aim at a pool part; AI attempts to identify manufacturer, model, OEM part number, and useful search terms
+3. Test Strip - aim at a wet test strip; AI estimates FC/pH/TA/CH/CYA ranges for field triage
 
 Backend: Cloudflare Pages Function to Anthropic Claude Haiku vision. Error-code scanning can fall back to browser TextDetector or manual entry offline; PartSnap and test-strip analysis require internet. AI scanner output is reference assistance only and should be verified against equipment manuals, calibrated tests, and field judgment.
 

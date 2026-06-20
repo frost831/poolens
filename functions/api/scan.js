@@ -20,7 +20,6 @@ const ALLOWED_ORIGINS = new Set([
   'https://app.splashlens.com',
   'https://splashlens.com',
   'https://www.splashlens.com',
-  'https://poolens.pages.dev',
 ]);
 
 const DEV_ORIGINS = new Set([
