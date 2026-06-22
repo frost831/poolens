@@ -1,1 +1,1 @@
-Pool service techs can search error codes, calculate chemical dosing, draft visit notes, and verify field checks faster.
+Route Brain helps pool service techs build field plans, escalation packets, service notes, and faster troubleshooting checks at the equipment pad.

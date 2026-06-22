@@ -183,6 +183,27 @@
     .mic-btn.listening { background:#fee2e2; border-color:#fca5a5; color:#991b1b; }
     .mic-btn:disabled { background:#f1f5f9; border-color:#e2e8f0; color:#94a3b8; cursor:not-allowed; }
     .mic-status { min-height:16px; margin-top:5px; color:#64748b; font-size:11px; font-weight:700; line-height:1.35; }
+    .brain-card { background:#ffffff; border:1px solid #d8e3ea; border-radius:10px; padding:13px; margin-bottom:10px; box-shadow:var(--field-shadow-tight); }
+    .brain-card.dark { background:linear-gradient(145deg,#0f172a,#12384b); border-color:#245a78; color:#ffffff; }
+    .brain-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+    .brain-chip { border:1px solid #cbd5e1; background:#f8fafc; color:#334155; border-radius:999px; padding:8px 10px; font-size:11px; font-weight:900; cursor:pointer; text-align:left; }
+    .brain-chip.primary { background:#e0f2fe; border-color:#7dd3fc; color:#075985; }
+    .brain-pill { display:inline-flex; align-items:center; gap:5px; border-radius:999px; padding:4px 8px; font-size:10px; font-weight:900; text-transform:uppercase; letter-spacing:.04em; }
+    .brain-pill.ready { background:#dcfce7; color:#166534; border:1px solid #86efac; }
+    .brain-pill.warn { background:#fef3c7; color:#92400e; border:1px solid #fcd34d; }
+    .brain-pill.risk { background:#fee2e2; color:#991b1b; border:1px solid #fca5a5; }
+    .brain-action { border:0; border-radius:9px; padding:11px 10px; color:#ffffff; background:#0369a1; font-size:12px; font-weight:900; cursor:pointer; }
+    .brain-action.secondary { background:#f1f5f9; color:#334155; border:1px solid #cbd5e1; }
+    .brain-action.green { background:#15803d; }
+    .brain-action.orange { background:#b45309; }
+    .brain-result h3 { color:#0f172a; font-size:14px; font-weight:900; margin-bottom:5px; }
+    .brain-result p, .brain-result li { color:#334155; font-size:12px; line-height:1.5; }
+    .brain-result ol, .brain-result ul { padding-left:18px; margin:6px 0 0; }
+    .brain-result .dark-note { background:#0f172a; color:#cbd5e1; border-radius:8px; padding:10px; margin-top:8px; }
+    .brain-result .dark-note p, .brain-result .dark-note li { color:#cbd5e1; }
+    @media (max-width: 380px) {
+      .brain-grid { grid-template-columns:1fr; }
+    }
   </style>
 </head>
 <body>

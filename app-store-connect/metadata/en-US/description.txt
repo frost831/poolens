@@ -1,13 +1,13 @@
-SplashLens Field Tools is a pool service app for technicians who need fast equipment error-code lookup, chemical dosing math, service notes, and lightweight field checklists.
+SplashLens Field Tools is a pool service app for technicians who need fast equipment troubleshooting lookup, chemical dosing math, route notes, and proof-ready field records.
 
 Use SplashLens to:
 
-- Search pool equipment error codes, symptoms, and field checks
+- Search 230+ pool equipment, automation, lighting, robot, cover, sanitizer, and controller troubleshooting entries
 - Calculate common chemical dosing adjustments
-- Build service notes and report-style field records
+- Build service notes, Route Brain field plans, escalation packets, and report-style field records
 - Check filter guides, pump/filter checklists, and manual reference tools
 - Use optional online AI scan assistance for equipment displays, pool parts, and test strips
 
-Manual lookup, calculators, notes, filters, and checklists are designed for field use and can work from the app shell after first load. Online AI scan features require internet access and are assistance only. Always verify AI scan output against equipment manuals, calibrated tests, label directions, and professional field judgment.
+Manual lookup, Route Brain planning, calculators, notes, filters, and checklists are designed for field use and can work from the app shell after first load. Online AI scan features require internet access and are assistance only. Always verify AI scan output and Route Brain guidance against equipment manuals, calibrated tests, label directions, and professional field judgment.
 
 SplashLens does not guarantee diagnosis, repair, chemical safety, manufacturer support, or training certification.

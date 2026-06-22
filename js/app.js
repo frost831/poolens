@@ -2364,6 +2364,7 @@ function renderPoolDetail(id) {
   })();
 
   const serviceHistoryHtml = renderServicePassportHistory(p);
+  const equipmentTreeHtml = renderPoolEquipmentTree(p);
 
   const container = document.getElementById('pools-content');
   if (!container) return;
@@ -2391,6 +2392,8 @@ function renderPoolDetail(id) {
         <p style="color:#64748b;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;">Equipment</p>
         <p style="color:#0f172a;font-size:13px;">${escHtml(p.heater)}</p>
       </div>` : ''}
+
+    ${equipmentTreeHtml}
 
     <!-- Notes -->
     <div class="pool-form-panel" style="padding:12px;margin-bottom:14px;">
@@ -2435,6 +2438,23 @@ function renderPoolDetail(id) {
 
 function poolPill(text) {
   return `<span style="background:#f1f5f9;border:1px solid #e2e8f0;border-radius:20px;padding:4px 11px;font-size:12px;font-weight:700;color:#374151;">${escHtml(text)}</span>`;
+}
+
+function renderPoolEquipmentTree(pool) {
+  const tree = pool.equipmentTree || [];
+  if (!tree.length) return '';
+  return `
+    <div class="pool-form-panel" style="padding:12px;margin-bottom:10px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px;">
+        <p style="color:#64748b;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;">Equipment Tree</p>
+        <span style="background:#e0f2fe;color:#075985;border:1px solid #7dd3fc;border-radius:999px;padding:2px 7px;font-size:9px;font-weight:900;">${tree.length} saved</span>
+      </div>
+      ${tree.slice(-5).reverse().map(item => `
+        <div style="border:1px solid #e2e8f0;border-radius:7px;padding:8px;margin-bottom:6px;background:#f8fafc;">
+          <p style="color:#0f172a;font-size:13px;font-weight:900;">${escHtml([item.manufacturer, item.hardware, item.model].filter(Boolean).join(' / ') || 'Unknown equipment')}</p>
+          <p style="color:#64748b;font-size:11px;line-height:1.4;">${escHtml(item.symptom || 'No symptom saved')} ${item.confidence ? ' - ' + escHtml(item.confidence) : ''}</p>
+        </div>`).join('')}
+    </div>`;
 }
 
 function poolReadingDetailGrid(r) {
@@ -2799,6 +2819,492 @@ function copyText(text, btn) {
 // ROUTE / DAY VIEW
 // ═══════════════════════════════════════════
 const ROUTE_KEY = 'poolens-route';
+const ROUTE_BRAIN_KEY = 'splashlens-route-brain-state';
+
+const ROUTE_BRAIN_HARDWARE = [
+  'heater','heat pump','pump','filter','salt cell','automation','lighting','robot','water feature','valve actuator','UV / ozone / AOP','chemical controller','feeder','automatic cover','unknown'
+];
+
+const ROUTE_BRAIN_QUICK_SYMPTOMS = [
+  'light trips GFCI','wrong light color','Omni offline','iAquaLink waiting connection','IntelliCenter no comm','valve actuator stuck',
+  'robot will not climb','robot Wi-Fi pairing','ORP low','pH high alarm','cover will not move','heater says LO','flow fault','pump not priming'
+];
+
+function routeBrainDefaults() {
+  return {
+    poolId: '',
+    manufacturer: '',
+    hardware: '',
+    model: '',
+    visibleLabel: '',
+    symptom: '',
+    checks: '',
+    photoProof: '',
+    techNote: '',
+    confidence: 'possible',
+  };
+}
+
+function getRouteBrainState() {
+  try {
+    return { ...routeBrainDefaults(), ...JSON.parse(localStorage.getItem(ROUTE_BRAIN_KEY) || '{}') };
+  } catch {
+    return routeBrainDefaults();
+  }
+}
+
+function saveRouteBrainState(state) {
+  localStorage.setItem(ROUTE_BRAIN_KEY, JSON.stringify({ ...routeBrainDefaults(), ...state }));
+}
+
+function collectRouteBrainState() {
+  const state = routeBrainDefaults();
+  ['poolId','manufacturer','hardware','model','visibleLabel','symptom','checks','photoProof','techNote','confidence'].forEach((id) => {
+    const el = document.getElementById(`brain-${id}`);
+    if (el) state[id] = el.value.trim();
+  });
+  saveRouteBrainState(state);
+  return state;
+}
+
+function routeBrainManufacturers() {
+  if (!window.ERROR_DB) return [];
+  return Object.entries(window.ERROR_DB).map(([key, brand]) => ({ key, label: brand.label || key }));
+}
+
+function routeBrainPanel() {
+  const state = getRouteBrainState();
+  const pools = getPools();
+  const manufacturerOptions = routeBrainManufacturers().map(({ key, label }) =>
+    `<option value="${escAttr(key)}" ${state.manufacturer === key ? 'selected' : ''}>${escHtml(label)}</option>`).join('');
+  const hardwareOptions = ROUTE_BRAIN_HARDWARE.map((h) =>
+    `<option value="${escAttr(h)}" ${state.hardware === h ? 'selected' : ''}>${escHtml(h)}</option>`).join('');
+  const poolOptions = pools.map((p) =>
+    `<option value="${escAttr(p.id)}" ${state.poolId === p.id ? 'selected' : ''}>${escHtml(p.name || 'Pool')}</option>`).join('');
+  const quickChips = ROUTE_BRAIN_QUICK_SYMPTOMS.map((s) =>
+    `<button type="button" class="brain-chip primary" onclick="setRouteBrainSymptom('${escAttr(s)}')">${escHtml(s)}</button>`).join('');
+
+  return `
+    <section class="brain-card dark" aria-label="Route Brain">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:10px;">
+        <div>
+          <p style="color:#7dd3fc;font-size:10px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;margin-bottom:4px;">Route Brain</p>
+          <h2 style="font-size:22px;line-height:1.05;font-weight:900;margin:0 0 5px;color:#ffffff;">Photo-to-fix field companion</h2>
+          <p style="color:#cbd5e1;font-size:12px;line-height:1.45;">Build an equipment tree, run symptom checks, make an escalation packet, and save proof before leaving the pad.</p>
+        </div>
+        <span class="brain-pill ready">Live Sprint</span>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;">
+        <span class="brain-pill ready" style="justify-content:center;">Tree</span>
+        <span class="brain-pill ready" style="justify-content:center;">Proof</span>
+        <span class="brain-pill warn" style="justify-content:center;">AI photo tree soon</span>
+      </div>
+    </section>
+
+    <section class="brain-card">
+      <div class="brain-grid">
+        <div class="field-group">
+          <label class="field-label">Pool</label>
+          <select id="brain-poolId" onchange="routeBrainPoolChanged()">
+            <option value="">Temporary stop / no saved pool</option>
+            ${poolOptions}
+          </select>
+        </div>
+        <div class="field-group">
+          <label class="field-label">Manufacturer / System</label>
+          <select id="brain-manufacturer" onchange="collectRouteBrainState()">
+            <option value="">Unknown / all systems</option>
+            ${manufacturerOptions}
+          </select>
+        </div>
+        <div class="field-group">
+          <label class="field-label">Hardware</label>
+          <select id="brain-hardware" onchange="collectRouteBrainState()">
+            <option value="">Pick hardware</option>
+            ${hardwareOptions}
+          </select>
+        </div>
+        <div class="field-group">
+          <label class="field-label">Model / Line</label>
+          <input id="brain-model" type="text" value="${escAttr(state.model)}" placeholder="e.g. IntelliBrite, OmniPL, Coverstar" oninput="collectRouteBrainState()">
+        </div>
+      </div>
+      <div class="field-group">
+        <label class="field-label">Visible Label / Photo Proof</label>
+        <input id="brain-visibleLabel" type="text" value="${escAttr(state.visibleLabel)}" placeholder="model plate, serial, transformer size, label photo filename" oninput="collectRouteBrainState()">
+      </div>
+      <div class="field-group">
+        <label class="field-label">Symptom</label>
+        <input id="brain-symptom" type="text" value="${escAttr(state.symptom)}" placeholder="e.g. light trips GFCI, robot will not climb, ORP low" oninput="collectRouteBrainState()">
+      </div>
+      <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:7px;margin-bottom:10px;">
+        ${quickChips}
+      </div>
+      <div class="field-group">
+        <div class="note-tools">
+          <label class="field-label">Checks Already Done / Tech Note</label>
+          ${voiceNoteButton('brain-techNote')}
+        </div>
+        <textarea id="brain-techNote" rows="3" class="pool-textarea" placeholder="What you saw, what you tested, readings, breaker/GFCI behavior..." oninput="collectRouteBrainState()">${escHtml(state.techNote)}</textarea>
+      </div>
+      <div class="brain-grid">
+        <div class="field-group">
+          <label class="field-label">Checks Completed</label>
+          <input id="brain-checks" type="text" value="${escAttr(state.checks)}" placeholder="voltage checked, filter clean, photo captured..." oninput="collectRouteBrainState()">
+        </div>
+        <div class="field-group">
+          <label class="field-label">Part Confidence</label>
+          <select id="brain-confidence" onchange="collectRouteBrainState()">
+            ${['visible marking','likely family','possible','unknown'].map(v => `<option value="${v}" ${state.confidence === v ? 'selected' : ''}>${v}</option>`).join('')}
+          </select>
+        </div>
+      </div>
+      <div class="brain-grid" style="margin-top:4px;">
+        <button class="brain-action" onclick="runRouteBrain()">Build Field Plan</button>
+        <button class="brain-action secondary" onclick="copyRouteBrainPacket()">Copy Escalation</button>
+        <button class="brain-action green" onclick="saveRouteBrainToPool()">Save Proof</button>
+        <button class="brain-action orange" onclick="makeRouteBrainTraining()">Training Mode</button>
+      </div>
+    </section>
+
+    <div id="route-brain-result" class="brain-result"></div>
+    ${routeBrainLearningShelf()}
+    <section class="brain-card">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px;">
+        <h3 style="font-size:14px;font-weight:900;color:#0f172a;margin:0;">Coming Soon Gates</h3>
+        <span class="brain-pill warn">Prepared</span>
+      </div>
+      <p style="color:#64748b;font-size:12px;line-height:1.5;">Positioned now, but gated until backend/partner lanes are ready: live photo-to-equipment-tree AI, manufacturer sponsored banners, instructor-shared lessons, team sync, and native iOS speech cleanup.</p>
+    </section>
+  `;
+}
+
+function routeBrainLearningShelf() {
+  const groups = routeBrainManufacturers().slice(0, 10).map(({ key, label }) => {
+    const cats = Object.keys(window.ERROR_DB?.[key]?.categories || {});
+    return `<button type="button" class="brain-chip" onclick="openRouteBrainLearning('${escAttr(key)}')"><strong>${escHtml(label)}</strong><br><span style="font-weight:700;color:#64748b;">${cats.slice(0, 2).map(escHtml).join(' / ')}${cats.length > 2 ? ' +' + (cats.length - 2) : ''}</span></button>`;
+  }).join('');
+  return `
+    <section class="brain-card">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px;">
+        <h3 style="font-size:14px;font-weight:900;color:#0f172a;margin:0;">Manufacturer Learning Pages</h3>
+        <span class="brain-pill ready">Live</span>
+      </div>
+      <p style="color:#64748b;font-size:12px;line-height:1.5;margin-bottom:10px;">Tap a manufacturer/system to review hardware families, symptoms, codes, field checks, and when to call a pro.</p>
+      <div class="brain-grid">${groups}</div>
+      <div id="route-brain-learning-result" class="brain-result" style="margin-top:10px;"></div>
+    </section>`;
+}
+
+function openRouteBrainLearning(brandKey) {
+  const brand = window.ERROR_DB?.[brandKey];
+  const result = document.getElementById('route-brain-learning-result');
+  if (!brand || !result) return;
+  result.innerHTML = Object.entries(brand.categories || {}).map(([name, cat]) => `
+    <div style="border:1px solid #e2e8f0;border-radius:8px;padding:10px;margin-bottom:8px;">
+      <h3>${escHtml(name)}</h3>
+      <p><strong>Models:</strong> ${escHtml((cat.models || []).slice(0, 8).join(', '))}${(cat.models || []).length > 8 ? '...' : ''}</p>
+      ${(cat.codes || []).slice(0, 4).map(c => `
+        <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:7px;padding:8px;margin-top:6px;">
+          <p style="font-weight:900;color:#0369a1;">${escHtml(c.code)} - ${escHtml(c.name)}</p>
+          <p><strong>Symptoms / causes:</strong> ${escHtml((c.causes || []).slice(0, 2).join('; '))}</p>
+          <p><strong>First checks:</strong> ${escHtml((c.fix || []).slice(0, 2).join('; '))}</p>
+        </div>`).join('')}
+    </div>`).join('');
+  trackSplashLensEvent('route_brain_learning_opened', { brand: brandKey });
+}
+
+function setRouteBrainSymptom(symptom) {
+  const el = document.getElementById('brain-symptom');
+  if (el) el.value = symptom;
+  collectRouteBrainState();
+  runRouteBrain();
+}
+
+function routeBrainPoolChanged() {
+  const state = collectRouteBrainState();
+  const pool = getPools().find(p => p.id === state.poolId);
+  if (!pool) return;
+  const model = document.getElementById('brain-model');
+  const label = document.getElementById('brain-visibleLabel');
+  if (model && !model.value) {
+    model.value = [pool.pump, pool.filter, pool.heater, pool.salt].filter(Boolean).join(' / ');
+  }
+  if (label && !label.value) label.value = pool.address || pool.name || '';
+  collectRouteBrainState();
+}
+
+function routeBrainQuery(state) {
+  return [state.manufacturer, state.hardware, state.model, state.visibleLabel, state.symptom, state.checks, state.techNote]
+    .filter(Boolean).join(' ');
+}
+
+function routeBrainHits(state) {
+  const queries = [
+    state.symptom,
+    ...String(state.symptom || '').split(/[^a-zA-Z0-9]+/).filter(t => t.length > 3),
+    [state.hardware, state.symptom].filter(Boolean).join(' '),
+    state.model,
+    state.hardware,
+    routeBrainQuery(state),
+  ].filter(Boolean);
+  const seen = new Set();
+  const hits = [];
+  queries.forEach((query) => {
+    const found = state.manufacturer ? searchErrorDB(query, state.manufacturer) : searchErrorDB(query);
+    found.forEach((hit) => {
+      const key = `${hit.brandKey}|${hit.category}|${hit.code}|${hit.name}`;
+      if (seen.has(key)) return;
+      seen.add(key);
+      hits.push(hit);
+    });
+  });
+  const hardware = String(state.hardware || '').toLowerCase();
+  const model = String(state.model || '').toLowerCase();
+  const symptomTokens = String(state.symptom || '').toLowerCase().split(/[^a-z0-9]+/).filter(t => t.length > 3);
+  const ranked = hits
+    .map(hit => ({ hit, score: routeBrainHitScore(hit, hardware, model, symptomTokens) }))
+    .sort((a, b) => b.score - a.score);
+  const focused = hardware ? ranked.filter(item => item.score >= 3) : ranked;
+  return (focused.length ? focused : ranked).slice(0, 5).map(item => item.hit);
+}
+
+function routeBrainHitScore(hit, hardware, model, symptomTokens) {
+  const text = [hit.brandLabel, hit.category, hit.code, hit.name, ...(hit.causes || []), ...(hit.fix || [])].join(' ').toLowerCase();
+  let score = 0;
+  if (hardware && text.includes(hardware)) score += 12;
+  if (model && text.includes(model)) score += 8;
+  symptomTokens.forEach(t => { if (text.includes(t)) score += 3; });
+  if (hit.severity === 'high') score += 2;
+  if (hit.callpro) score += 1;
+  return score;
+}
+
+function routeBrainRisk(state, hits) {
+  const missing = [];
+  if (!state.symptom) missing.push('symptom');
+  if (!state.visibleLabel) missing.push('model/label proof');
+  if (!state.checks && !state.techNote) missing.push('checks performed');
+  if (state.confidence === 'unknown') missing.push('part confidence');
+  const highHit = hits.some(h => h.severity === 'high' || h.callpro);
+  const electricalWords = /gfci|breaker|voltage|240|120|transformer|gas|refrigerant|cover|commercial|orp|acid/i.test(routeBrainQuery(state));
+  const level = highHit || electricalWords || missing.length >= 3 ? 'high' : missing.length ? 'medium' : 'low';
+  return { level, missing, highHit, electricalWords };
+}
+
+function routeBrainNextChecks(state, hits) {
+  const checks = [];
+  hits.forEach(h => (h.fix || []).slice(0, 3).forEach(f => checks.push(f)));
+  if (!checks.length) {
+    checks.push('Capture the model plate or clear photo of the equipment label.');
+    checks.push('Confirm power, flow, settings, and visible symptoms before ordering parts.');
+    checks.push('Search the exact manufacturer plus symptom in SplashLens lookup if the model is unknown.');
+  }
+  if (!state.visibleLabel) checks.unshift('Get model/serial proof or a clear label photo before ordering parts.');
+  if (state.confidence === 'unknown') checks.unshift('Treat any part match as unknown until a visible marking, size, or model diagram confirms fit.');
+  return [...new Set(checks)].slice(0, 7);
+}
+
+function routeBrainCustomerSummary(state, hits, risk) {
+  const hardware = state.hardware || 'equipment';
+  const symptom = state.symptom || 'reported issue';
+  const first = hits[0];
+  if (risk.level === 'high') {
+    return `Checked ${hardware} for ${symptom}. This needs verification before repair or parts ordering because safety-critical power, gas, cover, chemical-controller, or manufacturer-specific checks may be involved.`;
+  }
+  if (first) {
+    return `Checked ${hardware} for ${symptom}. Current reference points to ${first.name}; next step is to verify the model and complete the listed field checks before repair decisions.`;
+  }
+  return `Checked ${hardware} for ${symptom}. More model or label proof is needed before a confident recommendation.`;
+}
+
+function routeBrainChangedSince(pool) {
+  if (!pool) return 'No saved pool selected. Save this stop to build comparison history.';
+  const passports = pool.servicePassports || [];
+  const history = pool.history || [];
+  const lastReport = passports[passports.length - 1];
+  const lastReading = history[history.length - 1];
+  if (!lastReport && !lastReading) return 'No prior report or reading is saved for this pool yet.';
+  const pieces = [];
+  if (lastReport) pieces.push(`Last report ${lastReport.date || ''}: ${lastReport.recommendations || lastReport.equipmentNotes || lastReport.workPerformed || 'service proof saved'}.`);
+  if (lastReading) pieces.push(`Last readings ${lastReading.date || ''}: FC ${lastReading.fc || '-'}, pH ${lastReading.ph || '-'}, TA ${lastReading.ta || '-'}, CYA ${lastReading.cya || '-'}.`);
+  return pieces.join(' ');
+}
+
+function buildRouteBrainPacket(state, hits, risk) {
+  const checks = routeBrainNextChecks(state, hits);
+  const customer = routeBrainCustomerSummary(state, hits, risk);
+  return [
+    'SplashLens Route Brain Escalation',
+    `Pool: ${getPools().find(p => p.id === state.poolId)?.name || 'Temporary stop'}`,
+    `Manufacturer/system: ${routeBrainManufacturers().find(m => m.key === state.manufacturer)?.label || state.manufacturer || 'Unknown'}`,
+    `Hardware: ${state.hardware || 'Unknown'}`,
+    `Model/label: ${state.model || state.visibleLabel || 'Needs proof'}`,
+    `Symptom: ${state.symptom || 'Not entered'}`,
+    `Part confidence: ${state.confidence || 'possible'}`,
+    `Risk: ${risk.level.toUpperCase()}${risk.missing.length ? ' - missing ' + risk.missing.join(', ') : ''}`,
+    '',
+    'Checks already done:',
+    state.checks || state.techNote || 'Not documented yet',
+    '',
+    'Recommended next checks:',
+    ...checks.map((c, i) => `${i + 1}. ${c}`),
+    '',
+    'Reference matches:',
+    ...(hits.length ? hits.map(h => `- ${h.brandLabel} / ${h.category} / ${h.code}: ${h.name}`) : ['- No confident match yet']),
+    '',
+    'Customer-safe summary:',
+    customer,
+    '',
+    'Reference only. Verify against current manufacturer manual, label directions, calibrated tests, and qualified field judgment.'
+  ].join('\n');
+}
+
+function runRouteBrain() {
+  const state = collectRouteBrainState();
+  const pool = getPools().find(p => p.id === state.poolId);
+  const hits = routeBrainHits(state);
+  const risk = routeBrainRisk(state, hits);
+  const checks = routeBrainNextChecks(state, hits);
+  const customer = routeBrainCustomerSummary(state, hits, risk);
+  const riskClass = risk.level === 'high' ? 'risk' : risk.level === 'medium' ? 'warn' : 'ready';
+  const result = document.getElementById('route-brain-result');
+  if (!result) return;
+  result.innerHTML = `
+    <section class="brain-card">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px;">
+        <h3>Field Plan</h3>
+        <span class="brain-pill ${riskClass}">${risk.level} callback risk</span>
+      </div>
+      ${risk.missing.length ? `<div class="warn-box" style="margin-bottom:10px;">Missing before this is proof-ready: ${escHtml(risk.missing.join(', '))}</div>` : `<div class="info-box" style="margin-bottom:10px;">Proof path looks complete enough to document and escalate if needed.</div>`}
+      <p><strong>Customer-safe summary:</strong> ${escHtml(customer)}</p>
+      <div class="dark-note">
+        <p style="font-weight:900;margin-bottom:6px;">Fastest next checks</p>
+        <ol>${checks.map(c => `<li>${escHtml(c)}</li>`).join('')}</ol>
+      </div>
+      <div style="margin-top:10px;">
+        <p style="font-weight:900;margin-bottom:6px;color:#0f172a;">Reference matches</p>
+        ${hits.length ? hits.map(h => `<div style="border:1px solid #e2e8f0;border-radius:8px;padding:9px;margin-bottom:6px;"><p style="font-weight:900;color:#0369a1;">${escHtml(h.brandLabel)} - ${escHtml(h.category)}</p><p>${escHtml(h.code)}: ${escHtml(h.name)}</p></div>`).join('') : '<p>No confident match yet. Capture the label/model and search the exact symptom.</p>'}
+      </div>
+      <div style="margin-top:10px;">
+        <p style="font-weight:900;margin-bottom:6px;color:#0f172a;">What changed since last visit?</p>
+        <p>${escHtml(routeBrainChangedSince(pool))}</p>
+      </div>
+      <div class="brain-grid" style="margin-top:12px;">
+        <button class="brain-action secondary" onclick="makeRouteBrainQuote()">Quick Quote Prep</button>
+        <button class="brain-action secondary" onclick="copyRouteBrainPacket()">Copy Packet</button>
+      </div>
+    </section>`;
+  trackSplashLensEvent('route_brain_plan_built', { hardware: state.hardware || 'unknown', risk: risk.level, matches: hits.length });
+}
+
+function copyRouteBrainPacket() {
+  const state = collectRouteBrainState();
+  const hits = routeBrainHits(state);
+  const risk = routeBrainRisk(state, hits);
+  const packet = buildRouteBrainPacket(state, hits, risk);
+  navigator.clipboard.writeText(packet).then(() => {
+    const result = document.getElementById('route-brain-result');
+    if (result && !result.innerHTML) runRouteBrain();
+    alert('Route Brain escalation packet copied.');
+  }).catch(() => alert(packet));
+  trackSplashLensEvent('route_brain_packet_copied', { risk: risk.level, matches: hits.length });
+}
+
+function saveRouteBrainToPool() {
+  const state = collectRouteBrainState();
+  const pools = getPools();
+  const pool = pools.find(p => p.id === state.poolId);
+  if (!pool) {
+    alert('Select a saved pool before saving proof. Temporary stops can still copy an escalation packet.');
+    return;
+  }
+  const hits = routeBrainHits(state);
+  const risk = routeBrainRisk(state, hits);
+  const passport = {
+    id: `brain-${Date.now()}`,
+    type: 'route_brain_proof',
+    savedAt: new Date().toISOString(),
+    poolId: pool.id,
+    customer: pool.name,
+    address: pool.address || '',
+    tech: '',
+    date: getTodayStr(),
+    visitType: 'Route Brain Troubleshooting',
+    readings: {},
+    proof: {
+      complete: risk.missing.length === 0,
+      missing: risk.missing,
+      photoProof: state.visibleLabel,
+      issueNote: state.techNote || state.checks,
+      customerSummary: routeBrainCustomerSummary(state, hits, risk),
+    },
+    chemicals: [],
+    totalChemicalCost: 0,
+    workPerformed: `Route Brain checked ${state.hardware || 'equipment'} for ${state.symptom || 'reported issue'}.`,
+    equipmentNotes: buildRouteBrainPacket(state, hits, risk),
+    recommendations: routeBrainNextChecks(state, hits).join(' '),
+    nextVisit: '',
+    routeBrain: state,
+  };
+  if (!pool.servicePassports) pool.servicePassports = [];
+  pool.servicePassports.push(passport);
+  if (!pool.equipmentTree) pool.equipmentTree = [];
+  pool.equipmentTree.push({
+    id: `eq-${Date.now()}`,
+    manufacturer: state.manufacturer,
+    hardware: state.hardware,
+    model: state.model,
+    visibleLabel: state.visibleLabel,
+    symptom: state.symptom,
+    confidence: state.confidence,
+    savedAt: new Date().toISOString(),
+  });
+  if (pool.equipmentTree.length > 50) pool.equipmentTree = pool.equipmentTree.slice(-50);
+  savePools(pools);
+  alert(`Saved Route Brain proof to ${pool.name}.`);
+  trackSplashLensEvent('route_brain_saved_to_pool', { risk: risk.level, pool_id: pool.id });
+}
+
+function makeRouteBrainTraining() {
+  const state = collectRouteBrainState();
+  const hits = routeBrainHits(state);
+  const risk = routeBrainRisk(state, hits);
+  const checks = routeBrainNextChecks(state, hits);
+  const result = document.getElementById('route-brain-result');
+  if (!result) return;
+  result.innerHTML = `
+    <section class="brain-card">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px;">
+        <h3>Training Session Mode</h3>
+        <span class="brain-pill ready">Instructor-ready</span>
+      </div>
+      <p><strong>Scenario:</strong> A tech arrives to investigate ${escHtml(state.hardware || 'equipment')} with symptom "${escHtml(state.symptom || 'unknown symptom')}".</p>
+      <p style="margin-top:8px;"><strong>Student task:</strong> Identify what proof is missing, complete safe checks first, and decide whether to escalate.</p>
+      <div class="dark-note">
+        <p style="font-weight:900;margin-bottom:6px;">Answer key / expected checks</p>
+        <ol>${checks.map(c => `<li>${escHtml(c)}</li>`).join('')}</ol>
+      </div>
+      <p style="margin-top:8px;"><strong>Safety note:</strong> Electrical, gas, refrigerant, automatic cover, and commercial chemical controller work should be handled by qualified personnel.</p>
+      <button class="brain-action secondary" style="margin-top:10px;width:100%;" onclick="copyRouteBrainPacket()">Copy Instructor Packet</button>
+    </section>`;
+  trackSplashLensEvent('route_brain_training_generated', { hardware: state.hardware || 'unknown', risk: risk.level });
+}
+
+function makeRouteBrainQuote() {
+  const state = collectRouteBrainState();
+  const hits = routeBrainHits(state);
+  const risk = routeBrainRisk(state, hits);
+  const quote = [
+    `Issue: ${state.symptom || 'Equipment issue reported'}`,
+    `Equipment: ${[state.manufacturer, state.hardware, state.model].filter(Boolean).join(' / ') || 'Needs model confirmation'}`,
+    `Proof needed: ${risk.missing.length ? risk.missing.join(', ') : 'model and field checks documented'}`,
+    `Recommended next step: ${routeBrainNextChecks(state, hits)[0]}`,
+    `Customer note: ${routeBrainCustomerSummary(state, hits, risk)}`,
+  ].join('\n');
+  navigator.clipboard.writeText(quote).then(() => alert('Quick quote prep copied.')).catch(() => alert(quote));
+  trackSplashLensEvent('route_brain_quote_copied', { risk: risk.level });
+}
 
 function getTodayStr() {
   return new Date().toISOString().split('T')[0];
@@ -2857,6 +3363,8 @@ function renderRoute() {
     : route.jobs.map((job, idx) => routeJobCard(job, idx)).join('');
 
   container.innerHTML = `
+    ${routeBrainPanel()}
+
     <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:4px;">
       <div>
         <p style="color:#0369a1;font-weight:900;font-size:16px;">Today's Route</p>
@@ -3469,7 +3977,8 @@ function renderPartsSnapResult(ai, result, status) {
 
   const condColor = { new:'#16a34a', good:'#16a34a', worn:'#d97706', damaged:'#dc2626', unknown:'#64748b' }[condition] || '#64748b';
 
-  const buyLinks = renderPartBuyLinks(searchTerms, partNumber, manufacturer, component);
+  const ladder = partConfidenceLadder(confidence, partNumber, manufacturer, model, component);
+  const buyLinks = ladder.allowLinks ? renderPartBuyLinks(searchTerms, partNumber, manufacturer, component) : '';
   trackSplashLensEvent('partsnap_result', { confidence: confidence || 'unknown', category: category || 'unknown' });
 
   result.innerHTML = `
@@ -3491,6 +4000,7 @@ function renderPartsSnapResult(ai, result, status) {
       ` : ''}
       ${replacementNotes ? `<p style="color:#fbbf24;font-size:12px;font-weight:600;margin-bottom:10px;">⚠ ${replacementNotes}</p>` : ''}
       ${verificationNotes ? `<p style="color:#fbbf24;font-size:12px;font-weight:600;margin-bottom:10px;">Check: ${verificationNotes}</p>` : ''}
+      ${renderPartConfidenceLadder(ladder)}
       ${searchTerms?.length ? `
         <p style="color:#64748b;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">SEARCH ONLINE</p>
         <div style="display:flex;flex-wrap:wrap;gap:6px;">
@@ -3498,6 +4008,7 @@ function renderPartsSnapResult(ai, result, status) {
         </div>
       ` : ''}
       ${buyLinks}
+      ${!ladder.allowLinks ? `<div style="margin-top:12px;background:#0f172a;border:1px solid #334155;border-radius:8px;padding:10px;"><p style="color:#fbbf24;font-size:12px;font-weight:900;margin-bottom:4px;">Hold buying links until proof improves</p><p style="color:#94a3b8;font-size:11px;line-height:1.45;">Need: ${ladder.missing.map(escHtml).join(', ')}.</p></div>` : ''}
       <p style="color:#94a3b8;font-size:11px;line-height:1.45;margin-top:10px;">Reference only. Confirm model, dimensions, and the current manufacturer parts diagram before ordering.</p>
       ${low ? `<p style="color:#64748b;font-size:12px;margin-top:12px;text-align:center;">Try getting closer, better lighting, or a different angle</p>` : ''}
     </div>
@@ -3505,6 +4016,37 @@ function renderPartsSnapResult(ai, result, status) {
       <button onclick="setScanMode('parts');document.getElementById('scan-result').innerHTML=''" style="background:#334155;color:#94a3b8;border:none;border-radius:8px;padding:10px 20px;font-size:13px;cursor:pointer;">Scan Another Part</button>
     </div>
   `;
+}
+
+function partConfidenceLadder(confidence, partNumber, manufacturer, model, component) {
+  const hasMarking = !!partNumber;
+  const hasFamily = !!(manufacturer && (model || component));
+  const level = hasMarking ? 'visible marking' : hasFamily && confidence !== 'low' ? 'likely family' : confidence === 'low' ? 'unknown' : 'possible';
+  const missing = [];
+  if (!hasMarking) missing.push('visible part number or model plate');
+  if (!manufacturer) missing.push('manufacturer proof');
+  if (!model) missing.push('equipment model');
+  if (!component) missing.push('component name');
+  return {
+    level,
+    allowLinks: hasMarking || (level === 'likely family' && missing.length <= 2),
+    missing,
+  };
+}
+
+function renderPartConfidenceLadder(ladder) {
+  const steps = ['visible marking','likely family','possible','unknown'];
+  return `
+    <div style="background:#0f172a;border:1px solid #334155;border-radius:8px;padding:10px;margin:10px 0;">
+      <p style="color:#94a3b8;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;">Part Confidence Ladder</p>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:5px;">
+        ${steps.map(step => {
+          const active = ladder.level === step;
+          return `<span style="text-align:center;border-radius:6px;padding:6px 3px;font-size:9px;font-weight:900;border:1px solid ${active ? '#7c3aed' : '#334155'};background:${active ? '#7c3aed' : '#1e293b'};color:${active ? '#fff' : '#94a3b8'};">${escHtml(step)}</span>`;
+        }).join('')}
+      </div>
+      <p style="color:#64748b;font-size:10px;line-height:1.4;margin-top:8px;">Buying links unlock only when the result has enough visible evidence to avoid guessing.</p>
+    </div>`;
 }
 
 function renderPartBuyLinks(searchTerms, partNumber, manufacturer, component) {
