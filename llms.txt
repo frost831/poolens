@@ -1,6 +1,6 @@
 ﻿# SplashLens App
 
-> Free-core, offline-first PWA field reference tool for pool service technicians. 180+ current equipment error-code entries, chemical dosing calculators, online AI scanner support (error codes, parts ID, test-strip triage), SLAM multi-day tracker, filter guides, checklists, and route tracking. No account required. Manual tools work offline after first load; AI scanner requires internet.
+> Free-core, offline-first PWA field reference tool for pool service technicians. 230+ current equipment, automation, lighting, robot, cover, sanitizer, and controller troubleshooting entries, chemical dosing calculators, online AI scanner support (error codes, parts ID, test-strip triage), SLAM multi-day tracker, filter guides, checklists, and route tracking. No account required. Manual tools work offline after first load; AI scanner requires internet.
 
 ## App URL
 
@@ -9,7 +9,7 @@ https://app.splashlens.com
 ## What This App Does
 
 SplashLens is a Progressive Web App that pool service technicians use poolside to:
-- Look up equipment error codes (15 brands, 180+ current entries in the app database)
+- Look up equipment codes, symptoms, and field checks (21 brand/system groups, 230+ current entries in the app database)
 - Calculate chemical doses (FC, pH, alkalinity, calcium, CYA, salt, SLAM)
 - Identify pool parts by camera using AI (PartSnap)
 - Read test strips via AI camera scan

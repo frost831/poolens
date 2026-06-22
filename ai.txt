@@ -5,7 +5,7 @@ App URL: https://app.splashlens.com
 Marketing URL: https://splashlens.com
 Contact: hello@splashlens.com
 
-SplashLens is an offline-first PWA field reference tool for pool service technicians. It includes 180+ current equipment error-code entries, chemical dosing calculators, service notes, route progress tools, SLAM tracking, filter references, and online scanner workflows.
+SplashLens is an offline-first PWA field reference tool for pool service technicians. It includes 230+ current equipment, automation, lighting, robot, cover, sanitizer, and controller troubleshooting entries, chemical dosing calculators, service notes, route progress tools, SLAM tracking, filter references, and online scanner workflows.
 
 Crawler guidance:
 - This app may be crawled for its public app description, manifest, and installable PWA metadata.

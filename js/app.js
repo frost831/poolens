@@ -1533,6 +1533,7 @@ function resetChecklist() {
 // VISIT REPORT
 // ═══════════════════════════════════════════
 let _chemRowId = 0;
+let _reportPoolId = null;
 
 function initReport() {
   const today = new Date().toISOString().split('T')[0];
@@ -1542,6 +1543,10 @@ function initReport() {
   ['rpt-fc','rpt-cc','rpt-ph','rpt-ta','rpt-ch','rpt-cya','rpt-customer-summary','rpt-issue-note','rpt-photo-proof'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.addEventListener('input', () => validateReportProof({ quiet: true }));
+  });
+  ['rpt-customer','rpt-address'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('input', () => { _reportPoolId = null; });
   });
   updateReportCostSummary();
   validateReportProof({ quiet: true });
@@ -1702,6 +1707,109 @@ function buildReportText() {
   return lines.join('\n');
 }
 
+function buildServicePassport() {
+  const rawDate = _rptVal('rpt-date');
+  const proof = validateReportProof({ quiet: true });
+  const chemRows = getReportChemRows();
+  const totalCost = chemRows.reduce((sum, c) => sum + (c.cost || 0), 0);
+  return {
+    id: `svc-${Date.now()}`,
+    type: 'service_passport',
+    savedAt: new Date().toISOString(),
+    poolId: _reportPoolId,
+    customer: _rptVal('rpt-customer') || 'Customer',
+    address: _rptVal('rpt-address'),
+    tech: _rptVal('rpt-tech') || 'Tech',
+    date: rawDate || new Date().toISOString().split('T')[0],
+    visitType: _rptVal('rpt-type') || 'Regular Service',
+    readings: {
+      source: _rptVal('rpt-reading-source') || 'manual',
+      fc: _rptVal('rpt-fc'),
+      cc: _rptVal('rpt-cc'),
+      ph: _rptVal('rpt-ph'),
+      ta: _rptVal('rpt-ta'),
+      ch: _rptVal('rpt-ch'),
+      cya: _rptVal('rpt-cya'),
+    },
+    proof: {
+      complete: proof.complete,
+      missing: proof.missing,
+      photoProof: _rptVal('rpt-photo-proof'),
+      issueNote: _rptVal('rpt-issue-note'),
+      customerSummary: _rptVal('rpt-customer-summary'),
+    },
+    chemicals: chemRows,
+    totalChemicalCost: totalCost,
+    workPerformed: _rptVal('rpt-work'),
+    equipmentNotes: _rptVal('rpt-equip'),
+    recommendations: _rptVal('rpt-rec'),
+    nextVisit: _rptVal('rpt-next'),
+    reportText: buildReportText(),
+  };
+}
+
+function findPoolForReport() {
+  const pools = getPools();
+  if (_reportPoolId) {
+    const linked = pools.find(p => p.id === _reportPoolId);
+    if (linked) return linked;
+  }
+  const customer = _rptVal('rpt-customer').toLowerCase();
+  const address = _rptVal('rpt-address').toLowerCase();
+  return pools.find(p =>
+    (customer && p.name && p.name.toLowerCase() === customer) ||
+    (address && p.address && p.address.toLowerCase() === address)
+  );
+}
+
+function saveReportToPoolHistory() {
+  const proof = validateReportProof({ quiet: true });
+  if (!proof.complete && !confirm(`Stop proof is incomplete: ${proof.missing.join(', ')}. Save anyway?`)) return;
+
+  const pools = getPools();
+  if (!pools.length) {
+    alert('Add a pool profile first, then load it into the Visit Report.');
+    showTab('pools');
+    return;
+  }
+
+  const pool = findPoolForReport();
+  if (!pool) {
+    alert('Load a saved pool before saving this report to history.');
+    toggleReportPoolPicker();
+    return;
+  }
+
+  const passport = buildServicePassport();
+  passport.poolId = pool.id;
+  const target = pools.find(p => p.id === pool.id);
+  if (!target) return;
+  if (!target.servicePassports) target.servicePassports = [];
+  target.servicePassports.push(passport);
+  if (target.servicePassports.length > 100) target.servicePassports = target.servicePassports.slice(-100);
+  savePools(pools);
+  _reportPoolId = target.id;
+
+  trackSplashLensEvent('service_report_saved', {
+    proof_ready: proof.complete,
+    pool_id: target.id,
+    visit_type: passport.visitType,
+  });
+  if (proof.complete) {
+    trackSplashLensEvent('proof_ready_report_saved', { pool_id: target.id, visit_type: passport.visitType });
+  }
+
+  const el = document.getElementById('rpt-copy-confirm');
+  if (el) {
+    el.textContent = `Saved to ${target.name} history.`;
+    el.style.display = 'block';
+    setTimeout(() => {
+      el.style.display = 'none';
+      el.textContent = 'Copied to clipboard!';
+    }, 3000);
+  }
+}
+
 function copyReport() {
   const proof = validateReportProof({ quiet: true });
   if (!proof.complete && !confirm(`Stop proof is incomplete: ${proof.missing.join(', ')}. Copy anyway?`)) return;
@@ -1716,6 +1824,7 @@ function shareReport() {
   const proof = validateReportProof({ quiet: true });
   if (!proof.complete && !confirm(`Stop proof is incomplete: ${proof.missing.join(', ')}. Share anyway?`)) return;
   const text = buildReportText();
+  trackSplashLensEvent('service_report_shared', { proof_ready: proof.complete, method: navigator.share ? 'native' : 'clipboard' });
   if (navigator.share) {
     navigator.share({ title: 'Pool Service Report', text }).catch(() => {});
   } else {
@@ -2064,6 +2173,7 @@ function loadReportFromPool(poolId) {
   const setV = (id, val) => { const el = document.getElementById(id); if (el && val) el.value = val; };
   setV('rpt-customer', pool.name);
   setV('rpt-address',  pool.address);
+  _reportPoolId = pool.id;
   if (pool.gallons) onVolumeChange(pool.gallons);
   const picker = document.getElementById('rpt-pool-picker');
   if (picker) { picker.style.display = 'none'; picker.innerHTML = ''; }
@@ -2180,8 +2290,13 @@ function renderPoolList() {
   }
 
   const cards = pools.map(p => {
-    const lastDate = p.history && p.history.length
-      ? `Last service: ${p.history[p.history.length - 1].date}`
+    const historyCount = (p.history || []).length;
+    const passportCount = (p.servicePassports || []).length;
+    const lastService = passportCount ? p.servicePassports[p.servicePassports.length - 1] : null;
+    const lastDate = lastService
+      ? `Last service: ${lastService.date}`
+      : historyCount
+      ? `Last reading: ${p.history[p.history.length - 1].date}`
       : 'No service history yet';
     const gallonsDisplay = p.gallons ? Number(p.gallons).toLocaleString() + ' gal' : '';
     return `
@@ -2196,7 +2311,7 @@ function renderPoolList() {
         </div>
         <div style="margin-top:8px;padding-top:8px;border-top:1px solid #f1f5f9;">
           <span style="color:#64748b;font-size:11px;">${lastDate}</span>
-          ${p.history && p.history.length ? `<span style="color:#0369a1;font-size:11px;font-weight:700;float:right;">${p.history.length} reading${p.history.length !== 1 ? 's' : ''}</span>` : ''}
+          ${passportCount || historyCount ? `<span style="color:#0369a1;font-size:11px;font-weight:700;float:right;">${passportCount} report${passportCount !== 1 ? 's' : ''} / ${historyCount} reading${historyCount !== 1 ? 's' : ''}</span>` : ''}
         </div>
       </div>`;
   }).join('');
@@ -2247,6 +2362,8 @@ function renderPoolDetail(id) {
         </div>`;
     }).join('');
   })();
+
+  const serviceHistoryHtml = renderServicePassportHistory(p);
 
   const container = document.getElementById('pools-content');
   if (!container) return;
@@ -2303,6 +2420,15 @@ function renderPoolDetail(id) {
     </div>
 
     <hr class="section-div">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+      <p style="color:#0369a1;font-weight:900;font-size:15px;">Service Proof Passports</p>
+      <button onclick="loadReportFromPool('${id}');showTab('report')" style="background:#ecfeff;border:1px solid #67e8f9;color:#0e7490;font-size:12px;font-weight:800;padding:6px 12px;border-radius:6px;cursor:pointer;">+ New Report</button>
+    </div>
+    <div id="service-passports-${id}">
+      ${serviceHistoryHtml}
+    </div>
+
+    <hr class="section-div">
     <button class="btn-delete" onclick="deletePool('${id}')">Delete Pool</button>
     <div style="height:8px;"></div>`;
 }
@@ -2324,6 +2450,68 @@ function poolReadingDetailGrid(r) {
   ).join('') +
   (r.source ? `<div style="grid-column:1/-1;background:#f0f9ff;border:1px solid #bae6fd;border-radius:6px;padding:8px;font-size:11px;color:#0369a1;font-weight:800;">Source: ${escHtml(readingSourceLabel(r.source))}</div>` : '') +
   (r.note ? `<div style="grid-column:1/-1;background:#eff6ff;border-radius:6px;padding:8px;font-size:12px;color:#0369a1;margin-top:2px;">${escHtml(r.note)}</div>` : '');
+}
+
+function renderServicePassportHistory(pool) {
+  const passports = pool.servicePassports || [];
+  if (!passports.length) {
+    return `<p style="color:#94a3b8;font-size:13px;padding:14px 0;text-align:center;">No service reports saved yet.</p>`;
+  }
+  return [...passports].reverse().slice(0, 20).map((r, i) => {
+    const uid = `passport-${pool.id}-${i}`;
+    const proofColor = r.proof?.complete ? '#166534' : '#991b1b';
+    const proofBg = r.proof?.complete ? '#dcfce7' : '#fee2e2';
+    const summary = r.proof?.customerSummary || r.workPerformed || r.equipmentNotes || 'Service report saved.';
+    const readings = r.readings || {};
+    const readingSummary = [
+      readings.fc ? `FC ${readings.fc}` : '',
+      readings.ph ? `pH ${readings.ph}` : '',
+      readings.ta ? `TA ${readings.ta}` : '',
+      readings.cya ? `CYA ${readings.cya}` : '',
+    ].filter(Boolean).join('  ');
+    return `
+      <div class="pool-reading-row" onclick="toggleReadingDetail('${uid}')">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">
+          <div style="min-width:0;">
+            <span style="color:#0f172a;font-size:13px;font-weight:800;">${escHtml(r.date || '')}</span>
+            <span style="background:${proofBg};color:${proofColor};border-radius:999px;padding:2px 7px;font-size:9px;font-weight:900;margin-left:6px;">${r.proof?.complete ? 'proof ready' : 'incomplete'}</span>
+            <p style="color:#64748b;font-size:12px;margin-top:4px;line-height:1.35;">${escHtml(summary)}</p>
+            ${readingSummary ? `<p style="color:#0369a1;font-size:11px;font-weight:800;margin-top:4px;">${escHtml(readingSummary)}</p>` : ''}
+          </div>
+          <svg id="rchev-${uid}" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="2.5" stroke-linecap="round" style="flex-shrink:0;transition:transform 0.2s;margin-top:3px;"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+        <div id="${uid}" class="pool-reading-detail">
+          ${servicePassportDetail(r)}
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function servicePassportDetail(r) {
+  const blocks = [];
+  if (r.proof?.photoProof) blocks.push(['Photo Proof', r.proof.photoProof]);
+  if (r.proof?.issueNote) blocks.push(['Tech Note', r.proof.issueNote]);
+  if (r.workPerformed) blocks.push(['Work', r.workPerformed]);
+  if (r.equipmentNotes) blocks.push(['Equipment', r.equipmentNotes]);
+  if (r.recommendations) blocks.push(['Recommendations', r.recommendations]);
+  if (r.nextVisit) blocks.push(['Next Visit', r.nextVisit]);
+  if (r.totalChemicalCost) blocks.push(['Chemical Cost', `$${Number(r.totalChemicalCost).toFixed(2)}`]);
+  return `
+    ${poolReadingDetailGrid({
+      fc: r.readings?.fc,
+      cc: r.readings?.cc,
+      ph: r.readings?.ph,
+      ta: r.readings?.ta,
+      ch: r.readings?.ch,
+      cya: r.readings?.cya,
+      source: r.readings?.source,
+    })}
+    ${blocks.map(([label, value]) => `
+      <div style="grid-column:1/-1;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;padding:8px;font-size:12px;color:#334155;">
+        <strong style="color:#0369a1;">${escHtml(label)}:</strong> ${escHtml(value)}
+      </div>`).join('')}
+    ${r.proof?.missing?.length ? `<div style="grid-column:1/-1;background:#fef2f2;border:1px solid #fecaca;border-radius:6px;padding:8px;font-size:12px;color:#991b1b;"><strong>Missing:</strong> ${escHtml(r.proof.missing.join(', '))}</div>` : ''}
+  `;
 }
 
 function readingSourceLabel(source) {
@@ -2558,11 +2746,13 @@ function savePool(id) {
     if (idx !== -1) {
       pool.id = id;
       pool.history = pools[idx].history || [];
+      pool.servicePassports = pools[idx].servicePassports || [];
       pools[idx] = pool;
     }
   } else {
     pool.id = String(Date.now());
     pool.history = [];
+    pool.servicePassports = [];
     pools.push(pool);
   }
   savePools(pools);
@@ -3435,16 +3625,24 @@ function scanCodeSearch(val) {
 
 function searchErrorDB(query, brandFilter) {
   if (!window.ERROR_DB) return [];
-  const q = query.trim().toUpperCase().replace(/\s+/g,'');
+  const normalizeSearchText = (value) => String(value || '').toUpperCase().replace(/[^A-Z0-9]/g,'');
+  const q = normalizeSearchText(query);
   const results = [];
   const brands = brandFilter ? { [brandFilter]: window.ERROR_DB[brandFilter] } : window.ERROR_DB;
   for (const [brandKey, brand] of Object.entries(brands)) {
     if (!brand?.categories) continue;
     for (const [catName, cat] of Object.entries(brand.categories)) {
       for (const code of (cat.codes || [])) {
-        const c = code.code.toUpperCase().replace(/\s+/g,'');
+        const c = normalizeSearchText(code.code);
         const n = (code.name || '').toUpperCase();
-        if (c.includes(q) || q.includes(c) || n.includes(q)) {
+        const category = (catName || '').toUpperCase();
+        const models = (cat.models || []).join(' ').toUpperCase();
+        const causes = (code.causes || []).join(' ').toUpperCase();
+        const fixes = (code.fix || []).join(' ').toUpperCase();
+        const haystack = normalizeSearchText([category, models, c, n, causes, fixes].join(' '));
+        const looseHaystack = [category, models, c, n, causes, fixes].join(' ');
+        const exactOrLongCode = c === q || (c.length >= 3 && q.includes(c));
+        if (haystack.includes(q) || exactOrLongCode || looseHaystack.includes(query.trim().toUpperCase())) {
           results.push({ brandKey, brandLabel: brand.label, brandColor: brand.color || '#0284c7', category: catName, ...code });
         }
       }

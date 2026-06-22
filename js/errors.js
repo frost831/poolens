@@ -976,3 +976,343 @@ window.ERROR_DB = {
     }
   }
 };
+
+// Field system expansion: newer categories where many calls are symptom-driven instead of code-driven.
+Object.assign(window.ERROR_DB.hayward.categories, {
+  "Lighting - ColorLogic / CrystaLogic": {
+    models:["Universal ColorLogic 2.0","Universal CrystaLogic 2.0","ColorLogic 4.0","ColorLogic 320","CrystaLogic 320","Omni Direct lighting"],
+    codes:[
+      { code:"LIGHT-NO-POWER", name:"Light Will Not Turn On",
+        causes:["GFCI or lighting breaker tripped","Transformer not outputting 12-15VAC","Bad relay or loose line/load wiring","Failed LED driver or fixture","Automation schedule or service mode disabling light"],
+        fix:["Reset GFCI and confirm breaker holds","Verify transformer primary voltage and 12-15VAC secondary output","Check automation relay output when light circuit is commanded on","Inspect junction box and cord connections for corrosion or water intrusion","If voltage is present at fixture and light stays dark, fixture/driver failure is likely"],
+        severity:"high", callpro:true },
+      { code:"LIGHT-WRONG-COLOR", name:"ColorLogic Wrong Color / Out Of Sync",
+        causes:["Power-cycle color mode out of sequence","Mixed ColorLogic generations or incompatible mode","Light not set to the same control mode as Omni/ProLogic","Long wire run causing voltage drop"],
+        fix:["Power all lights off for 30 seconds, then restart the selected show/color together","Verify all fixtures are set to the same ColorLogic/Universal/Omni Direct mode","In Omni systems, confirm the light type and zone are assigned correctly","Measure voltage under load at the junction box; correct undersized wire or transformer capacity issues"],
+        severity:"medium", callpro:false },
+      { code:"LIGHT-GFCI-TRIP", name:"GFCI Trips When Light Turns On",
+        causes:["Water intrusion in fixture or cord","Moisture/corrosion inside junction box","Damaged cord insulation","Transformer or relay short"],
+        fix:["Do not bypass GFCI protection","Open junction box and inspect for water, corrosion, or damaged wirenuts","Disconnect fixture load and retest circuit to isolate fixture versus transformer/relay","Replace wet fixture or damaged cord assembly; do not splice underwater light cords"],
+        severity:"high", callpro:true },
+      { code:"OMNI-LIGHT-MISSING", name:"Light Missing From OmniLogic / OmniPL",
+        causes:["Light not assigned in configuration","MSP/MPP communication issue","Incorrect relay or low-voltage output mapping","Firmware/configuration mismatch after equipment replacement"],
+        fix:["Enter service/configuration and verify light relay, transformer, and group assignment","Power cycle Omni controller from shutdown, breaker off 60 seconds, then allow several minutes to reconnect","Check for communication-loss alarms before replacing parts","Export/save configuration before major changes"],
+        severity:"medium", callpro:true }
+    ]
+  },
+  "Automation - OmniLogic / OmniPL / ProLogic": {
+    models:["OmniLogic","OmniPL","OmniHub","AquaPlus","ProLogic","OnCommand"],
+    codes:[
+      { code:"OMNI-OFFLINE", name:"Omni App / Cloud Offline",
+        causes:["Controller network connection lost","Router/Wi-Fi credentials changed","Omni controller needs reboot","Cloud account/device pairing issue"],
+        fix:["Power cycle Omni controller from the touchscreen shutdown, then breaker off 60 seconds","Wait at least 3 minutes after restart before judging connection","Confirm Ethernet/Wi-Fi connection and signal strength","If local control works but app does not, re-check account/device registration"],
+        severity:"medium", callpro:false },
+      { code:"COMM-LOSS", name:"Communication Loss Alarm",
+        causes:["MSP/MPP communication wiring fault","Loose Ethernet-style cable between panels","Board power issue","Damaged low-voltage communication cable"],
+        fix:["Open alarms and identify which module is reporting communication loss","Reseat MSP/MPP communication cable and inspect for corrosion","Verify low-voltage power supply outputs before replacing boards","If valves or relays are frozen by comm loss, resolve communication first"],
+        severity:"high", callpro:true },
+      { code:"VSP-NO-COMM", name:"Variable-Speed Pump Not Communicating",
+        causes:["Low-speed bus/RS-485 wiring incorrect","Pump address/configuration not learned","Automation controlling relay power instead of data","Damaged communication board"],
+        fix:["Verify pump has constant line power and is controlled by communication, not relay cycling","Check data-wire polarity and connection at Omni/ProLogic low-speed bus","Re-discover pump in configuration after wiring changes","Cycle power to pump and automation after correcting wiring"],
+        severity:"high", callpro:true },
+      { code:"SENSOR-BAD", name:"Bad Air / Water Sensor Reading",
+        causes:["10k thermistor open or shorted","Sensor in direct sun or bad location","Cable damaged by rodents or landscape work","Wrong sensor assigned in automation"],
+        fix:["Compare displayed temperature to a known thermometer","Inspect sensor cable and connector for breaks/corrosion","Test resistance against 10k thermistor table at current temperature","Relocate air sensor to shaded ventilated location if readings swing high"],
+        severity:"medium", callpro:false }
+    ]
+  },
+  "Advanced Sanitizer - HydraPure / UV / Ozone": {
+    models:["HydraPure","HydroRite UVO3","UV/Ozone systems","AOP systems"],
+    codes:[
+      { code:"UV-LAMP", name:"UV Lamp Fault / Low Output",
+        causes:["Lamp reached rated life","Quartz sleeve dirty or scaled","Ballast failure","Flow switch not proving water movement"],
+        fix:["Confirm lamp runtime and replace lamp on schedule","Clean quartz sleeve with manufacturer-approved process","Verify flow switch and pump flow before replacing ballast","Wear eye protection and never look at an energized UV lamp directly"],
+        severity:"medium", callpro:true },
+      { code:"OZONE-NO-OUTPUT", name:"Ozone System Not Producing",
+        causes:["Injector clogged or no vacuum","Check valve stuck or water-backed into ozone line","Ozone cell/module aged out","Air dryer or tubing restricted"],
+        fix:["Verify injector vacuum with pump running","Inspect and replace check valve if water is present in ozone tubing","Clean injector and tubing restrictions","Replace ozone module/cell if vacuum is good and no output remains"],
+        severity:"medium", callpro:false }
+    ]
+  }
+});
+
+Object.assign(window.ERROR_DB.pentair.categories, {
+  "Lighting - IntelliBrite / MicroBrite / GloBrite": {
+    models:["IntelliBrite Architectural Series","IntelliBrite 5G","MicroBrite Color","MicroBrite White","GloBrite","ColorVision Bubbler","Color Sync Controller"],
+    codes:[
+      { code:"LIGHT-NO-POWER", name:"Pentair Light Will Not Turn On",
+        causes:["GFCI/breaker tripped","Transformer output missing","Color Sync/automation relay not sending power","Failed LED engine or driver","Water intrusion in fixture"],
+        fix:["Confirm breaker and GFCI hold with load disconnected","Measure transformer secondary voltage under load","Command light directly from relay/controller and verify output","Inspect junction box and fixture cord for water/corrosion","Replace fixture if proper voltage is present and light remains dark"],
+        severity:"high", callpro:true },
+      { code:"LIGHT-NOT-SYNCED", name:"Color Lights Out Of Sync",
+        causes:["Power-cycle color commands not synchronized","Mixed IntelliBrite/GloBrite/MicroBrite behavior","Controller mode mismatch","One fixture power-cycled separately"],
+        fix:["Turn all light circuits off for 30 seconds, then choose the same saved color/show","If using Color Sync or IntelliCenter, confirm each light is assigned to the correct circuit/group","Avoid mixing unsupported generations in the same synchronized group","If one light never follows, isolate that fixture and test voltage/control"],
+        severity:"medium", callpro:false },
+      { code:"GLOBRITE-FAIL", name:"GloBrite / Nicheless Light Early Failure",
+        causes:["Water intrusion at nicheless fitting","Heat or voltage stress","Transformer under/over voltage","Fixture electronics failed"],
+        fix:["Confirm transformer voltage and wattage capacity","Inspect fixture/niche for water intrusion or damaged gasket/seal","Verify cord was not shortened/spliced outside approved junction location","Replace fixture if sealed electronics failed; most nicheless LED units are not board-serviceable"],
+        severity:"medium", callpro:true },
+      { code:"BUBBLER-DIM", name:"ColorVision Bubbler Light Dim / Weak Water",
+        causes:["Low flow through bubbler line","Debris in nozzle or flow control","Light lens dirty or scaled","Pump speed too low during feature mode"],
+        fix:["Increase feature pump speed and check valve position","Remove and clean bubbler nozzle/lens per manual","Balance flow if multiple bubblers are uneven","Inspect for air leaks or obstruction in feature plumbing"],
+        severity:"low", callpro:false }
+    ]
+  },
+  "Automation - IntelliCenter / EasyTouch / IntelliTouch": {
+    models:["IntelliCenter","EasyTouch","IntelliTouch","ScreenLogic","IntelliCenter2 app","Wireless Remote"],
+    codes:[
+      { code:"NO-COMM", name:"Panel / Remote No Communication",
+        causes:["Outdoor panel needs reset","Wireless link or antenna issue","RS-485 cable damaged","Firmware or address mismatch"],
+        fix:["Press reset at outdoor control panel or power cycle high-voltage breaker for 30 seconds","Check antenna/transceiver wiring and status lights","Inspect RS-485 green/yellow conductors for loose strands or corrosion","Confirm each remote/device has a unique address"],
+        severity:"medium", callpro:false },
+      { code:"PUMP-NO-COMM", name:"IntelliFlo / IntelliFlo3 No Communication",
+        causes:["RS-485 polarity or connection fault","Pump address mismatch","Pump not on constant power","Automation cable disconnected at drive"],
+        fix:["Give pump constant line power and let automation control speed by data","Check RS-485 wiring at pump and automation board","Reset/reassign pump address if needed","If display says Display Not Active, that can be normal under automation control"],
+        severity:"high", callpro:true },
+      { code:"LIGHT-CIRCUIT", name:"Light Circuit Not Responding",
+        causes:["Relay failed or circuit not assigned","Transformer not fed from correct relay","Light group/feature circuit misconfigured","GFCI tripped downstream"],
+        fix:["Verify circuit assignment in IntelliCenter/EasyTouch","Listen/measure relay output when command is pressed","Check transformer primary and secondary voltage","Reset GFCI and inspect load if it trips again"],
+        severity:"medium", callpro:false },
+      { code:"VALVE-ACTUATOR", name:"Valve Actuator Not Moving",
+        causes:["Actuator toggle switch off or in wrong position","24VAC missing","Cam/limit switch failed","Valve body seized"],
+        fix:["Check actuator toggle switch and assigned valve circuit","Test 24VAC at actuator cable when commanded","Remove actuator and manually turn valve to confirm it is not seized","Adjust cams/limit switches only after marking original position"],
+        severity:"medium", callpro:false }
+    ]
+  },
+  "Water Features - MagicStream / Deck Jets / Bubblers": {
+    models:["MagicStream Laminar","Deck Jet II","ColorVision Bubbler","MagicFlame","Sheer descent features"],
+    codes:[
+      { code:"FEATURE-NO-FLOW", name:"Water Feature Has No Flow",
+        causes:["Feature valve closed","Pump speed too low","Filter dirty or return restriction","Nozzle clogged with debris"],
+        fix:["Confirm feature valve/actuator position","Increase pump RPM for feature mode","Clean filter and pump basket","Remove and flush deck jet/laminar nozzle"],
+        severity:"low", callpro:false },
+      { code:"LAMINAR-BROKEN-STREAM", name:"Laminar Stream Broken / Splashing",
+        causes:["Air in line","Debris in laminar canister","Flow too high or too low","Nozzle not level"],
+        fix:["Purge air from feature line","Clean laminar screen/canister","Adjust flow slowly until stream becomes clear","Level nozzle and verify lid is not disturbing stream"],
+        severity:"low", callpro:false }
+    ]
+  },
+  "UV / Water Treatment - BioShield": {
+    models:["BioShield UV","Commercial BioShield UV","UV water treatment"],
+    codes:[
+      { code:"UV-NO-LAMP", name:"BioShield UV Lamp Not On",
+        causes:["Lamp expired","Ballast failed","Safety interlock open","No flow or controller disabled"],
+        fix:["Verify power and interlock before opening housing","Replace lamp and clean sleeve on schedule","Check ballast output only with proper electrical safety","Confirm flow interlock is closed when pump runs"],
+        severity:"medium", callpro:true }
+    ]
+  }
+});
+
+Object.assign(window.ERROR_DB.jandy.categories, {
+  "Lighting - WaterColors / HydroCool / Infinite WaterColors": {
+    models:["WaterColors LED","WaterColors Nicheless HydroCool","Infinite WaterColors","Jandy LED WaterFeatures","AquaLink light control"],
+    codes:[
+      { code:"LIGHT-NO-POWER", name:"Jandy Light Will Not Turn On",
+        causes:["GFCI/breaker tripped","Transformer or relay not powering circuit","Bad fixture/driver","Water intrusion at fixture or junction box"],
+        fix:["Reset GFCI and confirm it holds","Measure transformer output and relay line/load voltage","Inspect junction box for water/corrosion","If correct voltage reaches fixture and no light output, replace fixture"],
+        severity:"high", callpro:true },
+      { code:"LIGHT-COLOR-SYNC", name:"WaterColors Not Syncing / Wrong Color",
+        causes:["Manual power-cycle sequence out of sync","AquaLink light type not configured correctly","Mixed fixture generations","One light on separate relay"],
+        fix:["Turn all lights off for 30 seconds and restart same show together","Confirm AquaLink assigns each light to the correct circuit/group","Avoid grouping incompatible generations when consistent shows matter","Verify all fixtures share the intended transformer/relay control"],
+        severity:"medium", callpro:false },
+      { code:"HYDROCOOL-DIM", name:"HydroCool Nicheless Light Dim",
+        causes:["Dirty lens","Voltage drop at long run","Incorrect transformer sizing","Fixture nearing failure"],
+        fix:["Clean lens and inspect for scale","Measure voltage at junction box under load","Confirm transformer wattage supports total lighting load","If voltage is good and lens is clean, fixture replacement may be needed"],
+        severity:"medium", callpro:false }
+    ]
+  },
+  "Automation - AquaLink RS / iAquaLink": {
+    models:["AquaLink RS","AquaLink PDA","iAquaLink 2.0","iAquaLink 3.0","AquaPure integration"],
+    codes:[
+      { code:"WAITING-CONNECTION", name:"iAquaLink Waiting For Connection",
+        causes:["Wi-Fi/Ethernet connection lost","Device registration issue","Router changed SSID/password","Weak signal at equipment pad"],
+        fix:["Verify local power center works from service buttons first","Check iAquaLink Wi-Fi/Ethernet status and router connection","Reboot power center and network hardware","Re-register device only after confirming network connection"],
+        severity:"medium", callpro:false },
+      { code:"EQUIPMENT-NOT-RESPONDING", name:"Equipment Not Responding From App",
+        causes:["iAquaLink module connected to internet but not communicating with RS power center","4-wire RS-485 cable fault","Address conflict between remotes","Power center PCB issue"],
+        fix:["Inspect 4-wire cable between iAquaLink J-box and red 4-pin connector","Check HELP/REMOTES or diagnostics for device visibility","Confirm ID jumpers/addresses are unique where multiple remotes exist","If service buttons work but app control does not, isolate iAquaLink communication path"],
+        severity:"high", callpro:true },
+      { code:"AQUAPURE-OFFLINE", name:"AquaPure / Salt System Offline",
+        causes:["AquaPure board not powered","RS-485 wiring fault","Cell/controller not assigned","Blown fuse or failed board"],
+        fix:["Check AquaPure power and fuse","Inspect RS-485 wiring at power center","Verify salt system is enabled/assigned in AquaLink","Confirm cell diagnostics at AquaPure panel before replacing automation board"],
+        severity:"medium", callpro:true },
+      { code:"ACTUATOR-STUCK", name:"Jandy Valve Actuator Stuck",
+        causes:["Toggle switch off","Limit cam misadjusted","Actuator motor failed","Valve diverter seized"],
+        fix:["Check actuator toggle switch and command from service panel","Remove actuator and turn valve manually","Inspect cams/limit switches and wiring","Replace actuator if motor does not run with confirmed 24VAC"],
+        severity:"medium", callpro:false }
+    ]
+  }
+});
+
+window.ERROR_DB.cmp_pal_lighting = {
+  label:"CMP / PAL / S.R. Smith Lighting",
+  color:"#9333ea",
+  categories:{
+    "Lighting - Retrofit / Nicheless / Water Feature": {
+      models:["CMP Brilliant Wonders LED","CMP Smart Sync","PAL Treo","PAL EvenGlow","S.R. Smith Treo","S.R. Smith Mod-Lite","S.R. Smith Kelo","J&J Electronics VU"],
+      codes:[
+        { code:"RETROFIT-FIT", name:"Retrofit Light Fit / Compatibility Check",
+          causes:["Wrong niche adapter or 1.5 inch fitting requirement","Controller mode mismatch with Pentair/Hayward/Jandy system","Cord length or conduit path incompatible","Transformer wattage too small"],
+          fix:["Verify niche/fitting type before ordering","Confirm voltage, color-control mode, and automation compatibility","Measure cord route to junction box; do not plan underwater splices","Sum fixture wattage and confirm transformer capacity with margin"],
+          severity:"medium", callpro:false },
+        { code:"SMART-SYNC", name:"Water Feature Lights Not Syncing",
+          causes:["Controller not programmed for the installed light family","Power-cycle timing mismatch","Mixed brand compatibility mode issue","Shared transformer overloaded"],
+          fix:["Set controller/programming to the intended brand mode","Power all lights off together before selecting color/show","Test one light at a time to find non-following fixture","Check transformer load and voltage under load"],
+          severity:"medium", callpro:false },
+        { code:"LANDSCAPE-DIM", name:"Landscape / Strip Light Dim Or Flickering",
+          causes:["Voltage drop on low-voltage run","Undersized wire or transformer","Water in connector","Damaged strip segment"],
+          fix:["Measure voltage at farthest fixture while lights are on","Use proper low-voltage wire gauge and transformer tap","Replace wet/corroded connectors","Isolate strip sections to find damaged segment"],
+          severity:"low", callpro:false }
+        ]
+      }
+    }
+};
+
+window.ERROR_DB.robots_expanded = {
+  label:"Robots - Expanded Field Guide",
+  color:"#0f766e",
+  categories:{
+    "Robotic Cleaners - Dolphin / Polaris / Aiper / Beatbot / Betta / Hayward / Pentair": {
+      models:["Dolphin Explorer","Dolphin Premier","Dolphin Nautilus","Polaris Alpha iQ","Polaris 9550","Aiper Scuba","Aiper Seagull","Beatbot AquaSense","Betta SE","Hayward AquaVac","Pentair Prowler"],
+      codes:[
+        { code:"ROBOT-NO-POWER", name:"Robot Has No Power",
+          causes:["GFCI outlet tripped","Power supply failed","Floating cable damaged","Battery depleted on cordless unit","Charging contacts corroded"],
+          fix:["Test outlet/GFCI with known-good device","Inspect power supply LEDs and output","Check floating cable for cuts, kinks, or swollen sections","For cordless robots, clean charging contacts and fully charge before retest","Do not open sealed battery housings unless manufacturer service procedure allows it"],
+          severity:"high", callpro:false },
+        { code:"ROBOT-NOT-MOVING", name:"Robot Powers On But Does Not Move",
+          causes:["Drive track/wheel jammed","Impeller or brush motor overloaded","Filter basket packed with debris","Drive motor failed"],
+          fix:["Remove robot from pool and clear tracks, wheels, brushes, and impeller","Empty and rinse filter basket/canister","Run short test on deck only if manual permits","If one side never drives after cleaning, suspect drive motor or gearbox"],
+          severity:"medium", callpro:false },
+        { code:"ROBOT-NOT-CLIMBING", name:"Robot Will Not Climb Walls",
+          causes:["Filters dirty reducing suction","Brushes worn","Water chemistry causing slick surfaces","Program set to floor-only mode","Impeller weak or blocked"],
+          fix:["Clean filters thoroughly","Inspect brushes/tracks for wear","Confirm cleaning mode includes walls/waterline","Balance chemistry and brush algae/slime film","Clear impeller and check for strong discharge flow"],
+          severity:"low", callpro:false },
+        { code:"ROBOT-WIFI", name:"Robot App / Wi-Fi Pairing Failure",
+          causes:["2.4 GHz network required","Bluetooth/location permission missing during setup","Robot paired to old account/network","Weak Wi-Fi at pool area"],
+          fix:["Use 2.4 GHz Wi-Fi during pairing and stand near power supply/robot","Enable app permissions required for pairing","Remove old device registration before adding again","Move router/mesh node or use stronger outdoor coverage"],
+          severity:"low", callpro:false },
+        { code:"ROBOT-WATER-INTRUSION", name:"Water In Electronics / Battery Area",
+          causes:["Seal or housing crack","Charging-port gasket failure","Robot stored wet or dropped","Improper service opening"],
+          fix:["Stop using and do not charge until fully inspected","Dry exterior and check warranty/service route","Inspect gaskets, covers, and housing for cracks","Water intrusion in battery/electronics is a service or replacement issue"],
+          severity:"high", callpro:true }
+      ]
+    }
+  }
+};
+
+window.ERROR_DB.water_features_valves = {
+  label:"Water Features / Valves / Actuators",
+  color:"#0ea5e9",
+  categories:{
+    "Deck Jets / Laminars / Bubblers / Waterfalls": {
+      models:["CMP Deck Jets","CMP Laminars","Pentair MagicStream","Jandy Deck Jets","Sheer descents","Bubblers","Water bowls"],
+      codes:[
+        { code:"FEATURE-LOW-FLOW", name:"Low Or Uneven Water Feature Flow",
+          causes:["Feature valve partly closed","Dirty filter or low pump speed","Nozzle clogged","Air leak on suction side","Multiple features not balanced"],
+          fix:["Open/adjust feature valve and increase pump RPM","Clean filter and pump basket","Remove and flush nozzles or laminar screens","Balance each feature valve one at a time","Check for air in pump basket indicating suction leak"],
+          severity:"low", callpro:false },
+        { code:"FEATURE-LEAK", name:"Water Feature Leaking / Draining Back",
+          causes:["Check valve failed","Cracked feature body or fitting","Loose union","Winter freeze damage"],
+          fix:["Inspect feature plumbing and check valve","Pressure test suspect feature line if leak is hidden","Replace cracked fittings or feature body","Winterize feature lines in freeze climates"],
+          severity:"medium", callpro:true },
+        { code:"ACTUATOR-WRONG-DIRECTION", name:"Actuator Turns Wrong Direction",
+          causes:["Toggle switch set opposite desired direction","Cams adjusted incorrectly","Valve mounted 180 degrees from expected orientation"],
+          fix:["Use actuator toggle switch to reverse direction if appropriate","Mark original cam positions before adjustment","Adjust open/close cams in small steps","Verify automation labels match actual valve function"],
+          severity:"low", callpro:false }
+      ]
+    }
+  }
+};
+
+window.ERROR_DB.advanced_sanitizers = {
+  label:"UV / Ozone / AOP / Feeders",
+  color:"#14b8a6",
+  categories:{
+    "UV / Ozone / AOP Systems": {
+      models:["CMP DEL Ozone","DEL AOP","Paramount Clear O3","Ultra UV2","Hayward HydraPure","Pentair BioShield","AOP 40"],
+      codes:[
+        { code:"AOP-FLOW", name:"AOP / UV / Ozone Flow Fault",
+          causes:["Pump not running","Flow switch stuck open","Bypass valve closed","Dirty filter lowering flow"],
+          fix:["Confirm circulation pump is running at required speed","Open bypass/isolation valves","Clean filter and verify flow through treatment chamber","Test flow switch with confirmed water movement"],
+          severity:"medium", callpro:false },
+        { code:"UV-SLEEVE", name:"UV Sleeve Dirty / Low UV Performance",
+          causes:["Scale on quartz sleeve","Lamp aged out","High calcium hardness or poor water balance","Sensor window fouled"],
+          fix:["Clean quartz sleeve with approved cleaner and gloves","Replace lamp at rated interval even if it still glows","Correct water balance to reduce scaling","Clean UV sensor window if present"],
+          severity:"low", callpro:false },
+        { code:"OZONE-CHECKVALVE", name:"Ozone Check Valve / Water Backflow",
+          causes:["Check valve failed","Injector vacuum weak","Tubing routed below water level","Pump off siphon condition"],
+          fix:["Replace check valve immediately if water is in ozone tubing","Verify injector vacuum when pump runs","Route tubing per manual with high loop where required","Inspect ozone module for water damage before restarting"],
+          severity:"high", callpro:false }
+      ]
+    },
+    "Liquid / Tablet Feeders": {
+      models:["Rola-Chem pumps","Stenner pumps","Hayward chlorinators","Pentair Rainbow feeders","Liquid chlorine feeders","Acid feed pumps"],
+      codes:[
+        { code:"FEED-NO-DRAW", name:"Feeder Pump Not Drawing Chemical",
+          causes:["Empty tank","Suction tube cracked or clogged","Pump tube worn flat","Injection fitting blocked","Loss of prime"],
+          fix:["Confirm tank level and suction weight position","Inspect/replace suction tubing and pump tube","Clean injection fitting/check valve","Prime pump with PPE and proper chemical handling"],
+          severity:"medium", callpro:false },
+        { code:"FEED-OVERFEED", name:"Chemical Feeder Overfeeding",
+          causes:["Pump timer/program wrong","Stuck relay","ORP/pH probe reading falsely low/high","Siphon through injection line"],
+          fix:["Disable feeder until water is manually tested","Check relay output and feed schedule","Clean/calibrate probe before trusting controller demand","Install/inspect anti-siphon valve"],
+          severity:"high", callpro:true }
+      ]
+    }
+  }
+};
+
+window.ERROR_DB.chemical_controllers = {
+  label:"Commercial Chem Controllers",
+  color:"#dc2626",
+  categories:{
+    "pH / ORP / FAC Controllers": {
+      models:["Rola-Chem","CAT Controllers","BECS","Chemtrol","IPS Controllers","Prominent","Walchem","Pulsar","VivoAquatics"],
+      codes:[
+        { code:"ORP-LOW", name:"ORP Low / Chlorine Demand High",
+          causes:["True low sanitizer","Dirty or failed ORP probe","pH too high suppressing ORP","CYA high in outdoor pool","Flow cell not moving water"],
+          fix:["Verify sanitizer with calibrated manual test before feeding more chemical","Clean ORP probe and confirm flow through cell","Check pH and CYA because they change ORP behavior","Calibrate/replace probe if reading does not respond to known standard"],
+          severity:"high", callpro:true },
+        { code:"PH-HIGH", name:"pH High Alarm",
+          causes:["True pH high","Acid tank empty","Acid feed pump not primed","pH probe dirty or out of calibration","Injection fitting blocked"],
+          fix:["Manual test pH before feeding","Check acid tank, pump tube, suction line, and injection fitting","Clean and calibrate pH probe","Do not overfeed acid based on an unverified probe reading"],
+          severity:"high", callpro:true },
+        { code:"FLOW-CELL", name:"No Flow Through Sample Cell",
+          causes:["Sample line clogged","Strainer dirty","Flow switch failed","Pump off or valves closed"],
+          fix:["Open sample valves and clean strainer","Flush sample line and flow cell","Confirm controller flow switch closes with water movement","Do not allow controller to feed chemical without verified flow interlock"],
+          severity:"high", callpro:true },
+        { code:"PROBE-DRIFT", name:"Probe Drift / Unstable Readings",
+          causes:["Probe aged out","Probe stored dry","Grounding/bonding noise","Dirty probe tip","Air bubbles in flow cell"],
+          fix:["Clean probe and recalibrate with fresh standards","Remove bubbles and confirm steady sample flow","Check bonding/grounding and nearby electrical noise","Replace probe if it cannot hold calibration"],
+          severity:"medium", callpro:true }
+      ]
+    }
+  }
+};
+
+window.ERROR_DB.automatic_covers = {
+  label:"Automatic Covers",
+  color:"#64748b",
+  categories:{
+    "Automatic Pool Covers - Coverstar / Cover-Pools / APC": {
+      models:["Coverstar","Cover-Pools","Automatic Pool Covers Inc.","Coverstar Central","Save-T Cover","PowerTouch"],
+      codes:[
+        { code:"COVER-NO-MOVE", name:"Cover Will Not Open Or Close",
+          causes:["Key switch/controller not sending power","Breaker/GFCI tripped","Motor thermal overload","Cover track obstructed","Mechanism jammed"],
+          fix:["Check breaker/GFCI and controller power","Remove leaves/debris from tracks and box","Let motor cool if it stopped mid-cycle","Do not force a jammed cover; inspect ropes, pulleys, and mechanism","Keep people out of pool area while troubleshooting"],
+          severity:"high", callpro:true },
+        { code:"COVER-CROOKED", name:"Cover Travels Crooked",
+          causes:["Rope tension uneven","Track obstruction","Fabric waterlogged or overloaded","Pulley/guide wear","Mechanism out of alignment"],
+          fix:["Stop operation before fabric binds","Clear both tracks and pump standing water from cover","Inspect ropes and pulleys for fray/wear","Adjustments to rope reels/mechanism should be handled by cover service if severe"],
+          severity:"medium", callpro:true },
+        { code:"COVER-WATERLOAD", name:"Water On Cover / Cover Sagging",
+          causes:["Cover pump missing or failed","Rain load exceeding safe operation","Fabric stretched or support low","Drain path blocked"],
+          fix:["Pump water off cover before operating","Never open cover with heavy standing water","Inspect automatic cover pump and power","Schedule fabric/mechanism inspection if sagging remains after water removal"],
+          severity:"high", callpro:false },
+        { code:"COVER-SAFETY", name:"Safety / Manual Operation Warning",
+          causes:["Emergency/manual operation needed","Power failure","Cover used as only safety layer"],
+          fix:["Follow manufacturer manual for manual operation; do not improvise around mechanism","Keep switch/key under responsible control and maintain line of sight","Treat cover as one safety layer, not the only protection","Call cover specialist for rope, motor, or mechanism failures"],
+          severity:"high", callpro:true }
+      ]
+    }
+  }
+};
