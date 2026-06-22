@@ -21,7 +21,7 @@ This repo is the PoolLens source tree for the SplashLens field app.
 
 Do not run production scanner traffic with only browser localStorage limits.
 
-- `SCAN_USAGE_KV`: Cloudflare KV namespace binding. Used for monthly anonymous scan metering.
+- `SCAN_USAGE_KV`: Cloudflare KV namespace binding. Used for monthly anonymous scan metering, anonymous app events, and PartSnap mystery-part feedback when configured.
 - `SCAN_RATE_LIMITER`: Cloudflare Rate Limiting binding. Used for short-window abuse protection.
 
 If neither `SCAN_USAGE_KV` nor `SCAN_RATE_LIMITER` is configured in production, `/api/scan` returns `503 Scan metering is not configured`.
@@ -48,6 +48,12 @@ Recommended first pass:
 ## Stripe
 
 `functions/api/checkout.js` now creates Stripe Checkout Sessions when `STRIPE_SECRET_KEY` is present. The success URL lands on `/api/checkout-success?session_id={CHECKOUT_SESSION_ID}`, verifies the paid session with Stripe, signs a scanner entitlement token, stores the entitlement summary in `SCAN_USAGE_KV`, and sends the customer to SplashLens with the activation token.
+
+## PartSnap feedback
+
+`functions/api/partsnap-feedback.js` accepts low-confidence mystery-part submissions from the app. It stores the submission in `SCAN_USAGE_KV` with a `partsnap-feedback:` prefix and sends an alert through SendGrid when `SENDGRID_API_KEY` plus `SPLASHLENS_NOTIFY_TO` or another notify env is configured.
+
+This endpoint is for product learning and support follow-up. It does not confirm part fitment or manufacturer endorsement.
 
 If `STRIPE_SECRET_KEY` is missing, `/api/checkout` falls back to the existing Stripe Payment Links so the public CTA does not break, but the customer activation path remains manual and revenue launch is not clean.
 

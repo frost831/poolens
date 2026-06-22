@@ -1,6 +1,6 @@
 SplashLens is a free utility/reference wrapper around the SplashLens PWA at https://app.splashlens.com/?store=ios.
 
-No account is required for core use. Manual lookup, Route Brain planning, calculators, notes, filters, and checklists work from the app shell after first load. PartSnap is an optional online scanner mode for pool part reference assistance. Camera/photo access is user-initiated and only used for optional AI scanner workflows. Microphone access is user-initiated for dictated service notes where the webview/browser supports speech recognition. Online AI scan features require internet access.
+No account is required for core use. Manual lookup, Route Brain planning, calculators, notes, filters, and checklists work from the app shell after first load. PartSnap is an optional online scanner mode for pool part reference assistance. Camera/photo access is user-initiated and only used for optional AI scanner workflows. Microphone access is user-initiated for dictated service notes where the webview/browser supports speech recognition. Online AI scan features require internet access. PartSnap results are possible matches with missing-proof prompts and verification language, not confirmed part-fit results.
 
 Store wrapper mode is intended to stay free-core and must not show direct Stripe checkout or web-subscription CTAs. AI scan output is assistance only and should be verified against equipment manuals, calibrated tests, label directions, and professional field judgment.
 

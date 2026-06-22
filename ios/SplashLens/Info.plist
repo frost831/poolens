@@ -28,6 +28,8 @@
 	<string>SplashLens uses the camera only when you choose the optional scanner to review equipment displays, parts, or test strips.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>SplashLens can use a photo you select for optional scanner assistance.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>SplashLens can use the microphone only when you choose dictated service notes.</string>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UISupportedInterfaceOrientations</key>

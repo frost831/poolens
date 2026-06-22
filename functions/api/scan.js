@@ -66,6 +66,12 @@ Return ONLY valid JSON in this exact format:
   "description": "1 HP impeller for Super Pump",
   "condition": "worn",
   "verificationNotes": "Check visible markings, dimensions, and the manual parts diagram before ordering",
+  "visibleEvidence": ["molded number visible", "diffuser shape matches Super Pump family"],
+  "missingProof": ["equipment model plate", "impeller diameter"],
+  "alternates": [
+    {"name":"Super Pump impeller family", "why":"Similar vane pattern", "confidence":"medium"}
+  ],
+  "escalationSummary": "Possible Hayward Super Pump impeller. Verify model plate and impeller diameter before ordering.",
   "searchTerms": ["hayward impeller", "SPX2607C", "super pump impeller"],
   "confidence": "high"
 }
@@ -79,10 +85,16 @@ Rules:
 - description: what this part does (15 words max)
 - condition: new, good, worn, damaged, unknown
 - verificationNotes: what to verify in the manual or parts diagram (20 words max, null if not applicable)
+- visibleEvidence: 1-4 short facts actually visible in the image
+- missingProof: 1-4 short items the tech still needs before ordering
+- alternates: 0-3 possible alternatives; use only when reasonable, and keep confidence high/medium/low
+- escalationSummary: one concise senior-tech/vendor message. Never say "confirmed"; use "possible" or "likely family".
 - searchTerms: 2-4 search strings that would find this part online
 - confidence: high/medium/low
+- Prefer asking for a label/model-plate photo when markings are missing.
+- If the part family is uncertain, make confidence low and put the best next photo/check in missingProof.
 
-If image does not show pool equipment: {"manufacturer":null,"category":"other","component":"unknown","model":null,"partNumber":null,"description":"Not a pool part","condition":"unknown","verificationNotes":null,"searchTerms":[],"confidence":"low"}`,
+If image does not show pool equipment: {"manufacturer":null,"category":"other","component":"unknown","model":null,"partNumber":null,"description":"Not a pool part","condition":"unknown","verificationNotes":null,"visibleEvidence":[],"missingProof":["clear pool-part photo","equipment model plate"],"alternates":[],"escalationSummary":"No pool part could be identified from this photo. Capture a closer photo and the equipment label.","searchTerms":[],"confidence":"low"}`,
 
   test_strip: `You are a pool water chemistry analyzer. The user has photographed a pool test strip. Read the color blocks and estimate the water chemistry values.
 

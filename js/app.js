@@ -3538,6 +3538,7 @@ let _scanMode      = 'camera';
 let _scanBrand     = null;   // null = all brands
 let _flashOn       = false;
 let _flashTrack    = null;
+let _lastPartSnapResult = null;
 
 const SCAN_LIMIT_FREE = 10;
 const SCAN_USAGE_KEY = 'pl_scans_month';
@@ -3546,6 +3547,7 @@ const SCAN_ENTITLEMENT_TOKEN_KEY = 'sl_scan_entitlement_token';
 const PARTSNAP_MONTHLY_LINK = '/api/checkout?plan=monthly';
 const PARTSNAP_YEARLY_LINK = '/api/checkout?plan=yearly';
 const SPLASHLENS_EVENT_ENDPOINT = '/api/events';
+const PARTSNAP_FEEDBACK_ENDPOINT = '/api/partsnap-feedback';
 const STORE_SHELL_KEY = 'sl_store_shell_mode';
 
 function initScanTab() {
@@ -3608,7 +3610,24 @@ function setScanMode(mode) {
   else              stopCamera();
   if (mode === 'lookup') renderScanBrandFilter();
   if (mode === 'chem')   renderChemCatalogHome();
+  if (mode === 'parts')  renderPartSnapPrimer();
   updateAIStatusBar();
+}
+
+function renderPartSnapPrimer() {
+  const result = document.getElementById('scan-result');
+  if (!result || result.innerHTML.trim()) return;
+  result.innerHTML = `
+    <div style="margin:12px 0 16px;background:linear-gradient(135deg,#062b2f,#0f172a);border:1px solid #0f766e;border-radius:14px;padding:14px;border-left:4px solid #14b8a6;">
+      <p style="color:#5eead4;font-size:10px;font-weight:950;letter-spacing:.12em;text-transform:uppercase;margin-bottom:6px;">PartSnap AI Service</p>
+      <p style="color:#f8fafc;font-size:18px;font-weight:950;line-height:1.1;margin-bottom:8px;">Shoot the part, then shoot the label.</p>
+      <p style="color:#cbd5e1;font-size:12px;line-height:1.45;margin-bottom:12px;">Best results come from two photos: the mystery part up close, then the equipment model plate or molded number. PartSnap returns possible matches, missing proof, and a clean escalation packet.</p>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;">
+        <div style="background:#042f2e;border:1px solid #0f766e;border-radius:8px;padding:8px;text-align:center;"><b style="display:block;color:#ccfbf1;font-size:11px;">1. Part</b><span style="display:block;color:#99f6e4;font-size:9px;margin-top:2px;">close + lit</span></div>
+        <div style="background:#111827;border:1px solid #334155;border-radius:8px;padding:8px;text-align:center;"><b style="display:block;color:#e2e8f0;font-size:11px;">2. Label</b><span style="display:block;color:#94a3b8;font-size:9px;margin-top:2px;">model proof</span></div>
+        <div style="background:#431407;border:1px solid #b45309;border-radius:8px;padding:8px;text-align:center;"><b style="display:block;color:#fed7aa;font-size:11px;">3. Verify</b><span style="display:block;color:#fdba74;font-size:9px;margin-top:2px;">before buy</span></div>
+      </div>
+    </div>`;
 }
 
 // ── Camera ──────────────────────────────────
@@ -3965,6 +3984,10 @@ function getScanClientId() {
 
 function renderPartsSnapResult(ai, result, status) {
   if (!result) return;
+  _lastPartSnapResult = ai || {};
+  const visibleEvidence = Array.isArray(_lastPartSnapResult.visibleEvidence) ? _lastPartSnapResult.visibleEvidence.filter(Boolean).slice(0, 4) : [];
+  const missingProof = Array.isArray(_lastPartSnapResult.missingProof) ? _lastPartSnapResult.missingProof.filter(Boolean).slice(0, 4) : [];
+  const alternates = Array.isArray(_lastPartSnapResult.alternates) ? _lastPartSnapResult.alternates.filter(Boolean).slice(0, 3) : [];
   const { manufacturer, category, component, model, partNumber, description, condition, replacementNotes, verificationNotes, searchTerms, confidence } = ai;
   const low = confidence === 'low';
   const notes = verificationNotes || replacementNotes;
@@ -3982,9 +4005,9 @@ function renderPartsSnapResult(ai, result, status) {
   trackSplashLensEvent('partsnap_result', { confidence: confidence || 'unknown', category: category || 'unknown' });
 
   result.innerHTML = `
-    <div style="background:#1e293b;border:1px solid ${low?'#334155':'#7c3aed'};border-radius:12px;padding:16px;margin-bottom:10px;border-left:4px solid ${low?'#334155':'#7c3aed'};">
+    <div style="background:#1e293b;border:1px solid ${low?'#334155':'#14b8a6'};border-radius:12px;padding:16px;margin-bottom:10px;border-left:4px solid ${low?'#334155':'#14b8a6'};">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap;">
-        <span style="background:#7c3aed;color:#fff;padding:2px 10px;border-radius:100px;font-size:10px;font-weight:700;">🔧 PARTS SNAP</span>
+        <span style="background:#0f766e;color:#fff;padding:2px 10px;border-radius:100px;font-size:10px;font-weight:900;letter-spacing:.04em;">PARTSNAP SERVICE</span>
         ${manufacturer ? `<span style="color:#94a3b8;font-size:11px;">${manufacturer}</span>` : ''}
         ${category ? `<span style="color:#64748b;font-size:11px;text-transform:uppercase;">${category}</span>` : ''}
         <span style="margin-left:auto;background:${condColor};color:#fff;padding:2px 8px;border-radius:100px;font-size:10px;font-weight:700;">${(condition||'unknown').toUpperCase()}</span>
@@ -4001,6 +4024,8 @@ function renderPartsSnapResult(ai, result, status) {
       ${replacementNotes ? `<p style="color:#fbbf24;font-size:12px;font-weight:600;margin-bottom:10px;">⚠ ${replacementNotes}</p>` : ''}
       ${verificationNotes ? `<p style="color:#fbbf24;font-size:12px;font-weight:600;margin-bottom:10px;">Check: ${verificationNotes}</p>` : ''}
       ${renderPartConfidenceLadder(ladder)}
+      ${renderPartEvidencePanel(visibleEvidence, missingProof)}
+      ${renderPartAlternates(alternates)}
       ${searchTerms?.length ? `
         <p style="color:#64748b;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">SEARCH ONLINE</p>
         <div style="display:flex;flex-wrap:wrap;gap:6px;">
@@ -4009,13 +4034,113 @@ function renderPartsSnapResult(ai, result, status) {
       ` : ''}
       ${buyLinks}
       ${!ladder.allowLinks ? `<div style="margin-top:12px;background:#0f172a;border:1px solid #334155;border-radius:8px;padding:10px;"><p style="color:#fbbf24;font-size:12px;font-weight:900;margin-bottom:4px;">Hold buying links until proof improves</p><p style="color:#94a3b8;font-size:11px;line-height:1.45;">Need: ${ladder.missing.map(escHtml).join(', ')}.</p></div>` : ''}
+      ${ai.escalationSummary ? `<div style="margin-top:12px;background:#020617;border:1px solid #334155;border-radius:10px;padding:11px;"><p style="color:#94a3b8;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px;">Escalation packet</p><p style="color:#e2e8f0;font-size:12px;line-height:1.45;">${escHtml(ai.escalationSummary)}</p></div>` : ''}
       <p style="color:#94a3b8;font-size:11px;line-height:1.45;margin-top:10px;">Reference only. Confirm model, dimensions, and the current manufacturer parts diagram before ordering.</p>
       ${low ? `<p style="color:#64748b;font-size:12px;margin-top:12px;text-align:center;">Try getting closer, better lighting, or a different angle</p>` : ''}
     </div>
-    <div style="text-align:center;padding:8px 0 16px;">
-      <button onclick="setScanMode('parts');document.getElementById('scan-result').innerHTML=''" style="background:#334155;color:#94a3b8;border:none;border-radius:8px;padding:10px 20px;font-size:13px;cursor:pointer;">Scan Another Part</button>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:8px 0 8px;">
+      <button onclick="copyPartSnapEscalation()" style="background:#0f766e;color:#fff;border:none;border-radius:10px;padding:11px 8px;font-size:12px;font-weight:900;cursor:pointer;">Copy Packet</button>
+      <button onclick="renderMysteryPartForm()" style="background:#334155;color:#e2e8f0;border:none;border-radius:10px;padding:11px 8px;font-size:12px;font-weight:900;cursor:pointer;">Submit Mystery</button>
+      <button onclick="document.getElementById('scan-result').innerHTML='';renderPartSnapPrimer();setScanMode('parts')" style="grid-column:1 / -1;background:#0f172a;color:#7dd3fc;border:1px solid #334155;border-radius:10px;padding:10px 20px;font-size:13px;cursor:pointer;">Scan Another Part or Label</button>
     </div>
+    <div id="partsnap-feedback-panel"></div>
   `;
+}
+
+function renderPartEvidencePanel(visibleEvidence, missingProof) {
+  if (!visibleEvidence.length && !missingProof.length) return '';
+  const list = (items, color) => items.map(item => `<li style="color:${color};font-size:11px;line-height:1.35;margin-bottom:4px;">${escHtml(item)}</li>`).join('');
+  return `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0;">
+      <div style="background:#052e2b;border:1px solid #0f766e;border-radius:8px;padding:10px;">
+        <p style="color:#5eead4;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;">Visible proof</p>
+        <ul style="padding-left:14px;margin:0;">${visibleEvidence.length ? list(visibleEvidence, '#ccfbf1') : '<li style="color:#94a3b8;font-size:11px;">No strong visible proof yet</li>'}</ul>
+      </div>
+      <div style="background:#431407;border:1px solid #b45309;border-radius:8px;padding:10px;">
+        <p style="color:#fdba74;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;">Next proof</p>
+        <ul style="padding-left:14px;margin:0;">${missingProof.length ? list(missingProof, '#fed7aa') : '<li style="color:#94a3b8;font-size:11px;">No extra proof listed</li>'}</ul>
+      </div>
+    </div>`;
+}
+
+function renderPartAlternates(alternates) {
+  if (!alternates.length) return '';
+  return `
+    <div style="margin:10px 0;background:#0f172a;border:1px solid #334155;border-radius:8px;padding:10px;">
+      <p style="color:#94a3b8;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;">Other possible families</p>
+      ${alternates.map(alt => `<div style="border-top:1px solid #1e293b;padding-top:7px;margin-top:7px;">
+        <p style="color:#e2e8f0;font-size:12px;font-weight:900;">${escHtml(alt.name || 'Possible alternate')}</p>
+        <p style="color:#94a3b8;font-size:11px;line-height:1.4;">${escHtml(alt.why || 'Compare visible markings and dimensions.')} ${alt.confidence ? `(${escHtml(alt.confidence)})` : ''}</p>
+      </div>`).join('')}
+    </div>`;
+}
+
+function partSnapEscalationText() {
+  const ai = _lastPartSnapResult || {};
+  const evidence = Array.isArray(ai.visibleEvidence) ? ai.visibleEvidence.join('; ') : '';
+  const missing = Array.isArray(ai.missingProof) ? ai.missingProof.join('; ') : '';
+  return [
+    'SplashLens PartSnap escalation',
+    `Possible part: ${[ai.manufacturer, ai.component].filter(Boolean).join(' ') || 'unknown'}`,
+    `Model/family: ${ai.model || 'needs model proof'}`,
+    `Possible number: ${ai.partNumber || 'not visible'}`,
+    `Confidence: ${ai.confidence || 'unknown'}`,
+    evidence ? `Visible proof: ${evidence}` : '',
+    missing ? `Still needed: ${missing}` : '',
+    ai.escalationSummary ? `Summary: ${ai.escalationSummary}` : '',
+    'Verify against current manufacturer parts diagram before ordering.'
+  ].filter(Boolean).join('\n');
+}
+
+function copyPartSnapEscalation() {
+  const text = partSnapEscalationText();
+  navigator.clipboard?.writeText(text).then(() => {
+    trackSplashLensEvent('partsnap_packet_copied', { confidence: (_lastPartSnapResult || {}).confidence || 'unknown' });
+    const panel = document.getElementById('partsnap-feedback-panel');
+    if (panel) panel.innerHTML = `<p style="color:#5eead4;text-align:center;font-size:12px;font-weight:900;padding:8px 0;">Escalation packet copied.</p>`;
+  }).catch(() => {});
+}
+
+function renderMysteryPartForm() {
+  const panel = document.getElementById('partsnap-feedback-panel');
+  if (!panel) return;
+  panel.innerHTML = `
+    <div style="background:#ffffff;border:1px solid #bae6fd;border-radius:12px;padding:12px;margin:4px 0 16px;">
+      <p style="color:#0f172a;font-size:14px;font-weight:950;margin-bottom:5px;">Send this mystery part to SplashLens</p>
+      <p style="color:#64748b;font-size:12px;line-height:1.4;margin-bottom:10px;">Use this when PartSnap is low-confidence or you want the app trained around a real field miss.</p>
+      <label class="field-label" for="partsnap-feedback-email">Your email</label>
+      <input id="partsnap-feedback-email" type="email" placeholder="you@example.com" style="width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:8px;margin-bottom:8px;">
+      <label class="field-label" for="partsnap-feedback-note">What do you know?</label>
+      <textarea id="partsnap-feedback-note" rows="3" placeholder="Brand, pool type, where the part came from, vendor clue..." style="width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:8px;resize:vertical;margin-bottom:10px;"></textarea>
+      <button onclick="submitMysteryPartFeedback()" style="width:100%;background:#0f766e;color:#fff;border:none;border-radius:10px;padding:11px;font-size:13px;font-weight:900;cursor:pointer;">Send Mystery Part</button>
+      <p id="partsnap-feedback-status" style="color:#64748b;font-size:11px;text-align:center;margin-top:8px;"></p>
+    </div>`;
+}
+
+async function submitMysteryPartFeedback() {
+  const status = document.getElementById('partsnap-feedback-status');
+  const email = document.getElementById('partsnap-feedback-email')?.value || '';
+  const note = document.getElementById('partsnap-feedback-note')?.value || '';
+  if (status) status.textContent = 'Sending...';
+  try {
+    const res = await fetch(PARTSNAP_FEEDBACK_ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...getLanguageHeaders() },
+      body: JSON.stringify(withLanguageMetadata({
+        email,
+        note,
+        result: _lastPartSnapResult || {},
+        escalation: partSnapEscalationText(),
+        source: 'partsnap-result',
+        path: `${window.location.pathname}${window.location.search}`,
+      })),
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    trackSplashLensEvent('partsnap_mystery_submitted', { confidence: (_lastPartSnapResult || {}).confidence || 'unknown' });
+    if (status) status.textContent = 'Sent. This is now a training candidate.';
+  } catch {
+    if (status) status.textContent = 'Could not send. Copy the packet and email hello@splashlens.com.';
+  }
 }
 
 function partConfidenceLadder(confidence, partNumber, manufacturer, model, component) {
@@ -4042,7 +4167,7 @@ function renderPartConfidenceLadder(ladder) {
       <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:5px;">
         ${steps.map(step => {
           const active = ladder.level === step;
-          return `<span style="text-align:center;border-radius:6px;padding:6px 3px;font-size:9px;font-weight:900;border:1px solid ${active ? '#7c3aed' : '#334155'};background:${active ? '#7c3aed' : '#1e293b'};color:${active ? '#fff' : '#94a3b8'};">${escHtml(step)}</span>`;
+          return `<span style="text-align:center;border-radius:6px;padding:6px 3px;font-size:9px;font-weight:900;border:1px solid ${active ? '#14b8a6' : '#334155'};background:${active ? '#0f766e' : '#1e293b'};color:${active ? '#fff' : '#94a3b8'};">${escHtml(step)}</span>`;
         }).join('')}
       </div>
       <p style="color:#64748b;font-size:10px;line-height:1.4;margin-top:8px;">Buying links unlock only when the result has enough visible evidence to avoid guessing.</p>

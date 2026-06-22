@@ -1,1 +1,1 @@
-pool service,error codes,pool tech,chemical dosing,pool calculator,service notes,filter,pump
+pool service,part id,parts,PartSnap,error codes,pool tech,dosing,pump,filter,heater
