@@ -1,1 +1,1 @@
-Route Brain helps pool service techs build field plans, escalation packets, service notes, and faster troubleshooting checks at the equipment pad.
+PartSnap helps pool service techs photograph unknown parts, verify possible matches, and build cleaner field plans with Route Brain.

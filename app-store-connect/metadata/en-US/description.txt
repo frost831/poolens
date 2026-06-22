@@ -1,8 +1,9 @@
-SplashLens Field Tools is a pool service app for technicians who need fast equipment troubleshooting lookup, chemical dosing math, route notes, and proof-ready field records.
+SplashLens Field Tools is a pool service app for technicians who need PartSnap pool parts ID, fast equipment troubleshooting lookup, chemical dosing math, route notes, and proof-ready field records.
 
 Use SplashLens to:
 
 - Search 230+ pool equipment, automation, lighting, robot, cover, sanitizer, and controller troubleshooting entries
+- Use PartSnap to photograph unknown pool parts and receive possible manufacturer/model/part-number clues with verification prompts
 - Calculate common chemical dosing adjustments
 - Build service notes, Route Brain field plans, escalation packets, and report-style field records
 - Check filter guides, pump/filter checklists, and manual reference tools
