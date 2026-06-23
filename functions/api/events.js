@@ -4,6 +4,16 @@ const ALERT_EVENTS = new Set([
   'ai_scan_started',
   'manual_code_search',
   'partsnap_result',
+  'partsnap_packet_copied',
+  'partsnap_share_used',
+  'partsnap_saved_to_pool',
+  'partsnap_mystery_submitted',
+  'partsnap_apprentice_started',
+  'partsnap_partner_card_opened',
+  'partsnap_second_proof_requested',
+  'route_brain_saved_to_pool',
+  'service_report_saved',
+  'proof_ready_report_saved',
   'waitlist_signup',
   'checkout_success',
 ]);
@@ -104,6 +114,23 @@ async function eventSummary(request, env) {
   const paths = new Map();
   const scanModes = new Map();
   const manualQueries = new Map();
+  const callbackRisks = new Map();
+  const meaningfulEvents = new Set([
+    'pwa_installed',
+    'ai_scan_started',
+    'manual_code_search',
+    'partsnap_result',
+    'partsnap_packet_copied',
+    'partsnap_share_used',
+    'partsnap_saved_to_pool',
+    'partsnap_mystery_submitted',
+    'partsnap_apprentice_started',
+    'partsnap_second_proof_requested',
+    'route_brain_saved_to_pool',
+    'service_report_saved',
+    'proof_ready_report_saved',
+    'checkout_success',
+  ]);
   let events7d = 0;
   let events30d = 0;
   let appOpens7d = 0;
@@ -112,6 +139,12 @@ async function eventSummary(request, env) {
   let scans30d = 0;
   let searches30d = 0;
   let partsnapResults30d = 0;
+  let meaningfulActions30d = 0;
+  let partSnapPackets30d = 0;
+  let partSnapSaved30d = 0;
+  let partSnapMystery30d = 0;
+  let partSnapApprentice30d = 0;
+  let proofSaved30d = 0;
 
   for (const record of records) {
     const ts = eventTime(record);
@@ -133,6 +166,13 @@ async function eventSummary(request, env) {
         inc(manualQueries, [props.brand, props.query].filter(Boolean).join(': ') || props.query || 'unknown');
       }
       if (record.event === 'partsnap_result') partsnapResults30d += 1;
+      if (meaningfulEvents.has(record.event)) meaningfulActions30d += 1;
+      if (record.event === 'partsnap_packet_copied' || record.event === 'partsnap_share_used') partSnapPackets30d += 1;
+      if (record.event === 'partsnap_saved_to_pool') partSnapSaved30d += 1;
+      if (record.event === 'partsnap_mystery_submitted') partSnapMystery30d += 1;
+      if (record.event === 'partsnap_apprentice_started') partSnapApprentice30d += 1;
+      if (record.event === 'partsnap_saved_to_pool' || record.event === 'route_brain_saved_to_pool' || record.event === 'service_report_saved' || record.event === 'proof_ready_report_saved') proofSaved30d += 1;
+      if (props.risk || props.callbackRisk) inc(callbackRisks, props.risk || props.callbackRisk);
     }
     if (ts >= since7d && record.event === 'app_open') appOpens7d += 1;
   }
@@ -150,10 +190,17 @@ async function eventSummary(request, env) {
       scans30d,
       searches30d,
       partsnapResults30d,
+      meaningfulActions30d,
+      partSnapPackets30d,
+      partSnapSaved30d,
+      partSnapMystery30d,
+      partSnapApprentice30d,
+      proofSaved30d,
     },
     topEvents: topList(eventsByName),
     topPaths: topList(paths),
     scanModes: topList(scanModes),
+    callbackRisks: topList(callbackRisks),
     manualQueries: topList(manualQueries, 20),
     recentEvents: records.slice(0, 50).map((record) => ({
       event: record.event,
@@ -175,6 +222,24 @@ async function sendEventAlert(env, record) {
   if (!config.apiKey || !config.from || !config.to) {
     return { sent: false, reason: 'missing_sendgrid_config' };
   }
+  const labels = {
+    app_open: 'First/opened app',
+    pwa_installed: 'Installed app/PWA',
+    ai_scan_started: 'Scanner used',
+    manual_code_search: 'Manual code search',
+    partsnap_result: 'PartSnap result',
+    partsnap_packet_copied: 'PartSnap packet copied',
+    partsnap_share_used: 'PartSnap packet shared',
+    partsnap_saved_to_pool: 'PartSnap saved to proof passport',
+    partsnap_mystery_submitted: 'Mystery Part Lab submission',
+    partsnap_apprentice_started: 'PartSnap Apprentice Mode started',
+    partsnap_second_proof_requested: 'PartSnap second proof requested',
+    route_brain_saved_to_pool: 'Route Brain proof saved',
+    service_report_saved: 'Service report saved',
+    proof_ready_report_saved: 'Proof-ready report saved',
+    waitlist_signup: 'Waitlist signup',
+    checkout_success: 'Checkout success',
+  };
 
   const response = await fetch('https://api.sendgrid.com/v3/mail/send', {
     method: 'POST',
@@ -185,7 +250,7 @@ async function sendEventAlert(env, record) {
     body: JSON.stringify({
       personalizations: [{
         to: [{ email: config.to }],
-        subject: `[SplashLens App] ${record.event}`,
+        subject: `[SplashLens App] ${labels[record.event] || record.event}`,
       }],
       from: { email: config.from, name: 'SplashLens Alerts' },
       categories: ['splashlens', 'app-event', record.event],

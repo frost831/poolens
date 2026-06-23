@@ -4001,8 +4001,9 @@ function renderPartsSnapResult(ai, result, status) {
   const condColor = { new:'#16a34a', good:'#16a34a', worn:'#d97706', damaged:'#dc2626', unknown:'#64748b' }[condition] || '#64748b';
 
   const ladder = partConfidenceLadder(confidence, partNumber, manufacturer, model, component);
+  const risk = partSnapCallbackRisk(_lastPartSnapResult, ladder, visibleEvidence, missingProof);
   const buyLinks = ladder.allowLinks ? renderPartBuyLinks(searchTerms, partNumber, manufacturer, component) : '';
-  trackSplashLensEvent('partsnap_result', { confidence: confidence || 'unknown', category: category || 'unknown' });
+  trackSplashLensEvent('partsnap_result', { confidence: confidence || 'unknown', category: category || 'unknown', risk: risk.level });
 
   result.innerHTML = `
     <div style="background:#1e293b;border:1px solid ${low?'#334155':'#14b8a6'};border-radius:12px;padding:16px;margin-bottom:10px;border-left:4px solid ${low?'#334155':'#14b8a6'};">
@@ -4010,6 +4011,7 @@ function renderPartsSnapResult(ai, result, status) {
         <span style="background:#0f766e;color:#fff;padding:2px 10px;border-radius:100px;font-size:10px;font-weight:900;letter-spacing:.04em;">PARTSNAP SERVICE</span>
         ${manufacturer ? `<span style="color:#94a3b8;font-size:11px;">${manufacturer}</span>` : ''}
         ${category ? `<span style="color:#64748b;font-size:11px;text-transform:uppercase;">${category}</span>` : ''}
+        <span style="background:${risk.color};color:#fff;padding:2px 8px;border-radius:100px;font-size:10px;font-weight:900;">${risk.label}</span>
         <span style="margin-left:auto;background:${condColor};color:#fff;padding:2px 8px;border-radius:100px;font-size:10px;font-weight:700;">${(condition||'unknown').toUpperCase()}</span>
       </div>
       <p style="color:#f1f5f9;font-size:18px;font-weight:800;margin-bottom:4px;">${component || 'Unknown Part'}</p>
@@ -4025,7 +4027,9 @@ function renderPartsSnapResult(ai, result, status) {
       ${verificationNotes ? `<p style="color:#fbbf24;font-size:12px;font-weight:600;margin-bottom:10px;">Check: ${verificationNotes}</p>` : ''}
       ${renderPartConfidenceLadder(ladder)}
       ${renderPartEvidencePanel(visibleEvidence, missingProof)}
+      ${renderPartSnapCallbackRisk(risk)}
       ${renderPartAlternates(alternates)}
+      ${renderPartSnapPartnerCards(_lastPartSnapResult)}
       ${searchTerms?.length ? `
         <p style="color:#64748b;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">SEARCH ONLINE</p>
         <div style="display:flex;flex-wrap:wrap;gap:6px;">
@@ -4039,8 +4043,12 @@ function renderPartsSnapResult(ai, result, status) {
       ${low ? `<p style="color:#64748b;font-size:12px;margin-top:12px;text-align:center;">Try getting closer, better lighting, or a different angle</p>` : ''}
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:8px 0 8px;">
-      <button onclick="copyPartSnapEscalation()" style="background:#0f766e;color:#fff;border:none;border-radius:10px;padding:11px 8px;font-size:12px;font-weight:900;cursor:pointer;">Copy Packet</button>
-      <button onclick="renderMysteryPartForm()" style="background:#334155;color:#e2e8f0;border:none;border-radius:10px;padding:11px 8px;font-size:12px;font-weight:900;cursor:pointer;">Submit Mystery</button>
+      <button onclick="sharePartSnapPacket()" style="background:#0f766e;color:#fff;border:none;border-radius:10px;padding:11px 8px;font-size:12px;font-weight:900;cursor:pointer;">Share Packet</button>
+      <button onclick="savePartSnapToPool()" style="background:#0284c7;color:#fff;border:none;border-radius:10px;padding:11px 8px;font-size:12px;font-weight:900;cursor:pointer;">Save Proof</button>
+      <button onclick="startPartSnapApprenticeMode()" style="background:#334155;color:#e2e8f0;border:none;border-radius:10px;padding:11px 8px;font-size:12px;font-weight:900;cursor:pointer;">Apprentice Mode</button>
+      <button onclick="renderMysteryPartForm()" style="background:#431407;color:#fed7aa;border:1px solid #b45309;border-radius:10px;padding:11px 8px;font-size:12px;font-weight:900;cursor:pointer;">Mystery Lab</button>
+      <button onclick="copyPartSnapEscalation()" style="background:#0f172a;color:#7dd3fc;border:1px solid #334155;border-radius:10px;padding:10px 8px;font-size:12px;font-weight:900;cursor:pointer;">Copy Text</button>
+      <button onclick="requestPartSnapSecondProof()" style="background:#0f172a;color:#7dd3fc;border:1px solid #334155;border-radius:10px;padding:10px 8px;font-size:12px;font-weight:900;cursor:pointer;">Second Proof Photo</button>
       <button onclick="document.getElementById('scan-result').innerHTML='';renderPartSnapPrimer();setScanMode('parts')" style="grid-column:1 / -1;background:#0f172a;color:#7dd3fc;border:1px solid #334155;border-radius:10px;padding:10px 20px;font-size:13px;cursor:pointer;">Scan Another Part or Label</button>
     </div>
     <div id="partsnap-feedback-panel"></div>
@@ -4075,6 +4083,99 @@ function renderPartAlternates(alternates) {
     </div>`;
 }
 
+function partSnapCallbackRisk(ai = {}, ladder = {}, visibleEvidence = [], missingProof = []) {
+  const text = [ai.category, ai.component, ai.description, ai.replacementNotes, ai.verificationNotes].filter(Boolean).join(' ').toLowerCase();
+  const highRiskTerms = ['gas', 'heater', 'heat pump', 'electrical', 'transformer', 'light', 'lighting', 'automation', 'cover', 'refrigerant'];
+  const reasons = [];
+  let score = 0;
+  if ((ai.confidence || '').toLowerCase() === 'low' || ladder.level === 'unknown') {
+    score += 3;
+    reasons.push('Low confidence result.');
+  }
+  if (!ai.partNumber) {
+    score += 2;
+    reasons.push('No visible part number or model marking.');
+  }
+  if (!ai.manufacturer || !ai.component) {
+    score += 1;
+    reasons.push('Manufacturer or component family still needs proof.');
+  }
+  if (missingProof.length >= 2) {
+    score += 2;
+    reasons.push('Multiple proof items are still missing.');
+  }
+  if (!visibleEvidence.length) {
+    score += 1;
+    reasons.push('No strong visible proof was captured.');
+  }
+  if (highRiskTerms.some(term => text.includes(term))) {
+    score += 2;
+    reasons.push('Safety-sensitive hardware can create expensive callbacks.');
+  }
+  const level = score >= 6 ? 'high' : score >= 3 ? 'medium' : 'low';
+  return {
+    level,
+    label: `${level.toUpperCase()} CALLBACK RISK`,
+    color: level === 'high' ? '#dc2626' : level === 'medium' ? '#d97706' : '#16a34a',
+    reasons: reasons.slice(0, 4),
+    missing: missingProof.length ? missingProof : (ladder.missing || []).slice(0, 4),
+  };
+}
+
+function renderPartSnapCallbackRisk(risk) {
+  const reasons = risk.reasons.length ? risk.reasons : ['Enough visible proof was captured for a lower-risk field note.'];
+  const missing = risk.missing.length ? risk.missing : ['No extra proof listed.'];
+  return `
+    <div style="background:#020617;border:1px solid ${risk.color};border-radius:8px;padding:10px;margin:10px 0;">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px;">
+        <p style="color:#e2e8f0;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.06em;">Callback Risk Score</p>
+        <span style="background:${risk.color};color:#fff;border-radius:999px;padding:2px 8px;font-size:9px;font-weight:950;">${risk.level.toUpperCase()}</span>
+      </div>
+      <p style="color:#94a3b8;font-size:11px;line-height:1.4;margin-bottom:6px;">${reasons.map(escHtml).join(' ')}</p>
+      <p style="color:#fbbf24;font-size:11px;line-height:1.4;"><strong>Before ordering:</strong> ${missing.map(escHtml).join(', ')}</p>
+    </div>`;
+}
+
+function renderPartSnapPartnerCards(ai = {}) {
+  const cards = [
+    ['counter', 'Distributor Counter Packet', 'Ready', 'Shareable proof list for counter, vendor, or senior tech review.'],
+    ['verified', 'Manufacturer Verified Card', 'Coming soon', 'Prepared for official model, diagram, and part fit verification.'],
+    ['training', 'Instructor Scenario', 'Coming soon', 'Turns this result into a classroom or apprentice troubleshooting prompt.'],
+  ];
+  return `
+    <div style="margin:10px 0;background:#0f172a;border:1px solid #334155;border-radius:8px;padding:10px;">
+      <p style="color:#94a3b8;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;">Partner-verified cards</p>
+      <div style="display:grid;gap:7px;">
+        ${cards.map(([key, title, state, body]) => `
+          <button onclick="openPartSnapPartnerCard('${key}')" style="text-align:left;background:#111827;border:1px solid #334155;border-radius:8px;padding:9px;cursor:pointer;">
+            <span style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+              <strong style="color:#e2e8f0;font-size:12px;">${title}</strong>
+              <span style="background:${state === 'Ready' ? '#0f766e' : '#334155'};color:#fff;border-radius:999px;padding:2px 7px;font-size:9px;font-weight:900;">${state}</span>
+            </span>
+            <span style="display:block;color:#94a3b8;font-size:11px;line-height:1.35;margin-top:4px;">${body}</span>
+          </button>`).join('')}
+      </div>
+      <p style="color:#64748b;font-size:10px;line-height:1.35;margin-top:8px;">No official manufacturer or distributor partnership is implied unless marked verified.</p>
+    </div>`;
+}
+
+function openPartSnapPartnerCard(type) {
+  const panel = document.getElementById('partsnap-feedback-panel');
+  const title = {
+    counter: 'Distributor Counter Packet',
+    verified: 'Manufacturer Verified Card',
+    training: 'Instructor Scenario',
+  }[type] || 'Partner Card';
+  trackSplashLensEvent('partsnap_partner_card_opened', { card: type, confidence: (_lastPartSnapResult || {}).confidence || 'unknown' });
+  if (!panel) return;
+  panel.innerHTML = `
+    <div style="background:#ffffff;border:1px solid #bae6fd;border-radius:12px;padding:12px;margin:4px 0 16px;">
+      <p style="color:#0f172a;font-size:14px;font-weight:950;margin-bottom:5px;">${escHtml(title)}</p>
+      <p style="color:#64748b;font-size:12px;line-height:1.45;margin-bottom:10px;">${type === 'counter' ? 'Use Share Packet or Copy Text to send the proof list without making a final diagnosis claim.' : 'This lane is ready for partner input and will stay marked coming soon until a real partner verifies it.'}</p>
+      <pre style="white-space:pre-wrap;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px;color:#334155;font-size:11px;line-height:1.4;">${escHtml(partSnapEscalationText())}</pre>
+    </div>`;
+}
+
 function partSnapEscalationText() {
   const ai = _lastPartSnapResult || {};
   const evidence = Array.isArray(ai.visibleEvidence) ? ai.visibleEvidence.join('; ') : '';
@@ -4099,6 +4200,159 @@ function copyPartSnapEscalation() {
     const panel = document.getElementById('partsnap-feedback-panel');
     if (panel) panel.innerHTML = `<p style="color:#5eead4;text-align:center;font-size:12px;font-weight:900;padding:8px 0;">Escalation packet copied.</p>`;
   }).catch(() => {});
+}
+
+async function sharePartSnapPacket() {
+  const ai = _lastPartSnapResult || {};
+  const text = partSnapEscalationText();
+  try {
+    if (navigator.share) {
+      await navigator.share({ title: 'SplashLens PartSnap packet', text });
+    } else if (navigator.clipboard) {
+      await navigator.clipboard.writeText(text);
+    }
+    trackSplashLensEvent('partsnap_share_used', { confidence: ai.confidence || 'unknown', category: ai.category || 'unknown' });
+    const panel = document.getElementById('partsnap-feedback-panel');
+    if (panel) panel.innerHTML = `<p style="color:#5eead4;text-align:center;font-size:12px;font-weight:900;padding:8px 0;">Packet ready for senior tech, vendor, or customer file.</p>`;
+  } catch {}
+}
+
+function savePartSnapToPool() {
+  const pools = getPools();
+  const panel = document.getElementById('partsnap-feedback-panel');
+  if (!panel) return;
+  if (!pools.length) {
+    panel.innerHTML = `
+      <div style="background:#fff7ed;border:1px solid #fdba74;border-radius:12px;padding:12px;margin:4px 0 16px;">
+        <p style="color:#9a3412;font-size:13px;font-weight:900;margin-bottom:5px;">Create a saved pool first</p>
+        <p style="color:#7c2d12;font-size:12px;line-height:1.4;margin-bottom:10px;">PartSnap proof saves into Service Proof Passport so the tech can find it later by customer.</p>
+        <button onclick="showTab('pools')" style="width:100%;background:#0f766e;color:#fff;border:none;border-radius:10px;padding:10px;font-size:12px;font-weight:900;cursor:pointer;">Go to Pools</button>
+      </div>`;
+    return;
+  }
+  panel.innerHTML = `
+    <div style="background:#ffffff;border:1px solid #bae6fd;border-radius:12px;padding:12px;margin:4px 0 16px;">
+      <p style="color:#0f172a;font-size:14px;font-weight:950;margin-bottom:5px;">Save PartSnap to Service Proof Passport</p>
+      <p style="color:#64748b;font-size:12px;line-height:1.4;margin-bottom:10px;">Attach this result to a customer record with the proof, callback risk, and vendor packet.</p>
+      <label class="field-label" for="partsnap-save-pool">Saved pool</label>
+      <select id="partsnap-save-pool" style="width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:8px;margin-bottom:10px;">
+        ${pools.map(p => `<option value="${escHtml(p.id)}">${escHtml([p.name, p.address].filter(Boolean).join(' - ') || 'Saved pool')}</option>`).join('')}
+      </select>
+      <button onclick="confirmPartSnapSaveToPool()" style="width:100%;background:#0284c7;color:#fff;border:none;border-radius:10px;padding:11px;font-size:13px;font-weight:900;cursor:pointer;">Save Proof Passport</button>
+      <p id="partsnap-save-status" style="color:#64748b;font-size:11px;text-align:center;margin-top:8px;"></p>
+    </div>`;
+}
+
+function confirmPartSnapSaveToPool() {
+  const poolId = document.getElementById('partsnap-save-pool')?.value;
+  const status = document.getElementById('partsnap-save-status');
+  const pools = getPools();
+  const pool = pools.find(p => p.id === poolId);
+  const ai = _lastPartSnapResult || {};
+  if (!pool) {
+    if (status) status.textContent = 'Choose a saved pool first.';
+    return;
+  }
+  const visibleEvidence = Array.isArray(ai.visibleEvidence) ? ai.visibleEvidence.filter(Boolean).slice(0, 4) : [];
+  const missingProof = Array.isArray(ai.missingProof) ? ai.missingProof.filter(Boolean).slice(0, 4) : [];
+  const ladder = partConfidenceLadder(ai.confidence, ai.partNumber, ai.manufacturer, ai.model, ai.component);
+  const risk = partSnapCallbackRisk(ai, ladder, visibleEvidence, missingProof);
+  const passport = {
+    id: `partsnap-${Date.now()}`,
+    type: 'partsnap_proof',
+    savedAt: new Date().toISOString(),
+    poolId: pool.id,
+    customer: pool.name,
+    address: pool.address || '',
+    tech: '',
+    date: getTodayStr(),
+    visitType: 'PartSnap Parts ID',
+    readings: {},
+    proof: {
+      complete: risk.level === 'low' && missingProof.length === 0,
+      missing: risk.missing,
+      photoProof: visibleEvidence.join('; ') || 'PartSnap image result saved.',
+      issueNote: ai.verificationNotes || ai.replacementNotes || ai.escalationSummary || '',
+      customerSummary: `PartSnap reviewed ${[ai.manufacturer, ai.component].filter(Boolean).join(' ') || 'an unknown part'} with ${ai.confidence || 'unknown'} confidence.`,
+    },
+    chemicals: [],
+    totalChemicalCost: 0,
+    workPerformed: `PartSnap reviewed ${ai.component || 'unknown part'} for identification and ordering proof.`,
+    equipmentNotes: partSnapEscalationText(),
+    recommendations: (risk.missing.length ? `Before ordering: ${risk.missing.join(', ')}.` : 'Verify against the current manufacturer parts diagram before ordering.'),
+    nextVisit: '',
+    partSnap: ai,
+    callbackRisk: risk,
+  };
+  if (!pool.servicePassports) pool.servicePassports = [];
+  pool.servicePassports.push(passport);
+  if (!pool.equipmentTree) pool.equipmentTree = [];
+  pool.equipmentTree.push({
+    id: `partsnap-eq-${Date.now()}`,
+    manufacturer: ai.manufacturer || '',
+    hardware: ai.category || ai.component || 'PartSnap',
+    model: ai.model || ai.partNumber || '',
+    visibleLabel: visibleEvidence.join('; '),
+    symptom: ai.replacementNotes || ai.description || 'Part identification',
+    confidence: `${ai.confidence || 'unknown'} / ${risk.level} callback risk`,
+    savedAt: new Date().toISOString(),
+  });
+  if (pool.equipmentTree.length > 50) pool.equipmentTree = pool.equipmentTree.slice(-50);
+  savePools(pools);
+  trackSplashLensEvent('partsnap_saved_to_pool', { confidence: ai.confidence || 'unknown', risk: risk.level, pool_id: pool.id });
+  if (status) status.textContent = `Saved to ${pool.name}.`;
+}
+
+function startPartSnapApprenticeMode() {
+  const ai = _lastPartSnapResult || {};
+  const visibleEvidence = Array.isArray(ai.visibleEvidence) ? ai.visibleEvidence.filter(Boolean).slice(0, 4) : [];
+  const missingProof = Array.isArray(ai.missingProof) ? ai.missingProof.filter(Boolean).slice(0, 4) : [];
+  const ladder = partConfidenceLadder(ai.confidence, ai.partNumber, ai.manufacturer, ai.model, ai.component);
+  const risk = partSnapCallbackRisk(ai, ladder, visibleEvidence, missingProof);
+  const panel = document.getElementById('partsnap-feedback-panel');
+  if (!panel) return;
+  trackSplashLensEvent('partsnap_apprentice_started', { confidence: ai.confidence || 'unknown', risk: risk.level });
+  panel.innerHTML = `
+    <div style="background:#ffffff;border:1px solid #bae6fd;border-radius:12px;padding:12px;margin:4px 0 16px;">
+      <p style="color:#0f172a;font-size:14px;font-weight:950;margin-bottom:5px;">Apprentice Mode</p>
+      <p style="color:#64748b;font-size:12px;line-height:1.4;margin-bottom:10px;">Turn this part into a quick field coaching moment before someone orders the wrong thing.</p>
+      <label class="field-label" for="partsnap-apprentice-proof">What proof would you ask for next?</label>
+      <textarea id="partsnap-apprentice-proof" rows="2" style="width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:8px;resize:vertical;margin-bottom:8px;"></textarea>
+      <label class="field-label" for="partsnap-apprentice-order">Would you order yet? Why?</label>
+      <textarea id="partsnap-apprentice-order" rows="2" style="width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:8px;resize:vertical;margin-bottom:10px;"></textarea>
+      <button onclick="revealPartSnapApprenticeAnswer()" style="width:100%;background:#0f766e;color:#fff;border:none;border-radius:10px;padding:11px;font-size:13px;font-weight:900;cursor:pointer;">Show Answer Key</button>
+      <div id="partsnap-apprentice-answer"></div>
+    </div>`;
+}
+
+function revealPartSnapApprenticeAnswer() {
+  const ai = _lastPartSnapResult || {};
+  const visibleEvidence = Array.isArray(ai.visibleEvidence) ? ai.visibleEvidence.filter(Boolean).slice(0, 4) : [];
+  const missingProof = Array.isArray(ai.missingProof) ? ai.missingProof.filter(Boolean).slice(0, 4) : [];
+  const ladder = partConfidenceLadder(ai.confidence, ai.partNumber, ai.manufacturer, ai.model, ai.component);
+  const risk = partSnapCallbackRisk(ai, ladder, visibleEvidence, missingProof);
+  const answer = document.getElementById('partsnap-apprentice-answer');
+  if (!answer) return;
+  answer.innerHTML = `
+    <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px;margin-top:10px;">
+      <p style="color:#0f172a;font-size:12px;font-weight:900;margin-bottom:5px;">Answer key</p>
+      <p style="color:#334155;font-size:12px;line-height:1.45;margin-bottom:6px;"><strong>Next proof:</strong> ${escHtml((risk.missing || []).join(', ') || 'Confirm current manufacturer parts diagram.')}</p>
+      <p style="color:#334155;font-size:12px;line-height:1.45;margin-bottom:6px;"><strong>Order decision:</strong> ${risk.level === 'low' ? 'Lower risk, but still verify model fit before ordering.' : 'Do not order yet without the missing proof or a senior/vendor review.'}</p>
+      <p style="color:#334155;font-size:12px;line-height:1.45;"><strong>Customer wording:</strong> ${escHtml(ai.escalationSummary || 'We found a possible match and are verifying the exact model/part fit before ordering.')}</p>
+    </div>`;
+}
+
+function requestPartSnapSecondProof() {
+  const result = document.getElementById('scan-result');
+  const status = document.getElementById('scan-camera-status');
+  if (status) status.textContent = 'SECOND PROOF: CAPTURE LABEL, MODEL PLATE, OR PART NUMBER';
+  if (result) result.innerHTML = `
+    <div style="background:#0f172a;border:1px solid #334155;border-radius:12px;padding:14px;margin:8px 0;text-align:center;">
+      <p style="color:#e2e8f0;font-size:14px;font-weight:900;margin-bottom:6px;">Second proof photo</p>
+      <p style="color:#94a3b8;font-size:12px;line-height:1.45;margin-bottom:10px;">Get the label, model plate, casting number, wiring label, or a wider shot that shows where the part lives.</p>
+      <button onclick="setScanMode('parts')" style="background:#0f766e;color:#fff;border:none;border-radius:10px;padding:10px 18px;font-size:12px;font-weight:900;cursor:pointer;">Capture Second Proof</button>
+    </div>`;
+  trackSplashLensEvent('partsnap_second_proof_requested', { confidence: (_lastPartSnapResult || {}).confidence || 'unknown' });
 }
 
 function renderMysteryPartForm() {
