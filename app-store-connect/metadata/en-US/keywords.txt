@@ -1,1 +1,1 @@
-pool service,part id,parts,PartSnap,error codes,pool tech,dosing,pump,filter,heater
+pool tech,PartSnap,parts,codes,pump,heater,salt,robot,lighting,dosing,SCP

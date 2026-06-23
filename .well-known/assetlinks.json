@@ -5,7 +5,7 @@
     ],
     "target": {
       "namespace": "android_app",
-      "package_name": "com.splashlens.app",
+      "package_name": "com.splashlens.fieldtools",
       "sha256_cert_fingerprints": [
         "9F:B4:69:CF:41:91:74:BF:76:21:32:34:AF:7A:53:0D:75:02:58:0A:33:77:C9:D8:91:71:E4:E9:4B:17:2E:96",
         "A0:72:04:3D:00:60:69:48:55:CC:2B:01:95:DA:D8:9B:76:D7:52:F7:BB:C5:B8:7D:80:FB:DF:61:B4:F9:23:1F"

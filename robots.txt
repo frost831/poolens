@@ -1,5 +1,6 @@
 User-agent: *
 Allow: /
+Sitemap: https://app.splashlens.com/sitemap.xml
 
 # Full editorial content is at the marketing site:
 # https://splashlens.com/sitemap.xml

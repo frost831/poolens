@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>SplashLens — Field Reference</title>
+  <title>SplashLens - Pool Service Field Reference and PartSnap</title>
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#0369a1">
@@ -11,6 +11,49 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="SplashLens">
+  <meta name="description" content="SplashLens is a free no-account field reference app for pool service techs with PartSnap part identification assistance, pool equipment codes, dosing calculators, service notes, checklists, and route tools.">
+  <meta name="robots" content="index,follow,max-image-preview:large">
+  <meta name="keywords" content="pool service app, pool tech app, pool technician app, pool parts identification, pool equipment error codes, pool hardware, pool pump troubleshooting, pool heater codes, pool automation troubleshooting, pool robot troubleshooting, salt cell troubleshooting, pool lighting troubleshooting, pool dosing calculator, pool route notes, pool service training">
+  <link rel="canonical" href="https://app.splashlens.com/">
+  <meta property="og:site_name" content="SplashLens">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="SplashLens - Pool Service Field Reference and PartSnap">
+  <meta property="og:description" content="Free pool-service field reference with PartSnap part identification assistance, equipment-code lookup, dosing calculators, service notes, checklists, and route tools.">
+  <meta property="og:url" content="https://app.splashlens.com/">
+  <meta property="og:image" content="https://app.splashlens.com/icons/icon-512.png">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="SplashLens - Pool Service Field Reference and PartSnap">
+  <meta name="twitter:description" content="Free no-account field app for pool techs: PartSnap assistance, equipment codes, dosing, notes, checklists, and route tools.">
+  <meta name="twitter:image" content="https://app.splashlens.com/icons/icon-512.png">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "MobileApplication",
+    "name": "SplashLens",
+    "alternateName": "SplashLens Field Tools",
+    "url": "https://app.splashlens.com/",
+    "applicationCategory": "UtilitiesApplication",
+    "operatingSystem": "Web, iOS, Android",
+    "isAccessibleForFree": true,
+    "description": "Free no-account pool service field reference app with PartSnap part identification assistance, equipment-code lookup, dosing calculators, service notes, checklists, and route tools.",
+    "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"},
+    "publisher": {"@type": "Organization", "name": "SplashLens", "url": "https://splashlens.com/"},
+    "sameAs": [
+      "https://splashlens.com/",
+      "https://apps.apple.com/us/app/splashlens/id6763644905"
+    ],
+    "featureList": [
+      "PartSnap pool part identification assistance",
+      "Pool equipment code lookup",
+      "Chemical dosing calculators",
+      "Service notes",
+      "Route progress tools",
+      "Opening, closing, weekly, and monthly checklists",
+      "Pool pump, heater, automation, lighting, robot, and salt cell reference"
+    ],
+    "potentialAction": {"@type": "UseAction", "target": "https://app.splashlens.com/"}
+  }
+  </script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
@@ -217,7 +260,7 @@
 </head>
 <body>
 
-  <!-- ═══ HEADER ═══ -->
+  <!-- â•â•â• HEADER â•â•â• -->
   <header style="background:var(--field-blue);padding:11px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;box-shadow:0 2px 10px rgba(3,105,161,0.22);">
     <div style="display:flex;align-items:center;gap:10px;">
       <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 32 32">
@@ -229,7 +272,7 @@
       </svg>
       <span style="color:#ffffff;font-weight:900;font-size:20px;letter-spacing:-0.5px;">SplashLens</span>
       <span style="background:rgba(255,255,255,0.2);color:#ffffff;font-size:9px;font-weight:900;padding:2px 7px;border-radius:4px;border:1px solid rgba(255,255,255,0.35);letter-spacing:0.08em;">FIELD</span>
-      <div id="offline-dot" title="Checking offline status…" style="width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,0.25);flex-shrink:0;transition:background 0.4s;"></div>
+      <div id="offline-dot" title="Checking offline statusâ€¦" style="width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,0.25);flex-shrink:0;transition:background 0.4s;"></div>
     </div>
     <div id="pool-vol-badge" style="display:none;">
       <button onclick="focusVolumeInput()" style="background:rgba(255,255,255,0.18);border:1px solid rgba(255,255,255,0.35);border-radius:7px;padding:4px 11px;cursor:pointer;">
@@ -242,16 +285,16 @@
     <span>Preferred language</span>
     <select id="language-select" aria-label="Preferred language">
       <option value="en">English</option>
-      <option value="es">Español</option>
-      <option value="pt-BR">Português</option>
-      <option value="fr">Français</option>
+      <option value="es">EspaÃ±ol</option>
+      <option value="pt-BR">PortuguÃªs</option>
+      <option value="fr">FranÃ§ais</option>
     </select>
   </div>
 
-  <!-- ═══ MAIN ═══ -->
+  <!-- â•â•â• MAIN â•â•â• -->
   <main style="padding-bottom:96px;">
 
-    <!-- ─── ERRORS ─── -->
+    <!-- â”€â”€â”€ ERRORS â”€â”€â”€ -->
     <div id="tab-errors" class="tab-panel active" style="padding:14px;">
 
       <section class="rescue-hero">
@@ -301,12 +344,12 @@
 
       <div class="route-ready-card" aria-label="Route Ready service authority">
         <strong>Route Ready service authority</strong>
-        <span>Use SplashLens at the stop today. Route Ready training remains a pilot layer until field usage proves the modules; PartSnap Pro is the paid web scanner upgrade for extended online scans.</span>
+        <span>Use SplashLens at the stop today. Route Ready training remains a pilot layer until field usage proves the modules; PartSnap keeps parts lookup focused on proof, missing evidence, and clean escalation.</span>
       </div>
 
       <div style="position:relative;margin-bottom:12px;">
         <svg style="position:absolute;left:13px;top:50%;transform:translateY(-50%);pointer-events:none;" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <input type="search" id="error-search" placeholder="Search codes, symptoms, brands…" oninput="onErrorSearch(this.value)" style="padding-left:40px;padding-right:40px;" autocomplete="off" spellcheck="false">
+        <input type="search" id="error-search" placeholder="Search codes, symptoms, brandsâ€¦" oninput="onErrorSearch(this.value)" style="padding-left:40px;padding-right:40px;" autocomplete="off" spellcheck="false">
         <button id="search-clear" onclick="clearSearch()" style="display:none;position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:#94a3b8;cursor:pointer;padding:6px;">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>
@@ -318,12 +361,12 @@
         <div style="text-align:center;padding:40px 16px;">
           <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="1.5" style="margin:0 auto 14px;display:block;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
           <p style="font-size:15px;color:#475569;margin-bottom:5px;font-weight:600;">Pick a brand or search</p>
-          <p style="font-size:12px;color:#94a3b8;">Hayward · Pentair · Jandy · Maytronics · Aiper · Raypak</p>
+          <p style="font-size:12px;color:#94a3b8;">Hayward Â· Pentair Â· Jandy Â· Maytronics Â· Aiper Â· Raypak</p>
         </div>
       </div>
     </div>
 
-    <!-- ─── DOSING ─── -->
+    <!-- â”€â”€â”€ DOSING â”€â”€â”€ -->
     <div id="tab-dosing" class="tab-panel" style="padding:14px;">
       <!-- SLAM active banner (shown/hidden by JS) -->
       <div id="slam-banner" style="display:none;margin-bottom:14px;"></div>
@@ -336,10 +379,10 @@
       <div class="field-group">
         <label class="field-label">What to Adjust</label>
         <select id="dose-param" onchange="onParamChange()">
-          <option value="">— Select parameter —</option>
+          <option value="">â€” Select parameter â€”</option>
           <option value="fc">Free Chlorine (FC)</option>
-          <option value="ph_lower">pH — Lower it</option>
-          <option value="ph_raise">pH — Raise it</option>
+          <option value="ph_lower">pH â€” Lower it</option>
+          <option value="ph_raise">pH â€” Raise it</option>
           <option value="ta">Total Alkalinity (TA)</option>
           <option value="ch">Calcium Hardness (CH)</option>
           <option value="cya">CYA / Stabilizer</option>
@@ -393,12 +436,12 @@
 
       <hr class="section-div">
       <p style="color:#0369a1;font-weight:900;font-size:15px;margin-bottom:4px;">Addition Order</p>
-      <p style="color:#64748b;font-size:12px;margin-bottom:12px;">Always add in this sequence — never mix products directly.</p>
+      <p style="color:#64748b;font-size:12px;margin-bottom:12px;">Always add in this sequence â€” never mix products directly.</p>
       <div id="addition-order"></div>
 
       <hr class="section-div">
       <p style="color:#0369a1;font-weight:900;font-size:15px;margin-bottom:4px;">SLAM Calculator</p>
-      <p style="color:#64748b;font-size:12px;margin-bottom:14px;">Shock Level for Algae Management &mdash; FC target = CYA × multiplier</p>
+      <p style="color:#64748b;font-size:12px;margin-bottom:14px;">Shock Level for Algae Management &mdash; FC target = CYA Ã— multiplier</p>
 
       <div class="field-group">
         <label class="field-label">CYA Level (ppm)</label>
@@ -425,19 +468,19 @@
 
       <hr class="section-div">
       <p style="color:#0369a1;font-weight:900;font-size:15px;margin-bottom:4px;">Treatment Plan Generator</p>
-      <p style="color:#64748b;font-size:12px;margin-bottom:14px;">Enter your full test results — get a prioritized, ordered action plan for the visit.</p>
+      <p style="color:#64748b;font-size:12px;margin-bottom:14px;">Enter your full test results â€” get a prioritized, ordered action plan for the visit.</p>
       <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:10px;padding:14px;margin-bottom:4px;box-shadow:0 1px 3px rgba(0,0,0,0.06);">
         <div class="field-group">
-          <label class="field-label">Pool Volume (gallons) — optional, needed for exact doses</label>
+          <label class="field-label">Pool Volume (gallons) â€” optional, needed for exact doses</label>
           <input type="number" id="plan-vol" placeholder="e.g. 15000" min="0" inputmode="decimal">
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px;">
-          <div><label class="field-label">FC</label><input type="number" id="plan-fc" placeholder="—" inputmode="decimal" step="0.1" min="0"></div>
-          <div><label class="field-label">CC</label><input type="number" id="plan-cc" placeholder="—" inputmode="decimal" step="0.1" min="0"></div>
-          <div><label class="field-label">pH</label><input type="number" id="plan-ph" placeholder="—" inputmode="decimal" step="0.1"></div>
-          <div><label class="field-label">TA</label><input type="number" id="plan-ta" placeholder="—" inputmode="decimal" min="0"></div>
-          <div><label class="field-label">CH</label><input type="number" id="plan-ch" placeholder="—" inputmode="decimal" min="0"></div>
-          <div><label class="field-label">CYA</label><input type="number" id="plan-cya" placeholder="—" inputmode="decimal" min="0"></div>
+          <div><label class="field-label">FC</label><input type="number" id="plan-fc" placeholder="â€”" inputmode="decimal" step="0.1" min="0"></div>
+          <div><label class="field-label">CC</label><input type="number" id="plan-cc" placeholder="â€”" inputmode="decimal" step="0.1" min="0"></div>
+          <div><label class="field-label">pH</label><input type="number" id="plan-ph" placeholder="â€”" inputmode="decimal" step="0.1"></div>
+          <div><label class="field-label">TA</label><input type="number" id="plan-ta" placeholder="â€”" inputmode="decimal" min="0"></div>
+          <div><label class="field-label">CH</label><input type="number" id="plan-ch" placeholder="â€”" inputmode="decimal" min="0"></div>
+          <div><label class="field-label">CYA</label><input type="number" id="plan-cya" placeholder="â€”" inputmode="decimal" min="0"></div>
         </div>
         <button class="btn-calc" onclick="calcTreatmentPlan()">Generate Treatment Plan</button>
         <div id="plan-result" style="margin-top:14px;"></div>
@@ -474,7 +517,7 @@
       <div id="danger-section"></div>
     </div>
 
-    <!-- ─── VOLUME ─── -->
+    <!-- â”€â”€â”€ VOLUME â”€â”€â”€ -->
     <div id="tab-volume" class="tab-panel" style="padding:14px;">
       <p style="color:#0369a1;font-weight:900;font-size:16px;margin-bottom:14px;">Pool Volume</p>
       <div class="field-group">
@@ -486,7 +529,7 @@
 
       <hr class="section-div">
       <p style="color:#0369a1;font-weight:900;font-size:15px;margin-bottom:4px;">Turnover Rate</p>
-      <p style="color:#64748b;font-size:12px;margin-bottom:14px;">How many hours to filter the full pool volume. Residential target: 6–8 hrs/day.</p>
+      <p style="color:#64748b;font-size:12px;margin-bottom:14px;">How many hours to filter the full pool volume. Residential target: 6â€“8 hrs/day.</p>
       <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:10px;padding:14px;box-shadow:0 1px 3px rgba(0,0,0,0.06);">
         <div class="field-group">
           <label class="field-label">Pool Volume (gallons)</label>
@@ -501,7 +544,7 @@
       </div>
     </div>
 
-    <!-- ─── FILTERS (Sand / DE / Cartridge) ─── -->
+    <!-- â”€â”€â”€ FILTERS (Sand / DE / Cartridge) â”€â”€â”€ -->
     <div id="tab-sand" class="tab-panel" style="padding:14px;">
 
       <!-- Filter type sub-nav -->
@@ -536,7 +579,7 @@
               <p style="color:#64748b;font-size:10px;margin-top:2px;">until sight glass clears</p>
             </div>
           </div>
-          <div class="warn-box">Always RINSE 15–30 seconds after backwash before returning to FILTER.</div>
+          <div class="warn-box">Always RINSE 15â€“30 seconds after backwash before returning to FILTER.</div>
         </div>
         <div id="alt-media-section"></div>
       </div>
@@ -552,16 +595,16 @@
       </div>
     </div>
 
-    <!-- ─── ROUTE ─── -->
+    <!-- â”€â”€â”€ ROUTE â”€â”€â”€ -->
     <div id="tab-route" class="tab-panel" style="padding:14px;">
       <div id="route-content"></div>
     </div>
 
-    <!-- ─── REPORT ─── -->
+    <!-- â”€â”€â”€ REPORT â”€â”€â”€ -->
     <div id="tab-report" class="tab-panel" style="padding:14px;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
         <p style="color:#0369a1;font-weight:900;font-size:16px;">Visit Report</p>
-        <button onclick="toggleReportPoolPicker()" style="background:#eff6ff;border:1px solid #93c5fd;color:#0369a1;font-size:11px;font-weight:800;padding:6px 12px;border-radius:7px;cursor:pointer;">↓ Load Pool</button>
+        <button onclick="toggleReportPoolPicker()" style="background:#eff6ff;border:1px solid #93c5fd;color:#0369a1;font-size:11px;font-weight:800;padding:6px 12px;border-radius:7px;cursor:pointer;">â†“ Load Pool</button>
       </div>
       <div id="rpt-pool-picker" style="display:none;margin-bottom:14px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:10px;"></div>
       <div class="info-box" style="margin-bottom:14px;">
@@ -612,12 +655,12 @@
         </select>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px;">
-        <div><label class="field-label">FC (ppm)</label><input type="number" id="rpt-fc" placeholder="—" inputmode="decimal" step="0.1"></div>
-        <div><label class="field-label">CC (ppm)</label><input type="number" id="rpt-cc" placeholder="—" inputmode="decimal" step="0.1"></div>
-        <div><label class="field-label">pH</label><input type="number" id="rpt-ph" placeholder="—" inputmode="decimal" step="0.1"></div>
-        <div><label class="field-label">TA (ppm)</label><input type="number" id="rpt-ta" placeholder="—" inputmode="decimal"></div>
-        <div><label class="field-label">CH (ppm)</label><input type="number" id="rpt-ch" placeholder="—" inputmode="decimal"></div>
-        <div><label class="field-label">CYA (ppm)</label><input type="number" id="rpt-cya" placeholder="—" inputmode="decimal"></div>
+        <div><label class="field-label">FC (ppm)</label><input type="number" id="rpt-fc" placeholder="â€”" inputmode="decimal" step="0.1"></div>
+        <div><label class="field-label">CC (ppm)</label><input type="number" id="rpt-cc" placeholder="â€”" inputmode="decimal" step="0.1"></div>
+        <div><label class="field-label">pH</label><input type="number" id="rpt-ph" placeholder="â€”" inputmode="decimal" step="0.1"></div>
+        <div><label class="field-label">TA (ppm)</label><input type="number" id="rpt-ta" placeholder="â€”" inputmode="decimal"></div>
+        <div><label class="field-label">CH (ppm)</label><input type="number" id="rpt-ch" placeholder="â€”" inputmode="decimal"></div>
+        <div><label class="field-label">CYA (ppm)</label><input type="number" id="rpt-cya" placeholder="â€”" inputmode="decimal"></div>
       </div>
 
       <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:12px;margin-bottom:14px;box-shadow:0 1px 3px rgba(0,0,0,0.05);">
@@ -726,7 +769,7 @@
       <div id="rpt-copy-confirm" style="display:none;margin-top:8px;text-align:center;color:#166534;font-size:13px;font-weight:700;">Copied to clipboard!</div>
     </div>
 
-    <!-- ─── GUIDE (all checklists) ─── -->
+    <!-- â”€â”€â”€ GUIDE (all checklists) â”€â”€â”€ -->
     <div id="tab-guide" class="tab-panel" style="padding:14px;">
       <div style="display:flex;gap:6px;margin-bottom:14px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:2px;">
         <button id="cl-btn-opening" class="cat-pill active" onclick="switchClType('opening')">Opening</button>
@@ -748,21 +791,21 @@
       <div id="checklist-content"></div>
     </div>
 
-    <!-- ─── POOLS ─── -->
+    <!-- â”€â”€â”€ POOLS â”€â”€â”€ -->
     <div id="tab-pools" class="tab-panel" style="padding:14px;">
       <!-- Content rendered by JS: renderPoolList(), renderPoolDetail(), renderPoolForm() -->
       <div id="pools-content"></div>
     </div>
 
-    <!-- ═══ SCAN TAB ═══ -->
+    <!-- â•â•â• SCAN TAB â•â•â• -->
     <div id="tab-scan" class="tab-panel" style="padding:0;background:#0f172a;min-height:calc(100vh - 120px);">
       <!-- Mode bar -->
       <div id="scan-mode-bar" style="display:flex;background:#1e293b;border-bottom:1px solid #334155;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;">
-        <button id="scan-mode-camera" onclick="setScanMode('camera')" style="flex:1;min-width:68px;padding:10px 4px;background:#0284c7;color:#fff;border:none;cursor:pointer;font-size:10px;font-weight:700;letter-spacing:.02em;transition:background .15s;">📷 ERRORS</button>
-        <button id="scan-mode-parts" onclick="setScanMode('parts')" style="flex:1;min-width:78px;padding:10px 4px;background:transparent;color:#94a3b8;border:none;cursor:pointer;font-size:10px;font-weight:700;letter-spacing:.02em;transition:background .15s;">🔧 PARTSNAP</button>
-        <button id="scan-mode-strip" onclick="setScanMode('strip')" style="flex:1;min-width:68px;padding:10px 4px;background:transparent;color:#94a3b8;border:none;cursor:pointer;font-size:10px;font-weight:700;letter-spacing:.02em;transition:background .15s;">🧪 STRIP</button>
-        <button id="scan-mode-lookup" onclick="setScanMode('lookup')" style="flex:1;min-width:68px;padding:10px 4px;background:transparent;color:#94a3b8;border:none;cursor:pointer;font-size:10px;font-weight:700;letter-spacing:.02em;transition:background .15s;">🔍 LOOKUP</button>
-        <button id="scan-mode-chem" onclick="setScanMode('chem')" style="flex:1;min-width:68px;padding:10px 4px;background:transparent;color:#94a3b8;border:none;cursor:pointer;font-size:10px;font-weight:700;letter-spacing:.02em;transition:background .15s;">📖 CHEM</button>
+        <button id="scan-mode-camera" onclick="setScanMode('camera')" style="flex:1;min-width:68px;padding:10px 4px;background:#0284c7;color:#fff;border:none;cursor:pointer;font-size:10px;font-weight:700;letter-spacing:.02em;transition:background .15s;">ðŸ“· ERRORS</button>
+        <button id="scan-mode-parts" onclick="setScanMode('parts')" style="flex:1;min-width:78px;padding:10px 4px;background:transparent;color:#94a3b8;border:none;cursor:pointer;font-size:10px;font-weight:700;letter-spacing:.02em;transition:background .15s;">ðŸ”§ PARTSNAP</button>
+        <button id="scan-mode-strip" onclick="setScanMode('strip')" style="flex:1;min-width:68px;padding:10px 4px;background:transparent;color:#94a3b8;border:none;cursor:pointer;font-size:10px;font-weight:700;letter-spacing:.02em;transition:background .15s;">ðŸ§ª STRIP</button>
+        <button id="scan-mode-lookup" onclick="setScanMode('lookup')" style="flex:1;min-width:68px;padding:10px 4px;background:transparent;color:#94a3b8;border:none;cursor:pointer;font-size:10px;font-weight:700;letter-spacing:.02em;transition:background .15s;">ðŸ” LOOKUP</button>
+        <button id="scan-mode-chem" onclick="setScanMode('chem')" style="flex:1;min-width:68px;padding:10px 4px;background:transparent;color:#94a3b8;border:none;cursor:pointer;font-size:10px;font-weight:700;letter-spacing:.02em;transition:background .15s;">ðŸ“– CHEM</button>
       </div>
       <!-- AI status bar -->
       <div id="scan-ai-bar" style="display:flex;align-items:center;justify-content:center;gap:8px;padding:6px 14px;background:#0f172a;border-bottom:1px solid #1e293b;">
@@ -785,18 +828,18 @@
           </div>
           <canvas id="scan-canvas" style="display:none;"></canvas>
         </div>
-        <div id="scan-camera-status" style="text-align:center;padding:10px;color:#7dd3fc;font-size:12px;font-weight:600;letter-spacing:.04em;">AIM AT ERROR CODE DISPLAY — TAP CAPTURE</div>
+        <div id="scan-camera-status" style="text-align:center;padding:10px;color:#7dd3fc;font-size:12px;font-weight:600;letter-spacing:.04em;">AIM AT ERROR CODE DISPLAY â€” TAP CAPTURE</div>
         <div style="display:flex;gap:10px;padding:0 14px 14px;align-items:center;">
           <button id="scan-capture-btn" onclick="captureAndAnalyze()" style="flex:1;padding:16px;background:#0284c7;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;letter-spacing:.02em;">
-            ⬤ CAPTURE
+            â¬¤ CAPTURE
           </button>
-          <button onclick="toggleFlashlight()" id="scan-flash-btn" style="padding:14px;background:#1e293b;color:#94a3b8;border:1px solid #334155;border-radius:12px;font-size:16px;cursor:pointer;" title="Flashlight">🔦</button>
-          <button onclick="stopCamera()" style="padding:14px;background:#1e293b;color:#94a3b8;border:1px solid #334155;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;">⏹</button>
+          <button onclick="toggleFlashlight()" id="scan-flash-btn" style="padding:14px;background:#1e293b;color:#94a3b8;border:1px solid #334155;border-radius:12px;font-size:16px;cursor:pointer;" title="Flashlight">ðŸ”¦</button>
+          <button onclick="stopCamera()" style="padding:14px;background:#1e293b;color:#94a3b8;border:1px solid #334155;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;">â¹</button>
         </div>
         <div id="scan-result" style="padding:0 14px 80px;"></div>
         <div id="scan-no-camera" style="display:none;padding:20px 14px;">
           <div style="background:#1e293b;border:1px solid #334155;border-radius:12px;padding:20px;text-align:center;">
-            <div style="font-size:2rem;margin-bottom:10px;">📷</div>
+            <div style="font-size:2rem;margin-bottom:10px;">ðŸ“·</div>
             <p style="color:#94a3b8;font-size:14px;margin-bottom:16px;">Camera access not available or permission denied. Use Code Lookup to search manually.</p>
             <button onclick="setScanMode('lookup')" style="background:#0284c7;color:#fff;border:none;padding:12px 24px;border-radius:8px;font-weight:700;cursor:pointer;">Go to Code Lookup</button>
           </div>
@@ -827,7 +870,7 @@
 
   </main>
 
-  <!-- ═══ BOTTOM NAV ═══ -->
+  <!-- â•â•â• BOTTOM NAV â•â•â• -->
   <nav style="background:#ffffff;border-top:1px solid #e2e8f0;position:fixed;bottom:0;left:0;right:0;z-index:50;padding-bottom:env(safe-area-inset-bottom,0);display:flex;overflow-x:auto;-webkit-overflow-scrolling:touch;box-shadow:0 -2px 8px rgba(0,0,0,0.07);scrollbar-width:none;">
     <style>.nav-btn{min-width:52px;flex-shrink:0;}</style>
     <button class="nav-btn active" id="nav-errors" onclick="showTab('errors')">

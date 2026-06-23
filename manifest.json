@@ -1,7 +1,7 @@
 {
   "name": "SplashLens Field Reference",
   "short_name": "SplashLens",
-  "description": "Pool service field rescue app - error codes, dosing calculators, PartSnap AI scanner, SLAM tracker, filter guides, checklists. Manual tools work offline.",
+  "description": "Free pool service field reference app with PartSnap part identification assistance, equipment-code lookup, dosing calculators, service notes, route tools, SLAM tracker, and checklists. Manual tools work offline.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#f0f9ff",
@@ -27,9 +27,9 @@
       "description": "Calculate chemical doses for your pool"
     },
     {
-      "name": "AI Scanner",
+      "name": "PartSnap Scanner",
       "url": "/?tab=scan",
-      "description": "Scan error codes or identify parts with AI"
+      "description": "Reference assistance for pool parts, labels, and error displays"
     }
   ]
 }
