@@ -4,6 +4,7 @@ Use SplashLens to:
 
 - Search 230+ pool equipment, automation, lighting, robot, cover, sanitizer, and controller troubleshooting entries
 - Use PartSnap to photograph unknown pool parts and receive possible manufacturer/model/part-number clues with verification prompts
+- Review PartSnap Callback Risk Score, missing proof, Service Proof Passport saves, Mystery Part ticket IDs, and Apprentice Mode prompts
 - Calculate common chemical dosing adjustments
 - Build service notes, Route Brain field plans, escalation packets, and report-style field records
 - Check filter guides, pump/filter checklists, and manual reference tools
@@ -11,4 +12,4 @@ Use SplashLens to:
 
 Manual lookup, Route Brain planning, calculators, notes, filters, and checklists are designed for field use and can work from the app shell after first load. Online AI scan features require internet access and are assistance only. Always verify AI scan output and Route Brain guidance against equipment manuals, calibrated tests, label directions, and professional field judgment.
 
-SplashLens does not guarantee diagnosis, repair, chemical safety, manufacturer support, or training certification.
+SplashLens does not guarantee diagnosis, repair, chemical safety, manufacturer support, part fit, or training certification.

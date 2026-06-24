@@ -1,1 +1,1 @@
-PartSnap helps pool service techs photograph unknown parts, verify possible matches, and build cleaner field plans with Route Brain.
+PartSnap now adds callback-risk language, proof saves, mystery-part tickets, and Apprentice Mode so pool techs can verify faster before ordering.

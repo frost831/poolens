@@ -25,7 +25,7 @@
 ```text
 Refreshes SplashLens for the PartSnap field workflow.
 
-PartSnap now emphasizes possible pool-part matches, visible proof, missing proof, confidence ladder, and cleaner escalation notes before ordering.
+PartSnap now emphasizes possible pool-part matches, visible proof, missing proof, confidence ladder, Callback Risk Score, Service Proof Passport saves, Mystery Part ticket IDs, local review queue, Apprentice Mode, and cleaner escalation notes before ordering.
 
 The Android app remains a free no-account wrapper around app.splashlens.com. Manual lookup, dosing, checklists, and service notes remain free. Online scanner output is reference assistance only and must be verified against manufacturer documentation and professional field judgment.
 ```
@@ -72,7 +72,7 @@ Additional public-site crawl terms added without partnership claims:
 Recommended short description:
 
 ```text
-Pool part ID, error codes, dosing, service notes, and scanner assistance.
+Pool part ID, error codes, dosing, proof notes, and scanner assistance.
 ```
 
 Recommended full description:

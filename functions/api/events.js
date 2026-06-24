@@ -1,6 +1,9 @@
 const ALERT_EVENTS = new Set([
+  'first_app_open',
   'app_open',
+  'pwa_install_prompt_seen',
   'pwa_installed',
+  'pwa_standalone_open',
   'ai_scan_started',
   'manual_code_search',
   'partsnap_result',
@@ -117,6 +120,7 @@ async function eventSummary(request, env) {
   const callbackRisks = new Map();
   const meaningfulEvents = new Set([
     'pwa_installed',
+    'pwa_standalone_open',
     'ai_scan_started',
     'manual_code_search',
     'partsnap_result',
@@ -135,7 +139,10 @@ async function eventSummary(request, env) {
   let events30d = 0;
   let appOpens7d = 0;
   let appOpens30d = 0;
+  let firstOpens30d = 0;
+  let installPrompts30d = 0;
   let installs30d = 0;
+  let standaloneOpens30d = 0;
   let scans30d = 0;
   let searches30d = 0;
   let partsnapResults30d = 0;
@@ -145,18 +152,26 @@ async function eventSummary(request, env) {
   let partSnapMystery30d = 0;
   let partSnapApprentice30d = 0;
   let proofSaved30d = 0;
+  const uniqueClients30d = new Set();
+  const meaningfulClients30d = new Set();
 
   for (const record of records) {
     const ts = eventTime(record);
     const props = parseProps(record);
+    const clientId = clean(props.client_id || props.clientId || '', 120);
     inc(eventsByName, record.event);
     inc(paths, record.path || props.path || 'unknown');
 
     if (ts >= since7d) events7d += 1;
     if (ts >= since30d) {
       events30d += 1;
+      if (clientId) uniqueClients30d.add(clientId);
+      if (meaningfulEvents.has(record.event) && clientId) meaningfulClients30d.add(clientId);
+      if (record.event === 'first_app_open') firstOpens30d += 1;
       if (record.event === 'app_open') appOpens30d += 1;
+      if (record.event === 'pwa_install_prompt_seen') installPrompts30d += 1;
       if (record.event === 'pwa_installed') installs30d += 1;
+      if (record.event === 'pwa_standalone_open') standaloneOpens30d += 1;
       if (record.event === 'ai_scan_started') {
         scans30d += 1;
         inc(scanModes, props.mode || record.mode || 'unknown');
@@ -186,7 +201,12 @@ async function eventSummary(request, env) {
       events30d,
       appOpens7d,
       appOpens30d,
+      firstOpens30d,
+      uniqueClients30d: uniqueClients30d.size,
+      meaningfulClients30d: meaningfulClients30d.size,
+      installPrompts30d,
       installs30d,
+      standaloneOpens30d,
       scans30d,
       searches30d,
       partsnapResults30d,
@@ -223,8 +243,11 @@ async function sendEventAlert(env, record) {
     return { sent: false, reason: 'missing_sendgrid_config' };
   }
   const labels = {
+    first_app_open: 'First app open',
     app_open: 'First/opened app',
+    pwa_install_prompt_seen: 'Install prompt shown',
     pwa_installed: 'Installed app/PWA',
+    pwa_standalone_open: 'Standalone/PWA open',
     ai_scan_started: 'Scanner used',
     manual_code_search: 'Manual code search',
     partsnap_result: 'PartSnap result',

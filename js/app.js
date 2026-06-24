@@ -181,6 +181,7 @@ const DOSE_NEED_LABELS = {
 document.addEventListener('DOMContentLoaded', () => {
   initLanguageLayer();
   captureScanEntitlementFromUrl();
+  initInstallTracking();
   initErrors();
   initDosing();
   initVolume();
@@ -192,7 +193,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initRoute();
   checkOfflineStatus();
   initDeepLink();
-  trackSplashLensEvent('app_open', { tab: S.tab });
+  trackSplashLensAppOpen();
 });
 
 // ═══════════════════════════════════════════
@@ -3928,15 +3929,29 @@ function showScanLimitModal(result, status) {
 }
 
 function trackSplashLensEvent(name, props = {}) {
+  const clientId = getScanClientId();
+  const sessionKey = 'splashlens-session-id';
+  let sessionId = sessionStorage.getItem(sessionKey);
+  if (!sessionId) {
+    sessionId = `session-${Date.now().toString(36)}-${clientId.slice(0, 8)}`;
+    sessionStorage.setItem(sessionKey, sessionId);
+  }
+  const eventProps = {
+    client_id: clientId,
+    session_id: sessionId,
+    standalone: isStandaloneAppShell(),
+    store_shell: getStoreShellMode() || '',
+    ...props,
+  };
   window.dataLayer = window.dataLayer || [];
-  window.dataLayer.push({ event: name, ...props, ts: new Date().toISOString() });
-  if (window.plausible) window.plausible(name, { props });
+  window.dataLayer.push({ event: name, ...eventProps, ts: new Date().toISOString() });
+  if (window.plausible) window.plausible(name, { props: eventProps });
 
   const payload = JSON.stringify(withLanguageMetadata({
     event: name,
     source: 'app',
     path: `${window.location.pathname}${window.location.search}`,
-    props: withLanguageMetadata(props),
+    props: withLanguageMetadata(eventProps),
   }));
 
   try {
@@ -3951,6 +3966,38 @@ function trackSplashLensEvent(name, props = {}) {
       keepalive: true,
     }).catch(() => {});
   } catch {}
+}
+
+function isStandaloneAppShell() {
+  return Boolean(
+    window.matchMedia?.('(display-mode: standalone)')?.matches ||
+    window.navigator.standalone ||
+    getStoreShellMode()
+  );
+}
+
+function trackSplashLensAppOpen() {
+  const firstOpenKey = 'splashlens-first-open-tracked';
+  const openedBefore = localStorage.getItem(firstOpenKey) === '1';
+  if (!openedBefore) {
+    localStorage.setItem(firstOpenKey, '1');
+    trackSplashLensEvent('first_app_open', { tab: S.tab, first_open: true });
+  }
+  trackSplashLensEvent('app_open', { tab: S.tab, first_open: !openedBefore });
+}
+
+function initInstallTracking() {
+  window.addEventListener('beforeinstallprompt', () => {
+    trackSplashLensEvent('pwa_install_prompt_seen', { tab: S.tab });
+  });
+  window.addEventListener('appinstalled', () => {
+    localStorage.setItem('splashlens-pwa-installed', '1');
+    trackSplashLensEvent('pwa_installed', { tab: S.tab });
+  });
+  if (isStandaloneAppShell() && localStorage.getItem('splashlens-standalone-open-tracked') !== '1') {
+    localStorage.setItem('splashlens-standalone-open-tracked', '1');
+    trackSplashLensEvent('pwa_standalone_open', { tab: S.tab });
+  }
 }
 
 async function callAIScan(canvas, mode, result, status) {
