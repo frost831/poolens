@@ -3548,6 +3548,7 @@ const PARTSNAP_MONTHLY_LINK = '/api/checkout?plan=monthly';
 const PARTSNAP_YEARLY_LINK = '/api/checkout?plan=yearly';
 const SPLASHLENS_EVENT_ENDPOINT = '/api/events';
 const PARTSNAP_FEEDBACK_ENDPOINT = '/api/partsnap-feedback';
+const PARTSNAP_REVIEW_KEY = 'splashlens-partsnap-review-tickets';
 const STORE_SHELL_KEY = 'sl_store_shell_mode';
 
 function initScanTab() {
@@ -3606,6 +3607,17 @@ function setScanMode(mode) {
     if (capBtn) capBtn.textContent = '⬤ CAPTURE';
   }
 
+  if (mode === 'parts') {
+    if (status) status.textContent = 'AIM AT EQUIPMENT PART - TAP IDENTIFY';
+    if (capBtn) capBtn.textContent = 'IDENTIFY PART';
+  } else if (mode === 'strip') {
+    if (status) status.textContent = 'AIM AT TEST STRIP IN GOOD LIGHT - TAP SCAN';
+    if (capBtn) capBtn.textContent = 'SCAN STRIP';
+  } else {
+    if (status) status.textContent = 'AIM AT ERROR CODE DISPLAY - TAP CAPTURE';
+    if (capBtn) capBtn.textContent = 'CAPTURE';
+  }
+
   if (isCameraMode) startCamera();
   else              stopCamera();
   if (mode === 'lookup') renderScanBrandFilter();
@@ -3627,10 +3639,64 @@ function renderPartSnapPrimer() {
         <div style="background:#111827;border:1px solid #334155;border-radius:8px;padding:8px;text-align:center;"><b style="display:block;color:#e2e8f0;font-size:11px;">2. Label</b><span style="display:block;color:#94a3b8;font-size:9px;margin-top:2px;">model proof</span></div>
         <div style="background:#431407;border:1px solid #b45309;border-radius:8px;padding:8px;text-align:center;"><b style="display:block;color:#fed7aa;font-size:11px;">3. Verify</b><span style="display:block;color:#fdba74;font-size:9px;margin-top:2px;">before buy</span></div>
       </div>
+      ${renderPartSnapReviewTicketSummary()}
     </div>`;
 }
 
 // ── Camera ──────────────────────────────────
+
+function getPartSnapReviewTickets() {
+  try {
+    const tickets = JSON.parse(localStorage.getItem(PARTSNAP_REVIEW_KEY) || '[]');
+    return Array.isArray(tickets) ? tickets : [];
+  } catch {
+    return [];
+  }
+}
+
+function savePartSnapReviewTicket(ticket) {
+  const tickets = getPartSnapReviewTickets();
+  tickets.push(ticket);
+  localStorage.setItem(PARTSNAP_REVIEW_KEY, JSON.stringify(tickets.slice(-25)));
+}
+
+function renderPartSnapReviewTicketSummary() {
+  const tickets = getPartSnapReviewTickets();
+  if (!tickets.length) return '';
+  const latest = tickets[tickets.length - 1];
+  return `
+    <div style="margin-top:10px;background:#020617;border:1px solid #164e63;border-radius:10px;padding:10px;">
+      <div style="display:flex;justify-content:space-between;gap:8px;align-items:center;">
+        <div>
+          <p style="color:#67e8f9;font-size:10px;font-weight:950;letter-spacing:.08em;text-transform:uppercase;margin-bottom:3px;">Mystery Part Review Queue</p>
+          <p style="color:#e0f2fe;font-size:11px;line-height:1.35;">Latest: ${escHtml(latest.id || 'local ticket')} - ${escHtml(latest.status || 'saved')}</p>
+        </div>
+        <button onclick="renderPartSnapReviewTickets()" style="background:#0e7490;color:#fff;border:none;border-radius:8px;padding:8px 10px;font-size:10px;font-weight:900;cursor:pointer;white-space:nowrap;">View</button>
+      </div>
+    </div>`;
+}
+
+function renderPartSnapReviewTickets() {
+  const result = document.getElementById('scan-result');
+  if (!result) return;
+  const tickets = getPartSnapReviewTickets().slice().reverse();
+  result.innerHTML = `
+    <div style="background:#f8fafc;border:1px solid #cbd5e1;border-radius:12px;padding:14px;margin:8px 0;">
+      <p style="color:#0369a1;font-size:10px;font-weight:950;letter-spacing:.1em;text-transform:uppercase;margin-bottom:5px;">PartSnap Review Queue</p>
+      <h3 style="color:#0f172a;font-size:18px;font-weight:950;margin-bottom:7px;">Mystery part tickets saved on this device</h3>
+      <p style="color:#64748b;font-size:12px;line-height:1.45;margin-bottom:12px;">These are the last 25 mystery-part submissions or failed sends from this device. Use the ticket id when emailing SplashLens or following up with a senior tech/vendor.</p>
+      ${tickets.length ? tickets.map(ticket => `
+        <div style="border:1px solid #e2e8f0;border-radius:10px;padding:10px;margin-bottom:8px;background:#fff;">
+          <div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start;">
+            <strong style="color:#0f172a;font-size:12px;">${escHtml(ticket.id || 'local ticket')}</strong>
+            <span style="color:#0369a1;background:#e0f2fe;border-radius:999px;padding:3px 7px;font-size:10px;font-weight:900;">${escHtml(ticket.status || 'saved')}</span>
+          </div>
+          <p style="color:#475569;font-size:11px;line-height:1.4;margin-top:6px;">${escHtml(ticket.summary || 'Mystery part submitted.')}</p>
+          <p style="color:#94a3b8;font-size:10px;margin-top:6px;">${escHtml(ticket.createdAt || '')}</p>
+        </div>`).join('') : '<p style="color:#64748b;font-size:12px;">No tickets yet. Send a mystery part from a PartSnap result to start the queue.</p>'}
+      <button onclick="setScanMode('parts')" style="width:100%;background:#0f766e;color:#fff;border:none;border-radius:10px;padding:10px;font-size:12px;font-weight:900;cursor:pointer;margin-top:4px;">Back to PartSnap</button>
+    </div>`;
+}
 
 function startCamera() {
   const video  = document.getElementById('scan-video');
@@ -4375,6 +4441,8 @@ async function submitMysteryPartFeedback() {
   const status = document.getElementById('partsnap-feedback-status');
   const email = document.getElementById('partsnap-feedback-email')?.value || '';
   const note = document.getElementById('partsnap-feedback-note')?.value || '';
+  const ai = _lastPartSnapResult || {};
+  const summary = [ai.manufacturer, ai.component, ai.model, ai.partNumber].filter(Boolean).join(' / ') || note || 'Mystery part submitted.';
   if (status) status.textContent = 'Sending...';
   try {
     const res = await fetch(PARTSNAP_FEEDBACK_ENDPOINT, {
@@ -4390,10 +4458,26 @@ async function submitMysteryPartFeedback() {
       })),
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    trackSplashLensEvent('partsnap_mystery_submitted', { confidence: (_lastPartSnapResult || {}).confidence || 'unknown' });
-    if (status) status.textContent = 'Sent. This is now a training candidate.';
+    const payload = await res.json().catch(() => ({}));
+    const ticketId = payload.ticketId || `local-${Date.now().toString(36)}`;
+    savePartSnapReviewTicket({
+      id: ticketId,
+      createdAt: new Date().toLocaleString(),
+      status: payload.alertQueued ? 'sent to review' : 'saved locally',
+      summary,
+    });
+    trackSplashLensEvent('partsnap_mystery_submitted', { confidence: ai.confidence || 'unknown', ticket_id: ticketId });
+    if (status) status.textContent = `Sent. Ticket ${ticketId} saved in the review queue.`;
   } catch {
-    if (status) status.textContent = 'Could not send. Copy the packet and email hello@splashlens.com.';
+    const ticketId = `local-${Date.now().toString(36)}`;
+    savePartSnapReviewTicket({
+      id: ticketId,
+      createdAt: new Date().toLocaleString(),
+      status: 'needs manual email',
+      summary,
+    });
+    trackSplashLensEvent('partsnap_mystery_saved_local', { confidence: ai.confidence || 'unknown', ticket_id: ticketId });
+    if (status) status.textContent = `Could not send. Local ticket ${ticketId} saved; copy the packet and email hello@splashlens.com.`;
   }
 }
 

@@ -62,6 +62,7 @@ async function sendFeedbackAlert(env, record) {
         value: [
           'SplashLens PartSnap mystery part',
           '',
+          `Ticket: ${record.id}`,
           `Email: ${record.email || 'not provided'}`,
           `Note: ${record.note || 'not provided'}`,
           `Path: ${record.path}`,
@@ -92,6 +93,7 @@ export async function onRequestPost({ request, env }) {
   }
 
   const record = {
+    id: `mpr-${Date.now().toString(36)}-${crypto.randomUUID().slice(0, 8)}`,
     email,
     note: clean(body.note, 1000),
     source: clean(body.source || 'partsnap-result', 80),
@@ -111,6 +113,7 @@ export async function onRequestPost({ request, env }) {
   const alert = await sendFeedbackAlert(env, record);
   return json(request, env, 200, {
     ok: true,
+    ticketId: record.id,
     stored: Boolean(env.SCAN_USAGE_KV),
     alertQueued: Boolean(alert.sent),
     emailConfigured: alert.reason !== 'missing_sendgrid_config',

@@ -79,7 +79,7 @@
     .tab-panel.active { display: block; }
 
     /* Bottom nav */
-    .nav-btn { background: none; border: none; color: #94a3b8; cursor: pointer; flex: 1; display: flex; flex-direction: column; align-items: center; padding: 9px 0 7px; gap: 3px; transition: color 0.15s; -webkit-tap-highlight-color: transparent; }
+    .nav-btn { background: none; border: none; color: #94a3b8; cursor: pointer; min-width: 0; flex: 1 1 0; display: flex; flex-direction: column; align-items: center; padding: 9px 0 7px; gap: 3px; transition: color 0.15s; -webkit-tap-highlight-color: transparent; }
     .nav-btn.active { color: #0284c7; }
     .nav-btn span { font-size: 10px; font-weight: 700; letter-spacing: 0.04em; }
 
@@ -157,6 +157,7 @@
     @media (max-width: 360px) {
       .rescue-actions { grid-template-columns: 1fr; }
       .rescue-strip, .partsnap-steps { grid-template-columns: 1fr; }
+      .nav-btn span { font-size: 9px; letter-spacing: 0; }
     }
 
     /* Result display */
@@ -801,11 +802,11 @@
     <div id="tab-scan" class="tab-panel" style="padding:0;background:#0f172a;min-height:calc(100vh - 120px);">
       <!-- Mode bar -->
       <div id="scan-mode-bar" style="display:flex;background:#1e293b;border-bottom:1px solid #334155;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;">
-        <button id="scan-mode-camera" onclick="setScanMode('camera')" style="flex:1;min-width:68px;padding:10px 4px;background:#0284c7;color:#fff;border:none;cursor:pointer;font-size:10px;font-weight:700;letter-spacing:.02em;transition:background .15s;">ðŸ“· ERRORS</button>
-        <button id="scan-mode-parts" onclick="setScanMode('parts')" style="flex:1;min-width:78px;padding:10px 4px;background:transparent;color:#94a3b8;border:none;cursor:pointer;font-size:10px;font-weight:700;letter-spacing:.02em;transition:background .15s;">ðŸ”§ PARTSNAP</button>
-        <button id="scan-mode-strip" onclick="setScanMode('strip')" style="flex:1;min-width:68px;padding:10px 4px;background:transparent;color:#94a3b8;border:none;cursor:pointer;font-size:10px;font-weight:700;letter-spacing:.02em;transition:background .15s;">ðŸ§ª STRIP</button>
-        <button id="scan-mode-lookup" onclick="setScanMode('lookup')" style="flex:1;min-width:68px;padding:10px 4px;background:transparent;color:#94a3b8;border:none;cursor:pointer;font-size:10px;font-weight:700;letter-spacing:.02em;transition:background .15s;">ðŸ” LOOKUP</button>
-        <button id="scan-mode-chem" onclick="setScanMode('chem')" style="flex:1;min-width:68px;padding:10px 4px;background:transparent;color:#94a3b8;border:none;cursor:pointer;font-size:10px;font-weight:700;letter-spacing:.02em;transition:background .15s;">ðŸ“– CHEM</button>
+        <button id="scan-mode-camera" onclick="setScanMode('camera')" style="flex:1;min-width:68px;padding:10px 4px;background:#0284c7;color:#fff;border:none;cursor:pointer;font-size:10px;font-weight:700;letter-spacing:.02em;transition:background .15s;">ERRORS</button>
+        <button id="scan-mode-parts" onclick="setScanMode('parts')" style="flex:1;min-width:78px;padding:10px 4px;background:transparent;color:#94a3b8;border:none;cursor:pointer;font-size:10px;font-weight:700;letter-spacing:.02em;transition:background .15s;">PARTSNAP</button>
+        <button id="scan-mode-strip" onclick="setScanMode('strip')" style="flex:1;min-width:68px;padding:10px 4px;background:transparent;color:#94a3b8;border:none;cursor:pointer;font-size:10px;font-weight:700;letter-spacing:.02em;transition:background .15s;">STRIP</button>
+        <button id="scan-mode-lookup" onclick="setScanMode('lookup')" style="flex:1;min-width:68px;padding:10px 4px;background:transparent;color:#94a3b8;border:none;cursor:pointer;font-size:10px;font-weight:700;letter-spacing:.02em;transition:background .15s;">LOOKUP</button>
+        <button id="scan-mode-chem" onclick="setScanMode('chem')" style="flex:1;min-width:68px;padding:10px 4px;background:transparent;color:#94a3b8;border:none;cursor:pointer;font-size:10px;font-weight:700;letter-spacing:.02em;transition:background .15s;">CHEM</button>
       </div>
       <!-- AI status bar -->
       <div id="scan-ai-bar" style="display:flex;align-items:center;justify-content:center;gap:8px;padding:6px 14px;background:#0f172a;border-bottom:1px solid #1e293b;">
@@ -828,18 +829,18 @@
           </div>
           <canvas id="scan-canvas" style="display:none;"></canvas>
         </div>
-        <div id="scan-camera-status" style="text-align:center;padding:10px;color:#7dd3fc;font-size:12px;font-weight:600;letter-spacing:.04em;">AIM AT ERROR CODE DISPLAY â€” TAP CAPTURE</div>
+        <div id="scan-camera-status" style="text-align:center;padding:10px;color:#7dd3fc;font-size:12px;font-weight:600;letter-spacing:.04em;">AIM AT ERROR CODE DISPLAY - TAP CAPTURE</div>
         <div style="display:flex;gap:10px;padding:0 14px 14px;align-items:center;">
           <button id="scan-capture-btn" onclick="captureAndAnalyze()" style="flex:1;padding:16px;background:#0284c7;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;letter-spacing:.02em;">
-            â¬¤ CAPTURE
+            CAPTURE
           </button>
-          <button onclick="toggleFlashlight()" id="scan-flash-btn" style="padding:14px;background:#1e293b;color:#94a3b8;border:1px solid #334155;border-radius:12px;font-size:16px;cursor:pointer;" title="Flashlight">ðŸ”¦</button>
-          <button onclick="stopCamera()" style="padding:14px;background:#1e293b;color:#94a3b8;border:1px solid #334155;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;">â¹</button>
+          <button onclick="toggleFlashlight()" id="scan-flash-btn" style="padding:14px;background:#1e293b;color:#94a3b8;border:1px solid #334155;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer;" title="Flashlight">LIGHT</button>
+          <button onclick="stopCamera()" style="padding:14px;background:#1e293b;color:#94a3b8;border:1px solid #334155;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer;">STOP</button>
         </div>
         <div id="scan-result" style="padding:0 14px 80px;"></div>
         <div id="scan-no-camera" style="display:none;padding:20px 14px;">
           <div style="background:#1e293b;border:1px solid #334155;border-radius:12px;padding:20px;text-align:center;">
-            <div style="font-size:2rem;margin-bottom:10px;">ðŸ“·</div>
+            <div style="font-size:2rem;margin-bottom:10px;">CAM</div>
             <p style="color:#94a3b8;font-size:14px;margin-bottom:16px;">Camera access not available or permission denied. Use Code Lookup to search manually.</p>
             <button onclick="setScanMode('lookup')" style="background:#0284c7;color:#fff;border:none;padding:12px 24px;border-radius:8px;font-weight:700;cursor:pointer;">Go to Code Lookup</button>
           </div>
@@ -871,8 +872,7 @@
   </main>
 
   <!-- â•â•â• BOTTOM NAV â•â•â• -->
-  <nav style="background:#ffffff;border-top:1px solid #e2e8f0;position:fixed;bottom:0;left:0;right:0;z-index:50;padding-bottom:env(safe-area-inset-bottom,0);display:flex;overflow-x:auto;-webkit-overflow-scrolling:touch;box-shadow:0 -2px 8px rgba(0,0,0,0.07);scrollbar-width:none;">
-    <style>.nav-btn{min-width:52px;flex-shrink:0;}</style>
+  <nav style="background:#ffffff;border-top:1px solid #e2e8f0;position:fixed;bottom:0;left:0;right:0;z-index:50;padding-bottom:env(safe-area-inset-bottom,0);display:flex;overflow:hidden;box-shadow:0 -2px 8px rgba(0,0,0,0.07);">
     <button class="nav-btn active" id="nav-errors" onclick="showTab('errors')">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
       <span>Errors</span>
