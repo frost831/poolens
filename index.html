@@ -261,7 +261,7 @@
 </head>
 <body>
 
-  <!-- â•â•â• HEADER â•â•â• -->
+  <!-- HEADER -->
   <header style="background:var(--field-blue);padding:11px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;box-shadow:0 2px 10px rgba(3,105,161,0.22);">
     <div style="display:flex;align-items:center;gap:10px;">
       <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 32 32">
@@ -273,7 +273,7 @@
       </svg>
       <span style="color:#ffffff;font-weight:900;font-size:20px;letter-spacing:-0.5px;">SplashLens</span>
       <span style="background:rgba(255,255,255,0.2);color:#ffffff;font-size:9px;font-weight:900;padding:2px 7px;border-radius:4px;border:1px solid rgba(255,255,255,0.35);letter-spacing:0.08em;">FIELD</span>
-      <div id="offline-dot" title="Checking offline statusâ€¦" style="width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,0.25);flex-shrink:0;transition:background 0.4s;"></div>
+      <div id="offline-dot" title="Checking offline status..." style="width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,0.25);flex-shrink:0;transition:background 0.4s;"></div>
     </div>
     <div id="pool-vol-badge" style="display:none;">
       <button onclick="focusVolumeInput()" style="background:rgba(255,255,255,0.18);border:1px solid rgba(255,255,255,0.35);border-radius:7px;padding:4px 11px;cursor:pointer;">
@@ -286,16 +286,16 @@
     <span>Preferred language</span>
     <select id="language-select" aria-label="Preferred language">
       <option value="en">English</option>
-      <option value="es">EspaÃ±ol</option>
-      <option value="pt-BR">PortuguÃªs</option>
-      <option value="fr">FranÃ§ais</option>
+      <option value="es">Espanol</option>
+      <option value="pt-BR">Portugues</option>
+      <option value="fr">Francais</option>
     </select>
   </div>
 
-  <!-- â•â•â• MAIN â•â•â• -->
+  <!-- MAIN -->
   <main style="padding-bottom:96px;">
 
-    <!-- â”€â”€â”€ ERRORS â”€â”€â”€ -->
+    <!-- ERRORS -->
     <div id="tab-errors" class="tab-panel active" style="padding:14px;">
 
       <section class="rescue-hero">
@@ -350,7 +350,7 @@
 
       <div style="position:relative;margin-bottom:12px;">
         <svg style="position:absolute;left:13px;top:50%;transform:translateY(-50%);pointer-events:none;" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <input type="search" id="error-search" placeholder="Search codes, symptoms, brandsâ€¦" oninput="onErrorSearch(this.value)" style="padding-left:40px;padding-right:40px;" autocomplete="off" spellcheck="false">
+        <input type="search" id="error-search" placeholder="Search codes, symptoms, brands..." oninput="onErrorSearch(this.value)" style="padding-left:40px;padding-right:40px;" autocomplete="off" spellcheck="false">
         <button id="search-clear" onclick="clearSearch()" style="display:none;position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:#94a3b8;cursor:pointer;padding:6px;">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>
@@ -362,12 +362,12 @@
         <div style="text-align:center;padding:40px 16px;">
           <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="1.5" style="margin:0 auto 14px;display:block;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
           <p style="font-size:15px;color:#475569;margin-bottom:5px;font-weight:600;">Pick a brand or search</p>
-          <p style="font-size:12px;color:#94a3b8;">Hayward Â· Pentair Â· Jandy Â· Maytronics Â· Aiper Â· Raypak</p>
+          <p style="font-size:12px;color:#94a3b8;">Hayward / Pentair / Jandy / Maytronics / Aiper / Raypak</p>
         </div>
       </div>
     </div>
 
-    <!-- â”€â”€â”€ DOSING â”€â”€â”€ -->
+    <!-- DOSING -->
     <div id="tab-dosing" class="tab-panel" style="padding:14px;">
       <!-- SLAM active banner (shown/hidden by JS) -->
       <div id="slam-banner" style="display:none;margin-bottom:14px;"></div>
@@ -380,10 +380,10 @@
       <div class="field-group">
         <label class="field-label">What to Adjust</label>
         <select id="dose-param" onchange="onParamChange()">
-          <option value="">â€” Select parameter â€”</option>
+          <option value="">Select parameter</option>
           <option value="fc">Free Chlorine (FC)</option>
-          <option value="ph_lower">pH â€” Lower it</option>
-          <option value="ph_raise">pH â€” Raise it</option>
+          <option value="ph_lower">pH - Lower it</option>
+          <option value="ph_raise">pH - Raise it</option>
           <option value="ta">Total Alkalinity (TA)</option>
           <option value="ch">Calcium Hardness (CH)</option>
           <option value="cya">CYA / Stabilizer</option>
@@ -437,12 +437,12 @@
 
       <hr class="section-div">
       <p style="color:#0369a1;font-weight:900;font-size:15px;margin-bottom:4px;">Addition Order</p>
-      <p style="color:#64748b;font-size:12px;margin-bottom:12px;">Always add in this sequence â€” never mix products directly.</p>
+      <p style="color:#64748b;font-size:12px;margin-bottom:12px;">Always add in this sequence - never mix products directly.</p>
       <div id="addition-order"></div>
 
       <hr class="section-div">
       <p style="color:#0369a1;font-weight:900;font-size:15px;margin-bottom:4px;">SLAM Calculator</p>
-      <p style="color:#64748b;font-size:12px;margin-bottom:14px;">Shock Level for Algae Management &mdash; FC target = CYA Ã— multiplier</p>
+      <p style="color:#64748b;font-size:12px;margin-bottom:14px;">Shock Level for Algae Management - FC target = CYA x multiplier</p>
 
       <div class="field-group">
         <label class="field-label">CYA Level (ppm)</label>
@@ -469,19 +469,19 @@
 
       <hr class="section-div">
       <p style="color:#0369a1;font-weight:900;font-size:15px;margin-bottom:4px;">Treatment Plan Generator</p>
-      <p style="color:#64748b;font-size:12px;margin-bottom:14px;">Enter your full test results â€” get a prioritized, ordered action plan for the visit.</p>
+      <p style="color:#64748b;font-size:12px;margin-bottom:14px;">Enter your full test results - get a prioritized, ordered action plan for the visit.</p>
       <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:10px;padding:14px;margin-bottom:4px;box-shadow:0 1px 3px rgba(0,0,0,0.06);">
         <div class="field-group">
-          <label class="field-label">Pool Volume (gallons) â€” optional, needed for exact doses</label>
+          <label class="field-label">Pool Volume (gallons) - optional, needed for exact doses</label>
           <input type="number" id="plan-vol" placeholder="e.g. 15000" min="0" inputmode="decimal">
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px;">
-          <div><label class="field-label">FC</label><input type="number" id="plan-fc" placeholder="â€”" inputmode="decimal" step="0.1" min="0"></div>
-          <div><label class="field-label">CC</label><input type="number" id="plan-cc" placeholder="â€”" inputmode="decimal" step="0.1" min="0"></div>
-          <div><label class="field-label">pH</label><input type="number" id="plan-ph" placeholder="â€”" inputmode="decimal" step="0.1"></div>
-          <div><label class="field-label">TA</label><input type="number" id="plan-ta" placeholder="â€”" inputmode="decimal" min="0"></div>
-          <div><label class="field-label">CH</label><input type="number" id="plan-ch" placeholder="â€”" inputmode="decimal" min="0"></div>
-          <div><label class="field-label">CYA</label><input type="number" id="plan-cya" placeholder="â€”" inputmode="decimal" min="0"></div>
+          <div><label class="field-label">FC</label><input type="number" id="plan-fc" placeholder="-" inputmode="decimal" step="0.1" min="0"></div>
+          <div><label class="field-label">CC</label><input type="number" id="plan-cc" placeholder="-" inputmode="decimal" step="0.1" min="0"></div>
+          <div><label class="field-label">pH</label><input type="number" id="plan-ph" placeholder="-" inputmode="decimal" step="0.1"></div>
+          <div><label class="field-label">TA</label><input type="number" id="plan-ta" placeholder="-" inputmode="decimal" min="0"></div>
+          <div><label class="field-label">CH</label><input type="number" id="plan-ch" placeholder="-" inputmode="decimal" min="0"></div>
+          <div><label class="field-label">CYA</label><input type="number" id="plan-cya" placeholder="-" inputmode="decimal" min="0"></div>
         </div>
         <button class="btn-calc" onclick="calcTreatmentPlan()">Generate Treatment Plan</button>
         <div id="plan-result" style="margin-top:14px;"></div>
@@ -518,7 +518,7 @@
       <div id="danger-section"></div>
     </div>
 
-    <!-- â”€â”€â”€ VOLUME â”€â”€â”€ -->
+    <!-- VOLUME -->
     <div id="tab-volume" class="tab-panel" style="padding:14px;">
       <p style="color:#0369a1;font-weight:900;font-size:16px;margin-bottom:14px;">Pool Volume</p>
       <div class="field-group">
@@ -530,7 +530,7 @@
 
       <hr class="section-div">
       <p style="color:#0369a1;font-weight:900;font-size:15px;margin-bottom:4px;">Turnover Rate</p>
-      <p style="color:#64748b;font-size:12px;margin-bottom:14px;">How many hours to filter the full pool volume. Residential target: 6â€“8 hrs/day.</p>
+      <p style="color:#64748b;font-size:12px;margin-bottom:14px;">How many hours to filter the full pool volume. Residential target: 6-8 hrs/day.</p>
       <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:10px;padding:14px;box-shadow:0 1px 3px rgba(0,0,0,0.06);">
         <div class="field-group">
           <label class="field-label">Pool Volume (gallons)</label>
@@ -545,7 +545,7 @@
       </div>
     </div>
 
-    <!-- â”€â”€â”€ FILTERS (Sand / DE / Cartridge) â”€â”€â”€ -->
+    <!-- FILTERS (Sand / DE / Cartridge) -->
     <div id="tab-sand" class="tab-panel" style="padding:14px;">
 
       <!-- Filter type sub-nav -->
@@ -580,7 +580,7 @@
               <p style="color:#64748b;font-size:10px;margin-top:2px;">until sight glass clears</p>
             </div>
           </div>
-          <div class="warn-box">Always RINSE 15â€“30 seconds after backwash before returning to FILTER.</div>
+          <div class="warn-box">Always RINSE 15-30 seconds after backwash before returning to FILTER.</div>
         </div>
         <div id="alt-media-section"></div>
       </div>
@@ -596,16 +596,16 @@
       </div>
     </div>
 
-    <!-- â”€â”€â”€ ROUTE â”€â”€â”€ -->
+    <!-- ROUTE -->
     <div id="tab-route" class="tab-panel" style="padding:14px;">
       <div id="route-content"></div>
     </div>
 
-    <!-- â”€â”€â”€ REPORT â”€â”€â”€ -->
+    <!-- REPORT -->
     <div id="tab-report" class="tab-panel" style="padding:14px;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
         <p style="color:#0369a1;font-weight:900;font-size:16px;">Visit Report</p>
-        <button onclick="toggleReportPoolPicker()" style="background:#eff6ff;border:1px solid #93c5fd;color:#0369a1;font-size:11px;font-weight:800;padding:6px 12px;border-radius:7px;cursor:pointer;">â†“ Load Pool</button>
+        <button onclick="toggleReportPoolPicker()" style="background:#eff6ff;border:1px solid #93c5fd;color:#0369a1;font-size:11px;font-weight:800;padding:6px 12px;border-radius:7px;cursor:pointer;">Load Pool</button>
       </div>
       <div id="rpt-pool-picker" style="display:none;margin-bottom:14px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:10px;"></div>
       <div class="info-box" style="margin-bottom:14px;">
@@ -656,12 +656,12 @@
         </select>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px;">
-        <div><label class="field-label">FC (ppm)</label><input type="number" id="rpt-fc" placeholder="â€”" inputmode="decimal" step="0.1"></div>
-        <div><label class="field-label">CC (ppm)</label><input type="number" id="rpt-cc" placeholder="â€”" inputmode="decimal" step="0.1"></div>
-        <div><label class="field-label">pH</label><input type="number" id="rpt-ph" placeholder="â€”" inputmode="decimal" step="0.1"></div>
-        <div><label class="field-label">TA (ppm)</label><input type="number" id="rpt-ta" placeholder="â€”" inputmode="decimal"></div>
-        <div><label class="field-label">CH (ppm)</label><input type="number" id="rpt-ch" placeholder="â€”" inputmode="decimal"></div>
-        <div><label class="field-label">CYA (ppm)</label><input type="number" id="rpt-cya" placeholder="â€”" inputmode="decimal"></div>
+        <div><label class="field-label">FC (ppm)</label><input type="number" id="rpt-fc" placeholder="-" inputmode="decimal" step="0.1"></div>
+        <div><label class="field-label">CC (ppm)</label><input type="number" id="rpt-cc" placeholder="-" inputmode="decimal" step="0.1"></div>
+        <div><label class="field-label">pH</label><input type="number" id="rpt-ph" placeholder="-" inputmode="decimal" step="0.1"></div>
+        <div><label class="field-label">TA (ppm)</label><input type="number" id="rpt-ta" placeholder="-" inputmode="decimal"></div>
+        <div><label class="field-label">CH (ppm)</label><input type="number" id="rpt-ch" placeholder="-" inputmode="decimal"></div>
+        <div><label class="field-label">CYA (ppm)</label><input type="number" id="rpt-cya" placeholder="-" inputmode="decimal"></div>
       </div>
 
       <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:12px;margin-bottom:14px;box-shadow:0 1px 3px rgba(0,0,0,0.05);">
@@ -770,7 +770,7 @@
       <div id="rpt-copy-confirm" style="display:none;margin-top:8px;text-align:center;color:#166534;font-size:13px;font-weight:700;">Copied to clipboard!</div>
     </div>
 
-    <!-- â”€â”€â”€ GUIDE (all checklists) â”€â”€â”€ -->
+    <!-- GUIDE (all checklists) -->
     <div id="tab-guide" class="tab-panel" style="padding:14px;">
       <div style="display:flex;gap:6px;margin-bottom:14px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:2px;">
         <button id="cl-btn-opening" class="cat-pill active" onclick="switchClType('opening')">Opening</button>
@@ -792,13 +792,13 @@
       <div id="checklist-content"></div>
     </div>
 
-    <!-- â”€â”€â”€ POOLS â”€â”€â”€ -->
+    <!-- POOLS -->
     <div id="tab-pools" class="tab-panel" style="padding:14px;">
       <!-- Content rendered by JS: renderPoolList(), renderPoolDetail(), renderPoolForm() -->
       <div id="pools-content"></div>
     </div>
 
-    <!-- â•â•â• SCAN TAB â•â•â• -->
+    <!-- SCAN TAB -->
     <div id="tab-scan" class="tab-panel" style="padding:0;background:#0f172a;min-height:calc(100vh - 120px);">
       <!-- Mode bar -->
       <div id="scan-mode-bar" style="display:flex;background:#1e293b;border-bottom:1px solid #334155;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;">
@@ -871,7 +871,7 @@
 
   </main>
 
-  <!-- â•â•â• BOTTOM NAV â•â•â• -->
+  <!-- BOTTOM NAV -->
   <nav style="background:#ffffff;border-top:1px solid #e2e8f0;position:fixed;bottom:0;left:0;right:0;z-index:50;padding-bottom:env(safe-area-inset-bottom,0);display:flex;overflow:hidden;box-shadow:0 -2px 8px rgba(0,0,0,0.07);">
     <button class="nav-btn active" id="nav-errors" onclick="showTab('errors')">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -922,3 +922,4 @@
   </script>
 </body>
 </html>
+
