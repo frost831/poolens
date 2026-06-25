@@ -6,16 +6,16 @@
 
 ## 1. What This Product Is
 
-SplashLens is a free, offline-first PWA for pool service technicians. No account required. No app store download. No subscription. Open it on any phone at `app.splashlens.com` and it works without signal after the first load.
+SplashLens is a free-core, offline-first field reference app for pool service technicians. No account is required for the core tools. It is available at `app.splashlens.com`, the iOS App Store listing is live, and the Google Play listing is in testing/review.
 
 **The product today:**
-- 500+ equipment error codes across 15 brands with causes + fix steps
+- 230+ current field troubleshooting entries across major equipment categories with likely causes, next checks, and fix guidance
 - Chemical dosing calculators (chlorine, acid, alkalinity, CYA, salt)
 - SLAM multi-day tracker with OCLT logging
-- AI camera scanner — point at equipment error display → instant diagnosis
+- AI camera scanner — point at an equipment display or part to get cautious reference suggestions that still require manual, model, and qualified-tech verification
 - Filter guides (sand backwash, DE recharge, cartridge clean)
 - Weekly service checklist
-- Works 100% offline via service worker cache
+- Manual reference tools work offline after first load via service worker cache; online AI scanner workflows require internet
 
 **The planned paid product:** Route Ready — a 10-module training program turning new hires into competent pool techs in 30 days. Landing page is live. Email capture is running. No content built yet.
 
@@ -194,7 +194,7 @@ File: `poolens/js/errors.js` — 978 lines, syntax validated.
 | Individual | $29/mo or $199 lifetime | 1 tech |
 | Team Starter | $99/mo | Up to 5 techs |
 | Team Growth | $199/mo | Up to 15 techs |
-| Company Unlimited | $399/mo | Unlimited + manager dashboard |
+| Company / Training Pilot | TBD | Team, training, and partner pilots are open for discussion; do not market an unlimited-seat plan until pricing and entitlement are production-ready. |
 | **Launch offer** | **$99 lifetime** | First 50 individuals only |
 
 ### Build Sequence (per curriculum doc priority)

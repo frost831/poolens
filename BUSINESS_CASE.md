@@ -89,8 +89,8 @@ The app is a single-page PWA with 9 fully functional tabs. All features work off
 - Hosting: Cloudflare Pages (zero egress cost, global CDN)
 - PWA: service worker cache, offline-first, installable on iOS and Android
 
-### What the Product Is Not (Yet)
-- No native app store listing (Play Store / App Store) — currently browser-install only
+### Current Product Boundaries
+- Store distribution is no longer browser-only: the iOS App Store listing is live and the Google Play listing is in testing/review. The browser PWA remains the fastest free access path.
 - No backend/accounts — all data is local to the device
 - AI vision calls are live online through `/api/scan`; production must keep `ANTHROPIC_API_KEY` and server-side metering configured.
 - PartSnap Pro web checkout exists through Stripe Payment Links. Account-based paid entitlement is not production-grade yet; store wrappers must stay free-core unless native billing is added.
@@ -164,7 +164,7 @@ Key characteristics of the market:
 
 **Tier 4 — PoolLens Learn (B2B)**
 - Per-seat training: $49–99/employee trained (one-time)
-- Company subscription: $299/year for unlimited employee seats
+- Company/training pilot: pricing and seat limits TBD; do not market an unlimited-seat plan until entitlement, billing, and support paths are production-ready.
 - Individual module: $9.99 one-time (CPO exam prep, SLAM deep dive, etc.)
 
 **Tier 5 — Manufacturer API (Enterprise, negotiated)**
