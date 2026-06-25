@@ -29,7 +29,7 @@ Marketing and intake surfaces checked live on 2026-06-25:
 - `https://splashlens.com` returned HTTP 200.
 - `https://splashlens.com/api/partner-intake` returned `ok=true` on `GET` with storage and email configured.
 - A live `POST` probe to `https://splashlens.com/api/partner-intake` returned `Valid email required`, which confirms the endpoint is up and validating requests.
-- `https://splashlens.com/robots.txt`, `https://splashlens.com/sitemap.xml`, `https://splashlens.com/ai.txt`, and `https://splashlens.com/llms.txt` all returned HTTP 200.
+- `https://splashlens.com/robots.txt`, `https://splashlens.com/sitemap.xml`, `https://splashlens.com/pseo-sitemap.xml`, `https://splashlens.com/seo-hub-sitemap.xml`, `https://splashlens.com/category-hub-sitemap.xml`, `https://splashlens.com/ai.txt`, and `https://splashlens.com/llms.txt` all returned HTTP 200.
 - `https://app.splashlens.com/robots.txt`, `https://app.splashlens.com/sitemap.xml`, `https://app.splashlens.com/ai.txt`, and `https://app.splashlens.com/llms.txt` all returned HTTP 200.
 
 ## Google Play
@@ -56,6 +56,11 @@ Store-surface verification on 2026-06-25:
 
 - Public Google Play listing URL still resolved at `https://play.google.com/store/apps/details?id=com.splashlens.fieldtools`.
 - iOS App Store listing URL returned HTTP 200 at `https://apps.apple.com/us/app/splashlens/id6763644905`.
+
+Release-readiness caveat:
+
+- `docs/store/GOOGLE_PLAY_FIELDTOOLS_RELEASE_2026-06-25.md` still says the `1.0.4` AAB upload was initiated in Play Console, but the final `Next` / review / rollout confirmation was not truthfully completed from automation.
+- The public store listing is live, but this specific corrected `1.0.4` release should still be treated as waiting on manual Play Console confirmation.
 
 ## Stripe
 
