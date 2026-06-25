@@ -41,13 +41,13 @@ The earlier signed Android release was documented as:
 - Package: `com.splashlens.app`
 - AAB: `play-store-artifacts/SplashLens-Field-Tools-1.0.3-v4-splashlens-app-signed.aab`
 
-Google Play is live publicly at `https://play.google.com/store/apps/details?id=com.splashlens.fieldtools`. Because the public listing uses `com.splashlens.fieldtools`, a corrected Android wrapper build was prepared for that package:
+Google Play is live publicly at `https://play.google.com/store/apps/details?id=com.splashlens.fieldtools`. Because the public listing uses `com.splashlens.fieldtools`, a corrected Android wrapper build was prepared for that package. The first corrected attempt used version code `5`, but Play Console reported that version code had already been used. The submitted production review build is:
 
-- Version: `1.0.4`
-- Version code: `5`
+- Version: `1.0.5`
+- Version code: `6`
 - Package: `com.splashlens.fieldtools`
-- AAB: `play-store-artifacts/SplashLens-Field-Tools-1.0.4-v5-fieldtools-signed.aab`
-- SHA-256: `277272ABF82EFA6F4281492FDB6D4F482E432CFDCAE2B0EA275C89E57F7CFAAE`
+- AAB: `play-store-artifacts/SplashLens-Field-Tools-1.0.5-v6-fieldtools-FINAL-SIGNED.aab`
+- SHA-256: `B3574933B2069A8EBB7257D93E6AB1FE7C123BBCA3ABED142AA46841BCEBA7CF`
 - Release packet: `docs/store/GOOGLE_PLAY_FIELDTOOLS_RELEASE_2026-06-25.md`
 
 The marketing site includes a public Android tester and field-feedback intake page at `https://splashlens.com/google-play-testers.html`, wired to the partner/advisor intake endpoint for upcoming build feedback.
@@ -57,10 +57,12 @@ Store-surface verification on 2026-06-25:
 - Public Google Play listing URL still resolved at `https://play.google.com/store/apps/details?id=com.splashlens.fieldtools`.
 - iOS App Store listing URL returned HTTP 200 at `https://apps.apple.com/us/app/splashlens/id6763644905`.
 
-Release-readiness caveat:
+Release status:
 
-- `docs/store/GOOGLE_PLAY_FIELDTOOLS_RELEASE_2026-06-25.md` still says the `1.0.4` AAB upload was initiated in Play Console, but the final `Next` / review / rollout confirmation was not truthfully completed from automation.
-- The public store listing is live, but this specific corrected `1.0.4` release should still be treated as waiting on manual Play Console confirmation.
+- Play Console accepted bundle `6 (1.0.5)` under App bundles.
+- The production release was saved from Preview and Confirm.
+- Owner reported the saved production change was submitted to Google for review on 2026-06-25.
+- Treat the update as waiting on Google review until Play Console shows the new production release live.
 
 ## Stripe
 

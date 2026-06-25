@@ -11,16 +11,16 @@ The prior local `1.0.3` release packet documented a build under `com.splashlens.
 ## Build
 
 - Package: `com.splashlens.fieldtools`
-- Version code: `5`
-- Version name: `1.0.4`
+- Version code: `6`
+- Version name: `1.0.5`
 - Hosted app URL: `https://app.splashlens.com/?store=android`
 - Build command run from `android-twa`: `.\gradlew.bat clean bundleRelease`
 - Result: build passed
 
 ## Signed AAB
 
-- Signed AAB: `C:\Users\sales\Dropbox\Projects\poolens\play-store-artifacts\SplashLens-Field-Tools-1.0.4-v5-fieldtools-signed.aab`
-- SHA-256: `277272ABF82EFA6F4281492FDB6D4F482E432CFDCAE2B0EA275C89E57F7CFAAE`
+- Signed AAB: `C:\Users\sales\Dropbox\Projects\poolens\play-store-artifacts\SplashLens-Field-Tools-1.0.5-v6-fieldtools-FINAL-SIGNED.aab`
+- SHA-256: `B3574933B2069A8EBB7257D93E6AB1FE7C123BBCA3ABED142AA46841BCEBA7CF`
 - Upload certificate SHA-256: `9F:B4:69:CF:41:91:74:BF:76:21:32:34:AF:7A:53:0D:75:02:58:0A:33:77:C9:D8:91:71:E4:E9:4B:17:2E:96`
 - Signing verification: `jarsigner -verify -verbose -certs` returned `jar verified`
 
@@ -29,8 +29,8 @@ The prior local `1.0.3` release packet documented a build under `com.splashlens.
 Gradle release intermediates show:
 
 - `applicationId`: `com.splashlens.fieldtools`
-- `versionCode`: `5`
-- `versionName`: `1.0.4`
+- `versionCode`: `6`
+- `versionName`: `1.0.5`
 - Bundle manifest package: `com.splashlens.fieldtools`
 - Main classes: `com.splashlens.fieldtools.Application`, `com.splashlens.fieldtools.LauncherActivity`, `com.splashlens.fieldtools.DelegationService`
 
@@ -48,27 +48,25 @@ Status from browser work on 2026-06-25:
 - App status confirmed: `Production`
 - Latest public production release before this upload: `1.0.0 Android launch`, released June 5, 2026
 - Existing production draft release opened: `/tracks/4697669214915845586/releases/2/prepare`
-- `SplashLens-Field-Tools-1.0.4-v5-fieldtools-signed.aab` upload was initiated from that draft release screen
-- Play Console showed: `You can leave this page while your SplashLens-Field-Tools-1.0.4-v5-fieldtools-signed.aab upload is optimized for distribution.`
-- Browser automation became unstable while Google was optimizing the upload, so final `Next` / `Send changes for review` could not be truthfully confirmed from automation.
+- Play rejected the first `1.0.4` / version code `5` upload because version code `5` had already been used.
+- Android wrapper was bumped to `1.0.5` / version code `6`.
+- Play rejected an intermediate v6 upload as unsigned; local verification confirmed it was unsigned.
+- `SplashLens-Field-Tools-1.0.5-v6-fieldtools-FINAL-SIGNED.aab` was generated, verified with `jarsigner`, and uploaded.
+- Play Console accepted the bundle and showed `6 (1.0.5)` under App bundles.
+- The release was saved from Preview and Confirm.
+- Owner reported the saved production change was submitted to Google for review on 2026-06-25.
 
-Remaining Play Console steps:
-
-1. Return to the open Play Console draft release tab for `SplashLens Field Tools`.
-2. Confirm the uploaded bundle appears as `5 (1.0.4)` under App bundles.
-3. Fill release name if Play did not auto-fill it: `1.0.4 PartSnap field release`.
-4. Use release notes:
+Release notes used/planned for this release:
 
 ```text
 SplashLens now includes the latest PartSnap field-reference improvements, proof-focused part identification language, owner usage event wiring, and updated live app surfaces. SplashLens remains a free-core pool technician reference aid and does not replace manuals, manufacturer support, licensed work, or qualified technician judgment.
 ```
 
-5. Click `Next`.
-6. Review warnings and app access/data safety prompts.
-7. Click the final review/rollout button Play presents, usually `Save`, `Start rollout to Production`, or `Send changes for review`.
+Play Console may still display the release as pending review until Google completes review.
 
 ## Do Not Use
 
 - Do not upload the `1.0.3` / version code `4` artifact to the public `com.splashlens.fieldtools` listing.
+- Do not upload the rejected `1.0.4` / version code `5` artifact again; Play has already consumed version code `5`.
 - Do not use `com.splashlens.app` for the public Google Play listing unless Play Console proves that is the live listing package.
 - Do not add paid entitlement, guaranteed diagnosis, manufacturer endorsement, or unlimited AI claims to the Play listing.
