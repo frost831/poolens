@@ -25,7 +25,7 @@ The newest signed Android release was submitted as:
 - Package: `com.splashlens.app`
 - AAB: `play-store-artifacts/SplashLens-Field-Tools-1.0.3-v4-splashlens-app-signed.aab`
 
-Current external gate remains Google Play testing/review and the required tester opt-in period. The marketing site now includes a public tester intake page at `https://splashlens.com/google-play-testers.html`, wired to the partner/advisor intake endpoint.
+Google Play is live publicly at `https://play.google.com/store/apps/details?id=com.splashlens.fieldtools`. The marketing site includes a public Android tester and field-feedback intake page at `https://splashlens.com/google-play-testers.html`, wired to the partner/advisor intake endpoint for upcoming build feedback.
 
 ## Stripe
 

@@ -6,7 +6,7 @@
 
 ## 1. What This Product Is
 
-SplashLens is a free-core, offline-first field reference app for pool service technicians. No account is required for the core tools. It is available at `app.splashlens.com`, the iOS App Store listing is live, and the Google Play listing is in testing/review.
+SplashLens is a free-core, offline-first field reference app for pool service technicians. No account is required for the core tools. It is available at `app.splashlens.com`, and the iOS App Store and Google Play listings are live.
 
 **The product today:**
 - 230+ current field troubleshooting entries across major equipment categories with likely causes, next checks, and fix guidance

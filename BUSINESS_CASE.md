@@ -90,7 +90,7 @@ The app is a single-page PWA with 9 fully functional tabs. All features work off
 - PWA: service worker cache, offline-first, installable on iOS and Android
 
 ### Current Product Boundaries
-- Store distribution is no longer browser-only: the iOS App Store listing is live and the Google Play listing is in testing/review. The browser PWA remains the fastest free access path.
+- Store distribution is no longer browser-only: the iOS App Store and Google Play listings are live. The browser PWA remains the fastest free access path.
 - No backend/accounts — all data is local to the device
 - AI vision calls are live online through `/api/scan`; production must keep `ANTHROPIC_API_KEY` and server-side metering configured.
 - PartSnap Pro web checkout exists through Stripe Payment Links. Account-based paid entitlement is not production-grade yet; store wrappers must stay free-core unless native billing is added.
@@ -427,7 +427,7 @@ There is no affordable, mobile-first, practical training resource for this. The 
 | On-the-job | Variable | Inconsistent | Yes, but expensive |
 | PoolLens Learn (proposed) | $9.99–299 | Mobile, structured | Yes |
 
-**The cost of a bad hire:** A solo tech who doesn't understand chemistry or equipment faults generates $500–2,000 in callbacks, chemical errors, and equipment damage in their first 60 days. A training tool that cuts that risk by 50% is worth $500–1,000 to a pool service company owner. At $299/year for unlimited seats, this is a dramatically underpriced solution.
+**The cost of a bad hire:** A solo tech who doesn't understand chemistry or equipment faults can generate expensive callbacks, chemical errors, and equipment damage in their first 60 days. A training tool that reduces that risk can be valuable to a pool service company owner, but seat pricing, certificate handling, and entitlement rules must be finalized before public sales claims.
 
 ### Market Size for Training
 
