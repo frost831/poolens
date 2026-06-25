@@ -32,7 +32,7 @@
     
 
     <application
-        android:name="com.splashlens.app.Application"
+        android:name="com.splashlens.fieldtools.Application"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/appName"
@@ -75,7 +75,7 @@
             </activity>
         
 
-        <activity android:name="com.splashlens.app.LauncherActivity"
+        <activity android:name="com.splashlens.fieldtools.LauncherActivity"
             android:alwaysRetainTaskState="true"
             android:label="@string/launcherName"
             android:exported="true">
@@ -174,7 +174,7 @@
         </provider>
 
         <service
-            android:name="com.splashlens.app.DelegationService"
+            android:name="com.splashlens.fieldtools.DelegationService"
             android:enabled="@bool/enableNotification"
             android:exported="@bool/enableNotification">
 

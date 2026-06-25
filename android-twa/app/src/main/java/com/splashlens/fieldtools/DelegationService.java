@@ -1,14 +1,9 @@
-package com.splashlens.app;
-
-
+package com.splashlens.fieldtools;
 
 public class DelegationService extends
         com.google.androidbrowserhelper.trusted.DelegationService {
     @Override
     public void onCreate() {
         super.onCreate();
-
-        
     }
 }
-

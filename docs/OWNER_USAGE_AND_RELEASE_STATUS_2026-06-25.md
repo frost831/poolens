@@ -18,14 +18,23 @@ The owner dashboard is available at:
 
 ## Google Play
 
-The newest signed Android release was submitted as:
+The earlier signed Android release was documented as:
 
 - Version: `1.0.3`
 - Version code: `4`
 - Package: `com.splashlens.app`
 - AAB: `play-store-artifacts/SplashLens-Field-Tools-1.0.3-v4-splashlens-app-signed.aab`
 
-Google Play is live publicly at `https://play.google.com/store/apps/details?id=com.splashlens.fieldtools`. The marketing site includes a public Android tester and field-feedback intake page at `https://splashlens.com/google-play-testers.html`, wired to the partner/advisor intake endpoint for upcoming build feedback.
+Google Play is live publicly at `https://play.google.com/store/apps/details?id=com.splashlens.fieldtools`. Because the public listing uses `com.splashlens.fieldtools`, a corrected Android wrapper build was prepared for that package:
+
+- Version: `1.0.4`
+- Version code: `5`
+- Package: `com.splashlens.fieldtools`
+- AAB: `play-store-artifacts/SplashLens-Field-Tools-1.0.4-v5-fieldtools-signed.aab`
+- SHA-256: `277272ABF82EFA6F4281492FDB6D4F482E432CFDCAE2B0EA275C89E57F7CFAAE`
+- Release packet: `docs/store/GOOGLE_PLAY_FIELDTOOLS_RELEASE_2026-06-25.md`
+
+The marketing site includes a public Android tester and field-feedback intake page at `https://splashlens.com/google-play-testers.html`, wired to the partner/advisor intake endpoint for upcoming build feedback.
 
 ## Stripe
 

@@ -1,5 +1,5 @@
 {
-  "packageId": "com.splashlens.app",
+  "packageId": "com.splashlens.fieldtools",
   "host": "app.splashlens.com",
   "name": "SplashLens",
   "launcherName": "SplashLens",
@@ -20,8 +20,8 @@
     "path": "C:\\Users\\sales\\.keystores\\splashlens\\splashlens-upload.keystore",
     "alias": "splashlens_upload"
   },
-  "appVersionName": "1.0.3",
-  "appVersionCode": "4",
+  "appVersionName": "1.0.4",
+  "appVersionCode": "5",
   "shortcuts": [],
   "generatorApp": "bubblewrap-cli",
   "webManifestUrl": "https://app.splashlens.com/manifest.json",
@@ -43,5 +43,5 @@
   "fileHandlers": [],
   "launchHandlerClientMode": "",
   "displayOverride": [],
-  "appVersion": "1.0.3"
+  "appVersion": "1.0.4"
 }
