@@ -18,7 +18,7 @@
 - Content rating saved as All Other App Types with online content disclosed for generated AI content; rating preview showed ESRB Everyone / PEGI 3 / IARC 3+ style ratings.
 - Target audience saved as 18 and over.
 - Data safety saved:
-  - No data shared with third parties.
+  - Current policy language should disclose service-provider processing where applicable for app functionality, diagnostics, and optional online scan workflows. Do not reuse the old no-sharing shortcut line for current submissions.
   - Data collected: name, email address, photos, crash logs, diagnostics, other app performance data, app interactions, other user-generated content, other actions.
   - Data deletion request URL: `https://splashlens.com/privacy.html`
   - Encrypted in transit.

@@ -10,7 +10,7 @@
 - SplashLens is the public brand. PoolLens is the source repo / earlier field-app name.
 - Current public app: `https://app.splashlens.com`; fallback Pages host: `https://poolens.pages.dev`.
 - Current public site: `https://splashlens.com`; fallback Pages host: `https://poolens-site.pages.dev`.
-- Use `500+ error codes` in public-facing copy until the database count is automatically measured and updated.
+- Use measured, conservative entry-count language in public-facing copy until the database count is automatically measured and updated.
 - The online AI scanner is live, but production must keep server-side scan metering enabled. Do not rely only on browser localStorage limits.
 - PartSnap Pro web checkout exists through Stripe Payment Links. Account-based paid entitlement is not production-grade yet.
 - Route Ready is a planned training layer collecting free pilot interest. Do not describe certificates, verification, or completed modules as already built.
@@ -20,13 +20,13 @@
 
 ## 1. Executive Summary
 
-SplashLens is a free, offline-first Progressive Web App (PWA) for pool service technicians. It is a broad field reference tool: 500+ error codes across major equipment brands, full chemical dosing calculators, filter references, maintenance checklists, visit reporting, pool profiles, and route management - all usable with zero signal after first load.
+SplashLens is a free, offline-first Progressive Web App (PWA) for pool service technicians. It is a broad field reference tool: 230+ field troubleshooting entries across major equipment categories, full chemical dosing calculators, filter references, maintenance checklists, visit reporting, pool profiles, and route management - with core manual-reference tools usable after first load.
 
 The app is live at app.splashlens.com, with poolens.pages.dev as the Cloudflare Pages fallback. The marketing site is live at splashlens.com, with poolens-site.pages.dev as the fallback. No money has been spent on advertising. The product is distributing itself on brand authority and utility.
 
 The business model is a four-tier stack built on top of a free product that will never be paywalled:
 
-- **PartSnap** — camera-to-part-ID AI lookup with affiliate buy links and a $4.99/month unlimited tier
+- **PartSnap** — camera-to-part-ID AI lookup with affiliate buy links and an extended paid web scanner tier
 - **PoolLens Pro** — visit photo logging, customer PDF reports, multi-tech team accounts at $19.99/month
 - **PoolLens Learn** — new technician training module licensed B2B at $49–299/employee or $299/year/company
 - **Manufacturer API** — error code database licensing and white-label deals at $5K–25K/year per partner
@@ -44,7 +44,7 @@ The moat is distribution: every free user is a future paid conversion opportunit
 The app is a single-page PWA with 9 fully functional tabs. All features work offline via service worker cache. The app is installable from the browser on iOS and Android without going through an app store.
 
 **Error Codes (Scan + Errors tabs)**
-- 500+ fault codes across major brands: Hayward, Pentair (including IntelliFlo variable speed), Jandy, Maytronics/Dolphin, Aiper, Raypak, AquaCal, Sta-Rite, Waterway, Beatbot, Betta, Polaris, Zodiac
+- 230+ field troubleshooting entries across major brands and categories: Hayward, Pentair (including IntelliFlo variable speed), Jandy, Maytronics/Dolphin, Aiper, Raypak, AquaCal, Sta-Rite, Waterway, Beatbot, Betta, Polaris, Zodiac
 - Full-text search across all codes
 - Live camera with frame capture and Web TextDetector OCR for code recognition
 - Code Lookup returns manufacturer, fault description, diagnosis steps, and fix guidance
@@ -114,7 +114,7 @@ Key characteristics of the market:
 
 | Tool | Price | Error Codes | Offline | Chemistry Calcs | Field UX |
 |---|---|---|---|---|---|
-| **SplashLens** | Free | 500+ | Yes (SW cache) | Full suite | Yes |
+| **SplashLens** | Free | 230+ | Yes (SW cache) | Full suite | Yes |
 | Skimmer | $1–2/pool/month | No | No | No | Partial |
 | Pool Brain | $55/tech/month | No | No | Basic | Partial |
 | Jobber | $69+/month | No | No | No | Generic |
@@ -153,7 +153,7 @@ Key characteristics of the market:
 **Tier 2 — PartSnap ($4.99/month or $39/year)**
 - AI vision lookup: point camera at unknown part → get manufacturer, part number, compatible models, buy links
 - Free users get 10 lookups/month (enough to evaluate, not enough to rely on)
-- Paid users get unlimited lookups
+- Paid web users get an extended scanner allowance
 - Affiliate revenue on buy links (Amazon Associates 3–5%, pool supply affiliates 4–8%)
 
 **Tier 3 — PoolLens Pro ($19.99/month per tech, $199/year; first tech free, additional techs $9.99/month)**
@@ -283,7 +283,7 @@ The Scan tab is live. Users can:
 - Open a live camera feed
 - Capture a frame
 - Run Web TextDetector OCR for text recognition on the image
-- Search the 500+ code database via full-text search
+- Search the field troubleshooting database via full-text search
 
 What's missing: the AI vision call. The frontend is wired. The backend does not exist yet.
 
