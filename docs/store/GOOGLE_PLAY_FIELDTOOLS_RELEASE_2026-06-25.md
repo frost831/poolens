@@ -41,19 +41,31 @@ Evidence files:
 
 ## Play Console Upload Steps
 
-1. Open Play Console for `SplashLens Field Tools`.
-2. Confirm package is `com.splashlens.fieldtools`.
-3. Go to the active testing or production release lane Play allows for this account.
-4. Create a new release.
-5. Upload `SplashLens-Field-Tools-1.0.4-v5-fieldtools-signed.aab`.
-6. Use release notes:
+Status from browser work on 2026-06-25:
+
+- Play Console app confirmed: `SplashLens Field Tools`
+- Console package confirmed: `com.splashlens.fieldtools`
+- App status confirmed: `Production`
+- Latest public production release before this upload: `1.0.0 Android launch`, released June 5, 2026
+- Existing production draft release opened: `/tracks/4697669214915845586/releases/2/prepare`
+- `SplashLens-Field-Tools-1.0.4-v5-fieldtools-signed.aab` upload was initiated from that draft release screen
+- Play Console showed: `You can leave this page while your SplashLens-Field-Tools-1.0.4-v5-fieldtools-signed.aab upload is optimized for distribution.`
+- Browser automation became unstable while Google was optimizing the upload, so final `Next` / `Send changes for review` could not be truthfully confirmed from automation.
+
+Remaining Play Console steps:
+
+1. Return to the open Play Console draft release tab for `SplashLens Field Tools`.
+2. Confirm the uploaded bundle appears as `5 (1.0.4)` under App bundles.
+3. Fill release name if Play did not auto-fill it: `1.0.4 PartSnap field release`.
+4. Use release notes:
 
 ```text
 SplashLens now includes the latest PartSnap field-reference improvements, proof-focused part identification language, owner usage event wiring, and updated live app surfaces. SplashLens remains a free-core pool technician reference aid and does not replace manuals, manufacturer support, licensed work, or qualified technician judgment.
 ```
 
-7. Review Play warnings and app access/data safety prompts.
-8. Send changes for review.
+5. Click `Next`.
+6. Review warnings and app access/data safety prompts.
+7. Click the final review/rollout button Play presents, usually `Save`, `Start rollout to Production`, or `Send changes for review`.
 
 ## Do Not Use
 
