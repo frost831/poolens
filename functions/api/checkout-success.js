@@ -26,16 +26,25 @@ function tokenSecret(env) {
   return secret.length >= 32 ? secret : '';
 }
 
+function stripeSecret(env) {
+  let secret = String(env.STRIPE_SECRET_KEY || '').trim();
+  if (!secret) return '';
+  secret = secret.replace(/^STRIPE_SECRET_KEY\s*=\s*/i, '').replace(/^Bearer\s+/i, '').trim();
+  secret = secret.replace(/^['"]|['"]$/g, '').trim();
+  return secret;
+}
+
 async function stripeGet(path, env) {
-  if (!env.STRIPE_SECRET_KEY) return null;
+  const secret = stripeSecret(env);
+  if (!secret) return { data: null, reason: 'missing_secret' };
   const response = await fetch(`https://api.stripe.com/v1/${path}`, {
-    headers: { Authorization: `Bearer ${env.STRIPE_SECRET_KEY}` },
+    headers: { Authorization: `Bearer ${secret}` },
   });
   if (!response.ok) {
     console.error('SplashLens Stripe lookup failed', response.status, await response.text());
-    return null;
+    return { data: null, reason: `stripe_api_${response.status}` };
   }
-  return response.json();
+  return { data: await response.json(), reason: 'ok' };
 }
 
 function isPaid(session) {
@@ -123,9 +132,13 @@ export async function onRequestGet({ request, env }) {
     return html('<h1>SplashLens checkout</h1><p>Missing a valid checkout session.</p>', 400);
   }
 
-  const session = await stripeGet(`checkout/sessions/${encodeURIComponent(sessionId)}`, env);
+  const lookup = await stripeGet(`checkout/sessions/${encodeURIComponent(sessionId)}`, env);
+  const session = lookup.data;
   if (!session) {
-    return html('<h1>SplashLens checkout</h1><p>Checkout lookup is not configured yet. Contact support for activation.</p>', 503);
+    const label = lookup.reason === 'missing_secret'
+      ? 'Checkout lookup is not configured yet.'
+      : 'Checkout lookup could not verify this Stripe session.';
+    return html(`<h1>SplashLens checkout</h1><p>${label} Contact support for activation.</p>`, 503);
   }
   if (!isPaid(session)) {
     return html('<h1>SplashLens checkout</h1><p>Payment is not complete yet. Refresh after Stripe finishes processing.</p>', 402);
