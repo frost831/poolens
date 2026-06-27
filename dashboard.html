@@ -201,6 +201,18 @@
         <table id="top-events"></table>
       </div>
       <div class="panel">
+        <h2>Top Sources</h2>
+        <table id="top-sources"></table>
+      </div>
+      <div class="panel">
+        <h2>Top Referrers</h2>
+        <table id="top-referrers"></table>
+      </div>
+      <div class="panel">
+        <h2>Top Campaigns</h2>
+        <table id="top-campaigns"></table>
+      </div>
+      <div class="panel">
         <h2>Manual Searches</h2>
         <table id="manual-queries"></table>
       </div>
@@ -249,9 +261,9 @@
       const el = document.getElementById('recent-events');
       const body = (rows || []).map((row) => {
         const props = row.props ? JSON.stringify(row.props).slice(0, 180) : '';
-        return `<tr><td>${new Date(row.createdAt).toLocaleString()}</td><td><code>${escapeHtml(row.event || '')}</code></td><td>${escapeHtml(row.path || '')}</td><td>${escapeHtml(props)}</td></tr>`;
+        return `<tr><td>${new Date(row.createdAt).toLocaleString()}</td><td><code>${escapeHtml(row.event || '')}</code></td><td><code>${escapeHtml(row.source || 'app')}</code></td><td>${escapeHtml(row.path || '')}</td><td>${escapeHtml(props)}</td></tr>`;
       }).join('');
-      el.innerHTML = '<thead><tr><th>Time</th><th>Event</th><th>Path</th><th>Props</th></tr></thead><tbody>' + (body || '<tr><td colspan="4">No events yet.</td></tr>') + '</tbody>';
+      el.innerHTML = '<thead><tr><th>Time</th><th>Event</th><th>Source</th><th>Path</th><th>Props</th></tr></thead><tbody>' + (body || '<tr><td colspan="5">No events yet.</td></tr>') + '</tbody>';
     }
 
     function escapeHtml(value) {
@@ -286,6 +298,13 @@
       const m = data.metrics || {};
       document.getElementById('metrics').innerHTML = [
         metricCard('App Opens 7d', m.appOpens7d, 'Real app usage, not email opens.'),
+        metricCard('PoolPro Clients 30d', m.poolProClients30d, 'Anonymous devices from PoolPro attribution.'),
+        metricCard('PoolPro Article Opens', m.poolProReferralOpens30d, 'Tagged article/referral landings.'),
+        metricCard('PoolPro App Opens', m.poolProAppOpens30d, 'App opens attributed to PoolPro.'),
+        metricCard('PoolPro First Opens', m.poolProFirstOpens30d, 'New-device first opens from PoolPro.'),
+        metricCard('PoolPro Installs', m.poolProInstalls30d, 'PWA install events from PoolPro.'),
+        metricCard('PoolPro Standalone', m.poolProStandaloneOpens30d, 'Installed/native shell opens from PoolPro.'),
+        metricCard('PoolPro Scans', m.poolProScans30d, 'Scanner starts from PoolPro traffic.'),
         metricCard('App Opens 30d', m.appOpens30d, 'Anonymous event count.'),
         metricCard('PWA Installs 30d', m.installs30d, 'Browser-dependent install signal.'),
         metricCard('AI Scans 30d', m.scans30d, 'Scanner starts.'),
@@ -301,6 +320,9 @@
         metricCard('Stored Events', m.storedEvents, 'Loaded from KV sample.')
       ].join('');
       renderCountTable('top-events', data.topEvents, 'Event');
+      renderCountTable('top-sources', data.topSources, 'Source');
+      renderCountTable('top-referrers', data.topReferrers, 'Referrer');
+      renderCountTable('top-campaigns', data.topCampaigns, 'Campaign');
       renderCountTable('manual-queries', data.manualQueries, 'Query');
       renderCountTable('scan-modes', data.scanModes, 'Mode');
       renderCountTable('callback-risks', data.callbackRisks, 'Risk');

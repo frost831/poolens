@@ -8,6 +8,11 @@
   }
 
   function track(eventName, props) {
+    if (typeof window.trackSplashLensEvent === 'function') {
+      window.trackSplashLensEvent(eventName, props || {});
+      return;
+    }
+
     var body = JSON.stringify({
       event: eventName,
       source: 'app',
@@ -32,6 +37,7 @@
   window.SplashLensAnalytics = { track: track };
 
   window.addEventListener('appinstalled', function () {
+    if (typeof window.trackSplashLensEvent === 'function') return;
     track('pwa_installed', { displayMode: displayMode() });
   });
 
@@ -42,5 +48,7 @@
     }
   });
 
-  track('app_open', { title: document.title, displayMode: displayMode() });
+  if (typeof window.trackSplashLensEvent !== 'function') {
+    track('app_open', { title: document.title, displayMode: displayMode() });
+  }
 })();

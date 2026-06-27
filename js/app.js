@@ -181,6 +181,7 @@ const DOSE_NEED_LABELS = {
 document.addEventListener('DOMContentLoaded', () => {
   initLanguageLayer();
   captureScanEntitlementFromUrl();
+  initSplashLensAttribution();
   initInstallTracking();
   initErrors();
   initDosing();
@@ -193,6 +194,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initRoute();
   checkOfflineStatus();
   initDeepLink();
+  trackReferralLandingOpen();
   trackSplashLensAppOpen();
 });
 
@@ -3551,6 +3553,8 @@ const SPLASHLENS_EVENT_ENDPOINT = '/api/events';
 const PARTSNAP_FEEDBACK_ENDPOINT = '/api/partsnap-feedback';
 const PARTSNAP_REVIEW_KEY = 'splashlens-partsnap-review-tickets';
 const STORE_SHELL_KEY = 'sl_store_shell_mode';
+const ATTRIBUTION_KEY = 'splashlens-attribution-v1';
+const ATTRIBUTION_SESSION_KEY = 'splashlens-attribution-session-v1';
 
 function initScanTab() {
   updateAIStatusBar();
@@ -3873,6 +3877,118 @@ function isStoreShellMode() {
   return !!getStoreShellMode();
 }
 
+function cleanAttributionValue(value, max = 160) {
+  return String(value || '')
+    .replace(/[\u0000-\u001f\u007f]/g, '')
+    .trim()
+    .slice(0, max);
+}
+
+function normalizeAttributionSource(value) {
+  const source = cleanAttributionValue(value, 80).toLowerCase();
+  if (!source) return '';
+  if (source.includes('poolpro') || source.includes('poolpro mag') || source.includes('poolpromag')) return 'poolpro';
+  return source.replace(/[^a-z0-9._-]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '').slice(0, 80);
+}
+
+function getReferrerHost() {
+  try {
+    if (!document.referrer) return '';
+    return new URL(document.referrer).hostname.replace(/^www\./i, '').toLowerCase();
+  } catch {
+    return '';
+  }
+}
+
+function readAttribution(storage) {
+  try {
+    const raw = storage.getItem(storage === sessionStorage ? ATTRIBUTION_SESSION_KEY : ATTRIBUTION_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+function writeAttribution(storage, attribution) {
+  try {
+    storage.setItem(storage === sessionStorage ? ATTRIBUTION_SESSION_KEY : ATTRIBUTION_KEY, JSON.stringify(attribution));
+  } catch {}
+}
+
+function attributionFromCurrentPage() {
+  try {
+    const url = new URL(window.location.href);
+    const params = url.searchParams;
+    const referrerHost = getReferrerHost();
+    const explicitSource = params.get('utm_source') || params.get('source') || params.get('ref') || params.get('referrer');
+    let source = normalizeAttributionSource(explicitSource);
+    if (!source && referrerHost.endsWith('poolpromag.com')) source = 'poolpro';
+    if (!source && referrerHost) source = normalizeAttributionSource(referrerHost);
+    const campaign = cleanAttributionValue(params.get('utm_campaign') || params.get('campaign') || (source === 'poolpro' ? 'poolpro_launch_article' : ''), 120);
+    const medium = cleanAttributionValue(params.get('utm_medium') || (referrerHost ? 'referral' : ''), 80);
+    if (!source && !campaign && !medium && !referrerHost) return null;
+    const now = new Date().toISOString();
+    return {
+      source: source || 'direct',
+      medium,
+      campaign,
+      referrer: cleanAttributionValue(document.referrer, 300),
+      referrer_host: cleanAttributionValue(referrerHost, 120),
+      landing_path: cleanAttributionValue(`${window.location.pathname}${window.location.search}`, 300),
+      article: source === 'poolpro' ? 'poolpro_splashlens_launches_free_field_reference_app' : '',
+      first_seen: now,
+      last_seen: now,
+    };
+  } catch {
+    return null;
+  }
+}
+
+function initSplashLensAttribution() {
+  const incoming = attributionFromCurrentPage();
+  const stored = readAttribution(localStorage);
+  let attribution = stored || incoming || null;
+
+  if (incoming) {
+    const shouldReplace =
+      !stored ||
+      incoming.source === 'poolpro' ||
+      (incoming.source && incoming.source !== 'direct' && stored.source === 'direct') ||
+      incoming.campaign;
+    attribution = shouldReplace
+      ? { ...stored, ...incoming, first_seen: stored?.first_seen || incoming.first_seen, last_seen: incoming.last_seen }
+      : { ...stored, last_seen: incoming.last_seen };
+  }
+
+  if (attribution) {
+    writeAttribution(localStorage, attribution);
+    writeAttribution(sessionStorage, attribution);
+  }
+  return attribution || {};
+}
+
+function getSplashLensAttribution() {
+  return readAttribution(sessionStorage) || readAttribution(localStorage) || initSplashLensAttribution() || {};
+}
+
+function trackReferralLandingOpen() {
+  const attribution = getSplashLensAttribution();
+  const source = normalizeAttributionSource(attribution.source);
+  if (!source || source === 'direct') return;
+  const key = `splashlens-referral-open-${source}`;
+  try {
+    if (sessionStorage.getItem(key) === '1') return;
+    sessionStorage.setItem(key, '1');
+  } catch {}
+  trackSplashLensEvent('article_referral_open', {
+    referral_source: source,
+    referral_campaign: attribution.campaign || '',
+    referral_medium: attribution.medium || '',
+    referral_host: attribution.referrer_host || '',
+    article: attribution.article || '',
+  });
+}
+
 function canUseAIScan() {
   return isPartSnapPro() || getScanUsage().count < SCAN_LIMIT_FREE;
 }
@@ -3930,6 +4046,7 @@ function showScanLimitModal(result, status) {
 
 function trackSplashLensEvent(name, props = {}) {
   const clientId = getScanClientId();
+  const attribution = getSplashLensAttribution();
   const sessionKey = 'splashlens-session-id';
   let sessionId = sessionStorage.getItem(sessionKey);
   if (!sessionId) {
@@ -3941,6 +4058,13 @@ function trackSplashLensEvent(name, props = {}) {
     session_id: sessionId,
     standalone: isStandaloneAppShell(),
     store_shell: getStoreShellMode() || '',
+    attribution_source: attribution.source || '',
+    attribution_medium: attribution.medium || '',
+    attribution_campaign: attribution.campaign || '',
+    attribution_referrer: attribution.referrer || '',
+    attribution_referrer_host: attribution.referrer_host || '',
+    attribution_landing_path: attribution.landing_path || '',
+    attribution_article: attribution.article || '',
     ...props,
   };
   window.dataLayer = window.dataLayer || [];
@@ -3949,7 +4073,7 @@ function trackSplashLensEvent(name, props = {}) {
 
   const payload = JSON.stringify(withLanguageMetadata({
     event: name,
-    source: 'app',
+    source: attribution.source || props.source || 'app',
     path: `${window.location.pathname}${window.location.search}`,
     props: withLanguageMetadata(eventProps),
   }));

@@ -1,4 +1,5 @@
 const ALERT_EVENTS = new Set([
+  'article_referral_open',
   'first_app_open',
   'app_open',
   'pwa_install_prompt_seen',
@@ -80,6 +81,17 @@ function topList(map, limit = 12) {
     .slice(0, limit);
 }
 
+function eventSource(record, props = {}) {
+  return clean(record.source || props.attribution_source || props.source || 'app', 80) || 'app';
+}
+
+function isPoolProEvent(record, props = {}) {
+  const source = eventSource(record, props).toLowerCase();
+  const attributionSource = clean(props.attribution_source || '', 80).toLowerCase();
+  const referrer = clean(props.attribution_referrer || props.attribution_referrer_host || props.referrer || '', 300).toLowerCase();
+  return source === 'poolpro' || attributionSource === 'poolpro' || referrer.includes('poolpromag.com');
+}
+
 async function eventSummary(request, env) {
   if (!authOk(request, env)) {
     return json(401, { ok: false, error: 'Unauthorized' });
@@ -91,21 +103,24 @@ async function eventSummary(request, env) {
   const url = new URL(request.url);
   const limit = Math.min(Math.max(Number(url.searchParams.get('limit') || 500), 50), 1000);
   let cursor;
+  const keyNames = [];
   const records = [];
 
   do {
-    const page = await env.SCAN_USAGE_KV.list({ prefix: 'event:', cursor, limit: Math.min(limit, 1000) });
-    for (const key of page.keys || []) {
-      if (records.length >= limit) break;
-      const raw = await env.SCAN_USAGE_KV.get(key.name);
-      if (!raw) continue;
-      try {
-        const record = JSON.parse(raw);
-        records.push(record);
-      } catch {}
-    }
+    const page = await env.SCAN_USAGE_KV.list({ prefix: 'event:', cursor, limit: 1000 });
+    for (const key of page.keys || []) keyNames.push(key.name);
     cursor = page.list_complete ? undefined : page.cursor;
-  } while (cursor && records.length < limit);
+  } while (cursor);
+
+  const newestKeys = keyNames.sort((a, b) => b.localeCompare(a)).slice(0, limit);
+  for (const keyName of newestKeys) {
+    const raw = await env.SCAN_USAGE_KV.get(keyName);
+    if (!raw) continue;
+    try {
+      const record = JSON.parse(raw);
+      records.push(record);
+    } catch {}
+  }
 
   records.sort((a, b) => eventTime(b) - eventTime(a));
 
@@ -118,7 +133,11 @@ async function eventSummary(request, env) {
   const scanModes = new Map();
   const manualQueries = new Map();
   const callbackRisks = new Map();
+  const sources = new Map();
+  const referrers = new Map();
+  const campaigns = new Map();
   const meaningfulEvents = new Set([
+    'article_referral_open',
     'pwa_installed',
     'pwa_standalone_open',
     'ai_scan_started',
@@ -152,21 +171,48 @@ async function eventSummary(request, env) {
   let partSnapMystery30d = 0;
   let partSnapApprentice30d = 0;
   let proofSaved30d = 0;
+  let poolProEvents30d = 0;
+  let poolProReferralOpens30d = 0;
+  let poolProAppOpens30d = 0;
+  let poolProFirstOpens30d = 0;
+  let poolProInstalls30d = 0;
+  let poolProStandaloneOpens30d = 0;
+  let poolProScans30d = 0;
+  let poolProStoreShellOpens30d = 0;
+  let poolProMeaningfulActions30d = 0;
   const uniqueClients30d = new Set();
   const meaningfulClients30d = new Set();
+  const poolProClients30d = new Set();
 
   for (const record of records) {
     const ts = eventTime(record);
     const props = parseProps(record);
     const clientId = clean(props.client_id || props.clientId || '', 120);
+    const source = eventSource(record, props);
+    const poolPro = isPoolProEvent(record, props);
     inc(eventsByName, record.event);
     inc(paths, record.path || props.path || 'unknown');
+    inc(sources, source);
+    if (props.attribution_referrer_host || props.attribution_referrer) inc(referrers, props.attribution_referrer_host || props.attribution_referrer);
+    if (props.attribution_campaign) inc(campaigns, props.attribution_campaign);
 
     if (ts >= since7d) events7d += 1;
     if (ts >= since30d) {
       events30d += 1;
       if (clientId) uniqueClients30d.add(clientId);
       if (meaningfulEvents.has(record.event) && clientId) meaningfulClients30d.add(clientId);
+      if (poolPro) {
+        poolProEvents30d += 1;
+        if (clientId) poolProClients30d.add(clientId);
+        if (meaningfulEvents.has(record.event)) poolProMeaningfulActions30d += 1;
+        if (record.event === 'article_referral_open') poolProReferralOpens30d += 1;
+        if (record.event === 'first_app_open') poolProFirstOpens30d += 1;
+        if (record.event === 'app_open') poolProAppOpens30d += 1;
+        if (record.event === 'pwa_installed') poolProInstalls30d += 1;
+        if (record.event === 'pwa_standalone_open') poolProStandaloneOpens30d += 1;
+        if (record.event === 'ai_scan_started') poolProScans30d += 1;
+        if (props.store_shell) poolProStoreShellOpens30d += 1;
+      }
       if (record.event === 'first_app_open') firstOpens30d += 1;
       if (record.event === 'app_open') appOpens30d += 1;
       if (record.event === 'pwa_install_prompt_seen') installPrompts30d += 1;
@@ -216,8 +262,21 @@ async function eventSummary(request, env) {
       partSnapMystery30d,
       partSnapApprentice30d,
       proofSaved30d,
+      poolProEvents30d,
+      poolProReferralOpens30d,
+      poolProAppOpens30d,
+      poolProFirstOpens30d,
+      poolProInstalls30d,
+      poolProStandaloneOpens30d,
+      poolProScans30d,
+      poolProStoreShellOpens30d,
+      poolProMeaningfulActions30d,
+      poolProClients30d: poolProClients30d.size,
     },
     topEvents: topList(eventsByName),
+    topSources: topList(sources),
+    topReferrers: topList(referrers),
+    topCampaigns: topList(campaigns),
     topPaths: topList(paths),
     scanModes: topList(scanModes),
     callbackRisks: topList(callbackRisks),
@@ -231,7 +290,7 @@ async function eventSummary(request, env) {
     })),
     caveats: [
       'PWA install events are browser-dependent and may not fire on every iOS add-to-home-screen install.',
-      'App opens are anonymous events; unique users need a durable anonymous client ID in a future pass.',
+      'Native App Store downloads are only visible here after the app/web wrapper opens or when a tracked store click/referral reaches the app.',
       'Email alerts are intentionally limited to usage/conversion events, not outreach email opens.',
     ],
   });
@@ -244,6 +303,7 @@ async function sendEventAlert(env, record) {
   }
   const labels = {
     first_app_open: 'First app open',
+    article_referral_open: 'Article/referral landing',
     app_open: 'First/opened app',
     pwa_install_prompt_seen: 'Install prompt shown',
     pwa_installed: 'Installed app/PWA',
@@ -263,6 +323,9 @@ async function sendEventAlert(env, record) {
     waitlist_signup: 'Waitlist signup',
     checkout_success: 'Checkout success',
   };
+  const props = parseProps(record);
+  const source = eventSource(record, props);
+  const sourcePrefix = source && source !== 'app' ? `${source.toUpperCase()} - ` : '';
 
   const response = await fetch('https://api.sendgrid.com/v3/mail/send', {
     method: 'POST',
@@ -273,7 +336,7 @@ async function sendEventAlert(env, record) {
     body: JSON.stringify({
       personalizations: [{
         to: [{ email: config.to }],
-        subject: `[SplashLens App] ${labels[record.event] || record.event}`,
+        subject: `[SplashLens App] ${sourcePrefix}${labels[record.event] || record.event}`,
       }],
       from: { email: config.from, name: 'SplashLens Alerts' },
       categories: ['splashlens', 'app-event', record.event],
@@ -283,8 +346,16 @@ async function sendEventAlert(env, record) {
           'SplashLens app event',
           '',
           `Event: ${record.event}`,
-          `Source: ${record.source}`,
+          `Source: ${source}`,
           `Path: ${record.path}`,
+          `Attribution source: ${props.attribution_source || source}`,
+          `Attribution campaign: ${props.attribution_campaign || ''}`,
+          `Attribution medium: ${props.attribution_medium || ''}`,
+          `Attribution referrer: ${props.attribution_referrer || props.attribution_referrer_host || ''}`,
+          `Attribution landing path: ${props.attribution_landing_path || ''}`,
+          `Store shell: ${props.store_shell || ''}`,
+          `Client ID: ${props.client_id || props.clientId || ''}`,
+          `Session ID: ${props.session_id || props.sessionId || ''}`,
           `Preferred language: ${record.language.preferredLanguage}`,
           `Locale: ${record.language.locale}`,
           `Created: ${record.createdAt}`,
@@ -312,7 +383,7 @@ export async function onRequestPost({ request, env }) {
   const props = body.props && typeof body.props === 'object' ? body.props : {};
   const record = {
     event,
-    source: clean(body.source || props.source || 'app', 60),
+    source: clean(body.source || props.attribution_source || props.source || 'app', 60),
     path: clean(body.path || props.path || '', 300),
     language: {
       preferredLanguage: clean(body.preferred_language || props.preferred_language || request.headers.get('X-BZM-Language') || 'en', 16),
