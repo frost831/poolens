@@ -5,6 +5,7 @@ const ALERT_EVENTS = new Set([
   'pwa_install_prompt_seen',
   'pwa_installed',
   'pwa_standalone_open',
+  'native_shell_first_open',
   'ai_scan_started',
   'manual_code_search',
   'partsnap_result',
@@ -140,6 +141,7 @@ async function eventSummary(request, env) {
     'article_referral_open',
     'pwa_installed',
     'pwa_standalone_open',
+    'native_shell_first_open',
     'ai_scan_started',
     'manual_code_search',
     'partsnap_result',
@@ -162,6 +164,10 @@ async function eventSummary(request, env) {
   let installPrompts30d = 0;
   let installs30d = 0;
   let standaloneOpens30d = 0;
+  let nativeShellOpens30d = 0;
+  let nativeFirstOpens30d = 0;
+  let iosFirstOpens30d = 0;
+  let androidFirstOpens30d = 0;
   let scans30d = 0;
   let searches30d = 0;
   let partsnapResults30d = 0;
@@ -218,6 +224,12 @@ async function eventSummary(request, env) {
       if (record.event === 'pwa_install_prompt_seen') installPrompts30d += 1;
       if (record.event === 'pwa_installed') installs30d += 1;
       if (record.event === 'pwa_standalone_open') standaloneOpens30d += 1;
+      if (record.event === 'native_shell_open') nativeShellOpens30d += 1;
+      if (record.event === 'native_shell_first_open') {
+        nativeFirstOpens30d += 1;
+        if (props.store === 'ios' || props.store_shell === 'ios') iosFirstOpens30d += 1;
+        if (props.store === 'android' || props.store_shell === 'android') androidFirstOpens30d += 1;
+      }
       if (record.event === 'ai_scan_started') {
         scans30d += 1;
         inc(scanModes, props.mode || record.mode || 'unknown');
@@ -253,6 +265,10 @@ async function eventSummary(request, env) {
       installPrompts30d,
       installs30d,
       standaloneOpens30d,
+      nativeShellOpens30d,
+      nativeFirstOpens30d,
+      iosFirstOpens30d,
+      androidFirstOpens30d,
       scans30d,
       searches30d,
       partsnapResults30d,
@@ -308,6 +324,7 @@ async function sendEventAlert(env, record) {
     pwa_install_prompt_seen: 'Install prompt shown',
     pwa_installed: 'Installed app/PWA',
     pwa_standalone_open: 'Standalone/PWA open',
+    native_shell_first_open: 'Native app first open',
     ai_scan_started: 'Scanner used',
     manual_code_search: 'Manual code search',
     partsnap_result: 'PartSnap result',

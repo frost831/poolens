@@ -183,6 +183,7 @@ document.addEventListener('DOMContentLoaded', () => {
   captureScanEntitlementFromUrl();
   initSplashLensAttribution();
   initInstallTracking();
+  trackStoreShellOpen();
   initErrors();
   initDosing();
   initVolume();
@@ -4122,6 +4123,18 @@ function initInstallTracking() {
     localStorage.setItem('splashlens-standalone-open-tracked', '1');
     trackSplashLensEvent('pwa_standalone_open', { tab: S.tab });
   }
+}
+
+function trackStoreShellOpen() {
+  const store = getStoreShellMode();
+  if (!store) return;
+  const firstStoreOpenKey = `splashlens-store-shell-first-open-${store}`;
+  const firstStoreOpen = localStorage.getItem(firstStoreOpenKey) !== '1';
+  if (firstStoreOpen) {
+    localStorage.setItem(firstStoreOpenKey, '1');
+    trackSplashLensEvent('native_shell_first_open', { tab: S.tab, store, first_native_open: true });
+  }
+  trackSplashLensEvent('native_shell_open', { tab: S.tab, store, first_native_open: firstStoreOpen });
 }
 
 async function callAIScan(canvas, mode, result, status) {
