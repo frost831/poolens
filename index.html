@@ -269,10 +269,124 @@
     @media (max-width: 380px) {
       .brain-grid { grid-template-columns:1fr; }
     }
+    .marketing-gate { min-height: 100dvh; background:#f8fbfd; color:#0f172a; }
+    .marketing-gate.hidden { display:none; }
+    .marketing-nav { min-height:64px; padding:14px 18px; display:flex; align-items:center; justify-content:space-between; gap:16px; border-bottom:1px solid #dbe8ef; background:#ffffff; position:sticky; top:0; z-index:60; }
+    .marketing-brand { display:flex; align-items:center; gap:10px; color:#0f172a; font-weight:950; letter-spacing:0; }
+    .marketing-mark { width:34px; height:34px; border-radius:8px; background:#0369a1; display:grid; place-items:center; color:#ffffff; font-size:14px; font-weight:950; }
+    .marketing-nav-actions { display:flex; align-items:center; gap:8px; }
+    .marketing-link { border:0; background:transparent; color:#0369a1; font-weight:900; font-size:13px; cursor:pointer; padding:9px 8px; }
+    .marketing-open { border:0; background:#0f766e; color:#ffffff; border-radius:8px; min-height:38px; padding:0 14px; font-size:13px; font-weight:950; cursor:pointer; }
+    .marketing-hero { max-width:1160px; margin:0 auto; padding:42px 20px 24px; display:grid; grid-template-columns:minmax(0,1.02fr) minmax(320px,.98fr); gap:32px; align-items:center; }
+    .marketing-copy h1 { font-size:clamp(42px,7vw,82px); line-height:.92; color:#082f49; font-weight:950; letter-spacing:0; max-width:780px; margin:0 0 18px; }
+    .marketing-copy p { max-width:620px; color:#475569; font-size:18px; line-height:1.5; margin:0 0 22px; }
+    .marketing-actions { display:flex; flex-wrap:wrap; gap:10px; margin-bottom:18px; }
+    .marketing-primary, .marketing-secondary { border-radius:8px; min-height:48px; padding:0 18px; font-size:15px; font-weight:950; cursor:pointer; }
+    .marketing-primary { border:0; background:#0284c7; color:#ffffff; box-shadow:0 10px 26px rgba(2,132,199,.22); }
+    .marketing-secondary { background:#ffffff; color:#0369a1; border:1px solid #b9d9e8; box-shadow:0 1px 2px rgba(15,23,42,.06); }
+    .marketing-proof { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; max-width:620px; }
+    .marketing-proof div { border:1px solid #dbe8ef; background:#ffffff; border-radius:8px; padding:12px; }
+    .marketing-proof strong { display:block; color:#0f172a; font-size:14px; font-weight:950; margin-bottom:4px; }
+    .marketing-proof span { display:block; color:#64748b; font-size:12px; line-height:1.35; }
+    .marketing-preview { background:#082f49; border:1px solid #0e7490; border-radius:14px; padding:14px; box-shadow:0 24px 60px rgba(8,47,73,.2); }
+    .preview-top { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:12px; color:#dff6ff; font-size:12px; font-weight:900; }
+    .preview-screen { background:#ffffff; border-radius:10px; padding:14px; min-height:420px; display:flex; flex-direction:column; gap:10px; }
+    .preview-title { display:flex; justify-content:space-between; gap:10px; align-items:flex-start; }
+    .preview-title strong { color:#0f172a; font-size:20px; line-height:1.1; font-weight:950; }
+    .preview-pill { background:#dcfce7; color:#166534; border-radius:999px; padding:4px 8px; font-size:10px; font-weight:950; white-space:nowrap; }
+    .preview-card { border:1px solid #dbe8ef; border-radius:8px; padding:11px; background:#f8fafc; }
+    .preview-card.dark { background:#0f172a; border-color:#334155; color:#e2e8f0; }
+    .preview-card h3 { font-size:13px; margin-bottom:6px; color:inherit; }
+    .preview-card p { font-size:12px; line-height:1.45; color:#64748b; }
+    .preview-card.dark p { color:#cbd5e1; }
+    .preview-row { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+    .marketing-lanes { max-width:1160px; margin:0 auto; padding:10px 20px 34px; display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
+    .marketing-lane { background:#ffffff; border:1px solid #dbe8ef; border-radius:8px; padding:18px; }
+    .marketing-lane h2 { color:#082f49; font-size:20px; line-height:1.15; margin-bottom:8px; }
+    .marketing-lane p { color:#475569; font-size:14px; line-height:1.45; }
+    .app-shell.marketing-active { display:none; }
+    @media (max-width: 860px) {
+      .marketing-hero { grid-template-columns:1fr; padding-top:30px; gap:22px; }
+      .preview-screen { min-height:0; }
+      .marketing-lanes { grid-template-columns:1fr; }
+    }
+    @media (max-width: 520px) {
+      .marketing-nav { padding:12px 14px; }
+      .marketing-nav-actions .marketing-link { display:none; }
+      .marketing-hero { padding:28px 18px 20px; }
+      .marketing-copy h1 { font-size:46px; }
+      .marketing-copy p { font-size:16px; }
+      .marketing-proof { grid-template-columns:1fr; }
+      .marketing-actions { display:grid; grid-template-columns:1fr; }
+      .marketing-primary, .marketing-secondary { width:100%; }
+      .preview-row { grid-template-columns:1fr; }
+      .marketing-lanes { padding:4px 18px 28px; }
+    }
   </style>
 </head>
 <body>
 
+  <section id="marketing-gate" class="marketing-gate" aria-label="SplashLens introduction">
+    <nav class="marketing-nav">
+      <div class="marketing-brand"><span class="marketing-mark">SL</span><span>SplashLens</span></div>
+      <div class="marketing-nav-actions">
+        <button type="button" class="marketing-link" onclick="enterSplashLensApp('scan','parts')">PartSnap</button>
+        <button type="button" class="marketing-link" onclick="enterSplashLensApp('errors')">Codes</button>
+        <button type="button" class="marketing-open" onclick="enterSplashLensApp('errors')">Open Tools</button>
+      </div>
+    </nav>
+
+    <div class="marketing-hero">
+      <div class="marketing-copy">
+        <h1>Get off the pad faster.</h1>
+        <p>SplashLens helps pool techs identify mystery parts, look up equipment codes, capture proof, dictate notes, and build a cleaner senior-tech or vendor packet before the stop eats the whole afternoon.</p>
+        <div class="marketing-actions">
+          <button type="button" class="marketing-primary" onclick="enterSplashLensApp('errors')">Open Field Tools</button>
+          <button type="button" class="marketing-secondary" onclick="enterSplashLensApp('scan','parts')">Try PartSnap</button>
+          <button type="button" class="marketing-secondary" onclick="enterSplashLensApp('errors','search')">Look Up Codes</button>
+        </div>
+        <div class="marketing-proof">
+          <div><strong>PartSnap</strong><span>Possible part families, missing proof, callback risk, and clean escalation.</span></div>
+          <div><strong>Connected Brain</strong><span>Automation, robots, lights, heat pumps, salt, covers, and smart gear.</span></div>
+          <div><strong>Time Back</strong><span>Voice notes, proof passports, dosing math, and fewer after-hours rewrites.</span></div>
+        </div>
+      </div>
+
+      <div class="marketing-preview" aria-label="SplashLens product preview">
+        <div class="preview-top"><span>Field stop workflow</span><span>proof first</span></div>
+        <div class="preview-screen">
+          <div class="preview-title">
+            <strong>PartSnap result packet</strong>
+            <span class="preview-pill">Review ready</span>
+          </div>
+          <div class="preview-card dark">
+            <h3>Possible part family</h3>
+            <p>Pump lid / basket / O-ring path. Needs model plate and molded number before ordering.</p>
+          </div>
+          <div class="preview-row">
+            <div class="preview-card"><h3>Visible proof</h3><p>Part photo, housing shape, label close-up.</p></div>
+            <div class="preview-card"><h3>Missing proof</h3><p>Model plate, size, vendor cross-check.</p></div>
+          </div>
+          <div class="preview-card">
+            <h3>Senior-tech packet</h3>
+            <p>Copy one clean handoff with symptoms, proof, missing evidence, and what to verify before selling or replacing.</p>
+          </div>
+          <div class="preview-card">
+            <h3>Service Proof Passport</h3>
+            <p>Save the stop so next visit has the equipment context, not a mystery photo buried in texts.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="marketing-lanes">
+      <article class="marketing-lane"><h2>Identify the part.</h2><p>Use PartSnap for seals, lids, grids, cells, valves, robot parts, lights, boards, sensors, and the stuff nobody wants to guess at.</p></article>
+      <article class="marketing-lane"><h2>Verify the proof.</h2><p>SplashLens keeps the language cautious: possible matches, missing proof, and manual/vendor/manufacturer verification before ordering.</p></article>
+      <article class="marketing-lane"><h2>Finish the stop.</h2><p>Use dosing math, notes, Route Brain, training cards, and customer-safe summaries to leave cleaner and faster.</p></article>
+    </div>
+  </section>
+
+  <div id="app-shell" class="app-shell marketing-active">
   <!-- HEADER -->
   <header style="background:var(--field-blue);padding:11px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;box-shadow:0 2px 10px rgba(3,105,161,0.22);">
     <div style="display:flex;align-items:center;gap:10px;">
@@ -936,13 +1050,14 @@
 
   <script src="js/errors.js"></script>
   <script src="js/data.js"></script>
-  <script src="js/app.js?v=20260629-review-network"></script>
+  <script src="js/app.js?v=20260629-marketing-gate"></script>
   <script src="js/analytics.js"></script>
   <script>
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/sw.js').catch(() => {});
     }
   </script>
+  </div>
 </body>
 </html>
 

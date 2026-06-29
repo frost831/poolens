@@ -180,6 +180,7 @@ const DOSE_NEED_LABELS = {
 // ═══════════════════════════════════════════
 document.addEventListener('DOMContentLoaded', () => {
   initLanguageLayer();
+  initMarketingGate();
   captureScanEntitlementFromUrl();
   initSplashLensAttribution();
   initInstallTracking();
@@ -215,6 +216,39 @@ function showTab(name) {
   if (name === 'route')  renderRoute();
   if (name === 'scan')   initScanTab();
   if (name === 'dosing') renderSlamBanner();
+}
+
+function initMarketingGate() {
+  const params = new URLSearchParams(window.location.search);
+  const hasToolIntent = params.has('tab') || params.has('activate_scan') || params.has('token') || params.has('session_id');
+  if (hasToolIntent || window.matchMedia('(display-mode: standalone)').matches || navigator.standalone) {
+    revealSplashLensApp();
+  }
+}
+
+function revealSplashLensApp() {
+  const gate = document.getElementById('marketing-gate');
+  const shell = document.getElementById('app-shell');
+  if (gate) gate.classList.add('hidden');
+  if (shell) shell.classList.remove('marketing-active');
+}
+
+function enterSplashLensApp(tab = 'errors', mode) {
+  revealSplashLensApp();
+  trackSplashLensEvent('marketing_gate_entered', { target_tab: tab, target_mode: mode || '' });
+  showTab(tab);
+  if (tab === 'scan' && mode) {
+    setTimeout(() => setScanMode(mode), 80);
+  }
+  if (tab === 'errors' && mode === 'search') {
+    setTimeout(() => {
+      const el = document.getElementById('error-search');
+      if (el) {
+        el.focus();
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }, 120);
+  }
 }
 
 function initDeepLink() {
