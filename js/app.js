@@ -3705,7 +3705,7 @@ function renderPartSnapPrimer() {
     <div style="margin:12px 0 16px;background:linear-gradient(135deg,#062b2f,#0f172a);border:1px solid #0f766e;border-radius:14px;padding:14px;border-left:4px solid #14b8a6;">
       <p style="color:#5eead4;font-size:10px;font-weight:950;letter-spacing:.12em;text-transform:uppercase;margin-bottom:6px;">PartSnap AI Service</p>
       <p style="color:#f8fafc;font-size:18px;font-weight:950;line-height:1.1;margin-bottom:8px;">Shoot the part, then shoot the label.</p>
-      <p style="color:#cbd5e1;font-size:12px;line-height:1.45;margin-bottom:12px;">Best results come from two photos: the mystery part up close, then the equipment model plate or molded number. PartSnap returns possible matches, missing proof, and a clean escalation packet.</p>
+      <p style="color:#cbd5e1;font-size:12px;line-height:1.45;margin-bottom:12px;">Best results come from two photos: the mystery part up close, then the equipment model plate or molded number. PartSnap returns possible matches, missing proof, and a clean escalation packet. Low-proof items can be sent into the senior-tech review queue.</p>
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;">
         <div style="background:#042f2e;border:1px solid #0f766e;border-radius:8px;padding:8px;text-align:center;"><b style="display:block;color:#ccfbf1;font-size:11px;">1. Part</b><span style="display:block;color:#99f6e4;font-size:9px;margin-top:2px;">close + lit</span></div>
         <div style="background:#111827;border:1px solid #334155;border-radius:8px;padding:8px;text-align:center;"><b style="display:block;color:#e2e8f0;font-size:11px;">2. Label</b><span style="display:block;color:#94a3b8;font-size:9px;margin-top:2px;">model proof</span></div>
@@ -3756,7 +3756,7 @@ function renderPartSnapReviewTickets() {
     <div style="background:#f8fafc;border:1px solid #cbd5e1;border-radius:12px;padding:14px;margin:8px 0;">
       <p style="color:#0369a1;font-size:10px;font-weight:950;letter-spacing:.1em;text-transform:uppercase;margin-bottom:5px;">PartSnap Review Queue</p>
       <h3 style="color:#0f172a;font-size:18px;font-weight:950;margin-bottom:7px;">Mystery part tickets saved on this device</h3>
-      <p style="color:#64748b;font-size:12px;line-height:1.45;margin-bottom:12px;">These are the last 25 mystery-part submissions or failed sends from this device. Use the ticket id when emailing SplashLens or following up with a senior tech/vendor.</p>
+      <p style="color:#64748b;font-size:12px;line-height:1.45;margin-bottom:12px;">These are the last 25 mystery-part submissions or failed sends from this device. Owner review also appears in the protected dashboard when the ticket reaches SplashLens.</p>
       ${tickets.length ? tickets.map(ticket => `
         <div style="border:1px solid #e2e8f0;border-radius:10px;padding:10px;margin-bottom:8px;background:#fff;">
           <div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start;">
@@ -4455,7 +4455,7 @@ function renderPartSnapCallbackRisk(risk) {
 function renderPartSnapPartnerCards(ai = {}) {
   const cards = [
     ['counter', 'Senior Tech / Vendor Packet', 'Ready', 'One tap packet with proof, missing evidence, risk, and exact questions for a senior tech, distributor, or vendor.'],
-    ['verified', 'Partner-Verified Card', 'Ready for partner', 'A manufacturer/distributor intake card that shows what official docs or model language would be needed before SplashLens marks it verified.'],
+    ['verified', 'Partner-Verified Card', 'Ready for partner', 'A manufacturer, distributor, trainer, or vendor intake card for official docs, failure points, model aliases, and required proof language.'],
     ['training', 'Training Scenario Card', 'Ready', 'Turns the result into a 5-minute apprentice lesson with student task, proof checklist, and answer key.'],
     ['passport', 'Service Proof Passport', 'Ready', 'Save the part result into a customer/pool history so callbacks and reorders have field proof attached.'],
   ];
@@ -4514,6 +4514,7 @@ function partSnapPartnerCardText(type) {
       '- Official model-family names and aliases techs use at the counter',
       '- Required proof before fitment or ordering',
       '- Known failure points and common misidentifications',
+      '- New release notes, superseded part numbers, and do-not-confuse families',
       '- Manual, diagram, or support URL that should be checked',
       '- Preferred safe wording for field techs and customers',
       '',
@@ -4744,7 +4745,7 @@ function renderMysteryPartForm() {
   panel.innerHTML = `
     <div style="background:#ffffff;border:1px solid #bae6fd;border-radius:12px;padding:12px;margin:4px 0 16px;">
       <p style="color:#0f172a;font-size:14px;font-weight:950;margin-bottom:5px;">Send this mystery part to SplashLens</p>
-      <p style="color:#64748b;font-size:12px;line-height:1.4;margin-bottom:10px;">Use this when PartSnap is low-confidence or you want the app trained around a real field miss.</p>
+      <p style="color:#64748b;font-size:12px;line-height:1.4;margin-bottom:10px;">Use this when PartSnap is low-confidence or you want the app trained around a real field miss. It becomes a review ticket, not a public post.</p>
       <label class="field-label" for="partsnap-feedback-email">Your email</label>
       <input id="partsnap-feedback-email" type="email" placeholder="you@example.com" style="width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:8px;margin-bottom:8px;">
       <label class="field-label" for="partsnap-feedback-note">What do you know?</label>
