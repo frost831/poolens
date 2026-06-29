@@ -15,7 +15,9 @@ This repo is the PoolLens source tree for the SplashLens field app.
 - `ENVIRONMENT=production`: recommended production variable.
 - `SPLASHLENS_ENTITLEMENT_SECRET`: required to verify signed scanner entitlement tokens.
 - `SPLASHLENS_ENTITLEMENT_ADMIN_SECRET`: required for `/api/scan-entitlement` admin issuance.
-- `STRIPE_SECRET_KEY`: required for `/api/checkout` to create Stripe Checkout Sessions and for `/api/checkout-success` to verify paid sessions before issuing scanner activation links.
+- `STRIPE_WEBHOOK_SECRET`: required for `/api/stripe-webhook` to verify Stripe Payment Link / Checkout events before issuing scanner activation links.
+- `STRIPE_SECRET_KEY`: required only when `SPLASHLENS_CHECKOUT_MODE=stripe_checkout` for first-party Checkout Sessions and `/api/checkout-success`.
+- `SPLASHLENS_STRIPE_PAYMENT_LINK_MONTHLY_ID` and `SPLASHLENS_STRIPE_PAYMENT_LINK_YEARLY_ID`: recommended so webhook fulfillment only issues entitlements for the correct SplashLens Payment Links.
 
 ## Required production metering
 
@@ -58,6 +60,34 @@ Set `SPLASHLENS_CHECKOUT_MODE=stripe_checkout` only after the production `STRIPE
 This endpoint is for product learning and support follow-up. It does not confirm part fitment or manufacturer endorsement.
 
 If `SPLASHLENS_CHECKOUT_MODE` is not `stripe_checkout`, `/api/checkout` uses the existing Stripe Payment Links intentionally and returns `X-SplashLens-Checkout-Mode: payment_link_direct`. The customer activation path remains manual/payment-link-based until the first-party Checkout Session key is corrected.
+
+### Stripe webhook fulfillment
+
+`functions/api/stripe-webhook.js` is the production bridge for Payment Link purchases. Configure this endpoint in Stripe:
+
+```text
+https://app.splashlens.com/api/stripe-webhook
+```
+
+Listen for:
+
+- `checkout.session.completed`
+- `checkout.session.async_payment_succeeded`
+
+Required webhook secret:
+
+```powershell
+npx wrangler pages secret put STRIPE_WEBHOOK_SECRET --project-name poolens
+```
+
+Recommended Payment Link ID variables:
+
+```powershell
+npx wrangler pages secret put SPLASHLENS_STRIPE_PAYMENT_LINK_MONTHLY_ID --project-name poolens
+npx wrangler pages secret put SPLASHLENS_STRIPE_PAYMENT_LINK_YEARLY_ID --project-name poolens
+```
+
+When Stripe sends a recognized paid checkout session, the webhook signs a scanner entitlement, stores it in `SCAN_USAGE_KV`, emails the buyer an activation link via SendGrid, and emails the owner a payment alert. If the Payment Link IDs are not configured, keep `SPLASHLENS_STRIPE_WEBHOOK_ALLOW_UNTAGGED_PAYMENT_LINKS=false` unless the Stripe webhook endpoint is dedicated only to SplashLens Payment Links.
 
 Current Stripe catalog IDs:
 
