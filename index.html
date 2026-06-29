@@ -134,7 +134,18 @@
     .rescue-hero { background: linear-gradient(145deg, #082f49 0%, #0f172a 58%, #134e4a 100%); border: 1px solid rgba(125,211,252,.24); border-radius: 12px; padding: 16px; margin-bottom: 12px; box-shadow: var(--field-shadow); }
     .rescue-kicker { color: #7dd3fc; font-size: 10px; font-weight: 900; letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 7px; }
     .rescue-title { color: #ffffff; font-size: 24px; line-height: 1.05; font-weight: 900; margin-bottom: 7px; letter-spacing: 0; }
-    .rescue-sub { color: #cbd5e1; font-size: 13px; line-height: 1.35; margin-bottom: 12px; }
+    .rescue-sub { color: #cbd5e1; font-size: 13px; line-height: 1.35; margin-bottom: 12px; max-width: 42rem; }
+    .field-workflow { display:grid; grid-template-columns:repeat(5, minmax(92px,1fr)); gap:8px; overflow-x:auto; padding-bottom:2px; -webkit-overflow-scrolling:touch; scrollbar-width:none; }
+    .workflow-chip { min-height:82px; border:1px solid #bae6fd; border-radius:10px; background:#ffffff; color:#0f172a; padding:10px; text-align:left; cursor:pointer; box-shadow:var(--field-shadow-tight); display:flex; flex-direction:column; justify-content:space-between; -webkit-tap-highlight-color:transparent; }
+    .workflow-chip:active { transform:scale(.98); }
+    .workflow-chip.partsnap { background:#0f766e; color:#ffffff; border-color:#5eead4; }
+    .workflow-chip.primary { background:#0284c7; color:#ffffff; border-color:#7dd3fc; }
+    .workflow-num { width:25px; height:25px; border-radius:999px; display:grid; place-items:center; background:#e0f2fe; color:#0369a1; font-size:12px; font-weight:950; margin-bottom:8px; }
+    .workflow-chip.partsnap .workflow-num, .workflow-chip.primary .workflow-num { background:rgba(255,255,255,.18); color:#ffffff; }
+    .workflow-chip strong { display:block; font-size:13px; line-height:1.1; font-weight:950; }
+    .workflow-chip span { display:block; color:#64748b; font-size:10px; line-height:1.2; font-weight:800; margin-top:4px; }
+    .workflow-chip.partsnap span { color:#ccfbf1; }
+    .workflow-chip.primary span { color:#e0f2fe; }
     .rescue-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
     .rescue-action { background: #ffffff; color: #0f172a; border: 1px solid #bae6fd; border-radius: var(--field-radius); padding: 10px; min-height: 74px; cursor: pointer; text-align: left; display: flex; flex-direction: column; justify-content: space-between; -webkit-tap-highlight-color: transparent; box-shadow: var(--field-shadow-tight); }
     .rescue-action strong { display: block; font-size: 14px; line-height: 1.15; font-weight: 900; letter-spacing: 0; }
@@ -148,10 +159,10 @@
     .partsnap-hero-card { background:#ffffff; border:1px solid #99f6e4; border-left:4px solid #0f766e; border-radius:12px; padding:11px; margin-bottom:12px; box-shadow:var(--field-shadow-tight); }
     .partsnap-hero-card strong { display:block; color:#0f172a; font-size:14px; font-weight:950; line-height:1.15; margin-bottom:4px; }
     .partsnap-hero-card p { color:#475569; font-size:11.5px; line-height:1.35; margin-bottom:8px; }
-    .partsnap-steps { display:grid; grid-template-columns:repeat(3,1fr); gap:6px; }
-    .partsnap-step { background:#f0fdfa; border:1px solid #ccfbf1; border-radius:8px; padding:6px; text-align:center; }
-    .partsnap-step b { display:block; color:#0f766e; font-size:11px; font-weight:950; }
-    .partsnap-step span { display:block; color:#64748b; font-size:9px; font-weight:800; margin-top:2px; line-height:1.2; }
+    .partsnap-steps { display:grid; grid-template-columns:repeat(5,minmax(82px,1fr)); gap:7px; overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none; }
+    .partsnap-step { background:#f0fdfa; border:1px solid #ccfbf1; border-radius:9px; padding:8px; min-height:68px; text-align:left; display:flex; flex-direction:column; justify-content:space-between; }
+    .partsnap-step b { display:block; color:#0f766e; font-size:12px; font-weight:950; line-height:1.1; }
+    .partsnap-step span { display:block; color:#64748b; font-size:10px; font-weight:800; margin-top:5px; line-height:1.2; }
     .rescue-strip { display: grid; grid-template-columns: repeat(3,1fr); gap: 6px; margin-bottom: 12px; }
     .rescue-chip { background: #ffffff; border: 1px solid #bae6fd; border-radius: 9px; padding: 8px 6px; text-align: center; }
     .rescue-chip strong { display: block; color: #0369a1; font-size: 14px; font-weight: 900; line-height: 1; }
@@ -168,7 +179,8 @@
     .tech-radar-tile span { display:block; color:#64748b; font-size:10.5px; font-weight:700; line-height:1.28; }
     @media (max-width: 360px) {
       .rescue-actions { grid-template-columns: 1fr; }
-      .rescue-strip, .partsnap-steps, .tech-radar-grid { grid-template-columns: 1fr; }
+      .rescue-strip, .tech-radar-grid { grid-template-columns: 1fr; }
+      .field-workflow, .partsnap-steps { grid-template-columns:repeat(5,86px); }
       .nav-btn span { font-size: 9px; letter-spacing: 0; }
     }
 
@@ -321,6 +333,11 @@
       .marketing-primary, .marketing-secondary { width:100%; }
       .preview-row { grid-template-columns:1fr; }
       .marketing-lanes { padding:4px 18px 28px; }
+      .field-workflow { grid-template-columns:1fr 1fr; overflow:visible; }
+      .workflow-chip { min-height:86px; }
+      .workflow-chip:last-child { grid-column:1 / -1; min-height:70px; }
+      .partsnap-steps { grid-template-columns:1fr 1fr; overflow:visible; }
+      .partsnap-step:last-child { grid-column:1 / -1; min-height:58px; }
     }
   </style>
 </head>
@@ -427,39 +444,45 @@
       <section class="rescue-hero">
         <p class="rescue-kicker">SplashLens field rescue - parts, codes, proof</p>
         <h1 class="rescue-title">Find the part. Fix the stop.</h1>
-        <p class="rescue-sub">PartSnap is the fast lane for mystery pool parts: photo the part, get possible manufacturer/model clues and search terms, then verify before ordering. Codes, dosing, Route Brain, and service proof stay right beside it.</p>
-        <div class="rescue-actions">
-          <button type="button" class="rescue-action partsnap" onclick="showTab('scan');setTimeout(()=>setScanMode('parts'),80)">
-            <strong>PartSnap Parts ID</strong>
-            <span>Photo a part and get possible matches plus proof prompts.</span>
+        <p class="rescue-sub">Tap the next job. No digging, no long read.</p>
+        <div class="field-workflow" aria-label="Fast field workflow">
+          <button type="button" class="workflow-chip partsnap" onclick="showTab('scan');setTimeout(()=>setScanMode('parts'),80)">
+            <span class="workflow-num">1</span>
+            <strong>ID Part</strong>
+            <span>photo + label</span>
           </button>
-          <button type="button" class="rescue-action primary" onclick="showTab('scan')">
-            <strong>Scan Error Code</strong>
-            <span>10 free AI scans monthly. Manual tools stay free.</span>
+          <button type="button" class="workflow-chip primary" onclick="showTab('scan')">
+            <span class="workflow-num">2</span>
+            <strong>Scan Code</strong>
+            <span>display / plate</span>
           </button>
-          <button type="button" class="rescue-action" onclick="focusErrorSearch()">
-            <strong>Search Code</strong>
-            <span>230+ current entries across major pool brands and field systems.</span>
+          <button type="button" class="workflow-chip" onclick="focusErrorSearch()">
+            <span class="workflow-num">3</span>
+            <strong>Search</strong>
+            <span>brand / symptom</span>
           </button>
-          <button type="button" class="rescue-action" onclick="focusVolumeInput()">
-            <strong>Calculate Dose</strong>
-            <span>Fast pool math for the stop you are on.</span>
+          <button type="button" class="workflow-chip" onclick="focusVolumeInput()">
+            <span class="workflow-num">4</span>
+            <strong>Dose</strong>
+            <span>pool math</span>
           </button>
-          <button type="button" class="rescue-action" onclick="quickServiceNote()">
-            <strong>Make Service Note</strong>
-            <span>Talk it once, clean it up, copy or share the report.</span>
+          <button type="button" class="workflow-chip" onclick="quickServiceNote()">
+            <span class="workflow-num">5</span>
+            <strong>Note</strong>
+            <span>talk + save</span>
           </button>
         </div>
-        <p class="rescue-proof"><strong>Manual lookup works offline after first load.</strong> AI camera scan and voice dictation need device support. PoolBrain and Skimmer run the company; SplashLens saves the stop.</p>
+        <p class="rescue-proof"><strong>Offline:</strong> manual lookup, calculators, guides. <strong>Online:</strong> AI scan, PartSnap, voice.</p>
       </section>
 
       <section class="partsnap-hero-card" aria-label="PartSnap parts identification">
-        <strong>PartSnap is built for the part you cannot name.</strong>
-        <p>Use it for seals, impellers, grids, valves, cells, baskets, gauges, O-rings, robot parts, fittings, and control labels. It shows a confidence ladder and holds buying links until proof is strong enough.</p>
+        <strong>PartSnap flow</strong>
         <div class="partsnap-steps">
-          <div class="partsnap-step"><b>1. Photo</b><span>part or label</span></div>
-          <div class="partsnap-step"><b>2. Verify</b><span>model / marking</span></div>
-          <div class="partsnap-step"><b>3. Escalate</b><span>clean packet</span></div>
+          <div class="partsnap-step"><b>1. Part</b><span>close + lit</span></div>
+          <div class="partsnap-step"><b>2. Label</b><span>model plate</span></div>
+          <div class="partsnap-step"><b>3. Proof</b><span>marking / size</span></div>
+          <div class="partsnap-step"><b>4. Risk</b><span>callback flag</span></div>
+          <div class="partsnap-step"><b>5. Packet</b><span>senior / vendor</span></div>
         </div>
       </section>
 
@@ -471,12 +494,12 @@
 
       <div class="route-ready-card" aria-label="Route Ready service authority">
         <strong>Route Ready service authority</strong>
-        <span>Use SplashLens at the stop today. Route Ready training remains a pilot layer until field usage proves the modules; PartSnap keeps parts lookup focused on proof, missing evidence, and clean escalation.</span>
+        <span>Use the chips first. Save the longer proof and training notes for review after the stop.</span>
       </div>
 
       <section class="tech-radar-card" aria-label="New Tech Radar and Connected Pool Brain">
         <h2>PartSnap + Connected Pool Brain</h2>
-        <p>New robots, smart automation, lights, heat pumps, salt systems, covers, and chemical controllers are moving faster than old manuals-at-the-shop workflows. SplashLens keeps the stop focused on proof, risk flags, and the next safe check.</p>
+        <p>Fast lanes for smart gear and weird stops.</p>
         <div class="tech-radar-grid">
           <button type="button" class="tech-radar-tile" onclick="showTab('route')"><strong>Connected Pool Brain</strong><span>Omni, IntelliCenter, iAquaLink, RS-485, relays, actuators, app pairing.</span></button>
           <button type="button" class="tech-radar-tile" onclick="selectBrand('robots_expanded')"><strong>Robot Field Guide</strong><span>Dolphin, Polaris, Aiper, Beatbot, WYBOT, Ecovacs, iGarden, Betta.</span></button>
@@ -1050,7 +1073,7 @@
 
   <script src="js/errors.js"></script>
   <script src="js/data.js"></script>
-  <script src="js/app.js?v=20260629-marketing-gate"></script>
+  <script src="js/app.js?v=20260629-field-chips"></script>
   <script src="js/analytics.js"></script>
   <script>
     if ('serviceWorker' in navigator) {

@@ -510,6 +510,8 @@ function renderCodesForBrand(brandId, catFilter) {
 function codeCard(code, uid, brandColor) {
   const isLED = code.code.startsWith('LED:') || code.code.startsWith('No ');
   const sevClass = { low: 'badge-low', medium: 'badge-med', high: 'badge-high' }[code.severity] || 'badge-med';
+  const causes = (code.causes || []).slice(0, 5);
+  const fixes = (code.fix || []).slice(0, 6);
   return `
     <div class="error-card" style="border-left:3px solid ${brandColor};">
       <button class="error-toggle" onclick="toggleCode('${uid}')">
@@ -525,14 +527,14 @@ function codeCard(code, uid, brandColor) {
       </button>
       <div id="det-${uid}" class="error-detail">
         <div style="padding-top:12px;">
-          <p style="color:#64748b;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;margin-bottom:7px;">Possible Causes</p>
-          <ul style="list-style:none;">
-            ${code.causes.map(c => `<li style="display:flex;gap:7px;padding:3px 0;font-size:13px;color:#374151;"><span style="color:#dc2626;flex-shrink:0;margin-top:1px;">•</span>${c}</li>`).join('')}
-          </ul>
-          <p style="color:#64748b;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;margin:12px 0 7px;">Fix Steps</p>
-          <ol style="list-style:none;">
-            ${code.fix.map((f, i) => `<li style="display:flex;gap:8px;padding:4px 0;font-size:13px;color:#374151;"><span style="color:#0284c7;font-weight:900;flex-shrink:0;min-width:16px;">${i+1}.</span>${f}</li>`).join('')}
-          </ol>
+          <p style="color:#64748b;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;margin-bottom:7px;">Check first</p>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));gap:7px;">
+            ${causes.map((c, i) => `<div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:9px;padding:9px;min-height:62px;"><span style="display:inline-grid;place-items:center;width:22px;height:22px;border-radius:999px;background:#fed7aa;color:#9a3412;font-size:11px;font-weight:950;margin-bottom:5px;">${i+1}</span><p style="font-size:12px;line-height:1.28;color:#7c2d12;font-weight:800;">${c}</p></div>`).join('')}
+          </div>
+          <p style="color:#64748b;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;margin:12px 0 7px;">Do next</p>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));gap:7px;">
+            ${fixes.map((f, i) => `<div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:9px;padding:9px;min-height:62px;"><span style="display:inline-grid;place-items:center;width:22px;height:22px;border-radius:999px;background:#0284c7;color:#fff;font-size:11px;font-weight:950;margin-bottom:5px;">${i+1}</span><p style="font-size:12px;line-height:1.28;color:#1e3a8a;font-weight:800;">${f}</p></div>`).join('')}
+          </div>
           ${code.callpro ? `<div class="badge-pro" style="margin-top:10px;padding:8px 10px;border-radius:8px;font-size:12px;font-weight:600;text-transform:none;letter-spacing:0;">⚠ This fault typically requires a licensed technician. Do not bypass safety controls.</div>` : ''}
         </div>
       </div>
@@ -3739,11 +3741,11 @@ function renderPartSnapPrimer() {
     <div style="margin:12px 0 16px;background:linear-gradient(135deg,#062b2f,#0f172a);border:1px solid #0f766e;border-radius:14px;padding:14px;border-left:4px solid #14b8a6;">
       <p style="color:#5eead4;font-size:10px;font-weight:950;letter-spacing:.12em;text-transform:uppercase;margin-bottom:6px;">PartSnap AI Service</p>
       <p style="color:#f8fafc;font-size:18px;font-weight:950;line-height:1.1;margin-bottom:8px;">Shoot the part, then shoot the label.</p>
-      <p style="color:#cbd5e1;font-size:12px;line-height:1.45;margin-bottom:12px;">Best results come from two photos: the mystery part up close, then the equipment model plate or molded number. PartSnap returns possible matches, missing proof, and a clean escalation packet. Low-proof items can be sent into the senior-tech review queue.</p>
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;">
-        <div style="background:#042f2e;border:1px solid #0f766e;border-radius:8px;padding:8px;text-align:center;"><b style="display:block;color:#ccfbf1;font-size:11px;">1. Part</b><span style="display:block;color:#99f6e4;font-size:9px;margin-top:2px;">close + lit</span></div>
-        <div style="background:#111827;border:1px solid #334155;border-radius:8px;padding:8px;text-align:center;"><b style="display:block;color:#e2e8f0;font-size:11px;">2. Label</b><span style="display:block;color:#94a3b8;font-size:9px;margin-top:2px;">model proof</span></div>
-        <div style="background:#431407;border:1px solid #b45309;border-radius:8px;padding:8px;text-align:center;"><b style="display:block;color:#fed7aa;font-size:11px;">3. Verify</b><span style="display:block;color:#fdba74;font-size:9px;margin-top:2px;">before buy</span></div>
+      <div style="display:grid;grid-template-columns:repeat(4,minmax(76px,1fr));gap:7px;overflow-x:auto;-webkit-overflow-scrolling:touch;">
+        <div style="background:#042f2e;border:1px solid #0f766e;border-radius:9px;padding:9px;min-height:66px;"><b style="display:block;color:#ccfbf1;font-size:12px;">1. Part</b><span style="display:block;color:#99f6e4;font-size:10px;font-weight:800;margin-top:6px;">close + lit</span></div>
+        <div style="background:#111827;border:1px solid #334155;border-radius:9px;padding:9px;min-height:66px;"><b style="display:block;color:#e2e8f0;font-size:12px;">2. Label</b><span style="display:block;color:#94a3b8;font-size:10px;font-weight:800;margin-top:6px;">model proof</span></div>
+        <div style="background:#431407;border:1px solid #b45309;border-radius:9px;padding:9px;min-height:66px;"><b style="display:block;color:#fed7aa;font-size:12px;">3. Verify</b><span style="display:block;color:#fdba74;font-size:10px;font-weight:800;margin-top:6px;">before buy</span></div>
+        <div style="background:#082f49;border:1px solid #0369a1;border-radius:9px;padding:9px;min-height:66px;"><b style="display:block;color:#bae6fd;font-size:12px;">4. Packet</b><span style="display:block;color:#7dd3fc;font-size:10px;font-weight:800;margin-top:6px;">send / save</span></div>
       </div>
       ${renderPartSnapReviewTicketSummary()}
     </div>`;
@@ -4407,16 +4409,16 @@ function renderPartsSnapResult(ai, result, status) {
 
 function renderPartEvidencePanel(visibleEvidence, missingProof) {
   if (!visibleEvidence.length && !missingProof.length) return '';
-  const list = (items, color) => items.map(item => `<li style="color:${color};font-size:11px;line-height:1.35;margin-bottom:4px;">${escHtml(item)}</li>`).join('');
+  const chips = (items, color, bg, border) => items.map((item, i) => `<span style="display:flex;align-items:center;gap:6px;background:${bg};border:1px solid ${border};color:${color};border-radius:999px;padding:7px 9px;font-size:11px;font-weight:900;line-height:1.2;"><b style="display:grid;place-items:center;width:18px;height:18px;border-radius:999px;background:rgba(255,255,255,.16);font-size:10px;">${i + 1}</b>${escHtml(item)}</span>`).join('');
   return `
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0;">
       <div style="background:#052e2b;border:1px solid #0f766e;border-radius:8px;padding:10px;">
         <p style="color:#5eead4;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;">Visible proof</p>
-        <ul style="padding-left:14px;margin:0;">${visibleEvidence.length ? list(visibleEvidence, '#ccfbf1') : '<li style="color:#94a3b8;font-size:11px;">No strong visible proof yet</li>'}</ul>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;">${visibleEvidence.length ? chips(visibleEvidence, '#ccfbf1', '#064e3b', '#0f766e') : '<span style="color:#94a3b8;font-size:11px;">No strong visible proof yet</span>'}</div>
       </div>
       <div style="background:#431407;border:1px solid #b45309;border-radius:8px;padding:10px;">
         <p style="color:#fdba74;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;">Next proof</p>
-        <ul style="padding-left:14px;margin:0;">${missingProof.length ? list(missingProof, '#fed7aa') : '<li style="color:#94a3b8;font-size:11px;">No extra proof listed</li>'}</ul>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;">${missingProof.length ? chips(missingProof, '#fed7aa', '#7c2d12', '#b45309') : '<span style="color:#94a3b8;font-size:11px;">No extra proof listed</span>'}</div>
       </div>
     </div>`;
 }
