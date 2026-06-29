@@ -1,5 +1,5 @@
-const CACHE = 'splashlens-v11-field-chips';
-const ASSETS = ['/', '/index.html', '/js/errors.js', '/js/data.js', '/js/app.js?v=20260629-field-chips', '/favicon.svg', '/manifest.json'];
+const CACHE = 'splashlens-v12-field-intel';
+const ASSETS = ['/', '/index.html', '/js/errors.js', '/js/data.js', '/js/app.js?v=20260629-field-intel', '/favicon.svg', '/manifest.json'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)));

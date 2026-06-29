@@ -2405,6 +2405,7 @@ function renderPoolDetail(id) {
 
   const serviceHistoryHtml = renderServicePassportHistory(p);
   const equipmentTreeHtml = renderPoolEquipmentTree(p);
+  const fieldIntelHtml = renderPoolFieldIntelligence(p);
 
   const container = document.getElementById('pools-content');
   if (!container) return;
@@ -2426,6 +2427,8 @@ function renderPoolDetail(id) {
       ${p.filter  ? poolPill(p.filter + (p.filterDia ? ' ' + p.filterDia + '"' : '') + ' filter') : ''}
       ${p.sanitizer ? poolPill(p.sanitizer) : ''}
     </div>
+
+    ${fieldIntelHtml}
 
     ${p.heater ? `
       <div class="pool-form-panel" style="padding:12px;margin-bottom:10px;">
@@ -2480,21 +2483,333 @@ function poolPill(text) {
   return `<span style="background:#f1f5f9;border:1px solid #e2e8f0;border-radius:20px;padding:4px 11px;font-size:12px;font-weight:700;color:#374151;">${escHtml(text)}</span>`;
 }
 
+function renderPoolFieldIntelligence(pool) {
+  const intel = poolFieldIntel(pool);
+  const next = pool.nextVisitReminder || {};
+  const due = next.date ? next.date : 'Not set';
+  const dueColor = intel.callbackRisk.level === 'high' ? '#991b1b' : intel.callbackRisk.level === 'medium' ? '#92400e' : '#166534';
+  const dueBg = intel.callbackRisk.level === 'high' ? '#fee2e2' : intel.callbackRisk.level === 'medium' ? '#fef3c7' : '#dcfce7';
+  return `
+    <section class="pool-form-panel" style="padding:12px;margin-bottom:10px;border-left:4px solid #0f766e;">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:10px;">
+        <div>
+          <p style="color:#0f766e;font-size:10px;font-weight:950;letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px;">Field Intelligence Layer</p>
+          <p style="color:#0f172a;font-size:16px;font-weight:950;line-height:1.1;">Proof, history, and next-stop memory.</p>
+        </div>
+        <span style="background:${dueBg};color:${dueColor};border-radius:999px;padding:4px 8px;font-size:10px;font-weight:950;white-space:nowrap;">${intel.callbackRisk.label}</span>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:10px;">
+        <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:9px;text-align:center;"><strong style="display:block;color:#0369a1;font-size:17px;">${intel.passports}</strong><span style="display:block;color:#64748b;font-size:10px;font-weight:800;">proof saves</span></div>
+        <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:9px;text-align:center;"><strong style="display:block;color:#0369a1;font-size:17px;">${intel.equipment}</strong><span style="display:block;color:#64748b;font-size:10px;font-weight:800;">equipment</span></div>
+        <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:9px;text-align:center;"><strong style="display:block;color:#0369a1;font-size:17px;">${intel.readings}</strong><span style="display:block;color:#64748b;font-size:10px;font-weight:800;">readings</span></div>
+      </div>
+      <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:9px;margin-bottom:10px;">
+        <p style="color:#64748b;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;">Next visit reminder</p>
+        <p style="color:#0f172a;font-size:12px;font-weight:900;">${escHtml(due)}</p>
+        ${next.note ? `<p style="color:#64748b;font-size:11px;line-height:1.35;margin-top:4px;">${escHtml(next.note)}</p>` : '<p style="color:#94a3b8;font-size:11px;line-height:1.35;margin-top:4px;">Set a reminder for the thing that will create the callback.</p>'}
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <button onclick="copyPoolCRMPacket('${pool.id}')" style="background:#0369a1;color:#fff;border:0;border-radius:9px;padding:10px;font-size:12px;font-weight:900;cursor:pointer;">Copy CRM Packet</button>
+        <button onclick="sharePoolCRMPacket('${pool.id}')" style="background:#0f766e;color:#fff;border:0;border-radius:9px;padding:10px;font-size:12px;font-weight:900;cursor:pointer;">Share / Export</button>
+        <button onclick="showNextVisitReminderForm('${pool.id}')" style="background:#f1f5f9;color:#334155;border:1px solid #cbd5e1;border-radius:9px;padding:10px;font-size:12px;font-weight:900;cursor:pointer;">Set Reminder</button>
+        <button onclick="loadReportFromPool('${pool.id}');showTab('report')" style="background:#f1f5f9;color:#334155;border:1px solid #cbd5e1;border-radius:9px;padding:10px;font-size:12px;font-weight:900;cursor:pointer;">New Visit</button>
+        <button onclick="downloadPoolCSV('${pool.id}')" style="background:#f8fafc;color:#0369a1;border:1px solid #bae6fd;border-radius:9px;padding:10px;font-size:12px;font-weight:900;cursor:pointer;">Download CSV</button>
+        <button onclick="printPoolPacket('${pool.id}')" style="background:#f8fafc;color:#0369a1;border:1px solid #bae6fd;border-radius:9px;padding:10px;font-size:12px;font-weight:900;cursor:pointer;">Print / PDF</button>
+      </div>
+      <div id="next-visit-form-${pool.id}"></div>
+      <p style="color:#94a3b8;font-size:10px;line-height:1.35;margin-top:8px;">This is not a CRM replacement. Use this packet to feed Jobber, Skimmer, Pool Brain, QuickBooks, a dispatcher, or a senior tech.</p>
+    </section>`;
+}
+
+function poolFieldIntel(pool) {
+  const passports = pool.servicePassports || [];
+  const equipment = pool.equipmentTree || [];
+  const readings = pool.history || [];
+  const incomplete = passports.filter(p => p.proof && p.proof.complete === false).length;
+  const highRisk = passports.filter(p => (p.callbackRisk && p.callbackRisk.level === 'high') || (p.routeBrain && /cover|gas|heater|light|electrical|automation/i.test([p.routeBrain.hardware, p.routeBrain.symptom].filter(Boolean).join(' ')))).length;
+  const recentNext = passports.slice(-5).filter(p => p.nextVisit || (p.proof && p.proof.missing && p.proof.missing.length)).length;
+  let level = 'low';
+  if (highRisk || incomplete >= 2) level = 'high';
+  else if (incomplete || recentNext || equipment.length >= 6) level = 'medium';
+  return {
+    passports: passports.length,
+    equipment: equipment.length,
+    readings: readings.length,
+    callbackRisk: {
+      level,
+      label: level === 'high' ? 'High Callback Risk' : level === 'medium' ? 'Watch Next Visit' : 'Clean History',
+    },
+  };
+}
+
 function renderPoolEquipmentTree(pool) {
   const tree = pool.equipmentTree || [];
-  if (!tree.length) return '';
+  const treeList = tree.length ? tree.slice(-8).reverse().map(item => `
+        <div style="border:1px solid #e2e8f0;border-radius:7px;padding:8px;margin-bottom:6px;background:#f8fafc;">
+          <p style="color:#0f172a;font-size:13px;font-weight:900;">${escHtml([item.manufacturer, item.hardware, item.model].filter(Boolean).join(' / ') || 'Unknown equipment')}</p>
+          <p style="color:#64748b;font-size:11px;line-height:1.4;">${escHtml(item.symptom || 'No symptom saved')} ${item.confidence ? ' - ' + escHtml(item.confidence) : ''}</p>
+        </div>`).join('') : `<p style="color:#94a3b8;font-size:12px;text-align:center;padding:10px 0;">No equipment saved yet. Add the first pump, heater, robot, light, cover, salt cell, or controller.</p>`;
   return `
     <div class="pool-form-panel" style="padding:12px;margin-bottom:10px;">
       <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px;">
         <p style="color:#64748b;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;">Equipment Tree</p>
-        <span style="background:#e0f2fe;color:#075985;border:1px solid #7dd3fc;border-radius:999px;padding:2px 7px;font-size:9px;font-weight:900;">${tree.length} saved</span>
+        <button onclick="showEquipmentForm('${pool.id}')" style="background:#e0f2fe;color:#075985;border:1px solid #7dd3fc;border-radius:999px;padding:4px 8px;font-size:10px;font-weight:900;cursor:pointer;">+ Add</button>
       </div>
-      ${tree.slice(-5).reverse().map(item => `
-        <div style="border:1px solid #e2e8f0;border-radius:7px;padding:8px;margin-bottom:6px;background:#f8fafc;">
-          <p style="color:#0f172a;font-size:13px;font-weight:900;">${escHtml([item.manufacturer, item.hardware, item.model].filter(Boolean).join(' / ') || 'Unknown equipment')}</p>
-          <p style="color:#64748b;font-size:11px;line-height:1.4;">${escHtml(item.symptom || 'No symptom saved')} ${item.confidence ? ' - ' + escHtml(item.confidence) : ''}</p>
-        </div>`).join('')}
+      <div id="equipment-form-${pool.id}"></div>
+      ${treeList}
     </div>`;
+}
+
+function findPoolById(poolId) {
+  return getPools().find(p => p.id === poolId) || null;
+}
+
+function updatePoolById(poolId, updater) {
+  const pools = getPools();
+  const idx = pools.findIndex(p => p.id === poolId);
+  if (idx === -1) return null;
+  const next = updater(pools[idx]) || pools[idx];
+  pools[idx] = next;
+  savePools(pools);
+  return next;
+}
+
+function showEquipmentForm(poolId) {
+  const wrap = document.getElementById(`equipment-form-${poolId}`);
+  if (!wrap) return;
+  wrap.innerHTML = `
+    <div style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:10px;padding:10px;margin-bottom:10px;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+        <input id="eq-mfg-${poolId}" type="text" placeholder="Manufacturer" style="min-width:0;border:1px solid #cbd5e1;border-radius:8px;padding:10px;font-size:13px;">
+        <input id="eq-hardware-${poolId}" type="text" placeholder="Hardware" style="min-width:0;border:1px solid #cbd5e1;border-radius:8px;padding:10px;font-size:13px;">
+        <input id="eq-model-${poolId}" type="text" placeholder="Model / family" style="min-width:0;border:1px solid #cbd5e1;border-radius:8px;padding:10px;font-size:13px;">
+        <select id="eq-confidence-${poolId}" style="min-width:0;border:1px solid #cbd5e1;border-radius:8px;padding:10px;font-size:13px;background:#fff;">
+          <option value="visible label">Visible label</option>
+          <option value="tech verified">Tech verified</option>
+          <option value="possible match">Possible match</option>
+          <option value="needs manual verification">Needs manual verification</option>
+        </select>
+      </div>
+      <input id="eq-symptom-${poolId}" type="text" placeholder="Symptom, part clue, or next check" style="width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:10px;font-size:13px;margin-bottom:8px;">
+      <textarea id="eq-note-${poolId}" rows="2" placeholder="Proof note, label text, serial clue, vendor pointer..." style="width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:10px;font-size:13px;resize:vertical;margin-bottom:8px;"></textarea>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <button onclick="saveManualEquipment('${poolId}')" style="background:#0369a1;color:#fff;border:0;border-radius:9px;padding:10px;font-size:12px;font-weight:900;cursor:pointer;">Save Equipment</button>
+        <button onclick="cancelEquipmentForm('${poolId}')" style="background:#f8fafc;color:#64748b;border:1px solid #cbd5e1;border-radius:9px;padding:10px;font-size:12px;font-weight:900;cursor:pointer;">Cancel</button>
+      </div>
+    </div>`;
+}
+
+function saveManualEquipment(poolId) {
+  const val = suffix => (document.getElementById(`eq-${suffix}-${poolId}`)?.value || '').trim();
+  const item = {
+    id: `eq-manual-${Date.now()}`,
+    manufacturer: val('mfg'),
+    hardware: val('hardware'),
+    model: val('model'),
+    symptom: val('symptom'),
+    note: val('note'),
+    confidence: document.getElementById(`eq-confidence-${poolId}`)?.value || 'needs manual verification',
+    source: 'manual',
+    savedAt: new Date().toISOString(),
+  };
+  if (![item.manufacturer, item.hardware, item.model, item.symptom, item.note].some(Boolean)) {
+    alert('Add at least one equipment detail first.');
+    return;
+  }
+  const pool = updatePoolById(poolId, p => {
+    p.equipmentTree = Array.isArray(p.equipmentTree) ? p.equipmentTree : [];
+    p.equipmentTree.push(item);
+    if (p.equipmentTree.length > 100) p.equipmentTree = p.equipmentTree.slice(-100);
+    return p;
+  });
+  if (pool) {
+    trackSplashLensEvent('manual_equipment_saved', { pool_id: poolId, hardware: item.hardware || '', manufacturer: item.manufacturer || '' });
+    renderPoolDetail(poolId);
+  }
+}
+
+function cancelEquipmentForm(poolId) {
+  const wrap = document.getElementById(`equipment-form-${poolId}`);
+  if (wrap) wrap.innerHTML = '';
+}
+
+function showNextVisitReminderForm(poolId) {
+  const pool = findPoolById(poolId);
+  const wrap = document.getElementById(`next-visit-form-${poolId}`);
+  if (!pool || !wrap) return;
+  const next = pool.nextVisitReminder || {};
+  wrap.innerHTML = `
+    <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:10px;margin-top:10px;">
+      <label class="field-label" for="next-date-${poolId}">Next Visit Date</label>
+      <input id="next-date-${poolId}" type="date" value="${escAttr(next.date || '')}" style="width:100%;border:1px solid #d6d3d1;border-radius:8px;padding:10px;font-size:13px;margin-bottom:8px;">
+      <div class="note-tools">
+        <label class="field-label" for="next-note-${poolId}">Callback Preventer</label>
+        ${voiceNoteButton(`next-note-${poolId}`)}
+      </div>
+      <textarea id="next-note-${poolId}" rows="3" placeholder="What should the next tech check first?" style="width:100%;border:1px solid #d6d3d1;border-radius:8px;padding:10px;font-size:13px;resize:vertical;margin-bottom:8px;">${escHtml(next.note || '')}</textarea>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
+        <button onclick="saveNextVisitReminder('${poolId}')" style="background:#d97706;color:#fff;border:0;border-radius:9px;padding:10px;font-size:12px;font-weight:900;cursor:pointer;">Save</button>
+        <button onclick="clearNextVisitReminder('${poolId}')" style="background:#fff7ed;color:#9a3412;border:1px solid #fed7aa;border-radius:9px;padding:10px;font-size:12px;font-weight:900;cursor:pointer;">Clear</button>
+        <button onclick="document.getElementById('next-visit-form-${poolId}').innerHTML=''" style="background:#f8fafc;color:#64748b;border:1px solid #cbd5e1;border-radius:9px;padding:10px;font-size:12px;font-weight:900;cursor:pointer;">Cancel</button>
+      </div>
+    </div>`;
+}
+
+function saveNextVisitReminder(poolId) {
+  const date = (document.getElementById(`next-date-${poolId}`)?.value || '').trim();
+  const note = (document.getElementById(`next-note-${poolId}`)?.value || '').trim();
+  if (!date && !note) {
+    alert('Add a date or note first.');
+    return;
+  }
+  const pool = updatePoolById(poolId, p => {
+    p.nextVisitReminder = { date, note, savedAt: new Date().toISOString() };
+    return p;
+  });
+  if (pool) {
+    trackSplashLensEvent('next_visit_reminder_saved', { pool_id: poolId, has_date: !!date, has_note: !!note });
+    renderPoolDetail(poolId);
+  }
+}
+
+function clearNextVisitReminder(poolId) {
+  const pool = updatePoolById(poolId, p => {
+    delete p.nextVisitReminder;
+    return p;
+  });
+  if (pool) {
+    trackSplashLensEvent('next_visit_reminder_cleared', { pool_id: poolId });
+    renderPoolDetail(poolId);
+  }
+}
+
+function buildPoolCRMPacket(pool) {
+  const intel = poolFieldIntel(pool);
+  const passports = pool.servicePassports || [];
+  const readings = pool.history || [];
+  const equipment = pool.equipmentTree || [];
+  const latestPassport = passports[passports.length - 1] || null;
+  const latestReading = readings[readings.length - 1] || null;
+  const next = pool.nextVisitReminder || {};
+  const missing = passports.flatMap(p => (p.proof && Array.isArray(p.proof.missing)) ? p.proof.missing : []).slice(-8);
+  const lines = [
+    `SplashLens Field Intelligence Packet`,
+    `Pool: ${pool.name || 'Unnamed pool'}`,
+    pool.address ? `Address: ${pool.address}` : '',
+    `Profile: ${[pool.gallons ? `${pool.gallons} gal` : '', pool.type, pool.sanitizer, pool.filter].filter(Boolean).join(' | ') || 'Not set'}`,
+    pool.heater ? `Primary equipment note: ${pool.heater}` : '',
+    '',
+    `Callback risk: ${intel.callbackRisk.label}`,
+    next.date || next.note ? `Next visit: ${[next.date, next.note].filter(Boolean).join(' - ')}` : 'Next visit: Not set',
+    '',
+    latestPassport ? `Latest proof (${latestPassport.date || 'undated'}): ${latestPassport.proof?.customerSummary || latestPassport.workPerformed || latestPassport.equipmentNotes || 'Saved service proof.'}` : 'Latest proof: none saved',
+    latestPassport?.proof ? `Proof status: ${latestPassport.proof.complete ? 'complete' : 'incomplete'}` : '',
+    missing.length ? `Open proof items: ${missing.join('; ')}` : '',
+    latestReading ? `Latest chemistry (${latestReading.date || 'undated'}): ${[
+      latestReading.fc ? `FC ${latestReading.fc}` : '',
+      latestReading.cc ? `CC ${latestReading.cc}` : '',
+      latestReading.ph ? `pH ${latestReading.ph}` : '',
+      latestReading.ta ? `TA ${latestReading.ta}` : '',
+      latestReading.ch ? `CH ${latestReading.ch}` : '',
+      latestReading.cya ? `CYA ${latestReading.cya}` : '',
+    ].filter(Boolean).join(' | ') || 'saved'}` : 'Latest chemistry: none saved',
+    '',
+    'Equipment tree:',
+    ...(equipment.length ? equipment.slice(-10).reverse().map(item => `- ${[item.manufacturer, item.hardware, item.model].filter(Boolean).join(' / ') || 'Unknown equipment'}${item.symptom ? `: ${item.symptom}` : ''}${item.confidence ? ` (${item.confidence})` : ''}`) : ['- None saved yet']),
+    '',
+    pool.notes ? `Site notes: ${pool.notes}` : '',
+    'Use this as a field packet for Jobber, Skimmer, Pool Brain, QuickBooks, office notes, a senior tech, or a vendor counter.',
+    'SplashLens is a reference aid. Verify with model numbers, manuals, qualified tech judgment, and manufacturer guidance before ordering parts or diagnosing.',
+  ];
+  return lines.filter(line => line !== '').join('\n');
+}
+
+function copyPoolCRMPacket(poolId) {
+  const pool = findPoolById(poolId);
+  if (!pool) return;
+  navigator.clipboard.writeText(buildPoolCRMPacket(pool)).then(() => {
+    trackSplashLensEvent('pool_crm_packet_copied', { pool_id: poolId });
+    alert('CRM packet copied.');
+  }).catch(() => alert('Copy failed. Use Share / Export instead.'));
+}
+
+async function sharePoolCRMPacket(poolId) {
+  const pool = findPoolById(poolId);
+  if (!pool) return;
+  const text = buildPoolCRMPacket(pool);
+  trackSplashLensEvent('pool_crm_packet_shared', { pool_id: poolId, native_share: !!navigator.share });
+  if (navigator.share) {
+    try {
+      await navigator.share({ title: `SplashLens packet - ${pool.name || 'pool'}`, text });
+      return;
+    } catch (e) {}
+  }
+  navigator.clipboard.writeText(text).then(() => alert('Packet copied for sharing.')).catch(() => alert(text));
+}
+
+function poolCSVRows(pool) {
+  const rows = [['section', 'date', 'key', 'value']];
+  rows.push(['profile', '', 'name', pool.name || '']);
+  rows.push(['profile', '', 'address', pool.address || '']);
+  rows.push(['profile', '', 'gallons', pool.gallons || '']);
+  rows.push(['profile', '', 'type', pool.type || '']);
+  rows.push(['profile', '', 'sanitizer', pool.sanitizer || '']);
+  rows.push(['profile', '', 'filter', pool.filter || '']);
+  rows.push(['profile', '', 'heater', pool.heater || '']);
+  if (pool.nextVisitReminder) {
+    rows.push(['next_visit', pool.nextVisitReminder.date || '', 'note', pool.nextVisitReminder.note || '']);
+  }
+  (pool.history || []).forEach(r => {
+    ['fc', 'cc', 'ph', 'ta', 'ch', 'cya', 'salt', 'temp', 'note'].forEach(key => {
+      if (r[key] != null && r[key] !== '') rows.push(['chemistry', r.date || '', key, r[key]]);
+    });
+  });
+  (pool.equipmentTree || []).forEach(item => {
+    rows.push(['equipment', item.savedAt || '', 'summary', [item.manufacturer, item.hardware, item.model].filter(Boolean).join(' / ')]);
+    if (item.symptom) rows.push(['equipment', item.savedAt || '', 'symptom', item.symptom]);
+    if (item.note) rows.push(['equipment', item.savedAt || '', 'note', item.note]);
+    if (item.confidence) rows.push(['equipment', item.savedAt || '', 'confidence', item.confidence]);
+  });
+  (pool.servicePassports || []).forEach(p => {
+    rows.push(['service_proof', p.date || '', 'summary', p.proof?.customerSummary || p.workPerformed || p.equipmentNotes || '']);
+    rows.push(['service_proof', p.date || '', 'proof_complete', p.proof?.complete ? 'yes' : 'no']);
+    if (p.nextVisit) rows.push(['service_proof', p.date || '', 'next_visit', p.nextVisit]);
+  });
+  return rows;
+}
+
+function csvEscape(value) {
+  return `"${String(value == null ? '' : value).replace(/"/g, '""')}"`;
+}
+
+function downloadPoolCSV(poolId) {
+  const pool = findPoolById(poolId);
+  if (!pool) return;
+  const csv = poolCSVRows(pool).map(row => row.map(csvEscape).join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `${(pool.name || 'splashlens-pool').replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '').toLowerCase()}-field-packet.csv`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+  trackSplashLensEvent('pool_csv_downloaded', { pool_id: poolId });
+}
+
+function printPoolPacket(poolId) {
+  const pool = findPoolById(poolId);
+  if (!pool) return;
+  const packet = buildPoolCRMPacket(pool);
+  const win = window.open('', '_blank', 'noopener,noreferrer');
+  if (!win) {
+    navigator.clipboard.writeText(packet).then(() => alert('Packet copied. Browser blocked the print window.'));
+    return;
+  }
+  win.document.write(`<!doctype html><html><head><title>SplashLens Field Packet</title><style>body{font-family:Arial,sans-serif;max-width:760px;margin:32px auto;padding:0 18px;color:#0f172a;line-height:1.45;}h1{font-size:24px;margin-bottom:10px;}pre{white-space:pre-wrap;font:14px/1.55 Arial,sans-serif;border:1px solid #e2e8f0;border-radius:10px;padding:18px;background:#f8fafc;}</style></head><body><h1>SplashLens Field Packet</h1><pre>${escHtml(packet)}</pre><script>window.onload=function(){window.print();}<\/script></body></html>`);
+  win.document.close();
+  trackSplashLensEvent('pool_packet_printed', { pool_id: poolId });
 }
 
 function poolReadingDetailGrid(r) {
@@ -2807,12 +3122,16 @@ function savePool(id) {
       pool.id = id;
       pool.history = pools[idx].history || [];
       pool.servicePassports = pools[idx].servicePassports || [];
+      pool.equipmentTree = pools[idx].equipmentTree || [];
+      pool.nextVisitReminder = pools[idx].nextVisitReminder || null;
       pools[idx] = pool;
     }
   } else {
     pool.id = String(Date.now());
     pool.history = [];
     pool.servicePassports = [];
+    pool.equipmentTree = [];
+    pool.nextVisitReminder = null;
     pools.push(pool);
   }
   savePools(pools);
