@@ -213,6 +213,14 @@
         <table id="top-campaigns"></table>
       </div>
       <div class="panel">
+        <h2>Payment Plans</h2>
+        <table id="payment-plans"></table>
+      </div>
+      <div class="panel">
+        <h2>Recent Payments</h2>
+        <table id="recent-payments"></table>
+      </div>
+      <div class="panel">
         <h2>Manual Searches</h2>
         <table id="manual-queries"></table>
       </div>
@@ -264,6 +272,17 @@
         return `<tr><td>${new Date(row.createdAt).toLocaleString()}</td><td><code>${escapeHtml(row.event || '')}</code></td><td><code>${escapeHtml(row.source || 'app')}</code></td><td>${escapeHtml(row.path || '')}</td><td>${escapeHtml(props)}</td></tr>`;
       }).join('');
       el.innerHTML = '<thead><tr><th>Time</th><th>Event</th><th>Source</th><th>Path</th><th>Props</th></tr></thead><tbody>' + (body || '<tr><td colspan="5">No events yet.</td></tr>') + '</tbody>';
+    }
+
+    function money(cents, currency) {
+      const code = String(currency || 'usd').toUpperCase();
+      return new Intl.NumberFormat(undefined, { style: 'currency', currency: code }).format((Number(cents || 0) || 0) / 100);
+    }
+
+    function renderPayments(rows) {
+      const el = document.getElementById('recent-payments');
+      const body = (rows || []).map((row) => `<tr><td>${new Date(row.createdAt).toLocaleString()}</td><td><code>${escapeHtml(row.plan || 'PartSnap Pro')}</code></td><td>${escapeHtml(row.subject || '')}</td><td>${money(row.amountTotal, row.currency)}</td></tr>`).join('');
+      el.innerHTML = '<thead><tr><th>Time</th><th>Plan</th><th>Customer</th><th>Amount</th></tr></thead><tbody>' + (body || '<tr><td colspan="4">No payment events yet.</td></tr>') + '</tbody>';
     }
 
     function escapeHtml(value) {
@@ -320,6 +339,8 @@
         metricCard('Mystery Lab 30d', m.partSnapMystery30d, 'Low-confidence parts submitted.'),
         metricCard('Apprentice Starts 30d', m.partSnapApprentice30d, 'Training mode sessions.'),
         metricCard('Proof Saved 30d', m.proofSaved30d, 'Proof passport save events.'),
+        metricCard('Paid Checkouts 30d', m.checkoutSuccess30d, 'Stripe webhook confirmed purchases.'),
+        metricCard('Revenue 30d', (Number(m.revenueCents30d || 0) / 100).toFixed(0), 'Approx dollars from tracked checkout events.'),
         metricCard('Events 7d', m.events7d, 'All stored app events.'),
         metricCard('Stored Events', m.storedEvents, 'Loaded from KV sample.')
       ].join('');
@@ -327,10 +348,12 @@
       renderCountTable('top-sources', data.topSources, 'Source');
       renderCountTable('top-referrers', data.topReferrers, 'Referrer');
       renderCountTable('top-campaigns', data.topCampaigns, 'Campaign');
+      renderCountTable('payment-plans', data.topPaymentPlans, 'Plan');
       renderCountTable('manual-queries', data.manualQueries, 'Query');
       renderCountTable('scan-modes', data.scanModes, 'Mode');
       renderCountTable('callback-risks', data.callbackRisks, 'Risk');
       renderCountTable('top-paths', data.topPaths, 'Path');
+      renderPayments(data.recentPayments);
       renderRecent(data.recentEvents);
       setStatus(`Loaded ${Number(m.storedEvents || 0).toLocaleString()} stored events. Generated ${new Date(data.generatedAt).toLocaleString()}.`, false);
     }

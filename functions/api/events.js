@@ -134,6 +134,7 @@ async function eventSummary(request, env) {
   const scanModes = new Map();
   const manualQueries = new Map();
   const callbackRisks = new Map();
+  const paymentPlans = new Map();
   const sources = new Map();
   const referrers = new Map();
   const campaigns = new Map();
@@ -177,6 +178,9 @@ async function eventSummary(request, env) {
   let partSnapMystery30d = 0;
   let partSnapApprentice30d = 0;
   let proofSaved30d = 0;
+  let checkoutSuccess30d = 0;
+  let revenueCents30d = 0;
+  const recentPayments = [];
   let poolProEvents30d = 0;
   let poolProReferralOpens30d = 0;
   let poolProAppOpens30d = 0;
@@ -245,6 +249,19 @@ async function eventSummary(request, env) {
       if (record.event === 'partsnap_mystery_submitted') partSnapMystery30d += 1;
       if (record.event === 'partsnap_apprentice_started') partSnapApprentice30d += 1;
       if (record.event === 'partsnap_saved_to_pool' || record.event === 'route_brain_saved_to_pool' || record.event === 'service_report_saved' || record.event === 'proof_ready_report_saved') proofSaved30d += 1;
+      if (record.event === 'checkout_success') {
+        checkoutSuccess30d += 1;
+        revenueCents30d += Math.max(0, Number(props.amount_total || props.amountTotal || 0) || 0);
+        inc(paymentPlans, props.plan || props.product || 'PartSnap Pro');
+        recentPayments.push({
+          createdAt: record.createdAt,
+          subject: clean(props.subject || props.customer_email || props.customerEmail || '', 160),
+          plan: clean(props.plan || props.product || 'PartSnap Pro', 100),
+          amountTotal: Math.max(0, Number(props.amount_total || props.amountTotal || 0) || 0),
+          currency: clean(props.currency || 'usd', 12),
+          source: clean(props.payment_source || record.source || 'stripe', 60),
+        });
+      }
       if (props.risk || props.callbackRisk) inc(callbackRisks, props.risk || props.callbackRisk);
     }
     if (ts >= since7d && record.event === 'app_open') appOpens7d += 1;
@@ -278,6 +295,8 @@ async function eventSummary(request, env) {
       partSnapMystery30d,
       partSnapApprentice30d,
       proofSaved30d,
+      checkoutSuccess30d,
+      revenueCents30d,
       poolProEvents30d,
       poolProReferralOpens30d,
       poolProAppOpens30d,
@@ -293,10 +312,12 @@ async function eventSummary(request, env) {
     topSources: topList(sources),
     topReferrers: topList(referrers),
     topCampaigns: topList(campaigns),
+    topPaymentPlans: topList(paymentPlans),
     topPaths: topList(paths),
     scanModes: topList(scanModes),
     callbackRisks: topList(callbackRisks),
     manualQueries: topList(manualQueries, 20),
+    recentPayments: recentPayments.slice(0, 20),
     recentEvents: records.slice(0, 50).map((record) => ({
       event: record.event,
       source: record.source,

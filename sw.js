@@ -1,5 +1,5 @@
-const CACHE = 'splashlens-v7-connected-pool-brain';
-const ASSETS = ['/', '/index.html', '/js/errors.js', '/js/data.js', '/js/app.js', '/favicon.svg', '/manifest.json'];
+const CACHE = 'splashlens-v8-moonshot-field-network';
+const ASSETS = ['/', '/index.html', '/js/errors.js', '/js/data.js', '/js/app.js?v=20260629-moonshot', '/favicon.svg', '/manifest.json'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)));

@@ -3313,22 +3313,52 @@ function makeRouteBrainTraining() {
   const checks = routeBrainNextChecks(state, hits);
   const result = document.getElementById('route-brain-result');
   if (!result) return;
+  const modules = [
+    ['proof', 'Proof First', 'Student identifies model/label proof, photos, readings, and missing evidence before touching parts.'],
+    ['safe-checks', 'Safe Checks', 'Student orders checks from lowest-risk observation to qualified electrical/gas/refrigerant work.'],
+    ['customer', 'Customer Summary', 'Student writes a plain-English explanation without diagnosis, warranty, or fitment claims.'],
+    ['escalation', 'Escalation Packet', 'Student prepares a senior tech/vendor packet with exact photos and questions.'],
+  ];
   result.innerHTML = `
     <section class="brain-card">
       <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px;">
-        <h3>Training Session Mode</h3>
-        <span class="brain-pill ready">Instructor-ready</span>
+        <h3>Guided Training Module</h3>
+        <span class="brain-pill ready">5-minute lesson</span>
       </div>
       <p><strong>Scenario:</strong> A tech arrives to investigate ${escHtml(state.hardware || 'equipment')} with symptom "${escHtml(state.symptom || 'unknown symptom')}".</p>
-      <p style="margin-top:8px;"><strong>Student task:</strong> Identify what proof is missing, complete safe checks first, and decide whether to escalate.</p>
+      <div class="brain-grid" style="margin:10px 0;">
+        ${modules.map(([key, title, body], index) => `
+          <button class="brain-action secondary" onclick="openTrainingModule('${key}')" style="text-align:left;height:auto;min-height:76px;">
+            <span style="display:block;font-size:11px;color:#0369a1;font-weight:950;">${index + 1}. ${title}</span>
+            <span style="display:block;font-size:11px;color:#475569;line-height:1.35;margin-top:3px;">${body}</span>
+          </button>`).join('')}
+      </div>
       <div class="dark-note">
         <p style="font-weight:900;margin-bottom:6px;">Answer key / expected checks</p>
         <ol>${checks.map(c => `<li>${escHtml(c)}</li>`).join('')}</ol>
       </div>
+      <div id="training-module-panel" class="info-box" style="margin-top:10px;">Pick a module above to run the tech through a focused field exercise.</div>
       <p style="margin-top:8px;"><strong>Safety note:</strong> Electrical, gas, refrigerant, automatic cover, and commercial chemical controller work should be handled by qualified personnel.</p>
       <button class="brain-action secondary" style="margin-top:10px;width:100%;" onclick="copyRouteBrainPacket()">Copy Instructor Packet</button>
     </section>`;
   trackSplashLensEvent('route_brain_training_generated', { hardware: state.hardware || 'unknown', risk: risk.level });
+}
+
+function openTrainingModule(key) {
+  const panel = document.getElementById('training-module-panel');
+  if (!panel) return;
+  const state = collectRouteBrainState();
+  const hits = routeBrainHits(state);
+  const risk = routeBrainRisk(state, hits);
+  const checks = routeBrainNextChecks(state, hits);
+  const copy = {
+    proof: ['Proof First', 'List the exact model/label, photo, reading, or app screen needed before ordering.'],
+    'safe-checks': ['Safe Checks', `Start with: ${checks[0] || 'capture proof before repair work'}`],
+    customer: ['Customer Summary', routeBrainCustomerSummary(state, hits, risk)],
+    escalation: ['Escalation Packet', buildRouteBrainPacket(state, hits, risk)],
+  }[key] || ['Training Module', 'Run the scenario and document proof before action.'];
+  panel.innerHTML = `<strong>${escHtml(copy[0])}</strong><p style="margin-top:6px;">${escHtml(copy[1])}</p>`;
+  trackSplashLensEvent('route_brain_training_module_opened', { module: key, risk: risk.level });
 }
 
 function makeRouteBrainQuote() {
@@ -4424,13 +4454,14 @@ function renderPartSnapCallbackRisk(risk) {
 
 function renderPartSnapPartnerCards(ai = {}) {
   const cards = [
-    ['counter', 'Distributor Counter Packet', 'Ready', 'Shareable proof list for counter, vendor, or senior tech review.'],
-    ['verified', 'Manufacturer Verified Card', 'Coming soon', 'Prepared for official model, diagram, and part fit verification.'],
-    ['training', 'Instructor Scenario', 'Coming soon', 'Turns this result into a classroom or apprentice troubleshooting prompt.'],
+    ['counter', 'Senior Tech / Vendor Packet', 'Ready', 'One tap packet with proof, missing evidence, risk, and exact questions for a senior tech, distributor, or vendor.'],
+    ['verified', 'Partner-Verified Card', 'Ready for partner', 'A manufacturer/distributor intake card that shows what official docs or model language would be needed before SplashLens marks it verified.'],
+    ['training', 'Training Scenario Card', 'Ready', 'Turns the result into a 5-minute apprentice lesson with student task, proof checklist, and answer key.'],
+    ['passport', 'Service Proof Passport', 'Ready', 'Save the part result into a customer/pool history so callbacks and reorders have field proof attached.'],
   ];
   return `
     <div style="margin:10px 0;background:#0f172a;border:1px solid #334155;border-radius:8px;padding:10px;">
-      <p style="color:#94a3b8;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;">Partner-verified cards</p>
+      <p style="color:#94a3b8;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;">PartSnap field network</p>
       <div style="display:grid;gap:7px;">
         ${cards.map(([key, title, state, body]) => `
           <button onclick="openPartSnapPartnerCard('${key}')" style="text-align:left;background:#111827;border:1px solid #334155;border-radius:8px;padding:9px;cursor:pointer;">
@@ -4441,25 +4472,91 @@ function renderPartSnapPartnerCards(ai = {}) {
             <span style="display:block;color:#94a3b8;font-size:11px;line-height:1.35;margin-top:4px;">${body}</span>
           </button>`).join('')}
       </div>
-      <p style="color:#64748b;font-size:10px;line-height:1.35;margin-top:8px;">No official manufacturer or distributor partnership is implied unless marked verified.</p>
+      <p style="color:#64748b;font-size:10px;line-height:1.35;margin-top:8px;">Partner-verified means an actual manufacturer, distributor, trainer, or vendor has supplied the official proof language. Until then, these cards stay conservative.</p>
     </div>`;
 }
 
 function openPartSnapPartnerCard(type) {
   const panel = document.getElementById('partsnap-feedback-panel');
   const title = {
-    counter: 'Distributor Counter Packet',
-    verified: 'Manufacturer Verified Card',
-    training: 'Instructor Scenario',
+    counter: 'Senior Tech / Vendor Packet',
+    verified: 'Partner-Verified Card Intake',
+    training: 'Training Scenario Card',
+    passport: 'Service Proof Passport',
   }[type] || 'Partner Card';
   trackSplashLensEvent('partsnap_partner_card_opened', { card: type, confidence: (_lastPartSnapResult || {}).confidence || 'unknown' });
   if (!panel) return;
+  const body = partSnapPartnerCardText(type);
   panel.innerHTML = `
     <div style="background:#ffffff;border:1px solid #bae6fd;border-radius:12px;padding:12px;margin:4px 0 16px;">
       <p style="color:#0f172a;font-size:14px;font-weight:950;margin-bottom:5px;">${escHtml(title)}</p>
-      <p style="color:#64748b;font-size:12px;line-height:1.45;margin-bottom:10px;">${type === 'counter' ? 'Use Share Packet or Copy Text to send the proof list without making a final diagnosis claim.' : 'This lane is ready for partner input and will stay marked coming soon until a real partner verifies it.'}</p>
-      <pre style="white-space:pre-wrap;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px;color:#334155;font-size:11px;line-height:1.4;">${escHtml(partSnapEscalationText())}</pre>
+      <p style="color:#64748b;font-size:12px;line-height:1.45;margin-bottom:10px;">${type === 'verified' ? 'Use this when a partner wants to tell SplashLens exactly what evidence, language, or official doc link should appear on a verified field card.' : 'Use this to move the field result into the next workflow without overstating certainty.'}</p>
+      <pre style="white-space:pre-wrap;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px;color:#334155;font-size:11px;line-height:1.4;">${escHtml(body)}</pre>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;">
+        <button onclick="navigator.clipboard.writeText(partSnapPartnerCardText('${type}')).then(()=>alert('Card copied.')).catch(()=>alert(partSnapPartnerCardText('${type}')))" style="background:#0369a1;color:#fff;border:0;border-radius:8px;padding:10px;font-size:12px;font-weight:900;cursor:pointer;">Copy Card</button>
+        <button onclick="${type === 'passport' ? 'savePartSnapToPool()' : type === 'training' ? 'startPartSnapApprenticeMode()' : 'sharePartSnapPacket()'}" style="background:#0f766e;color:#fff;border:0;border-radius:8px;padding:10px;font-size:12px;font-weight:900;cursor:pointer;">Use Now</button>
+      </div>
     </div>`;
+}
+
+function partSnapPartnerCardText(type) {
+  const ai = _lastPartSnapResult || {};
+  const base = partSnapEscalationText();
+  const risk = partSnapCallbackRisk(ai, partConfidenceLadder(ai.confidence, ai.partNumber, ai.manufacturer, ai.model, ai.component), ai.visibleEvidence || [], ai.missingProof || []);
+  if (type === 'verified') {
+    return [
+      'SplashLens partner-verified card intake',
+      '',
+      `Brand/family: ${[ai.manufacturer, ai.category, ai.component].filter(Boolean).join(' / ') || 'Needs partner input'}`,
+      `Possible model/part: ${ai.model || ai.partNumber || 'Needs official model language'}`,
+      '',
+      'Partner input requested:',
+      '- Official model-family names and aliases techs use at the counter',
+      '- Required proof before fitment or ordering',
+      '- Known failure points and common misidentifications',
+      '- Manual, diagram, or support URL that should be checked',
+      '- Preferred safe wording for field techs and customers',
+      '',
+      'Current unverified field packet:',
+      base,
+    ].join('\n');
+  }
+  if (type === 'training') {
+    return [
+      'SplashLens 5-minute PartSnap training card',
+      '',
+      `Scenario: A tech found ${ai.component || 'a mystery pool part'} with ${ai.confidence || 'unknown'} confidence.`,
+      `Callback risk: ${risk.level}`,
+      '',
+      'Student task:',
+      '1. Name what proof is visible.',
+      '2. Name what proof is missing.',
+      '3. Decide if buying links should be held.',
+      '4. Write the customer-safe explanation.',
+      '',
+      `Answer key: ${risk.missing.length ? `Do not order until ${risk.missing.join(', ')} is captured.` : 'Proof path is strong enough to escalate with normal verification.'}`,
+      '',
+      base,
+    ].join('\n');
+  }
+  if (type === 'passport') {
+    return [
+      'Service Proof Passport note',
+      '',
+      `Saved item: ${[ai.manufacturer, ai.component, ai.model || ai.partNumber].filter(Boolean).join(' / ') || 'PartSnap result'}`,
+      `Callback risk: ${risk.level}`,
+      `Before ordering: ${risk.missing.length ? risk.missing.join(', ') : 'verify against current manufacturer parts diagram'}`,
+      '',
+      base,
+    ].join('\n');
+  }
+  return [
+    'SplashLens senior tech / vendor packet',
+    '',
+    'Use this for a distributor counter, vendor support, or senior tech review. It is not a final diagnosis or fitment guarantee.',
+    '',
+    base,
+  ].join('\n');
 }
 
 function partSnapEscalationText() {
