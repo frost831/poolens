@@ -70,16 +70,33 @@ async function createCheckoutSession(request, env, plan) {
   return { url: session?.url || null, reason: session?.url ? 'ok' : 'missing_session_url' };
 }
 
+function useStripeCheckout(env) {
+  return String(env.SPLASHLENS_CHECKOUT_MODE || '').trim().toLowerCase() === 'stripe_checkout';
+}
+
 export async function onRequestGet({ request, env }) {
   const url = new URL(request.url);
   const plan = (url.searchParams.get('plan') || 'monthly').toLowerCase();
-  const session = await createCheckoutSession(request, env, plan);
-  if (session.url) {
+
+  if (useStripeCheckout(env)) {
+    const session = await createCheckoutSession(request, env, plan);
+    if (session.url) {
+      return new Response(null, {
+        status: 302,
+        headers: {
+          Location: session.url,
+          'X-SplashLens-Checkout-Mode': 'stripe_checkout',
+        },
+      });
+    }
+
+    const target = LINKS[plan] || LINKS.monthly;
     return new Response(null, {
       status: 302,
       headers: {
-        Location: session.url,
-        'X-SplashLens-Checkout-Mode': 'stripe_checkout',
+        Location: target,
+        'X-SplashLens-Checkout-Mode': 'payment_link_fallback',
+        'X-SplashLens-Checkout-Fallback': session.reason || 'unknown',
       },
     });
   }
@@ -89,8 +106,7 @@ export async function onRequestGet({ request, env }) {
     status: 302,
     headers: {
       Location: target,
-      'X-SplashLens-Checkout-Mode': 'payment_link_fallback',
-      'X-SplashLens-Checkout-Fallback': session.reason || 'unknown',
+      'X-SplashLens-Checkout-Mode': 'payment_link_direct',
     },
   });
 }

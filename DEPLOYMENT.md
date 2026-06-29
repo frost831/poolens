@@ -47,7 +47,9 @@ Recommended first pass:
 
 ## Stripe
 
-`functions/api/checkout.js` now creates Stripe Checkout Sessions when `STRIPE_SECRET_KEY` is present. The success URL lands on `/api/checkout-success?session_id={CHECKOUT_SESSION_ID}`, verifies the paid session with Stripe, signs a scanner entitlement token, stores the entitlement summary in `SCAN_USAGE_KV`, and sends the customer to SplashLens with the activation token.
+`functions/api/checkout.js` now sends public web checkout directly to the live Stripe Payment Links by default. This keeps the revenue path live while the first-party Stripe API key is corrected.
+
+Set `SPLASHLENS_CHECKOUT_MODE=stripe_checkout` only after the production `STRIPE_SECRET_KEY` has been verified against the live SplashLens prices. In that mode, the route creates Stripe Checkout Sessions, sends the success URL to `/api/checkout-success?session_id={CHECKOUT_SESSION_ID}`, verifies the paid session with Stripe, signs a scanner entitlement token, stores the entitlement summary in `SCAN_USAGE_KV`, and sends the customer to SplashLens with the activation token.
 
 ## PartSnap feedback
 
@@ -55,7 +57,7 @@ Recommended first pass:
 
 This endpoint is for product learning and support follow-up. It does not confirm part fitment or manufacturer endorsement.
 
-If `STRIPE_SECRET_KEY` is missing, `/api/checkout` falls back to the existing Stripe Payment Links so the public CTA does not break, but the customer activation path remains manual and revenue launch is not clean.
+If `SPLASHLENS_CHECKOUT_MODE` is not `stripe_checkout`, `/api/checkout` uses the existing Stripe Payment Links intentionally and returns `X-SplashLens-Checkout-Mode: payment_link_direct`. The customer activation path remains manual/payment-link-based until the first-party Checkout Session key is corrected.
 
 Current Stripe catalog IDs:
 
