@@ -2834,6 +2834,41 @@ const ROUTE_BRAIN_QUICK_SYMPTOMS = [
   'robot will not climb','robot Wi-Fi pairing','ORP low','pH high alarm','cover will not move','heater says LO','flow fault','pump not priming'
 ];
 
+function renderTechRadarPanel() {
+  const radar = window.SPLASHLENS_TECH_RADAR;
+  if (!radar || !Array.isArray(radar.categories)) return '';
+  const tiles = radar.categories.map((cat) => `
+    <details class="brain-card" style="margin-bottom:8px;">
+      <summary style="cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;gap:10px;">
+        <span>
+          <strong style="display:block;color:#0f172a;font-size:13px;">${escHtml(cat.name)}</strong>
+          <span style="display:block;color:#64748b;font-size:11px;font-weight:800;">${escHtml(cat.status)}</span>
+        </span>
+        <span class="brain-pill ready">Radar</span>
+      </summary>
+      <div style="padding-top:9px;">
+        <p style="color:#334155;font-size:12px;line-height:1.5;"><strong>Models / systems:</strong> ${escHtml((cat.examples || []).join(', '))}</p>
+        <p style="color:#334155;font-size:12px;line-height:1.5;margin-top:5px;"><strong>Proof to capture:</strong> ${escHtml((cat.proof || []).join(', '))}</p>
+        <p style="color:#334155;font-size:12px;line-height:1.5;margin-top:5px;"><strong>Field flags:</strong> ${escHtml((cat.fieldFlags || []).join(', '))}</p>
+      </div>
+    </details>
+  `).join('');
+  return `
+    <section class="brain-card dark" aria-label="New Tech Radar">
+      <p style="color:#7dd3fc;font-size:10px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;margin-bottom:4px;">New Tech Radar</p>
+      <h2 style="font-size:21px;line-height:1.06;font-weight:950;margin:0 0 6px;color:#fff;">PartSnap + Connected Pool Brain</h2>
+      <p style="color:#cbd5e1;font-size:12px;line-height:1.45;">Track the fast-moving stuff: robots, smart automation, lights, heat pumps, covers, sensors, feeders, and chemical controllers. Use it to capture proof, spot callback risk, and build safer escalation packets.</p>
+      <div class="brain-grid" style="margin-top:10px;">
+        <span class="brain-pill ready" style="justify-content:center;">Daily data adds</span>
+        <span class="brain-pill ready" style="justify-content:center;">Weekly field cards</span>
+        <span class="brain-pill warn" style="justify-content:center;">Monthly update</span>
+        <span class="brain-pill warn" style="justify-content:center;">Partner cards ready</span>
+      </div>
+    </section>
+    ${tiles}
+  `;
+}
+
 function routeBrainDefaults() {
   return {
     poolId: '',
@@ -2972,6 +3007,7 @@ function routeBrainPanel() {
     </section>
 
     <div id="route-brain-result" class="brain-result"></div>
+    ${renderTechRadarPanel()}
     ${routeBrainLearningShelf()}
     <section class="brain-card">
       <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px;">

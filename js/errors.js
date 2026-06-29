@@ -1169,11 +1169,11 @@ window.ERROR_DB.cmp_pal_lighting = {
 };
 
 window.ERROR_DB.robots_expanded = {
-  label:"Robots - Expanded Field Guide",
+  label:"Robot Cleaners / Smart Robots",
   color:"#0f766e",
   categories:{
-    "Robotic Cleaners - Dolphin / Polaris / Aiper / Beatbot / Betta / Hayward / Pentair": {
-      models:["Dolphin Explorer","Dolphin Premier","Dolphin Nautilus","Polaris Alpha iQ","Polaris 9550","Aiper Scuba","Aiper Seagull","Beatbot AquaSense","Betta SE","Hayward AquaVac","Pentair Prowler"],
+    "Robotic Cleaners - Dolphin / Polaris / Aiper / Beatbot / WYBOT / Ecovacs / iGarden": {
+      models:["Dolphin Explorer","Dolphin Premier","Dolphin Nautilus","Maytronics Dolphin Liberty","Polaris Alpha iQ","Polaris 9550","Polaris FREEDOM","Aiper Scuba","Aiper Seagull","Beatbot AquaSense","Beatbot AquaSense Pro","WYBOT S2","WYBOT C1","Ecovacs Goat / Winbot pool concepts","iGarden K-series","Betta SE","Betta SE Plus","Hayward AquaVac","Pentair Prowler"],
       codes:[
         { code:"ROBOT-NO-POWER", name:"Robot Has No Power",
           causes:["GFCI outlet tripped","Power supply failed","Floating cable damaged","Battery depleted on cordless unit","Charging contacts corroded"],
@@ -1194,7 +1194,51 @@ window.ERROR_DB.robots_expanded = {
         { code:"ROBOT-WATER-INTRUSION", name:"Water In Electronics / Battery Area",
           causes:["Seal or housing crack","Charging-port gasket failure","Robot stored wet or dropped","Improper service opening"],
           fix:["Stop using and do not charge until fully inspected","Dry exterior and check warranty/service route","Inspect gaskets, covers, and housing for cracks","Water intrusion in battery/electronics is a service or replacement issue"],
-          severity:"high", callpro:true }
+          severity:"high", callpro:true },
+        { code:"ROBOT-SHORT-RUNTIME", name:"Cordless Robot Short Runtime",
+          causes:["Battery not fully charged","Charging contacts dirty","High debris load increasing motor draw","Cold water reducing battery output","Battery aging"],
+          fix:["Clean and dry charging contacts before charging","Confirm full charge/dock status before route use","Empty basket and remove hair/string from tracks and impeller","Run a lighter cycle to compare runtime","If runtime stays far below spec, check warranty/service route before opening sealed battery housings"],
+          severity:"medium", callpro:false },
+        { code:"ROBOT-MAPPING-MISS", name:"AI Mapping / Navigation Miss",
+          causes:["Pool shape not fully mapped","Waterline or sun glare confusing sensors","Obstacles, ledges, or benches interrupting route","Firmware/app issue","Dirty optical/ultrasonic sensor window"],
+          fix:["Run a full learning cycle per app/manual","Clean sensor windows and basket","Remove loose toys, hoses, and large debris before cycle","Check for firmware/app updates","Document pool shape/ledge issue before calling vendor support"],
+          severity:"low", callpro:false },
+        { code:"ROBOT-DOCK-ISSUE", name:"Self-Dock / Charging Station Failure",
+          causes:["Dock not level or positioned per manual","Power supply/GFCI issue","Contacts fouled with scale or debris","Robot cannot navigate to dock","Low Wi-Fi/Bluetooth handoff"],
+          fix:["Place dock exactly per manufacturer spacing and depth guidance","Test GFCI/outlet and inspect power supply LED","Clean robot and dock contacts","Run a manual return-to-dock cycle if supported","Capture app error screen before support escalation"],
+          severity:"medium", callpro:false },
+        { code:"ROBOT-DEBRIS-DETECT", name:"Debris Recognition / Dirty Pool Miss",
+          causes:["Filter basket full","Camera/sensor window dirty","Fine debris too small for selected filter panel","Cleaning cycle too short","AI mode not selected"],
+          fix:["Empty basket and install fine filter panel if available","Clean camera/sensor window","Run floor/wall/waterline cycle instead of quick mode","Brush heavy algae or fine silt before relying on robot","Use manual vacuum for heavy cleanup when robot keeps recirculating debris"],
+          severity:"low", callpro:false }
+      ]
+    }
+  }
+};
+
+window.ERROR_DB.connected_pool_brain = {
+  label:"Connected Pool Brain",
+  color:"#2563eb",
+  categories:{
+    "Automation / Smart Backyard": {
+      models:["Pentair IntelliCenter","Pentair EasyTouch","Hayward OmniLogic","Hayward OmniPL","Jandy AquaLink RS","iAquaLink","Zodiac iAquaLink","RS-485 pumps","Smart heaters","Valve actuators","App-connected lighting"],
+      codes:[
+        { code:"SMART-OFFLINE", name:"Pool App Shows System Offline",
+          causes:["Wi-Fi/Ethernet lost at equipment pad","Router credentials changed","Controller cloud service/account issue","Controller needs reboot","Weak outdoor signal"],
+          fix:["Confirm local control at the panel first","Check Ethernet/Wi-Fi signal and router changes","Power cycle controller using normal shutdown before breaker cycle","Wait several minutes before judging cloud reconnection","Capture app screen and controller network page before vendor escalation"],
+          severity:"medium", callpro:false },
+        { code:"RS485-NO-COMM", name:"RS-485 Device Not Communicating",
+          causes:["A/B polarity reversed","Loose low-voltage terminal","Address conflict","Pump has relay power instead of constant line power","Damaged data cable"],
+          fix:["Photograph wiring before moving conductors","Verify A/B polarity and shield/grounding per manual","Confirm device address and automation assignment","Give VS pump constant line power when controlled by data","Test continuity if communication drops intermittently"],
+          severity:"medium", callpro:true },
+        { code:"RELAY-WRONG-LOAD", name:"Wrong Device Turns On From App",
+          causes:["Relay labels do not match actual load","Schedule assigned to wrong circuit","Aux names changed after service","Shared transformer/load confusion"],
+          fix:["Use service mode and test one relay at a time","Relabel physical relay/load mapping","Verify automation circuit names and schedules","Check transformer load before combining lights/features","Save/export configuration before major changes"],
+          severity:"medium", callpro:false },
+        { code:"ACTUATOR-NO-MOVE", name:"Valve Actuator Does Not Move From Automation",
+          causes:["Actuator toggle switch off","Cam switch at limit","24VAC missing","Aux/valve assignment wrong","Actuator motor failed"],
+          fix:["Check actuator toggle switch and listen for motor","Verify 24VAC at actuator command","Confirm valve assignment in controller","Mark cam positions before adjustment","Replace actuator only after power and assignment are verified"],
+          severity:"medium", callpro:false }
       ]
     }
   }

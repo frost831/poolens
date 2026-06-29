@@ -109,6 +109,59 @@ window.CHEM_DATA = {
   }
 };
 
+window.SPLASHLENS_TECH_RADAR = {
+  updated: "2026-06-28",
+  cadence: {
+    daily: "Add 3-5 codes, model clues, part families, or proof prompts when new field patterns show up.",
+    weekly: "Publish one field card, training scenario, or SEO/AEO hub update for pool tech search.",
+    monthly: "Ship a Field Intelligence Update with new robots, automation, heaters, heat pumps, lights, salts, covers, and controller notes."
+  },
+  categories: [
+    {
+      name: "Robots",
+      status: "High priority",
+      examples: ["Beatbot AquaSense", "Aiper Scuba / Seagull", "Maytronics Dolphin", "Polaris Alpha iQ", "WYBOT", "Ecovacs", "iGarden", "Betta"],
+      proof: ["power supply or dock", "charging contacts", "tracks and brushes", "filter basket", "cord or battery housing", "app pairing screen"],
+      fieldFlags: ["no power", "will not climb", "Wi-Fi pairing failure", "water intrusion", "short runtime", "navigation/mapping miss"]
+    },
+    {
+      name: "Connected Pool Brain",
+      status: "Live reference layer",
+      examples: ["Pentair IntelliCenter", "Hayward Omni", "Jandy iAquaLink", "RS-485 pumps", "valve actuators", "smart heaters", "lighting relays", "automatic covers"],
+      proof: ["controller model", "firmware/app screen", "relay label", "RS-485 wiring photo", "device assignment screen", "breaker/GFCI behavior"],
+      fieldFlags: ["offline app", "lost communication", "wrong relay", "actuator wrong direction", "pump not seen by automation", "light schedule mismatch"]
+    },
+    {
+      name: "Heat / Cool",
+      status: "Expanding",
+      examples: ["Raypak", "Pentair MasterTemp / UltraTemp", "Hayward Universal H-Series / HeatPro", "Jandy JXi / VersaTemp", "AquaCal", "Gulfstream", "Rheem / Ruud"],
+      proof: ["model plate", "fault display", "water flow reading", "filter pressure", "gas/electrical context", "ambient temperature"],
+      fieldFlags: ["LO/IF/HL faults", "flow switch", "defrost", "refrigerant/service call", "heater lockout", "cooler/chiller sizing question"]
+    },
+    {
+      name: "Lighting",
+      status: "Live reference layer",
+      examples: ["Pentair IntelliBrite / MicroBrite", "Hayward ColorLogic / Omni Direct", "Jandy WaterColors", "CMP Brilliant Wonders / PAL", "retrofit niche lights"],
+      proof: ["fixture label", "voltage", "transformer size", "junction box condition", "cord route", "automation mode"],
+      fieldFlags: ["GFCI trip", "wrong color", "flicker", "one light out", "voltage drop", "retrofit compatibility"]
+    },
+    {
+      name: "Chem Controllers / Feeders",
+      status: "Live reference layer",
+      examples: ["Rola-Chem", "CAT", "BECS", "Chemtrol", "IPS", "Stenner", "Prominent", "Walchem", "Pulsar"],
+      proof: ["manual test reading", "probe age", "calibration standard", "flow cell", "tank level", "feed pump/tube"],
+      fieldFlags: ["ORP low", "pH high", "probe drift", "no sample flow", "overfeed risk", "blocked injection fitting"]
+    },
+    {
+      name: "Covers / Safety",
+      status: "Live reference layer",
+      examples: ["Coverstar", "Cover-Pools", "APC", "Coverstar Central", "Save-T Cover", "cover pumps"],
+      proof: ["track condition", "rope/pulley view", "motor/key switch", "controller label", "standing water load", "fabric alignment"],
+      fieldFlags: ["will not move", "travels crooked", "water on cover", "manual operation", "safety layer warning"]
+    }
+  ]
+};
+
 window.SAND_FILTER_DATA = {
   // Sand weight by tank diameter (inches) → pounds of #20 silica sand
   sandByDiameter: [
