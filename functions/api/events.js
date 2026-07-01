@@ -19,6 +19,7 @@ const ALERT_EVENTS = new Set([
   'route_brain_saved_to_pool',
   'service_report_saved',
   'proof_ready_report_saved',
+  'field_feedback_submitted',
   'waitlist_signup',
   'checkout_success',
 ]);
@@ -155,6 +156,7 @@ async function eventSummary(request, env) {
     'route_brain_saved_to_pool',
     'service_report_saved',
     'proof_ready_report_saved',
+    'field_feedback_submitted',
     'checkout_success',
   ]);
   let events7d = 0;
@@ -178,6 +180,8 @@ async function eventSummary(request, env) {
   let partSnapMystery30d = 0;
   let partSnapApprentice30d = 0;
   let proofSaved30d = 0;
+  let fieldFeedback30d = 0;
+  let fieldTesterOptIns30d = 0;
   let checkoutSuccess30d = 0;
   let revenueCents30d = 0;
   const recentPayments = [];
@@ -249,6 +253,10 @@ async function eventSummary(request, env) {
       if (record.event === 'partsnap_mystery_submitted') partSnapMystery30d += 1;
       if (record.event === 'partsnap_apprentice_started') partSnapApprentice30d += 1;
       if (record.event === 'partsnap_saved_to_pool' || record.event === 'route_brain_saved_to_pool' || record.event === 'service_report_saved' || record.event === 'proof_ready_report_saved') proofSaved30d += 1;
+      if (record.event === 'field_feedback_submitted') {
+        fieldFeedback30d += 1;
+        if (props.field_tester_opt_in === true || props.field_tester_opt_in === 'true') fieldTesterOptIns30d += 1;
+      }
       if (record.event === 'checkout_success') {
         checkoutSuccess30d += 1;
         revenueCents30d += Math.max(0, Number(props.amount_total || props.amountTotal || 0) || 0);
@@ -295,6 +303,8 @@ async function eventSummary(request, env) {
       partSnapMystery30d,
       partSnapApprentice30d,
       proofSaved30d,
+      fieldFeedback30d,
+      fieldTesterOptIns30d,
       checkoutSuccess30d,
       revenueCents30d,
       poolProEvents30d,
@@ -358,6 +368,7 @@ async function sendEventAlert(env, record) {
     route_brain_saved_to_pool: 'Route Brain proof saved',
     service_report_saved: 'Service report saved',
     proof_ready_report_saved: 'Proof-ready report saved',
+    field_feedback_submitted: 'Field feedback submitted',
     waitlist_signup: 'Waitlist signup',
     checkout_success: 'Checkout success',
   };

@@ -18,6 +18,28 @@ const S = {
 
 const LANGUAGE_STORAGE_KEY = 'splashlens_language_profile';
 const LANGUAGE_OPTIONS = ['en', 'es', 'pt-BR', 'fr'];
+const FIELD_FEEDBACK_KEY = 'splashlens-field-feedback-state';
+const FIELD_FEEDBACK_COOLDOWN_MS = 7 * 24 * 60 * 60 * 1000;
+const FIELD_FEEDBACK_AFTER_SUBMIT_MS = 30 * 24 * 60 * 60 * 1000;
+const FIELD_FEEDBACK_ACTIONS = new Set([
+  'ai_scan_started',
+  'manual_code_search',
+  'partsnap_result',
+  'partsnap_packet_copied',
+  'partsnap_share_used',
+  'partsnap_saved_to_pool',
+  'partsnap_mystery_submitted',
+  'partsnap_apprentice_started',
+  'partsnap_second_proof_requested',
+  'route_brain_saved_to_pool',
+  'service_report_saved',
+  'proof_ready_report_saved',
+  'manual_equipment_saved',
+  'pool_crm_packet_copied',
+  'pool_crm_packet_shared',
+  'pool_csv_downloaded',
+  'pool_packet_printed',
+]);
 
 function normalizeLanguage(value) {
   const code = String(value || 'en');
@@ -260,6 +282,167 @@ function initDeepLink() {
 // ═══════════════════════════════════════════
 // PERSISTENT POOL VOLUME
 // ═══════════════════════════════════════════
+function readFieldFeedbackState() {
+  try {
+    return {
+      opens: 0,
+      meaningfulActions: 0,
+      signals: [],
+      promptShown: 0,
+      snoozedUntil: 0,
+      submittedAt: 0,
+      ...JSON.parse(localStorage.getItem(FIELD_FEEDBACK_KEY) || '{}'),
+    };
+  } catch {
+    return { opens: 0, meaningfulActions: 0, signals: [], promptShown: 0, snoozedUntil: 0, submittedAt: 0 };
+  }
+}
+
+function writeFieldFeedbackState(state) {
+  try { localStorage.setItem(FIELD_FEEDBACK_KEY, JSON.stringify(state)); } catch {}
+}
+
+function shouldShowFieldFeedback(state) {
+  const now = Date.now();
+  if (document.getElementById('field-feedback-overlay')) return false;
+  if (state.snoozedUntil && now < Number(state.snoozedUntil)) return false;
+  if (state.submittedAt && now - Number(state.submittedAt) < FIELD_FEEDBACK_AFTER_SUBMIT_MS) return false;
+  if (state.promptShown && now - Number(state.promptShown) < FIELD_FEEDBACK_COOLDOWN_MS) return false;
+  return state.meaningfulActions >= 2 || state.opens >= 3;
+}
+
+function recordFieldFeedbackSignal(eventName) {
+  if (eventName === 'field_feedback_submitted' || eventName === 'field_feedback_prompt_shown') return;
+  const state = readFieldFeedbackState();
+  if (eventName === 'app_open') state.opens = Number(state.opens || 0) + 1;
+  if (FIELD_FEEDBACK_ACTIONS.has(eventName)) {
+    state.meaningfulActions = Number(state.meaningfulActions || 0) + 1;
+    state.signals = [...(state.signals || []), { event: eventName, tab: S.tab, at: new Date().toISOString() }].slice(-8);
+  }
+  writeFieldFeedbackState(state);
+  if (shouldShowFieldFeedback(state)) setTimeout(() => showFieldFeedbackPrompt(eventName), 900);
+}
+
+function showFieldFeedbackPrompt(trigger = 'usage') {
+  const state = readFieldFeedbackState();
+  if (!shouldShowFieldFeedback(state)) return;
+  state.promptShown = Date.now();
+  writeFieldFeedbackState(state);
+  trackSplashLensEvent('field_feedback_prompt_shown', { trigger, meaningful_actions: state.meaningfulActions, opens: state.opens });
+
+  const overlay = document.createElement('div');
+  overlay.id = 'field-feedback-overlay';
+  overlay.setAttribute('role', 'dialog');
+  overlay.setAttribute('aria-modal', 'true');
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(15,23,42,.62);display:flex;align-items:flex-end;justify-content:center;padding:14px;';
+  overlay.innerHTML = `
+    <div style="width:min(520px,100%);background:#ffffff;border:1px solid #cbd5e1;border-radius:14px;box-shadow:0 24px 70px rgba(15,23,42,.28);padding:16px;">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:10px;">
+        <div>
+          <p style="color:#0f766e;font-size:10px;font-weight:950;letter-spacing:.09em;text-transform:uppercase;margin-bottom:4px;">Field tester feedback</p>
+          <h2 style="color:#0f172a;font-size:20px;line-height:1.08;font-weight:950;margin:0;">What slowed you down today?</h2>
+        </div>
+        <button type="button" onclick="snoozeFieldFeedback(7)" aria-label="Close feedback" style="border:1px solid #e2e8f0;background:#f8fafc;color:#64748b;border-radius:999px;width:34px;height:34px;font-size:18px;font-weight:900;cursor:pointer;">x</button>
+      </div>
+      <p style="color:#64748b;font-size:13px;line-height:1.45;margin-bottom:12px;">One honest note helps shape SplashLens around real pool tech work. Email is optional unless you want Joshua to follow up.</p>
+      <label class="field-label" for="field-feedback-text">Feedback</label>
+      <textarea id="field-feedback-text" rows="4" placeholder="Example: PartSnap needed a better label prompt, this code was missing, or this saved me time..." style="width:100%;border:1px solid #cbd5e1;border-radius:10px;padding:11px;font-size:14px;line-height:1.35;resize:vertical;margin-bottom:10px;"></textarea>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
+        <div>
+          <label class="field-label" for="field-feedback-rating">How useful was this stop?</label>
+          <select id="field-feedback-rating" style="width:100%;border:1px solid #cbd5e1;border-radius:10px;padding:10px;font-size:14px;background:#fff;">
+            <option value="">Pick one</option>
+            <option value="5">5 - saved real time</option>
+            <option value="4">4 - useful</option>
+            <option value="3">3 - okay</option>
+            <option value="2">2 - rough</option>
+            <option value="1">1 - missed it</option>
+          </select>
+        </div>
+        <div>
+          <label class="field-label" for="field-feedback-email">Email optional</label>
+          <input id="field-feedback-email" type="email" inputmode="email" placeholder="you@example.com" style="width:100%;border:1px solid #cbd5e1;border-radius:10px;padding:10px;font-size:14px;">
+        </div>
+      </div>
+      <label style="display:flex;align-items:flex-start;gap:8px;color:#334155;font-size:12px;line-height:1.35;font-weight:800;margin-bottom:12px;">
+        <input id="field-feedback-tester" type="checkbox" style="margin-top:2px;">
+        <span>I am open to being a founding field tester. Joshua may email me about this feedback if I entered an email.</span>
+      </label>
+      <div id="field-feedback-error" style="display:none;background:#fef2f2;border:1px solid #fecaca;color:#991b1b;border-radius:8px;padding:8px;font-size:12px;font-weight:800;margin-bottom:10px;"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <button type="button" onclick="submitFieldFeedback()" style="background:#0369a1;color:#fff;border:0;border-radius:10px;padding:12px 10px;font-size:13px;font-weight:950;cursor:pointer;">Send Feedback</button>
+        <button type="button" onclick="snoozeFieldFeedback(7)" style="background:#f8fafc;color:#334155;border:1px solid #cbd5e1;border-radius:10px;padding:12px 10px;font-size:13px;font-weight:900;cursor:pointer;">Not Now</button>
+      </div>
+      <button type="button" onclick="snoozeFieldFeedback(30)" style="margin-top:9px;width:100%;background:transparent;border:0;color:#94a3b8;font-size:12px;font-weight:800;cursor:pointer;">Hide for a while</button>
+    </div>`;
+  document.body.appendChild(overlay);
+  setTimeout(() => document.getElementById('field-feedback-text')?.focus(), 80);
+}
+
+function closeFieldFeedbackPrompt() {
+  document.getElementById('field-feedback-overlay')?.remove();
+}
+
+function snoozeFieldFeedback(days = 7) {
+  const state = readFieldFeedbackState();
+  state.snoozedUntil = Date.now() + Math.max(1, Number(days) || 7) * 24 * 60 * 60 * 1000;
+  writeFieldFeedbackState(state);
+  closeFieldFeedbackPrompt();
+}
+
+function validOptionalEmail(email) {
+  if (!email) return true;
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+function submitFieldFeedback() {
+  const text = (document.getElementById('field-feedback-text')?.value || '').trim();
+  const rating = (document.getElementById('field-feedback-rating')?.value || '').trim();
+  const email = (document.getElementById('field-feedback-email')?.value || '').trim();
+  const tester = Boolean(document.getElementById('field-feedback-tester')?.checked);
+  const error = document.getElementById('field-feedback-error');
+  if (!text && !rating && !tester) {
+    if (error) {
+      error.textContent = 'Add a quick note, rating, or field tester opt-in first.';
+      error.style.display = 'block';
+    }
+    return;
+  }
+  if (!validOptionalEmail(email)) {
+    if (error) {
+      error.textContent = 'Use a valid email or leave it blank.';
+      error.style.display = 'block';
+    }
+    return;
+  }
+  const state = readFieldFeedbackState();
+  state.submittedAt = Date.now();
+  state.snoozedUntil = Date.now() + FIELD_FEEDBACK_AFTER_SUBMIT_MS;
+  state.lastFeedback = { text: text.slice(0, 500), rating, email, tester, at: new Date().toISOString() };
+  writeFieldFeedbackState(state);
+  trackSplashLensEvent('field_feedback_submitted', {
+    feedback: text.slice(0, 900),
+    rating,
+    email,
+    field_tester_opt_in: tester,
+    consent_to_follow_up: Boolean(email && tester),
+    meaningful_actions: state.meaningfulActions || 0,
+    opens: state.opens || 0,
+    recent_signals: (state.signals || []).map(s => s.event).join(', '),
+    current_tab: S.tab,
+  });
+  const overlay = document.getElementById('field-feedback-overlay');
+  if (overlay) {
+    overlay.innerHTML = `
+      <div style="width:min(480px,100%);background:#ffffff;border:1px solid #bbf7d0;border-radius:14px;box-shadow:0 24px 70px rgba(15,23,42,.28);padding:18px;text-align:center;">
+        <p style="color:#166534;font-size:11px;font-weight:950;letter-spacing:.09em;text-transform:uppercase;margin-bottom:6px;">Feedback sent</p>
+        <h2 style="color:#0f172a;font-size:21px;line-height:1.1;font-weight:950;margin:0 0 8px;">That helps build the right thing.</h2>
+        <p style="color:#64748b;font-size:13px;line-height:1.45;margin-bottom:14px;">Thanks for giving field truth instead of polite noise.</p>
+        <button type="button" onclick="closeFieldFeedbackPrompt()" style="background:#0369a1;color:#fff;border:0;border-radius:10px;padding:12px 16px;font-size:13px;font-weight:950;cursor:pointer;">Back to SplashLens</button>
+      </div>`;
+  }
+}
+
 function onVolumeChange(val) {
   const n = parseFloat(val);
   if (n > 0) {
@@ -4492,6 +4675,7 @@ function trackSplashLensEvent(name, props = {}) {
   window.dataLayer = window.dataLayer || [];
   window.dataLayer.push({ event: name, ...eventProps, ts: new Date().toISOString() });
   if (window.plausible) window.plausible(name, { props: eventProps });
+  recordFieldFeedbackSignal(name);
 
   const payload = JSON.stringify(withLanguageMetadata({
     event: name,
