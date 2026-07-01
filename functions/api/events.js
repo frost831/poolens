@@ -20,6 +20,8 @@ const ALERT_EVENTS = new Set([
   'service_report_saved',
   'proof_ready_report_saved',
   'field_feedback_submitted',
+  'store_review_click',
+  'store_review_needs_work',
   'waitlist_signup',
   'checkout_success',
 ]);
@@ -369,6 +371,8 @@ async function sendEventAlert(env, record) {
     service_report_saved: 'Service report saved',
     proof_ready_report_saved: 'Proof-ready report saved',
     field_feedback_submitted: 'Field feedback submitted',
+    store_review_click: 'Store review clicked',
+    store_review_needs_work: 'Review ask needs work',
     waitlist_signup: 'Waitlist signup',
     checkout_success: 'Checkout success',
   };
@@ -418,6 +422,85 @@ async function sendEventAlert(env, record) {
   return { sent: response.ok, status: response.status };
 }
 
+async function sendDigestEmail(env, summary) {
+  const config = notifyConfig(env);
+  if (!config.apiKey || !config.from || !config.to) {
+    return { sent: false, reason: 'missing_sendgrid_config' };
+  }
+  const m = summary.metrics || {};
+  const lines = [
+    'SplashLens daily owner digest',
+    '',
+    `Generated: ${summary.generatedAt}`,
+    '',
+    'Core usage',
+    `- Events 7d: ${m.events7d || 0}`,
+    `- Events 30d: ${m.events30d || 0}`,
+    `- App opens 7d: ${m.appOpens7d || 0}`,
+    `- App opens 30d: ${m.appOpens30d || 0}`,
+    `- Unique clients 30d: ${m.uniqueClients30d || 0}`,
+    `- Meaningful clients 30d: ${m.meaningfulClients30d || 0}`,
+    '',
+    'Field actions',
+    `- AI scans 30d: ${m.scans30d || 0}`,
+    `- Manual searches 30d: ${m.searches30d || 0}`,
+    `- PartSnap results 30d: ${m.partsnapResults30d || 0}`,
+    `- PartSnap packets 30d: ${m.partSnapPackets30d || 0}`,
+    `- Proof saves 30d: ${m.proofSaved30d || 0}`,
+    `- Field feedback 30d: ${m.fieldFeedback30d || 0}`,
+    `- Field tester opt-ins 30d: ${m.fieldTesterOptIns30d || 0}`,
+    '',
+    'Store and revenue',
+    `- Native first opens 30d: ${m.nativeFirstOpens30d || 0}`,
+    `- iOS first opens 30d: ${m.iosFirstOpens30d || 0}`,
+    `- Android first opens 30d: ${m.androidFirstOpens30d || 0}`,
+    `- Checkout success 30d: ${m.checkoutSuccess30d || 0}`,
+    `- Revenue cents 30d: ${m.revenueCents30d || 0}`,
+    '',
+    'Top events',
+    ...(summary.topEvents || []).slice(0, 10).map(x => `- ${x.name}: ${x.count}`),
+    '',
+    'Top sources',
+    ...(summary.topSources || []).slice(0, 10).map(x => `- ${x.name}: ${x.count}`),
+    '',
+    'Recent events',
+    ...(summary.recentEvents || []).slice(0, 12).map(x => `- ${x.createdAt} ${x.event} ${x.source || ''} ${x.path || ''}`),
+  ];
+
+  const response = await fetch('https://api.sendgrid.com/v3/mail/send', {
+    method: 'POST',
+    headers: {
+      authorization: `Bearer ${config.apiKey}`,
+      'content-type': 'application/json',
+    },
+    body: JSON.stringify({
+      personalizations: [{
+        to: [{ email: config.to }],
+        subject: `[SplashLens Digest] ${new Date().toISOString().slice(0, 10)}`,
+      }],
+      from: { email: config.from, name: 'SplashLens Alerts' },
+      categories: ['splashlens', 'owner-digest'],
+      content: [{ type: 'text/plain', value: lines.join('\n') }],
+    }),
+  });
+  return { sent: response.ok, status: response.status };
+}
+
+async function eventDigest(request, env) {
+  const summaryResponse = await eventSummary(request, env);
+  if (!summaryResponse.ok) return summaryResponse;
+  const summary = await summaryResponse.json();
+  const digest = await sendDigestEmail(env, summary);
+  return json(200, {
+    ok: true,
+    digestSent: Boolean(digest.sent),
+    digestStatus: digest.status || '',
+    emailConfigured: digest.reason !== 'missing_sendgrid_config',
+    generatedAt: summary.generatedAt,
+    metrics: summary.metrics,
+  });
+}
+
 export async function onRequestPost({ request, env }) {
   let body;
   try {
@@ -464,6 +547,9 @@ export async function onRequestPost({ request, env }) {
 
 export async function onRequestGet({ request, env }) {
   const url = new URL(request.url);
+  if (url.searchParams.get('digest') === '1') {
+    return eventDigest(request, env);
+  }
   if (url.searchParams.get('summary') === '1') {
     return eventSummary(request, env);
   }

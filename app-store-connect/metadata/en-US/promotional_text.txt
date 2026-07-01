@@ -1,1 +1,1 @@
-PartSnap now adds callback-risk language, proof saves, mystery-part tickets, and Apprentice Mode so pool techs can verify faster before ordering.
+New Field Intelligence exports: PartSnap proof, equipment trees, callback risk, CRM packets, and quick feedback loops for faster pool stops.

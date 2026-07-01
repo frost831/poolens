@@ -1,1 +1,1 @@
-pool tech,PartSnap,parts,codes,pump,heater,salt,robot,lighting,dosing,SCP,proof
+pool tech,PartSnap,parts,codes,pump,heater,salt,robot,CRM,proof,dosing,SCP

@@ -4,7 +4,7 @@ Use 6.7-inch iPhone screenshots first. Add other sizes only if App Store Connect
 
 ## Required Shots
 
-1. PartSnap-forward home/rescue quick actions.
+1. PartSnap-forward home/rescue quick actions with App Store / Google Play-safe install language.
    Caption: Find the part. Fix the stop.
 
 2. PartSnap scan or result with confidence ladder and verification language visible.
@@ -13,14 +13,20 @@ Use 6.7-inch iPhone screenshots first. Add other sizes only if App Store Connect
 3. PartSnap escalation packet / missing proof workflow.
    Caption: Verify before ordering
 
-4. Error-code lookup result.
+4. Field Intelligence pool profile or connected-pool troubleshooting tree.
+   Caption: Build a cleaner field packet
+
+5. Error-code lookup result.
    Caption: Search codes across major pool brands
 
-5. Chemical dosing calculator.
+6. Chemical dosing calculator.
    Caption: Fast pool math in the field
 
-6. Service note/report screen.
+7. Service note/report screen or CRM companion packet.
    Caption: Write a clean service note
+
+8. Optional tester feedback / review prompt after a successful workflow.
+   Caption: Help shape the field tool
 
 ## Avoid
 

@@ -21,6 +21,10 @@ const LANGUAGE_OPTIONS = ['en', 'es', 'pt-BR', 'fr'];
 const FIELD_FEEDBACK_KEY = 'splashlens-field-feedback-state';
 const FIELD_FEEDBACK_COOLDOWN_MS = 7 * 24 * 60 * 60 * 1000;
 const FIELD_FEEDBACK_AFTER_SUBMIT_MS = 30 * 24 * 60 * 60 * 1000;
+const STORE_REVIEW_KEY = 'splashlens-store-review-state';
+const STORE_REVIEW_COOLDOWN_MS = 45 * 24 * 60 * 60 * 1000;
+const SPLASHLENS_IOS_REVIEW_URL = 'https://apps.apple.com/us/app/splashlens/id6763644905?action=write-review';
+const SPLASHLENS_PLAY_REVIEW_URL = 'https://play.google.com/store/apps/details?id=com.splashlens.fieldtools';
 const FIELD_FEEDBACK_ACTIONS = new Set([
   'ai_scan_started',
   'manual_code_search',
@@ -35,6 +39,18 @@ const FIELD_FEEDBACK_ACTIONS = new Set([
   'service_report_saved',
   'proof_ready_report_saved',
   'manual_equipment_saved',
+  'pool_crm_packet_copied',
+  'pool_crm_packet_shared',
+  'pool_csv_downloaded',
+  'pool_packet_printed',
+]);
+const STORE_REVIEW_SUCCESS_EVENTS = new Set([
+  'partsnap_saved_to_pool',
+  'partsnap_packet_copied',
+  'partsnap_share_used',
+  'route_brain_saved_to_pool',
+  'service_report_saved',
+  'proof_ready_report_saved',
   'pool_crm_packet_copied',
   'pool_crm_packet_shared',
   'pool_csv_downloaded',
@@ -441,6 +457,107 @@ function submitFieldFeedback() {
         <button type="button" onclick="closeFieldFeedbackPrompt()" style="background:#0369a1;color:#fff;border:0;border-radius:10px;padding:12px 16px;font-size:13px;font-weight:950;cursor:pointer;">Back to SplashLens</button>
       </div>`;
   }
+}
+
+function readStoreReviewState() {
+  try {
+    return { wins: 0, promptShown: 0, reviewedAt: 0, declinedAt: 0, ...JSON.parse(localStorage.getItem(STORE_REVIEW_KEY) || '{}') };
+  } catch {
+    return { wins: 0, promptShown: 0, reviewedAt: 0, declinedAt: 0 };
+  }
+}
+
+function writeStoreReviewState(state) {
+  try { localStorage.setItem(STORE_REVIEW_KEY, JSON.stringify(state)); } catch {}
+}
+
+function recordReviewableWin(eventName) {
+  if (!STORE_REVIEW_SUCCESS_EVENTS.has(eventName)) return;
+  const state = readStoreReviewState();
+  state.wins = Number(state.wins || 0) + 1;
+  writeStoreReviewState(state);
+  if (shouldShowStoreReviewPrompt(state)) setTimeout(() => showStoreReviewPrompt(eventName), 650);
+}
+
+function shouldShowStoreReviewPrompt(state) {
+  const now = Date.now();
+  if (document.getElementById('field-feedback-overlay') || document.getElementById('store-review-overlay')) return false;
+  if (state.wins < 2) return false;
+  if (state.reviewedAt) return false;
+  if (state.promptShown && now - Number(state.promptShown) < STORE_REVIEW_COOLDOWN_MS) return false;
+  if (state.declinedAt && now - Number(state.declinedAt) < STORE_REVIEW_COOLDOWN_MS) return false;
+  return true;
+}
+
+function storeReviewLinks() {
+  const store = getStoreShellMode();
+  if (store === 'ios') return [{ label: 'Review on App Store', url: SPLASHLENS_IOS_REVIEW_URL }];
+  if (store === 'android') return [{ label: 'Review on Google Play', url: SPLASHLENS_PLAY_REVIEW_URL }];
+  return [
+    { label: 'App Store', url: SPLASHLENS_IOS_REVIEW_URL },
+    { label: 'Google Play', url: SPLASHLENS_PLAY_REVIEW_URL },
+  ];
+}
+
+function showStoreReviewPrompt(trigger = 'success') {
+  const state = readStoreReviewState();
+  if (!shouldShowStoreReviewPrompt(state)) return;
+  state.promptShown = Date.now();
+  writeStoreReviewState(state);
+  trackSplashLensEvent('store_review_prompt_shown', { trigger, wins: state.wins, store: getStoreShellMode() || 'web' });
+
+  const links = storeReviewLinks();
+  const overlay = document.createElement('div');
+  overlay.id = 'store-review-overlay';
+  overlay.setAttribute('role', 'dialog');
+  overlay.setAttribute('aria-modal', 'true');
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(15,23,42,.62);display:flex;align-items:flex-end;justify-content:center;padding:14px;';
+  overlay.innerHTML = `
+    <div style="width:min(500px,100%);background:#ffffff;border:1px solid #cbd5e1;border-radius:14px;box-shadow:0 24px 70px rgba(15,23,42,.28);padding:16px;">
+      <p style="color:#0f766e;font-size:10px;font-weight:950;letter-spacing:.09em;text-transform:uppercase;margin-bottom:6px;">Quick field check</p>
+      <h2 style="color:#0f172a;font-size:21px;line-height:1.08;font-weight:950;margin:0 0 8px;">Did SplashLens save you time?</h2>
+      <p style="color:#64748b;font-size:13px;line-height:1.45;margin-bottom:14px;">If it helped, a store review helps other pool techs find it. If it missed, tell us what to fix instead.</p>
+      <div style="display:grid;grid-template-columns:${links.length === 1 ? '1fr' : '1fr 1fr'};gap:8px;margin-bottom:8px;">
+        ${links.map(link => `<a href="${link.url}" target="_blank" rel="noopener" onclick="markStoreReviewClicked('${escAttr(link.label)}')" style="background:#0369a1;color:#fff;text-align:center;text-decoration:none;border-radius:10px;padding:12px 8px;font-size:13px;font-weight:950;">${escHtml(link.label)}</a>`).join('')}
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <button type="button" onclick="storeReviewNeedsWork()" style="background:#fef3c7;color:#92400e;border:1px solid #fde68a;border-radius:10px;padding:11px 8px;font-size:13px;font-weight:900;cursor:pointer;">Needs Work</button>
+        <button type="button" onclick="dismissStoreReviewPrompt()" style="background:#f8fafc;color:#334155;border:1px solid #cbd5e1;border-radius:10px;padding:11px 8px;font-size:13px;font-weight:900;cursor:pointer;">Not Now</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+}
+
+function closeStoreReviewPrompt() {
+  document.getElementById('store-review-overlay')?.remove();
+}
+
+function markStoreReviewClicked(label) {
+  const state = readStoreReviewState();
+  state.reviewedAt = Date.now();
+  writeStoreReviewState(state);
+  trackSplashLensEvent('store_review_click', { store_label: label, wins: state.wins, store: getStoreShellMode() || 'web' });
+}
+
+function dismissStoreReviewPrompt() {
+  const state = readStoreReviewState();
+  state.declinedAt = Date.now();
+  writeStoreReviewState(state);
+  trackSplashLensEvent('store_review_dismissed', { wins: state.wins, store: getStoreShellMode() || 'web' });
+  closeStoreReviewPrompt();
+}
+
+function storeReviewNeedsWork() {
+  const state = readStoreReviewState();
+  state.declinedAt = Date.now();
+  writeStoreReviewState(state);
+  trackSplashLensEvent('store_review_needs_work', { wins: state.wins, store: getStoreShellMode() || 'web' });
+  closeStoreReviewPrompt();
+  const feedback = readFieldFeedbackState();
+  feedback.promptShown = 0;
+  feedback.snoozedUntil = 0;
+  writeFieldFeedbackState(feedback);
+  showFieldFeedbackPrompt('store_review_needs_work');
 }
 
 function onVolumeChange(val) {
@@ -4676,6 +4793,7 @@ function trackSplashLensEvent(name, props = {}) {
   window.dataLayer.push({ event: name, ...eventProps, ts: new Date().toISOString() });
   if (window.plausible) window.plausible(name, { props: eventProps });
   recordFieldFeedbackSignal(name);
+  recordReviewableWin(name);
 
   const payload = JSON.stringify(withLanguageMetadata({
     event: name,
