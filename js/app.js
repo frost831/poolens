@@ -4271,6 +4271,7 @@ const SCAN_PRO_KEY = 'sl_partsnap_pro_local';
 const SCAN_ENTITLEMENT_TOKEN_KEY = 'sl_scan_entitlement_token';
 const PARTSNAP_MONTHLY_LINK = '/api/checkout?plan=monthly';
 const PARTSNAP_YEARLY_LINK = '/api/checkout?plan=yearly';
+const PARTSNAP_RESTORE_ENDPOINT = '/api/restore-entitlement';
 const SPLASHLENS_EVENT_ENDPOINT = '/api/events';
 const PARTSNAP_FEEDBACK_ENDPOINT = '/api/partsnap-feedback';
 const PARTSNAP_REVIEW_KEY = 'splashlens-partsnap-review-tickets';
@@ -4737,6 +4738,41 @@ function unlockPartSnapProLocal() {
   }
 }
 
+async function restorePartSnapPro() {
+  const email = prompt('Enter the email used at SplashLens checkout:');
+  if (!email) return;
+  const result = document.getElementById('scan-result');
+  try {
+    if (result) {
+      result.innerHTML = `<div style="background:#0f172a;border:1px solid #334155;border-radius:12px;padding:16px;text-align:center;">
+        <p style="color:#e2e8f0;font-size:14px;font-weight:900;">Checking PartSnap Pro access...</p>
+      </div>`;
+    }
+    const response = await fetch(PARTSNAP_RESTORE_ENDPOINT, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ email }),
+    });
+    const payload = await response.json().catch(() => ({}));
+    trackSplashLensEvent('partsnap_pro_restore_requested', { ok: response.ok, email_sent: Boolean(payload.emailSent) });
+    if (!response.ok) throw new Error(payload.error || 'Restore failed.');
+    if (result) {
+      result.innerHTML = `<div style="background:#052e16;border:1px solid #16a34a;border-radius:12px;padding:18px;text-align:center;">
+        <p style="color:#86efac;font-size:15px;font-weight:900;margin-bottom:6px;">Restore link requested</p>
+        <p style="color:#bbf7d0;font-size:12px;line-height:1.5;">${escHtml(payload.message || 'Check the email used at checkout for your activation link.')}</p>
+      </div>`;
+    }
+  } catch (error) {
+    if (result) {
+      result.innerHTML = `<div style="background:#450a0a;border:1px solid #dc2626;border-radius:12px;padding:18px;text-align:center;">
+        <p style="color:#fecaca;font-size:15px;font-weight:900;margin-bottom:6px;">Could not restore yet</p>
+        <p style="color:#fee2e2;font-size:12px;line-height:1.5;">${escHtml(error.message || 'Contact hello@splashlens.com for help restoring PartSnap Pro.')}</p>
+        <button onclick="setScanMode('parts')" style="margin-top:12px;background:#dc2626;color:#fff;border:0;border-radius:10px;padding:10px 12px;font-size:12px;font-weight:900;cursor:pointer;">Back to PartSnap</button>
+      </div>`;
+    }
+  }
+}
+
 function showScanLimitModal(result, status) {
   if (status) status.textContent = 'FREE SCAN LIMIT REACHED';
   const usage = getScanUsage();
@@ -4756,12 +4792,13 @@ function showScanLimitModal(result, status) {
     result.innerHTML = `
       <div style="background:#1e293b;border:1px solid #7c3aed;border-radius:14px;padding:18px;margin:0 0 14px;text-align:center;border-left:4px solid #7c3aed;">
         <p style="color:#f1f5f9;font-size:19px;font-weight:900;margin-bottom:6px;">You've used ${usage.count} of ${SCAN_LIMIT_FREE} free AI scans this month.</p>
-        <p style="color:#94a3b8;font-size:13px;line-height:1.5;margin-bottom:14px;">Manual code lookup, dosing, reports, filters, and checklists stay free. Upgrade PartSnap Pro for extended web scanner access on this device.</p>
+        <p style="color:#94a3b8;font-size:13px;line-height:1.5;margin-bottom:14px;">Manual code lookup, dosing, reports, filters, and checklists stay free. Upgrade PartSnap Pro for unlimited web scanner access.</p>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
           <a href="${PARTSNAP_MONTHLY_LINK}" target="_blank" rel="noopener" onclick="trackSplashLensEvent('upgrade_click',{plan:'monthly'})" style="background:#0284c7;color:#fff;text-decoration:none;border-radius:10px;padding:12px 8px;font-size:13px;font-weight:900;">$4.99 / mo</a>
           <a href="${PARTSNAP_YEARLY_LINK}" target="_blank" rel="noopener" onclick="trackSplashLensEvent('upgrade_click',{plan:'yearly'})" style="background:#16a34a;color:#fff;text-decoration:none;border-radius:10px;padding:12px 8px;font-size:13px;font-weight:900;">$39 / yr</a>
         </div>
-        <p style="color:#64748b;font-size:10px;line-height:1.4;margin-top:10px;">After web checkout, use the signed activation link issued by SplashLens support. Store builds remain free-core until native billing is added.</p>
+        <button onclick="restorePartSnapPro()" style="width:100%;background:#334155;color:#e2e8f0;border:0;border-radius:10px;padding:10px 8px;font-size:12px;font-weight:900;cursor:pointer;">Restore Pro from checkout email</button>
+        <p style="color:#64748b;font-size:10px;line-height:1.4;margin-top:10px;">After web checkout, use the signed activation link. If browser storage is cleared, restore with the checkout email. Store builds remain free-core until native billing is added.</p>
       </div>`;
   }
 }

@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "include": ["/api/*"],
+  "exclude": [
+    "/assets/*",
+    "/docs/*",
+    "/icons/*",
+    "/ios/*",
+    "/android-twa/*",
+    "/app-store-connect/*",
+    "/play-store-artifacts/*",
+    "/release-evidence/*",
+    "/js/*",
+    "/.well-known/*",
+    "/favicon.svg",
+    "/manifest.json",
+    "/robots.txt",
+    "/sitemap.xml",
+    "/ai.txt",
+    "/llms.txt",
+    "/sw.js",
+    "/*.html"
+  ]
+}

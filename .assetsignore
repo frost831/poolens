@@ -1,0 +1,14 @@
+.git/
+.wrangler/
+.secrets.local/
+node_modules/
+dist/
+_deploy/
+release-evidence/
+play-store-artifacts/
+app-store-connect/
+ios/
+android-twa/
+SplashLens.xcodeproj/
+docs/
+*.log
