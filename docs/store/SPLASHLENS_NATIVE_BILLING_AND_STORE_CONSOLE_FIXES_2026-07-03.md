@@ -60,7 +60,7 @@ Optional hardening:
 
 - Cloudflare function syntax checked as ES module.
 - Android debug build succeeds with Billing Library 9.1.0.
-- Android release bundle builds successfully: `android-twa/app/build/outputs/bundle/release/app-release.aab`.
+- Android release bundle builds successfully at versionCode 7 / versionName 1.0.6: `android-twa/app/build/outputs/bundle/release/app-release.aab`.
 - Windows cannot run `xcodebuild`; Mac handoff is required for iOS compile/archive/TestFlight.
 
 ## Verified live after deploy
