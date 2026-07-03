@@ -5,6 +5,7 @@ node_modules/
 dist/
 _deploy/
 release-evidence/
+SplashLens-ios-proof-*/
 play-store-artifacts/
 app-store-connect/
 ios/
