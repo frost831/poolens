@@ -1,18 +1,27 @@
 # SplashLens IAP Products Draft
 
-Do not attach IAP products to the first submission.
+Native paid products are now code-prepped for the next iOS submission.
 
-Native paid products require all of the following before public submission:
+Use these exact subscription product IDs in App Store Connect so the iOS wrapper can resolve StoreKit products:
 
-- StoreKit purchase flow.
-- Restore purchases.
-- Durable server-side entitlement verification.
-- Production scan metering.
-- Failed AI calls that do not burn paid scans.
-- App Store-compliant copy and reviewer notes.
+- `partsnap_pro_monthly`
+- `partsnap_pro_annual`
 
-Potential future products:
+Required before enabling paid native access:
 
-- `splashlens_partsnap_monthly`
-- `splashlens_partsnap_annual`
-- `splashlens_scan_pack_25`
+- Create both subscription products in App Store Connect.
+- Attach them to a subscription group named `PartSnap Pro`.
+- Add local price, duration, review screenshot, and subscription disclosure copy.
+- Add App Store Server API credentials to Cloudflare Pages:
+  - `APPLE_APP_STORE_CONNECT_ISSUER_ID`
+  - `APPLE_APP_STORE_CONNECT_KEY_ID`
+  - `APPLE_APP_STORE_CONNECT_PRIVATE_KEY`
+  - `SPLASHLENS_IOS_BUNDLE_ID`
+- Keep `SPLASHLENS_ENTITLEMENT_SECRET` or `SCAN_ENTITLEMENT_SECRET` set.
+- Submit a build that includes `ios/SplashLens/ContentView.swift` StoreKit bridge.
+
+The backend fails closed if Apple server verification is not configured. That is intentional: SplashLens must not unlock PartSnap Pro from an unverified client-only receipt.
+
+Optional later product:
+
+- `partsnap_scan_pack_25`

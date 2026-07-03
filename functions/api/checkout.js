@@ -71,7 +71,9 @@ async function createCheckoutSession(request, env, plan) {
 }
 
 function useStripeCheckout(env) {
-  return String(env.SPLASHLENS_CHECKOUT_MODE || '').trim().toLowerCase() === 'stripe_checkout';
+  const mode = String(env.SPLASHLENS_CHECKOUT_MODE || '').trim().toLowerCase();
+  if (['payment_link_direct', 'payment_links', 'links'].includes(mode)) return false;
+  return true;
 }
 
 export async function onRequestGet({ request, env }) {
