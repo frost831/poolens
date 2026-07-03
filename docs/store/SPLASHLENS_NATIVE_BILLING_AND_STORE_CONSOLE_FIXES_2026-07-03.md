@@ -67,12 +67,13 @@ Optional hardening:
 
 - `https://app.splashlens.com/` returns HTTP 200.
 - `https://app.splashlens.com/api/native-entitlement` returns HTTP 200 with native products listed.
-- `https://app.splashlens.com/api/checkout?plan=monthly` attempts first-party Stripe Checkout and safely falls back to the live Stripe Payment Link.
-- Current fallback reason: `stripe_api_401`.
+- `https://app.splashlens.com/api/checkout?plan=monthly` returns a clean direct Stripe Payment Link redirect.
+- `https://app.splashlens.com/api/checkout?plan=yearly` returns a clean direct Stripe Payment Link redirect.
 
 ## Still needs real console/secret values
 
-- Cloudflare has an encrypted `STRIPE_SECRET_KEY`, but Stripe rejects it with `401`. Replace it with a valid live restricted/secret key or keep Payment Links as the working fallback.
+- Production is intentionally forced to `SPLASHLENS_CHECKOUT_MODE=payment_link_direct` so buyers do not hit the invalid live API key path.
+- The Stripe CLI live keys found on this PC also fail Stripe `/v1/account` with `401`; replace `STRIPE_SECRET_KEY` with a new valid live key before re-enabling first-party Checkout Sessions.
 - Cloudflare production secrets do not list Apple Server API keys yet.
 - Cloudflare production secrets do not list Google Play service-account keys yet.
 - App Store Connect and Play Console must have the subscription products created with the exact IDs above before native purchase buttons can resolve products.
