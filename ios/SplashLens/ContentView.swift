@@ -117,7 +117,11 @@ struct SplashLensWebView: UIViewRepresentable {
                         showNativeBillingMessage("Apple could not verify that purchase on device.")
                         return
                     }
-                    await activate(transaction: transaction, productId: productId)
+                    await activate(
+                        transaction: transaction,
+                        productId: productId,
+                        signedTransactionInfo: verification.jwsRepresentation
+                    )
                     await transaction.finish()
                 case .userCancelled:
                     showNativeBillingMessage("Purchase cancelled.")
@@ -134,11 +138,15 @@ struct SplashLensWebView: UIViewRepresentable {
         @MainActor
         private func restorePurchases() async {
             var restored = false
-            for await result in Transaction.currentEntitlements {
+            for await result in StoreKit.Transaction.currentEntitlements {
                 guard case .verified(let transaction) = result,
                       productIds.contains(transaction.productID) else { continue }
                 restored = true
-                await activate(transaction: transaction, productId: transaction.productID)
+                await activate(
+                    transaction: transaction,
+                    productId: transaction.productID,
+                    signedTransactionInfo: result.jwsRepresentation
+                )
             }
             if !restored {
                 showNativeBillingMessage("No active PartSnap Pro subscription was found.")
@@ -146,7 +154,7 @@ struct SplashLensWebView: UIViewRepresentable {
         }
 
         @MainActor
-        private func activate(transaction: Transaction, productId: String) async {
+        private func activate(transaction: StoreKit.Transaction, productId: String, signedTransactionInfo: String) async {
             guard let url = URL(string: "https://app.splashlens.com/api/native-entitlement") else { return }
             var request = URLRequest(url: url)
             request.httpMethod = "POST"
@@ -154,7 +162,7 @@ struct SplashLensWebView: UIViewRepresentable {
             request.httpBody = try? JSONSerialization.data(withJSONObject: [
                 "store": "ios",
                 "productId": productId,
-                "signedTransactionInfo": transaction.jwsRepresentation,
+                "signedTransactionInfo": signedTransactionInfo,
                 "transactionId": String(transaction.id),
                 "originalTransactionId": String(transaction.originalID)
             ])
