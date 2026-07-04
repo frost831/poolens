@@ -1,0 +1,56 @@
+{
+  "data" : {
+    "type" : "apps",
+    "id" : "6763644905",
+    "attributes" : {
+      "name" : "SplashLens",
+      "bundleId" : "com.splashlens.app"
+    },
+    "relationships" : {
+      "displayableVersions" : {
+        "meta" : {
+          "paging" : {
+            "total" : 1,
+            "limit" : 20
+          }
+        },
+        "data" : [ {
+          "type" : "appStoreVersions",
+          "id" : "ec107c1c-1bd0-4131-ab24-38fb0eac5c65"
+        } ],
+        "links" : {
+          "self" : "https://appstoreconnect.apple.com/iris/v1/apps/6763644905/relationships/displayableVersions",
+          "related" : "https://appstoreconnect.apple.com/iris/v1/apps/6763644905/displayableVersions"
+        }
+      }
+    },
+    "links" : {
+      "self" : "https://appstoreconnect.apple.com/iris/v1/apps/6763644905"
+    }
+  },
+  "included" : [ {
+    "type" : "appStoreVersions",
+    "id" : "ec107c1c-1bd0-4131-ab24-38fb0eac5c65",
+    "attributes" : {
+      "platform" : "IOS",
+      "versionString" : "1.0.1",
+      "appStoreState" : "READY_FOR_SALE",
+      "appVersionState" : "READY_FOR_DISTRIBUTION",
+      "storeIcon" : {
+        "templateUrl" : "https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/fb/71/eb/fb71eb1d-8081-58d5-4063-3fae2b8ed173/AppIcon-0-0-1x_U007emarketing-0-6-0-85-220.png/{w}x{h}bb.{f}",
+        "width" : 1024,
+        "height" : 1024
+      },
+      "watchStoreIcon" : null,
+      "distributions" : [ "WEBSITE", "APP_STORE", "MARKETPLACE" ],
+      "isWatchOnly" : false,
+      "createdDate" : "2026-07-01T15:49:40-07:00"
+    },
+    "links" : {
+      "self" : "https://appstoreconnect.apple.com/iris/v1/appStoreVersions/ec107c1c-1bd0-4131-ab24-38fb0eac5c65"
+    }
+  } ],
+  "links" : {
+    "self" : "https://appstoreconnect.apple.com/iris/v1/apps/6763644905?fields%5BappStoreVersions%5D=watchStoreIcon%2CisWatchOnly%2CcreatedDate%2CversionString%2CappStoreState%2Cplatform%2CstoreIcon%2CappVersionState%2Cdistributions&fields%5Bapps%5D=name%2CbundleId%2CdisplayableVersions&include=displayableVersions&limit%5BdisplayableVersions%5D=20"
+  }
+}

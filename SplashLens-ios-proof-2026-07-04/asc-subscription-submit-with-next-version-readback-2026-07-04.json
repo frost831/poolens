@@ -1,0 +1,71 @@
+{
+  "data" : [ {
+    "type" : "subscriptionGroups",
+    "id" : "22206916",
+    "attributes" : {
+      "referenceName" : "PartSnap Pro"
+    },
+    "relationships" : {
+      "subscriptions" : {
+        "meta" : {
+          "paging" : {
+            "total" : 2,
+            "limit" : 1000
+          }
+        },
+        "data" : [ {
+          "type" : "subscriptions",
+          "id" : "6787154847"
+        }, {
+          "type" : "subscriptions",
+          "id" : "6787154832"
+        } ],
+        "links" : {
+          "self" : "https://appstoreconnect.apple.com/iris/v1/subscriptionGroups/22206916/relationships/subscriptions",
+          "related" : "https://appstoreconnect.apple.com/iris/v1/subscriptionGroups/22206916/subscriptions"
+        }
+      }
+    },
+    "links" : {
+      "self" : "https://appstoreconnect.apple.com/iris/v1/subscriptionGroups/22206916"
+    }
+  } ],
+  "included" : [ {
+    "type" : "subscriptions",
+    "id" : "6787154847",
+    "attributes" : {
+      "name" : "PartSnap Pro Annual",
+      "productId" : "partsnap_pro_annual",
+      "state" : "READY_TO_SUBMIT",
+      "isAppStoreReviewInProgress" : false,
+      "submitWithNextAppStoreVersion" : true,
+      "subscriptionPeriod" : "ONE_YEAR"
+    },
+    "links" : {
+      "self" : "https://appstoreconnect.apple.com/iris/v1/subscriptions/6787154847"
+    }
+  }, {
+    "type" : "subscriptions",
+    "id" : "6787154832",
+    "attributes" : {
+      "name" : "PartSnap Pro Monthly",
+      "productId" : "partsnap_pro_monthly",
+      "state" : "READY_TO_SUBMIT",
+      "isAppStoreReviewInProgress" : false,
+      "submitWithNextAppStoreVersion" : true,
+      "subscriptionPeriod" : "ONE_MONTH"
+    },
+    "links" : {
+      "self" : "https://appstoreconnect.apple.com/iris/v1/subscriptions/6787154832"
+    }
+  } ],
+  "links" : {
+    "self" : "https://appstoreconnect.apple.com/iris/v1/apps/6763644905/subscriptionGroups?fields%5Bsubscriptions%5D=submitWithNextAppStoreVersion%2CsubscriptionPeriod%2CproductId%2Cname%2Cstate%2CisAppStoreReviewInProgress&fields%5BsubscriptionGroups%5D=subscriptions%2CreferenceName&include=subscriptions&limit%5Bsubscriptions%5D=1000&limit=300"
+  },
+  "meta" : {
+    "paging" : {
+      "total" : 1,
+      "limit" : 300
+    }
+  }
+}

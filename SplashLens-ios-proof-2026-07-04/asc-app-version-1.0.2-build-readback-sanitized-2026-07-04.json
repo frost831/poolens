@@ -1,0 +1,36 @@
+{
+  "capturedAt": "2026-07-04T15:40:35.734Z",
+  "appStoreVersion": {
+    "id": "6648796d-e31f-4725-944b-d8227ec2774a",
+    "type": "appStoreVersions",
+    "attributes": {
+      "platform": "IOS",
+      "versionString": "1.0.2",
+      "appStoreState": "PREPARE_FOR_SUBMISSION",
+      "appVersionState": "PREPARE_FOR_SUBMISSION"
+    },
+    "buildRelationship": {
+      "type": "builds",
+      "id": "0c44f71d-140b-450e-9815-4faf77c3d7fa"
+    },
+    "appStoreVersionSubmission": null
+  },
+  "app": {
+    "id": "6763644905",
+    "attributes": {
+      "name": "SplashLens",
+      "bundleId": "com.splashlens.app"
+    }
+  },
+  "build": {
+    "id": "0c44f71d-140b-450e-9815-4faf77c3d7fa",
+    "attributes": {
+      "version": "11",
+      "uploadedDate": "2026-07-03T08:36:43-07:00",
+      "expired": false,
+      "processingState": "VALID",
+      "buildAudienceType": "APP_STORE_ELIGIBLE"
+    }
+  },
+  "redactionNote": "Sanitized to omit App Review contact, demo account, notes, localizations, and other nonessential review metadata."
+}
