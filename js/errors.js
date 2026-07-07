@@ -397,8 +397,8 @@ window.ERROR_DB = {
     categories: {
 
       "Aiper Robot Cleaners": {
-        models:["Seagull Pro","Seagull Plus","Scuba S1","Scuba E1","Scuba N1","Surfer 1","Surfer M1","Smart 30 Pro","HJ2111"],
-        note:"Aiper uses LED indicator patterns. Indicator behavior varies by model — check model-specific manual. Common patterns below.",
+        models:["Scuba X1 Pro Max","Scuba X1 Pro","Scuba X1","Scuba V3","Scuba S1","Scuba 800","Scuba L1","Scuba N1","Scuba N1 Plus","Scuba N1 Max","Scuba N3 AI Vision","Seagull Pro","Seagull Plus","Scuba E1","EcoSurfer S2","EcoSurfer M2","Surfer S1","Surfer 1","Surfer M1","Smart 30 Pro","HydroComm Pro","HJ2111"],
+        note:"Aiper uses LED indicator patterns, app status, dock status, and model-specific troubleshooting flows. Indicator behavior varies by model - check the current model manual or Aiper app before ordering parts.",
         codes:[
           { code:"LED: Blinking Red (3×)", name:"Motor Blocked / Impeller Jam",
             causes:["Debris wrapped around brushes or impeller","Wheel/brush locked"],
@@ -416,6 +416,18 @@ window.ERROR_DB = {
             causes:["Charging dock contacts corroded or misaligned","Battery aged (battery life ~2-3 years)","Charging cable damaged"],
             fix:["Clean charging dock contacts with dry cloth","Ensure robot is properly seated on dock","Check charging cable for damage","If battery won't hold charge: replacement battery needed"],
             severity:"medium", callpro:false },
+          { code:"APP / HYDROCOMM OFFLINE", name:"Aiper App, HydroComm, or Underwater Control Not Responding",
+            causes:["Phone/app not paired to robot or HydroComm accessory","Robot out of wireless/underwater communication range","Firmware/app needs update","Battery too low for connected control","Accessory not charged or not linked"],
+            fix:["Confirm the robot model supports app or HydroComm control","Charge robot and accessory fully before pairing","Open the Aiper app and capture the device/status screen","Update app and firmware if prompted","Re-pair accessory per current manual before assuming robot failure"],
+            severity:"low", callpro:false },
+          { code:"AI / MAPPING MISS", name:"AI Vision or Mapping Misses Debris / Coverage",
+            causes:["Camera/sensor window dirty","Pool shape, stairs, ledges, or glare confusing route logic","Fine debris requires ultra-fine filter panel","Cycle mode too short for pool size","Firmware/app route data not updated"],
+            fix:["Clean optical/ultrasonic sensor windows and filter basket","Run a full floor/wall/waterline cycle before judging coverage","Install fine or ultra-fine filter media if available","Remove toys, hoses, and large leaves before mapping","Save app screenshots and pool-shape notes for support escalation"],
+            severity:"low", callpro:false },
+          { code:"DEMO / DISPLAY UNIT CHECK", name:"Dealer Demo Unit Intake Check",
+            causes:["Demo unit may have prior runtime or display handling","Missing charger, dock, caddy, hook, filter panel, or HydroComm accessory","Firmware may be stale from storage","Warranty/dealer paperwork not attached"],
+            fix:["Photograph serial plate, included accessories, and dock/charger before first use","Fully charge and update firmware before demo","Run a short controlled test and document runtime, suction, and return/retrieval behavior","Confirm dealer/demo warranty terms before resale or route use"],
+            severity:"low", callpro:false },
           { code:"LED: Blue blinking (Seagull Pro)", name:"Cycle Complete",
             causes:["Normal — cleaning cycle finished"],
             fix:["Remove robot, clean filter basket, rinse robot"],
@@ -1194,7 +1206,7 @@ window.ERROR_DB.robots_expanded = {
   color:"#0f766e",
   categories:{
     "Robotic Cleaners - Dolphin / Polaris / Aiper / Beatbot / WYBOT / Ecovacs / iGarden": {
-      models:["Dolphin Explorer","Dolphin Premier","Dolphin Nautilus","Maytronics Dolphin Liberty","Polaris Alpha iQ","Polaris 9550","Polaris FREEDOM","Aiper Scuba","Aiper Seagull","Beatbot AquaSense","Beatbot AquaSense Pro","WYBOT S2","WYBOT C1","Ecovacs Goat / Winbot pool concepts","iGarden K-series","Betta SE","Betta SE Plus","Hayward AquaVac","Pentair Prowler"],
+      models:["Dolphin Explorer","Dolphin Premier","Dolphin Nautilus","Maytronics Dolphin Liberty","Polaris Alpha iQ","Polaris 9550","Polaris FREEDOM","Aiper Scuba X1 Pro Max","Aiper Scuba X1 Pro","Aiper Scuba X1","Aiper Scuba V3","Aiper Scuba S1","Aiper Scuba 800","Aiper Scuba L1","Aiper Scuba N1 Plus","Aiper Scuba N1 Max","Aiper Scuba N3 AI Vision","Aiper EcoSurfer S2","Aiper EcoSurfer M2","Aiper Seagull","Aiper Surfer","Beatbot AquaSense","Beatbot AquaSense Pro","WYBOT S2","WYBOT C1","Ecovacs Goat / Winbot pool concepts","iGarden K-series","Betta SE","Betta SE Plus","Hayward AquaVac","Pentair Prowler"],
       codes:[
         { code:"ROBOT-NO-POWER", name:"Robot Has No Power",
           causes:["GFCI outlet tripped","Power supply failed","Floating cable damaged","Battery depleted on cordless unit","Charging contacts corroded"],

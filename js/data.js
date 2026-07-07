@@ -120,9 +120,9 @@ window.SPLASHLENS_TECH_RADAR = {
     {
       name: "Robots",
       status: "High priority",
-      examples: ["Beatbot AquaSense", "Aiper Scuba / Seagull", "Maytronics Dolphin", "Polaris Alpha iQ", "WYBOT", "Ecovacs", "iGarden", "Betta", "Water Tech Volt"],
-      proof: ["power supply or dock", "charging contacts", "tracks and brushes", "filter basket", "cord or battery housing", "app pairing screen"],
-      fieldFlags: ["no power", "will not climb", "Wi-Fi pairing failure", "water intrusion", "short runtime", "navigation/mapping miss"]
+      examples: ["Beatbot AquaSense", "Aiper Scuba X1 / X1 Pro Max", "Aiper Scuba V3", "Aiper N-series", "Aiper EcoSurfer", "Maytronics Dolphin", "Polaris Alpha iQ", "WYBOT", "Ecovacs", "iGarden", "Betta", "Water Tech Volt"],
+      proof: ["power supply or dock", "charging contacts", "tracks and brushes", "filter basket", "cord or battery housing", "app pairing screen", "firmware/status screen", "demo-unit accessory check"],
+      fieldFlags: ["no power", "will not climb", "Wi-Fi pairing failure", "HydroComm/app offline", "water intrusion", "short runtime", "navigation/mapping miss", "demo unit missing dock/accessory"]
     },
     {
       name: "Connected Pool Brain",
