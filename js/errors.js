@@ -1330,25 +1330,104 @@ window.ERROR_DB.spa_hot_tub = {
   label:"Hot Tubs / Spas",
   color:"#7c3aed",
   categories:{
-    "Spa Plumbing / Jets / Sanitation": {
-      models:["hot tub plumbing","swim spa plumbing","jet pump","spa pack","ozone spa system","mineral cartridge","FROG @ease","FROG Serene","pipe and jet cleanser"],
+    "Spa Packs / Controllers": {
+      models:["Balboa spa pack","Gecko in.ye","Gecko in.yt","Gecko in.xe","Waterway NEO 1100","Waterway NEO 1500","Waterway NEO 2100","topside control","heater tube","flow switch","pressure switch","temperature sensor","high-limit sensor"],
+      codes:[
+        { code:"SPA-FLO-FLOW", name:"Spa Flow / Pressure Error",
+          causes:["Dirty or collapsed filter cartridge","Air lock after refill","Low water level","Closed slice valve or blocked suction","Flow or pressure switch out of adjustment","Circulation pump not moving water"],
+          fix:["Check water level and open all valves before judging the pack","Remove and clean the filter as a quick flow proof check","Purge air from the pump/heater loop using the manufacturer procedure","Confirm the circ pump actually runs and moves water","Capture pack label, display code, filter photo, and pump/valve context before replacing a switch"],
+          severity:"high", callpro:false },
+        { code:"SPA-DRY-HEATER", name:"Dry Heater / Low-Water Heater Warning",
+          causes:["Heater tube not full","Air trapped after refill","Flow stopped while heater was enabled","Sensor reading does not match actual water movement","Pump prime lost"],
+          fix:["Do not keep resetting a dry-heater warning","Confirm the tub is filled to operating level and pump is primed","Run the priming/purge workflow for the specific controller","Verify filter and valve position","Qualified service should inspect heater tube, sensors, and board if the warning returns"],
+          severity:"high", callpro:true },
+        { code:"SPA-HL-HIGH-LIMIT", name:"High Limit / Overheat Warning",
+          causes:["Water overheated under cover","Low flow through heater","Temperature sensor or high-limit sensor issue","Pump heat during long filter cycle","Control relay stuck"],
+          fix:["Do not enter overheated water","Remove cover and let water cool if safe","Check flow, filters, and pump schedule first","Compare display temperature with a reliable thermometer","Electrical board/sensor testing belongs to qualified service"],
+          severity:"high", callpro:true },
+        { code:"SPA-SNS-SENSOR", name:"Sensor Sync / Temperature Sensor Fault",
+          causes:["Temperature sensors disagree","Sensor plug loose or wet","Sensor failed","Heater tube scale or poor flow causing uneven readings"],
+          fix:["Capture the exact display code and pack model","Power-cycle only per manual; do not keep clearing a repeating sensor fault","Inspect visible sensor plugs only if power is safely isolated","Verify flow and scale context","Replace sensors/pack parts only after manual and qualified verification"],
+          severity:"medium", callpro:true },
+        { code:"SPA-PR-PRIMING", name:"Priming Mode / Pump Will Not Prime",
+          causes:["Tub recently refilled","Air trapped in pump wet end","Water level low","Unions or slice valves not fully open","Debris in suction fitting or filter"],
+          fix:["Fill to the proper level before priming","Run priming mode and open jets/air per controller instructions","Verify pump unions and valves are open","Clean filter and suction basket where present","Avoid running pump dry; stop and escalate if prime will not establish"],
+          severity:"medium", callpro:false },
+        { code:"SPA-GFCI-TRIP", name:"Spa Breaker / GFCI Trips",
+          causes:["Heater element ground fault","Pump or blower fault","Water intrusion in pack or topside","Ozone/UV accessory fault","Incorrect wiring or wet connection"],
+          fix:["Do not bypass a GFCI","Document when it trips: immediately, heat call, pump start, blower, or light","Disconnect accessory loads only if qualified and following the manual","Keep water-intrusion photos for the proof packet","Electrical fault isolation requires qualified service"],
+          severity:"high", callpro:true }
+      ]
+    },
+    "Spa Plumbing / Jets / Pumps": {
+      models:["hot tub plumbing","swim spa plumbing","jet pump","circulation pump","jet body","air control","diverter valve","slice valve","suction fitting","spa filter cartridge"],
       codes:[
         { code:"SPA-JET-LOW-FLOW", name:"Spa Jets Weak Or Uneven",
           causes:["Filter dirty","Air control closed or leaking","Jet insert clogged","Pump air lock","Slice valve partly closed"],
           fix:["Remove and clean spa filter first","Open/adjust air controls and listen for air draw","Remove and rinse suspect jet inserts","Bleed air from pump union only if trained and safe","Verify valves are fully open after service"],
           severity:"medium", callpro:false },
+        { code:"SPA-PUMP-HUM", name:"Spa Pump Hums But Does Not Move Water",
+          causes:["Pump seized","Capacitor failed","Impeller jammed","Voltage issue","Air-locked wet end"],
+          fix:["Stop repeated start attempts to avoid motor damage","Confirm water level, valves, and prime first","Listen for hum vs. rotation and capture a short note","Electrical/capacitor checks require qualified service","Document pump label, voltage, wet-end model, and symptom timing"],
+          severity:"high", callpro:true },
+        { code:"SPA-AIR-CONTROL", name:"Air Controls Not Pulling Air",
+          causes:["Air control closed or stuck","Air line waterlogged","Jet insert blocked","Venturi path restricted","Blower not running where equipped"],
+          fix:["Open each air control and compare jet response","Remove and clean suspect jet inserts","Check if only one seat/zone is affected","Inspect visible air control cap and line routing","Escalate if water intrusion or blower electrical issue is suspected"],
+          severity:"low", callpro:false },
+        { code:"SPA-DIVERTER-STIFF", name:"Spa Diverter Or Valve Hard To Turn",
+          causes:["Scale or debris around diverter","Worn o-rings","Valve under pump pressure","Handle/key stripped","Wrong replacement cap or insert"],
+          fix:["Turn pumps off before forcing diverters","Clean accessible diverter parts per manual","Lubricate only with spa-safe silicone where allowed","Capture valve body, cap, handle, and o-ring proof before ordering","Do not force a cracked valve body"],
+          severity:"medium", callpro:false },
+        { code:"SPA-FILTER-COLLAPSE", name:"Spa Filter Collapses Or Closes Up",
+          causes:["Filter past service life","Pump suction too high for dirty cartridge","Wrong filter size","Chemical damage to media","Bypass/standpipe issue"],
+          fix:["Replace damaged cartridges rather than cleaning them again","Verify exact filter dimensions and part number","Check whether issue improves with filter removed only as a short diagnostic","Document pump speed/flow mode and filter proof","Review water chemistry if cartridges are failing early"],
+          severity:"medium", callpro:false }
+      ]
+    },
+    "Spa Water / Sanitation / Ozone": {
+      models:["ozone spa system","UV spa system","AOP spa system","mineral cartridge","FROG @ease","FROG Serene","pipe and jet cleanser","bromine feeder","chlorine feeder","spa shock","spa purge"],
+      codes:[
         { code:"SPA-PIPE-BIOFILM", name:"Spa Pipe / Jet Biofilm Flush Needed",
           causes:["Biofilm in plumbing","High bather load","Long drain interval","Sanitizer kept too low","Foam/odor after jets run"],
           fix:["Use a spa pipe and jet purge product before draining when biofilm is suspected","Run jets per product label, then drain and rinse thoroughly","Clean filters separately","Refill and balance water before sanitizer startup"],
           severity:"medium", callpro:false },
+        { code:"SPA-CHEM-DRIFT", name:"Spa Sanitizer Or pH Drifts Fast",
+          causes:["Small water volume changes quickly","High temperature burns off sanitizer","Bather waste high","Alkalinity not stable","Feeder/mineral cartridge depleted"],
+          fix:["Test before adding chemicals; small spas overdose easily","Adjust TA/pH in small increments","Shock/oxidize after high-use periods","Check cartridge/feeder date and replace on schedule","Drain/refill when TDS or age makes balancing impractical"],
+          severity:"medium", callpro:false },
+        { code:"SPA-FOAM-ODOR", name:"Spa Foam Or Odor Returns After Service",
+          causes:["Biofilm in plumbing","Soap/lotion load","Filter media saturated","Low sanitizer reserve","Water age/TDS high"],
+          fix:["Verify sanitizer, pH, TA, and water age before adding defoamer","Clean or replace filters","Purge plumbing before drain/refill when odor persists","Use customer-safe notes around bather-load and rinse habits","Do not mask persistent odor with fragrance products"],
+          severity:"medium", callpro:false },
+        { code:"SPA-OZONE-NO-BUBBLES", name:"Ozone / UV / AOP Not Showing Expected Operation",
+          causes:["Injector not pulling air","Check valve failed","Ozone tubing blocked or wet","UV lamp aged out","Flow too low through treatment loop"],
+          fix:["Check for visible air draw only when the system should be active","Replace wet or failed check valves before water reaches the unit","Capture module label, tubing route, and flow context","Follow lamp replacement intervals for UV/AOP","Do not open energized ozone/UV equipment without qualified service"],
+          severity:"medium", callpro:false },
+        { code:"SPA-SMALL-VOLUME-DOSE", name:"Small-Volume Chemical Dose Risk",
+          causes:["Residential pool dosage applied to spa volume","Gallons estimated too high","Chemical added before full circulation","High temperature accelerates reactions","Multiple products added too close together"],
+          fix:["Confirm actual spa gallons before dosing","Use small increments and retest after circulation","Separate incompatible chemical additions per label","Save readings and dose math in the proof note","Drain/refill may be safer than chasing badly aged water"],
+          severity:"medium", callpro:false }
+      ]
+    },
+    "Spa Heat / Swim Spa / Covers": {
+      models:["spa heater tube","heat pump spa","swim spa","swim jet pump","spa cover","cover lifter","cover pump","vacation-range spa","commercial/hospitality spa"],
+      codes:[
         { code:"SPA-NO-HEAT", name:"Spa Not Heating",
           causes:["Flow switch open due to dirty filter","Heater relay or element fault","Temperature sensor issue","Spa pack in economy/sleep mode","Breaker/GFCI issue"],
           fix:["Remove filter briefly only as a diagnostic if safe; replace/clean if flow returns","Confirm mode and setpoint","Check for flow/pressure error on display","Electrical heater checks require qualified service"],
           severity:"high", callpro:true },
-        { code:"SPA-CHEM-DRIFT", name:"Spa Sanitizer Or pH Drifts Fast",
-          causes:["Small water volume changes quickly","High temperature burns off sanitizer","Bather waste high","Alkalinity not stable","Feeder/mineral cartridge depleted"],
-          fix:["Test before adding chemicals; small spas overdose easily","Adjust TA/pH in small increments","Shock/oxidize after high-use periods","Check cartridge/feeder date and replace on schedule","Drain/refill when TDS or age makes balancing impractical"],
-          severity:"medium", callpro:false }
+        { code:"SPA-SWIM-JET-WEAK", name:"Swim Spa Current / Swim Jets Weak",
+          causes:["Filters restricted","Swim jet pump not reaching speed","Diverter or gate valve partly closed","Jet nozzles misaligned","Debris in suction or impeller"],
+          fix:["Clean filters and verify all swim-jet valves are open","Capture pump label, active mode, and affected zone","Check suction covers and visible debris safely","Compare each jet bank instead of guessing one part","Escalate electrical/drive faults to qualified service"],
+          severity:"medium", callpro:false },
+        { code:"SPA-COVER-WATERLOGGED", name:"Spa Cover Heavy / Waterlogged",
+          causes:["Cover foam saturated","Vapor barrier failed","Sagging cover holds rain/snow","Hinge seam failed","Cover lifter stress"],
+          fix:["Do not overload the lifter with a saturated cover","Document cover age, seam condition, water load, and heat loss complaint","Recommend replacement when foam is saturated","Use a cover pump only for standing water, not failed foam","Check cover fit before blaming heater runtime"],
+          severity:"low", callpro:false },
+        { code:"SPA-HOSPITALITY-RESET", name:"High-Use Spa Needs Reset Workflow",
+          causes:["Commercial/vacation rental bather load","Drain interval too long","Filters undersized for use","Sanitizer reserve cannot recover","Guest turnover without purge history"],
+          fix:["Capture water readings, usage context, and last drain/purge date","Use a purge-drain-refill-reset workflow when chemistry is unrecoverable","Check filters and sanitizer delivery before reopening","Keep customer-safe notes focused on operation and safety, not blame","Follow local code and operator rules for public/commercial spas"],
+          severity:"high", callpro:true }
       ]
     }
   }

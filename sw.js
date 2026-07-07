@@ -1,4 +1,4 @@
-const CACHE = 'splashlens-v14-growth-loop';
+const CACHE = 'splashlens-v15-spa-hot-tub-lane';
 const ASSETS = ['/', '/index.html', '/js/errors.js', '/js/data.js', '/js/app.js?v=20260701-growth-loop', '/favicon.svg', '/manifest.json'];
 
 self.addEventListener('install', e => {

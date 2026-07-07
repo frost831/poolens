@@ -120,9 +120,9 @@ window.SPLASHLENS_TECH_RADAR = {
     {
       name: "Robots",
       status: "High priority",
-      examples: ["Beatbot AquaSense", "Aiper Scuba X1 / X1 Pro Max", "Aiper Scuba V3", "Aiper N-series", "Aiper EcoSurfer", "Maytronics Dolphin", "Polaris Alpha iQ", "WYBOT", "Ecovacs", "iGarden", "Betta", "Water Tech Volt"],
-      proof: ["power supply or dock", "charging contacts", "tracks and brushes", "filter basket", "cord or battery housing", "app pairing screen", "firmware/status screen", "demo-unit accessory check"],
-      fieldFlags: ["no power", "will not climb", "Wi-Fi pairing failure", "HydroComm/app offline", "water intrusion", "short runtime", "navigation/mapping miss", "demo unit missing dock/accessory"]
+      examples: ["Beatbot AquaSense", "Aiper Scuba X1 / X1 Pro Max", "Aiper Scuba V3", "Aiper Scuba S1", "Aiper Scuba 800 / L1 / N1 / N3 AI Vision", "Aiper EcoSurfer / Surfer", "Maytronics Dolphin", "Polaris Alpha iQ", "WYBOT", "Ecovacs", "iGarden", "Betta", "Water Tech Volt"],
+      proof: ["power supply or dock", "charging contacts", "tracks and brushes", "filter basket", "cord or battery housing", "app pairing screen", "firmware/status screen", "demo-unit accessory check", "fine-filter or ultra-fine-filter proof"],
+      fieldFlags: ["no power", "will not climb", "Wi-Fi pairing failure", "HydroComm/app offline", "water intrusion", "short runtime", "navigation/mapping miss", "AI vision miss", "demo unit missing dock/accessory"]
     },
     {
       name: "Connected Pool Brain",
@@ -168,10 +168,10 @@ window.SPLASHLENS_TECH_RADAR = {
     },
     {
       name: "Hot Tubs / Spas",
-      status: "New lane",
-      examples: ["FROG hot tub systems", "spa jet plumbing", "swim spas", "spa packs", "ozone spa systems", "pipe and jet cleanser"],
-      proof: ["spa pack label", "display code", "filter condition", "jet body", "sanitizer cartridge", "water test", "drain/purge history"],
-      fieldFlags: ["weak jets", "biofilm flush", "no heat", "rapid pH drift", "foaming", "sanitizer depletion"]
+      status: "Live spa lane",
+      examples: ["Balboa spa packs", "Gecko in.ye / in.yt / in.xe", "Waterway NEO 1100 / 1500 / 2100", "FROG hot tub systems", "spa jet plumbing", "swim spas", "Platinum Spas Vacation range", "ozone / UV spa systems", "pipe and jet cleanser", "spa covers"],
+      proof: ["spa pack label", "display code", "filter condition", "flow or pressure-switch context", "heater tube or sensor proof", "jet body", "sanitizer cartridge", "ozone/UV module", "manual water test", "drain/purge history", "cover condition"],
+      fieldFlags: ["flow/pressure error", "dry heater", "high limit", "sensor sync", "GFCI trip", "weak jets", "biofilm flush", "no heat", "rapid pH drift", "foaming", "sanitizer depletion", "cover waterlogged"]
     }
   ]
 };
