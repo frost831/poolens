@@ -247,6 +247,14 @@
         <table id="manual-queries"></table>
       </div>
       <div class="panel">
+        <h2>Demand Lanes</h2>
+        <table id="demand-lanes"></table>
+      </div>
+      <div class="panel">
+        <h2>PartSnap Categories</h2>
+        <table id="partsnap-categories"></table>
+      </div>
+      <div class="panel">
         <h2>Scan Modes</h2>
         <table id="scan-modes"></table>
       </div>
@@ -396,10 +404,15 @@
         metricCard('PartSnap Results 30d', m.partsnapResults30d, 'Possible part-result screens.'),
         metricCard('Meaningful Actions 30d', m.meaningfulActions30d, 'Installs, scans, proof saves, shares, searches.'),
         metricCard('PartSnap Packets 30d', m.partSnapPackets30d, 'Copied or shared senior/vendor packets.'),
+        metricCard('Proof Drawers 30d', m.proofDrawerOpens30d, 'PartSnap proof checklist drawer opens.'),
         metricCard('PartSnap Saved 30d', m.partSnapSaved30d, 'Saved to Service Proof Passport.'),
         metricCard('Mystery Lab 30d', m.partSnapMystery30d, 'Low-confidence parts submitted.'),
         metricCard('Apprentice Starts 30d', m.partSnapApprentice30d, 'Training mode sessions.'),
         metricCard('Proof Saved 30d', m.proofSaved30d, 'Proof passport save events.'),
+        metricCard('Spa Demand 30d', m.spaSearches30d, 'Spa/hot tub searches and proof actions.'),
+        metricCard('Robot Demand 30d', m.robotSearches30d, 'Robot cleaner searches and proof actions.'),
+        metricCard('Automation Demand 30d', m.automationSearches30d, 'Connected pool searches and proof actions.'),
+        metricCard('Source Pages 30d', m.sourcePageViews30d, 'Tracked source-page traffic.'),
         metricCard('Paid Checkouts 30d', m.checkoutSuccess30d, 'Stripe webhook confirmed purchases.'),
         metricCard('Revenue 30d', (Number(m.revenueCents30d || 0) / 100).toFixed(0), 'Approx dollars from tracked checkout events.'),
         metricCard('Events 7d', m.events7d, 'All stored app events.'),
@@ -411,6 +424,8 @@
       renderCountTable('top-campaigns', data.topCampaigns, 'Campaign');
       renderCountTable('payment-plans', data.topPaymentPlans, 'Plan');
       renderCountTable('manual-queries', data.manualQueries, 'Query');
+      renderCountTable('demand-lanes', data.topDemandLanes, 'Lane');
+      renderCountTable('partsnap-categories', data.topPartSnapCategories, 'Category');
       renderCountTable('scan-modes', data.scanModes, 'Mode');
       renderCountTable('callback-risks', data.callbackRisks, 'Risk');
       renderCountTable('top-paths', data.topPaths, 'Path');

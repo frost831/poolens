@@ -9,6 +9,7 @@ const ALERT_EVENTS = new Set([
   'ai_scan_started',
   'manual_code_search',
   'partsnap_result',
+  'partsnap_proof_packet_drawer_opened',
   'partsnap_packet_copied',
   'partsnap_share_used',
   'partsnap_saved_to_pool',
@@ -96,6 +97,62 @@ function isPoolProEvent(record, props = {}) {
   return source === 'poolpro' || attributionSource === 'poolpro' || referrer.includes('poolpromag.com');
 }
 
+function demandLane(record, props = {}) {
+  const text = [
+    record.event,
+    record.path,
+    record.source,
+    props.path,
+    props.query,
+    props.brand,
+    props.category,
+    props.component,
+    props.hardware,
+    props.mode,
+    props.attribution_landing_path,
+  ].filter(Boolean).join(' ').toLowerCase();
+  const lanes = [
+    {
+      name: 'Spa / Hot Tub',
+      terms: ['spa', 'hot tub', 'balboa', 'gecko', 'waterway', 'topside', 'heater tube', 'pressure switch', 'flow switch', 'truclear'],
+    },
+    {
+      name: 'Robot Cleaners',
+      terms: ['robot', 'cleaner', 'dolphin', 'maytronics', 'polaris', 'aiper', 'beatbot', 'wybot', 'ecovacs', 'igarden', 'betta'],
+    },
+    {
+      name: 'Automation / Connected Pool',
+      terms: ['automation', 'connected', 'intellicenter', 'omni', 'omnipl', 'aqualink', 'iaqualink', 'rs-485', 'relay', 'actuator', 'app pairing'],
+    },
+    {
+      name: 'Lighting',
+      terms: ['light', 'lighting', 'intellibrite', 'colorlogic', 'watercolors', 'niche', 'transformer', 'gfci'],
+    },
+    {
+      name: 'Salt Systems',
+      terms: ['salt', 'cell', 'intellichlor', 'aquarite', 'aquapure', 'truclear', 'chlorinator', 'flow sensor'],
+    },
+    {
+      name: 'Chemical Controllers',
+      terms: ['orp', 'ph', 'chemical controller', 'chemtrol', 'rola-chem', 'rola chem', 'cat controller', 'stenner', 'feed pump'],
+    },
+    {
+      name: 'AOP / Ozone / UV',
+      terms: ['aop', 'ozone', 'uv', 'clear comfort', 'del ozone', 'lamp', 'injector', 'check valve'],
+    },
+    {
+      name: 'PartSnap Proof',
+      terms: ['partsnap', 'proof packet', 'mystery', 'second proof', 'vendor packet', 'senior tech'],
+    },
+    {
+      name: 'Source Pages',
+      terms: ['source-pages', 'field-guides', 'proof checklist', 'source page'],
+    },
+  ];
+  const match = lanes.find((lane) => lane.terms.some((term) => text.includes(term)));
+  return match ? match.name : '';
+}
+
 async function eventSummary(request, env) {
   if (!authOk(request, env)) {
     return json(401, { ok: false, error: 'Unauthorized' });
@@ -141,6 +198,8 @@ async function eventSummary(request, env) {
   const sources = new Map();
   const referrers = new Map();
   const campaigns = new Map();
+  const laneDemand = new Map();
+  const partSnapCategories = new Map();
   const meaningfulEvents = new Set([
     'article_referral_open',
     'pwa_installed',
@@ -149,6 +208,7 @@ async function eventSummary(request, env) {
     'ai_scan_started',
     'manual_code_search',
     'partsnap_result',
+    'partsnap_proof_packet_drawer_opened',
     'partsnap_packet_copied',
     'partsnap_share_used',
     'partsnap_saved_to_pool',
@@ -196,6 +256,14 @@ async function eventSummary(request, env) {
   let poolProScans30d = 0;
   let poolProStoreShellOpens30d = 0;
   let poolProMeaningfulActions30d = 0;
+  let spaSearches30d = 0;
+  let robotSearches30d = 0;
+  let automationSearches30d = 0;
+  let lightingSearches30d = 0;
+  let saltSearches30d = 0;
+  let chemicalControllerSearches30d = 0;
+  let sourcePageViews30d = 0;
+  let proofDrawerOpens30d = 0;
   const uniqueClients30d = new Set();
   const meaningfulClients30d = new Set();
   const poolProClients30d = new Set();
@@ -214,6 +282,8 @@ async function eventSummary(request, env) {
 
     if (ts >= since7d) events7d += 1;
     if (ts >= since30d) {
+      const lane = demandLane(record, props);
+      if (lane) inc(laneDemand, lane);
       events30d += 1;
       if (clientId) uniqueClients30d.add(clientId);
       if (meaningfulEvents.has(record.event) && clientId) meaningfulClients30d.add(clientId);
@@ -248,7 +318,23 @@ async function eventSummary(request, env) {
         searches30d += 1;
         inc(manualQueries, [props.brand, props.query].filter(Boolean).join(': ') || props.query || 'unknown');
       }
-      if (record.event === 'partsnap_result') partsnapResults30d += 1;
+      if (record.event === 'manual_code_search' || record.event === 'partsnap_result' || record.event === 'partsnap_proof_packet_drawer_opened') {
+        if (lane === 'Spa / Hot Tub') spaSearches30d += 1;
+        if (lane === 'Robot Cleaners') robotSearches30d += 1;
+        if (lane === 'Automation / Connected Pool') automationSearches30d += 1;
+        if (lane === 'Lighting') lightingSearches30d += 1;
+        if (lane === 'Salt Systems') saltSearches30d += 1;
+        if (lane === 'Chemical Controllers' || lane === 'AOP / Ozone / UV') chemicalControllerSearches30d += 1;
+      }
+      if (record.event === 'partsnap_result') {
+        partsnapResults30d += 1;
+        inc(partSnapCategories, props.category || props.component || 'unknown');
+      }
+      if (record.event === 'partsnap_proof_packet_drawer_opened') {
+        proofDrawerOpens30d += 1;
+        inc(partSnapCategories, props.category || props.component || 'unknown');
+      }
+      if (lane === 'Source Pages' || String(record.path || props.path || props.attribution_landing_path || '').includes('source-pages')) sourcePageViews30d += 1;
       if (meaningfulEvents.has(record.event)) meaningfulActions30d += 1;
       if (record.event === 'partsnap_packet_copied' || record.event === 'partsnap_share_used') partSnapPackets30d += 1;
       if (record.event === 'partsnap_saved_to_pool') partSnapSaved30d += 1;
@@ -309,6 +395,14 @@ async function eventSummary(request, env) {
       fieldTesterOptIns30d,
       checkoutSuccess30d,
       revenueCents30d,
+      spaSearches30d,
+      robotSearches30d,
+      automationSearches30d,
+      lightingSearches30d,
+      saltSearches30d,
+      chemicalControllerSearches30d,
+      sourcePageViews30d,
+      proofDrawerOpens30d,
       poolProEvents30d,
       poolProReferralOpens30d,
       poolProAppOpens30d,
@@ -325,6 +419,8 @@ async function eventSummary(request, env) {
     topReferrers: topList(referrers),
     topCampaigns: topList(campaigns),
     topPaymentPlans: topList(paymentPlans),
+    topDemandLanes: topList(laneDemand),
+    topPartSnapCategories: topList(partSnapCategories),
     topPaths: topList(paths),
     scanModes: topList(scanModes),
     callbackRisks: topList(callbackRisks),
@@ -361,6 +457,7 @@ async function sendEventAlert(env, record) {
     ai_scan_started: 'Scanner used',
     manual_code_search: 'Manual code search',
     partsnap_result: 'PartSnap result',
+    partsnap_proof_packet_drawer_opened: 'PartSnap proof packet drawer opened',
     partsnap_packet_copied: 'PartSnap packet copied',
     partsnap_share_used: 'PartSnap packet shared',
     partsnap_saved_to_pool: 'PartSnap saved to proof passport',
@@ -449,6 +546,11 @@ async function sendDigestEmail(env, summary) {
     `- Proof saves 30d: ${m.proofSaved30d || 0}`,
     `- Field feedback 30d: ${m.fieldFeedback30d || 0}`,
     `- Field tester opt-ins 30d: ${m.fieldTesterOptIns30d || 0}`,
+    `- Spa/hot tub demand 30d: ${m.spaSearches30d || 0}`,
+    `- Robot demand 30d: ${m.robotSearches30d || 0}`,
+    `- Automation demand 30d: ${m.automationSearches30d || 0}`,
+    `- Proof drawer opens 30d: ${m.proofDrawerOpens30d || 0}`,
+    `- Source page views 30d: ${m.sourcePageViews30d || 0}`,
     '',
     'Store and revenue',
     `- Native first opens 30d: ${m.nativeFirstOpens30d || 0}`,

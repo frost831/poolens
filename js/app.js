@@ -5094,6 +5094,7 @@ function renderPartsSnapResult(ai, result, status) {
       ${renderPartEvidencePanel(visibleEvidence, missingProof)}
       ${renderPartSnapCallbackRisk(risk)}
       ${renderPartAlternates(alternates)}
+      ${renderPartSnapProofPacketDrawer(_lastPartSnapResult)}
       ${renderPartSnapPartnerCards(_lastPartSnapResult)}
       ${searchTerms?.length ? `
         <p style="color:#64748b;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">SEARCH ONLINE</p>
@@ -5146,6 +5147,85 @@ function renderPartAlternates(alternates) {
         <p style="color:#94a3b8;font-size:11px;line-height:1.4;">${escHtml(alt.why || 'Compare visible markings and dimensions.')} ${alt.confidence ? `(${escHtml(alt.confidence)})` : ''}</p>
       </div>`).join('')}
     </div>`;
+}
+
+function partSnapProofPacketTemplates(ai = {}) {
+  const text = [ai.category, ai.component, ai.description, ai.model, ai.manufacturer].filter(Boolean).join(' ').toLowerCase();
+  const templates = [
+    {
+      key: 'pump',
+      title: 'Pump / Wet End',
+      match: ['pump', 'impeller', 'seal', 'basket', 'lid', 'volute', 'diffuser'],
+      proof: ['pump model plate', 'HP/THP and voltage', 'wet-end close-up', 'molded number', 'union size', 'seal plate or diffuser view'],
+      hold: 'Hold ordering until pump family, motor/wet-end split, and part dimensions agree.'
+    },
+    {
+      key: 'robot',
+      title: 'Robot Cleaner',
+      match: ['robot', 'cleaner', 'track', 'brush', 'basket', 'dock', 'charger', 'aiper', 'dolphin', 'polaris'],
+      proof: ['robot model/serial', 'power supply or dock label', 'track/brush profile', 'filter basket style', 'app/status screen', 'runtime or charging symptom'],
+      hold: 'Cleaner families share lookalike parts. Confirm model and accessory/dock family first.'
+    },
+    {
+      key: 'spa_pack',
+      title: 'Spa Pack / Topside',
+      match: ['spa', 'hot tub', 'balboa', 'gecko', 'waterway', 'topside', 'heater tube', 'flow switch', 'pressure switch'],
+      proof: ['pack label', 'topside display code', 'water level', 'filter condition', 'circ/jet pump movement', 'GFCI trip timing', 'heater tube/sensor context'],
+      hold: 'Do not call a board, heater, sensor, or pump from one code. Verify current manual and qualified electrical boundary.'
+    },
+    {
+      key: 'chemical_controller',
+      title: 'Chemical Controller',
+      match: ['orp', 'ph', 'probe', 'chemical', 'controller', 'feed', 'stenner', 'rola', 'cat', 'chemtrol'],
+      proof: ['manual water test', 'controller screen', 'probe age', 'calibration standard/date', 'flow cell photo', 'tank/tablet level', 'feed tube and injection fitting'],
+      hold: 'Automation readings that disagree with manual testing are high callback risk.'
+    },
+    {
+      key: 'aop_ozone_uv',
+      title: 'AOP / Ozone / UV',
+      match: ['ozone', 'uv', 'aop', 'clear comfort', 'del', 'lamp', 'check valve', 'injector'],
+      proof: ['module label', 'status light/app alert', 'lamp age', 'flow proof', 'injector air draw', 'check-valve/tubing water intrusion', 'power boundary'],
+      hold: 'Stop if water reached electronics or internal energized testing is required.'
+    },
+    {
+      key: 'lighting',
+      title: 'Lighting / Transformer',
+      match: ['light', 'lighting', 'niche', 'transformer', 'gfci', 'fixture', 'watercolors', 'colorlogic'],
+      proof: ['fixture family', 'voltage', 'transformer label/load', 'junction box condition', 'cord path', 'GFCI behavior', 'automation mode'],
+      hold: 'Voltage, GFCI, and niche/fixture family must be proven before parts.'
+    },
+    {
+      key: 'automation',
+      title: 'Automation / Connected Pool',
+      match: ['automation', 'relay', 'actuator', 'rs-485', 'intellicenter', 'omni', 'aqualink', 'board'],
+      proof: ['controller model', 'firmware/app screen', 'relay label', 'RS-485 wiring photo', 'device assignment screen', 'breaker/GFCI behavior'],
+      hold: 'Package this for senior tech/vendor review when wiring, board, or line-voltage work is involved.'
+    }
+  ];
+  const matched = templates.filter(t => t.match.some(term => text.includes(term)));
+  return matched.length ? matched.slice(0, 3) : templates.slice(0, 4);
+}
+
+function renderPartSnapProofPacketDrawer(ai = {}) {
+  const templates = partSnapProofPacketTemplates(ai);
+  const category = escHtml(ai.category || ai.component || 'unknown');
+  return `
+    <details data-category="${category}" style="margin:10px 0;background:#020617;border:1px solid #334155;border-radius:8px;overflow:hidden;" ontoggle="if(this.open) trackSplashLensEvent('partsnap_proof_packet_drawer_opened',{category:this.dataset.category||'unknown'})">
+      <summary style="cursor:pointer;list-style:none;padding:11px 12px;color:#e2e8f0;font-size:12px;font-weight:950;display:flex;justify-content:space-between;gap:10px;align-items:center;">
+        <span>Proof packet drawer</span>
+        <span style="color:#7dd3fc;font-size:10px;font-weight:900;">pump / robot / spa / chem / light</span>
+      </summary>
+      <div style="display:grid;gap:8px;padding:0 10px 10px;">
+        ${templates.map(t => `
+          <div style="background:#0f172a;border:1px solid #1e293b;border-radius:8px;padding:10px;">
+            <p style="color:#f8fafc;font-size:12px;font-weight:950;margin-bottom:6px;">${escHtml(t.title)}</p>
+            <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:7px;">
+              ${t.proof.map((item, i) => `<span style="display:inline-flex;align-items:center;gap:5px;background:#164e63;color:#cffafe;border:1px solid #0e7490;border-radius:999px;padding:5px 8px;font-size:10px;font-weight:900;"><b>${i + 1}</b>${escHtml(item)}</span>`).join('')}
+            </div>
+            <p style="color:#fbbf24;font-size:11px;line-height:1.4;"><strong>Hold:</strong> ${escHtml(t.hold)}</p>
+          </div>`).join('')}
+      </div>
+    </details>`;
 }
 
 function partSnapCallbackRisk(ai = {}, ladder = {}, visibleEvidence = [], missingProof = []) {
