@@ -110,7 +110,7 @@ window.CHEM_DATA = {
 };
 
 window.SPLASHLENS_TECH_RADAR = {
-  updated: "2026-06-28",
+  updated: "2026-07-07",
   cadence: {
     daily: "Add 3-5 codes, model clues, part families, or proof prompts when new field patterns show up.",
     weekly: "Publish one field card, training scenario, or SEO/AEO hub update for pool tech search.",
@@ -120,14 +120,14 @@ window.SPLASHLENS_TECH_RADAR = {
     {
       name: "Robots",
       status: "High priority",
-      examples: ["Beatbot AquaSense", "Aiper Scuba / Seagull", "Maytronics Dolphin", "Polaris Alpha iQ", "WYBOT", "Ecovacs", "iGarden", "Betta"],
+      examples: ["Beatbot AquaSense", "Aiper Scuba / Seagull", "Maytronics Dolphin", "Polaris Alpha iQ", "WYBOT", "Ecovacs", "iGarden", "Betta", "Water Tech Volt"],
       proof: ["power supply or dock", "charging contacts", "tracks and brushes", "filter basket", "cord or battery housing", "app pairing screen"],
       fieldFlags: ["no power", "will not climb", "Wi-Fi pairing failure", "water intrusion", "short runtime", "navigation/mapping miss"]
     },
     {
       name: "Connected Pool Brain",
       status: "Live reference layer",
-      examples: ["Pentair IntelliCenter", "Hayward Omni", "Jandy iAquaLink", "RS-485 pumps", "valve actuators", "smart heaters", "lighting relays", "automatic covers"],
+      examples: ["Pentair IntelliCenter", "Hayward Omni", "Jandy iAquaLink", "CCEI Vigipool", "CCEI Tild VP", "CCEI Antea VS", "RS-485 pumps", "valve actuators", "smart heaters", "lighting relays", "automatic covers"],
       proof: ["controller model", "firmware/app screen", "relay label", "RS-485 wiring photo", "device assignment screen", "breaker/GFCI behavior"],
       fieldFlags: ["offline app", "lost communication", "wrong relay", "actuator wrong direction", "pump not seen by automation", "light schedule mismatch"]
     },
@@ -141,16 +141,16 @@ window.SPLASHLENS_TECH_RADAR = {
     {
       name: "Lighting",
       status: "Live reference layer",
-      examples: ["Pentair IntelliBrite / MicroBrite", "Hayward ColorLogic / Omni Direct", "Jandy WaterColors", "CMP Brilliant Wonders / PAL", "retrofit niche lights"],
+      examples: ["Pentair IntelliBrite / MicroBrite", "Hayward ColorLogic / Omni Direct", "Jandy WaterColors", "Jandy Infinite WaterColors", "CMP Brilliant Wonders / PAL", "retrofit niche lights"],
       proof: ["fixture label", "voltage", "transformer size", "junction box condition", "cord route", "automation mode"],
       fieldFlags: ["GFCI trip", "wrong color", "flicker", "one light out", "voltage drop", "retrofit compatibility"]
     },
     {
       name: "Chem Controllers / Feeders",
       status: "Live reference layer",
-      examples: ["Rola-Chem", "CAT", "BECS", "Chemtrol", "IPS", "Stenner", "Prominent", "Walchem", "Pulsar"],
-      proof: ["manual test reading", "probe age", "calibration standard", "flow cell", "tank level", "feed pump/tube"],
-      fieldFlags: ["ORP low", "pH high", "probe drift", "no sample flow", "overfeed risk", "blocked injection fitting"]
+      examples: ["Rola-Chem", "CAT", "BECS", "Chemtrol", "IPS", "Stenner", "Prominent", "Walchem", "Pulsar", "SunnyWhale FinWhale"],
+      proof: ["manual test reading", "probe age", "calibration standard", "flow cell", "tank/tablet level", "feed pump/tube", "app alert screen"],
+      fieldFlags: ["ORP low", "pH high", "probe drift", "no sample flow", "overfeed risk", "blocked injection fitting", "low tablets", "stale app trend"]
     },
     {
       name: "Covers / Safety",
@@ -158,6 +158,20 @@ window.SPLASHLENS_TECH_RADAR = {
       examples: ["Coverstar", "Cover-Pools", "APC", "Coverstar Central", "Save-T Cover", "cover pumps"],
       proof: ["track condition", "rope/pulley view", "motor/key switch", "controller label", "standing water load", "fabric alignment"],
       fieldFlags: ["will not move", "travels crooked", "water on cover", "manual operation", "safety layer warning"]
+    },
+    {
+      name: "Salt Systems",
+      status: "Updated July 2026",
+      examples: ["Jandy TruClear", "Jandy TruClear XL", "AquaPure", "Hayward AquaRite", "Pentair IntelliChlor", "Circupool"],
+      proof: ["cell window or blade photo", "controller display", "independent salt test", "FC/CYA reading", "cell age", "pump schedule"],
+      fieldFlags: ["check cell", "low output", "visible scale", "drop-in fit", "cleaning cap", "cell replacement quote"]
+    },
+    {
+      name: "Hot Tubs / Spas",
+      status: "New lane",
+      examples: ["FROG hot tub systems", "spa jet plumbing", "swim spas", "spa packs", "ozone spa systems", "pipe and jet cleanser"],
+      proof: ["spa pack label", "display code", "filter condition", "jet body", "sanitizer cartridge", "water test", "drain/purge history"],
+      fieldFlags: ["weak jets", "biofilm flush", "no heat", "rapid pH drift", "foaming", "sanitizer depletion"]
     }
   ]
 };
@@ -474,6 +488,7 @@ window.SALT_CHLORINATOR_DATA = {
     { brand:"Hayward AquaRite",        target:"3000–3400 ppm", low:2700, high:3400 },
     { brand:"Pentair IntelliChlor",    target:"3100–3400 ppm", low:3100, high:3400 },
     { brand:"Zodiac / Jandy AquaPure", target:"3000–3500 ppm", low:3000, high:3500 },
+    { brand:"Jandy TruClear / TruClear XL", target:"3000–3500 ppm", low:3000, high:3500 },
     { brand:"CircuPool",               target:"3000–3500 ppm", low:3000, high:3500 },
     { brand:"Generic / most brands",   target:"2700–3400 ppm", low:2700, high:3400 },
   ],

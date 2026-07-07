@@ -1104,6 +1104,27 @@ Object.assign(window.ERROR_DB.pentair.categories, {
 });
 
 Object.assign(window.ERROR_DB.jandy.categories, {
+  "Salt - TruClear / AquaPure / Drop-In Cells": {
+    models:["TruClear Salt Chlorinator","TruClear XL","TRUCLEAR11K","TRUCLEARXL","AquaPure","Jandy drop-in replacement salt cells","TruClear cell body","TruClear cleaning cap"],
+    codes:[
+      { code:"TRUCLEAR-CHECK-CELL", name:"TruClear Check Cell / Visual Scale Inspection",
+        causes:["Calcium scale visible on blades","Salt level outside operating range","Cell nearing end of service life","Low-flow operation reducing production","Cell polarity cycle cannot clear buildup"],
+        fix:["Use the clear viewing window to inspect blades before removing the cell","Confirm salt level with an independent salt test before adding salt","If scale is visible, remove the cell and clean only per Jandy procedure","Do not guess from display alone; capture controller display, cell window, and water test proof before ordering"],
+        severity:"medium", callpro:false },
+      { code:"TRUCLEAR-LOW-OUTPUT", name:"TruClear Low Chlorine Output",
+        causes:["Output percentage too low for bather load","Pump runtime too short","CYA too low for outdoor salt pool","Cell scaled or aging","Water temperature or low-flow condition reducing production"],
+        fix:["Manually test FC, CYA, pH, and salt before changing hardware","Verify pump schedule and TruClear output percentage","Inspect the transparent window for blade scale","Supplement with liquid chlorine when the pool is behind; do not rely on the cell to recover a zero-FC pool quickly"],
+        severity:"medium", callpro:false },
+      { code:"TRUCLEAR-SERVICE-CAP", name:"Clean Cell While Circulating",
+        causes:["Cell needs cleaning during a route stop","Tech wants to continue pump/filter service while the cell is out","Missing cap or wrong replacement fit"],
+        fix:["Confirm the installed body and cap match the TruClear service procedure","Shut production off before removing the cell","Use the service/winterizing cap only as intended so circulation can continue while the cell is cleaned","Photograph the cell body, cap, and controller before leaving the stop"],
+        severity:"low", callpro:false },
+      { code:"TRUCLEAR-DROP-IN-FIT", name:"Drop-In Replacement Fit Check",
+        causes:["Existing chlorinator footprint may not match","Competitor cell dimensions or unions unknown","Power/control compatibility not verified","SKU matchup incomplete"],
+        fix:["Use the current manufacturer drop-in guide for dimensions and SKU matchups","Photograph the existing cell, unions, controller, and available straight pipe","Verify voltage/control requirements and AquaLink integration before quoting","Do not claim drop-in fit until measurements and model numbers are confirmed"],
+        severity:"medium", callpro:false }
+    ]
+  },
   "Lighting - WaterColors / HydroCool / Infinite WaterColors": {
     models:["WaterColors LED","WaterColors Nicheless HydroCool","Infinite WaterColors","Jandy LED WaterFeatures","AquaLink light control"],
     codes:[
@@ -1221,7 +1242,7 @@ window.ERROR_DB.connected_pool_brain = {
   color:"#2563eb",
   categories:{
     "Automation / Smart Backyard": {
-      models:["Pentair IntelliCenter","Pentair EasyTouch","Hayward OmniLogic","Hayward OmniPL","Jandy AquaLink RS","iAquaLink","Zodiac iAquaLink","RS-485 pumps","Smart heaters","Valve actuators","App-connected lighting"],
+      models:["Pentair IntelliCenter","Pentair EasyTouch","Hayward OmniLogic","Hayward OmniPL","Jandy AquaLink RS","iAquaLink","Zodiac iAquaLink","CCEI Vigipool","CCEI Tild VP","CCEI Antea VS","RS-485 pumps","Smart heaters","Valve actuators","App-connected lighting"],
       codes:[
         { code:"SMART-OFFLINE", name:"Pool App Shows System Offline",
           causes:["Wi-Fi/Ethernet lost at equipment pad","Router credentials changed","Controller cloud service/account issue","Controller needs reboot","Weak outdoor signal"],
@@ -1238,6 +1259,83 @@ window.ERROR_DB.connected_pool_brain = {
         { code:"ACTUATOR-NO-MOVE", name:"Valve Actuator Does Not Move From Automation",
           causes:["Actuator toggle switch off","Cam switch at limit","24VAC missing","Aux/valve assignment wrong","Actuator motor failed"],
           fix:["Check actuator toggle switch and listen for motor","Verify 24VAC at actuator command","Confirm valve assignment in controller","Mark cam positions before adjustment","Replace actuator only after power and assignment are verified"],
+          severity:"medium", callpro:false }
+        ,
+        { code:"CCEI-VS-COMM", name:"CCEI Antea VS / Vigipool Pump Control Issue",
+          causes:["Antea VS antenna not paired to Vigipool app","Tild VP automation supply not configured","Pump model/control mode not supported","Weak wireless signal at pump room","Power to pump/controller interrupted"],
+          fix:["Confirm exact pump model and Antea VS compatibility before promising control","Verify Tild VP and Vigipool app see the same equipment room device","Check pump has proper line power and the automation controller is not cycling it incorrectly","Capture app pairing screen, controller label, and pump model plate for vendor support"],
+          severity:"medium", callpro:false }
+      ]
+    }
+  }
+};
+
+window.ERROR_DB.smart_chem_dispensers = {
+  label:"Smart Chemical Dispensers",
+  color:"#0d9488",
+  categories:{
+    "Connected Chlorine / pH / ORP Devices": {
+      models:["SunnyWhale FinWhale","smart chlorine dispenser","app-connected tablet dispenser","ORP sensor dispenser","pH sensor dispenser","temperature sensor dispenser"],
+      codes:[
+        { code:"SMART-FEED-VERIFY", name:"Smart Dispenser Reading Needs Verification",
+          causes:["Probe drift","Free chlorine sensor not matching manual test","ORP affected by pH/CYA/temperature","Tablet feeder empty or bridged","App trend stale or offline"],
+          fix:["Verify FC, pH, ORP, and temperature with manual tests before trusting dosing changes","Check tablet level and dispenser flow path","Look for app alerts for pH drift, low tablets, battery, or probe replacement","Do not let an app-connected feeder overrule unsafe manual test results"],
+          severity:"high", callpro:false },
+        { code:"SMART-FEED-LOW-TABLETS", name:"Low Tablets / No Chlorine Feed",
+          causes:["Tablet chamber empty","Wet tablets bridged together","Flow path blocked","Dispenser battery low","App notification ignored"],
+          fix:["Open only per manufacturer safety steps and PPE","Refill with compatible tablets only","Clear flow path and verify water movement through the dispenser","Confirm app shows fresh readings after service"],
+          severity:"medium", callpro:false },
+        { code:"SMART-FEED-PROBE", name:"pH / ORP / Chlorine Probe Replacement Flag",
+          causes:["Probe aged out","Probe coated with scale or biofilm","Calibration drift","Low sample movement around device","Battery threshold reached"],
+          fix:["Clean probe according to manufacturer instructions","Compare against a reliable manual test before calibration or replacement","Check battery and sample movement","Record probe age and app alert screenshot for the service proof packet"],
+          severity:"medium", callpro:false }
+      ]
+    }
+  }
+};
+
+window.ERROR_DB.handheld_vacuums = {
+  label:"Handheld Vacuums / Leaf Vacs",
+  color:"#0891b2",
+  categories:{
+    "Battery Pool / Spa Vacuums": {
+      models:["Water Tech Volt Leaf Vac","Water Tech Volt FX-Series","Pool Blaster","battery handheld vacuum","spa vacuum"],
+      codes:[
+        { code:"VAC-NO-SUCTION", name:"Handheld Vac Has Weak Or No Suction",
+          causes:["Debris bag/cup full","Impeller clogged","Battery low","Seal or bag not seated","Fine silt passing through wrong filter media"],
+          fix:["Empty and rinse debris bag/cup","Clear impeller and intake path","Fully charge battery before judging motor strength","Reseat seals and bag collar","Use fine filter media for silt and normal bag for leaves"],
+          severity:"low", callpro:false },
+        { code:"VAC-NO-CHARGE", name:"Battery Vac Will Not Charge",
+          causes:["Charging contacts wet or corroded","Charger failed","Battery aged out","Unit stored discharged","Water intrusion"],
+          fix:["Dry and clean contacts before charging","Test charger output if available","Do not charge if water intrusion is suspected","Check warranty/service route if runtime remains poor after a full charge"],
+          severity:"medium", callpro:false }
+      ]
+    }
+  }
+};
+
+window.ERROR_DB.spa_hot_tub = {
+  label:"Hot Tubs / Spas",
+  color:"#7c3aed",
+  categories:{
+    "Spa Plumbing / Jets / Sanitation": {
+      models:["hot tub plumbing","swim spa plumbing","jet pump","spa pack","ozone spa system","mineral cartridge","FROG @ease","FROG Serene","pipe and jet cleanser"],
+      codes:[
+        { code:"SPA-JET-LOW-FLOW", name:"Spa Jets Weak Or Uneven",
+          causes:["Filter dirty","Air control closed or leaking","Jet insert clogged","Pump air lock","Slice valve partly closed"],
+          fix:["Remove and clean spa filter first","Open/adjust air controls and listen for air draw","Remove and rinse suspect jet inserts","Bleed air from pump union only if trained and safe","Verify valves are fully open after service"],
+          severity:"medium", callpro:false },
+        { code:"SPA-PIPE-BIOFILM", name:"Spa Pipe / Jet Biofilm Flush Needed",
+          causes:["Biofilm in plumbing","High bather load","Long drain interval","Sanitizer kept too low","Foam/odor after jets run"],
+          fix:["Use a spa pipe and jet purge product before draining when biofilm is suspected","Run jets per product label, then drain and rinse thoroughly","Clean filters separately","Refill and balance water before sanitizer startup"],
+          severity:"medium", callpro:false },
+        { code:"SPA-NO-HEAT", name:"Spa Not Heating",
+          causes:["Flow switch open due to dirty filter","Heater relay or element fault","Temperature sensor issue","Spa pack in economy/sleep mode","Breaker/GFCI issue"],
+          fix:["Remove filter briefly only as a diagnostic if safe; replace/clean if flow returns","Confirm mode and setpoint","Check for flow/pressure error on display","Electrical heater checks require qualified service"],
+          severity:"high", callpro:true },
+        { code:"SPA-CHEM-DRIFT", name:"Spa Sanitizer Or pH Drifts Fast",
+          causes:["Small water volume changes quickly","High temperature burns off sanitizer","Bather waste high","Alkalinity not stable","Feeder/mineral cartridge depleted"],
+          fix:["Test before adding chemicals; small spas overdose easily","Adjust TA/pH in small increments","Shock/oxidize after high-use periods","Check cartridge/feeder date and replace on schedule","Drain/refill when TDS or age makes balancing impractical"],
           severity:"medium", callpro:false }
       ]
     }
