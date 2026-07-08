@@ -99,16 +99,17 @@ Do not make store copy imply native subscriptions are fully live unless ASC prod
 - Current Gradle values:
   - `versionName "1.0.6"`
   - `versionCode 7`
-- Current `android-twa/twa-manifest.json` is stale:
-  - `appVersionName: 1.0.5`
-  - `appVersionCode: 6`
+- Current `android-twa/twa-manifest.json` values:
+  - `appVersionName: 1.0.6`
+  - `appVersionCode: 7`
+  - `appVersion: 1.0.6`
 
 ### Required Android Action
 
 1. Pull latest branch:
    - `git checkout feature/splashlens-usage-alerts-dashboard`
    - `git pull origin feature/splashlens-usage-alerts-dashboard`
-2. Fix `android-twa/twa-manifest.json` before building:
+2. Verify `android-twa/twa-manifest.json` before building:
    - Set `appVersionName` to `1.0.6`
    - Set `appVersionCode` to `7`
    - Set `appVersion` to `1.0.6`
