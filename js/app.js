@@ -5209,10 +5209,10 @@ function partSnapProofPacketTemplates(ai = {}) {
     },
     {
       key: 'spa_pack',
-      title: 'Spa Pack / Topside',
-      match: ['spa', 'hot tub', 'balboa', 'gecko', 'waterway', 'topside', 'heater tube', 'flow switch', 'pressure switch'],
-      proof: ['pack label', 'topside display code', 'water level', 'filter condition', 'circ/jet pump movement', 'GFCI trip timing', 'heater tube/sensor context'],
-      hold: 'Do not call a board, heater, sensor, or pump from one code. Verify current manual and qualified electrical boundary.'
+      title: 'Spa Pack / Topside / Swim Spa',
+      match: ['spa', 'hot tub', 'swim spa', 'balboa', 'gecko', 'waterway', 'watkins', 'hot spring', 'caldera', 'jacuzzi', 'sundance', 'bullfrog', 'master spas', 'h2x', 'endless', 'hydropool', 'tidalfit', 'topside', 'heater tube', 'flow switch', 'pressure switch', 'current pump'],
+      proof: ['pack label', 'topside display code', 'brand/model plate', 'water level', 'filter condition', 'circ/jet/current pump movement', 'GFCI trip timing', 'heater tube/sensor context', 'suction cover marking', 'ozone/UV/check-valve proof'],
+      hold: 'Do not call a board, heater, sensor, pump, current system, or proprietary topside from one code. Verify current manual and qualified electrical boundary.'
     },
     {
       key: 'chemical_controller',

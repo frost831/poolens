@@ -1331,8 +1331,12 @@ window.ERROR_DB.spa_hot_tub = {
   color:"#7c3aed",
   categories:{
     "Spa Packs / Controllers": {
-      models:["Balboa spa pack","Gecko in.ye","Gecko in.yt","Gecko in.xe","Waterway NEO 1100","Waterway NEO 1500","Waterway NEO 2100","topside control","heater tube","flow switch","pressure switch","temperature sensor","high-limit sensor"],
+      models:["Balboa BP/VS/GS/GL spa pack","Balboa spaTouch","Balboa TP500/TP600/TP800/TP900 topside","Gecko Y series","Gecko in.ye","Gecko in.yt","Gecko in.xe","Gecko in.touch","Waterway NEO 1100","Waterway NEO 1500","Waterway NEO 2100","Watkins/Hot Spring IQ-style controller","Jacuzzi/Sundance proprietary control","topside control","heater tube","flow switch","pressure switch","temperature sensor","high-limit sensor"],
       codes:[
+        { code:"SPA-NO-POWER", name:"Spa Has No Power / Dead Topside",
+          causes:["Breaker off or tripped","GFCI not reset","Service disconnect off","Pack fuse or transformer fault","Topside cable or controller issue","Line-voltage problem"],
+          fix:["Confirm the customer has not left the service disconnect or breaker off","Document whether the GFCI will reset and whether the topside is fully blank","Check for visible water intrusion at topside/pack only from outside the electrical boundary","Capture pack model, topside model, breaker rating, and recent storm/service context","Line-voltage, fuse, transformer, and board checks require qualified service"],
+          severity:"high", callpro:true },
         { code:"SPA-FLO-FLOW", name:"Spa Flow / Pressure Error",
           causes:["Dirty or collapsed filter cartridge","Air lock after refill","Low water level","Closed slice valve or blocked suction","Flow or pressure switch out of adjustment","Circulation pump not moving water"],
           fix:["Check water level and open all valves before judging the pack","Remove and clean the filter as a quick flow proof check","Purge air from the pump/heater loop using the manufacturer procedure","Confirm the circ pump actually runs and moves water","Capture pack label, display code, filter photo, and pump/valve context before replacing a switch"],
@@ -1356,11 +1360,27 @@ window.ERROR_DB.spa_hot_tub = {
         { code:"SPA-GFCI-TRIP", name:"Spa Breaker / GFCI Trips",
           causes:["Heater element ground fault","Pump or blower fault","Water intrusion in pack or topside","Ozone/UV accessory fault","Incorrect wiring or wet connection"],
           fix:["Do not bypass a GFCI","Document when it trips: immediately, heat call, pump start, blower, or light","Disconnect accessory loads only if qualified and following the manual","Keep water-intrusion photos for the proof packet","Electrical fault isolation requires qualified service"],
-          severity:"high", callpro:true }
+          severity:"high", callpro:true },
+        { code:"SPA-GFCI-IMMEDIATE", name:"Breaker Trips Immediately On Reset",
+          causes:["Line-side wiring or breaker issue","Water intrusion in control box","Shorted load still connected","Incorrect neutral routing","Failed GFCI device"],
+          fix:["Do not keep resetting the breaker","Record whether the trip is instant with no button press or only after equipment starts","Capture breaker/GFCI model, spa pack label, and visible moisture evidence","Keep all electrical compartment work inside qualified service boundaries","Escalate before replacing random loads"],
+          severity:"high", callpro:true },
+        { code:"SPA-GFCI-HEAT-CALL", name:"Breaker Trips When Heat Is Called",
+          causes:["Heater element leakage to ground","Heater relay/board fault","Wet heater terminals","Flow issue causing unsafe heat state","Incorrect voltage or bonding issue"],
+          fix:["Stop using heat until verified","Confirm whether pumps run without heat if the manual permits that observation","Capture exact trip timing, heater tube label, display code, and water condition","Heater isolation and resistance/leakage testing require qualified service","Do not bypass the heater, GFCI, or safety controls"],
+          severity:"high", callpro:true },
+        { code:"SPA-APP-OFFLINE", name:"Spa App Or Wi-Fi Module Offline",
+          causes:["Home Wi-Fi changed","Module not linked to pack","Cloud/app outage","Weak signal at spa cabinet","Firmware or account issue","Controller communication fault"],
+          fix:["Separate local topside control from cloud/app control","Capture app error screen, module label, router distance, and pack model","Power-cycle only per manufacturer guidance","Verify account/device ownership before re-pairing","If topside works but app does not, avoid calling a pack failure too early"],
+          severity:"medium", callpro:false },
+        { code:"SPA-AUX-KEYPAD-DEAD", name:"Auxiliary Keypad / Swim Control Not Responding",
+          causes:["Aux keypad locked or disabled","Cable unplugged or wet","Seat-side button failed","Controller setting not assigned","Low-voltage communication fault"],
+          fix:["Confirm the main topside works first","Capture auxiliary keypad type, location, and whether one zone or all controls fail","Check owner lockout/settings screens before parts","Look for visible water intrusion or physical damage","Internal keypad wiring and controller testing require qualified service"],
+          severity:"medium", callpro:true }
       ]
     },
     "Spa Plumbing / Jets / Pumps": {
-      models:["hot tub plumbing","swim spa plumbing","jet pump","circulation pump","jet body","air control","diverter valve","slice valve","suction fitting","spa filter cartridge"],
+      models:["hot tub plumbing","swim spa plumbing","Master Spas H2X","Endless Pools fitness system","Hydropool swim spa","PDC TruSwim / Summit","Artesian TidalFit","Bullfrog spa","Jacuzzi spa","Sundance spa","Hot Spring / Caldera","Marquis","Coast Spas","Arctic Spas","Wellis","jet pump","swim current pump","circulation pump","pump capacitor","jet body","air control","blower","diverter valve","manifold","slice valve","suction fitting","VGB suction cover","spa filter cartridge"],
       codes:[
         { code:"SPA-JET-LOW-FLOW", name:"Spa Jets Weak Or Uneven",
           causes:["Filter dirty","Air control closed or leaking","Jet insert clogged","Pump air lock","Slice valve partly closed"],
@@ -1370,6 +1390,14 @@ window.ERROR_DB.spa_hot_tub = {
           causes:["Pump seized","Capacitor failed","Impeller jammed","Voltage issue","Air-locked wet end"],
           fix:["Stop repeated start attempts to avoid motor damage","Confirm water level, valves, and prime first","Listen for hum vs. rotation and capture a short note","Electrical/capacitor checks require qualified service","Document pump label, voltage, wet-end model, and symptom timing"],
           severity:"high", callpro:true },
+        { code:"SPA-PUMP-ONE-ZONE-DEAD", name:"One Pump Or Jet Bank Dead",
+          causes:["One pump disabled by mode/settings","Slice valve closed on one loop","Air lock on one wet end","Failed pump capacitor or motor","Auxiliary keypad/relay assignment issue"],
+          fix:["Compare each pump/jet button and record which zone responds","Verify visible slice valves and diverters are open","Remove/clean filters and re-test flow where safe","Capture pump labels and which seat/zone is affected","Relay, capacitor, motor, and controller checks require qualified service"],
+          severity:"high", callpro:true },
+        { code:"SPA-BLOWER-NO-AIR", name:"Spa Blower Runs But No Air",
+          causes:["Air line blocked or waterlogged","Check valve failed","Blower weak","Manifold restriction","Air control or plumbing leak"],
+          fix:["Confirm blower sound and affected air ports","Check visible air controls and water in clear tubing if present","Capture blower label, check-valve direction, and whether water reached the blower","Do not open energized blower wiring without qualified service","Replace wet check valves before water damages equipment"],
+          severity:"medium", callpro:true },
         { code:"SPA-AIR-CONTROL", name:"Air Controls Not Pulling Air",
           causes:["Air control closed or stuck","Air line waterlogged","Jet insert blocked","Venturi path restricted","Blower not running where equipped"],
           fix:["Open each air control and compare jet response","Remove and clean suspect jet inserts","Check if only one seat/zone is affected","Inspect visible air control cap and line routing","Escalate if water intrusion or blower electrical issue is suspected"],
@@ -1381,6 +1409,10 @@ window.ERROR_DB.spa_hot_tub = {
         { code:"SPA-FILTER-COLLAPSE", name:"Spa Filter Collapses Or Closes Up",
           causes:["Filter past service life","Pump suction too high for dirty cartridge","Wrong filter size","Chemical damage to media","Bypass/standpipe issue"],
           fix:["Replace damaged cartridges rather than cleaning them again","Verify exact filter dimensions and part number","Check whether issue improves with filter removed only as a short diagnostic","Document pump speed/flow mode and filter proof","Review water chemistry if cartridges are failing early"],
+          severity:"medium", callpro:false },
+        { code:"SPA-SUCTION-VGB", name:"Suction Cover / Intake Restriction Concern",
+          causes:["Debris on suction cover","Cracked or missing cover","Wrong replacement cover","Hair/string at intake","Pump pulling from one restricted suction"],
+          fix:["Stop operation if a suction cover is cracked, missing, or unsecured","Photograph cover model/marking and installation condition","Clear visible debris only when pump is off","Verify replacement cover rating and fit against current documentation","Treat commercial/public spa suction issues as qualified safety work"],
           severity:"medium", callpro:false }
       ]
     },
@@ -1403,6 +1435,10 @@ window.ERROR_DB.spa_hot_tub = {
           causes:["Injector not pulling air","Check valve failed","Ozone tubing blocked or wet","UV lamp aged out","Flow too low through treatment loop"],
           fix:["Check for visible air draw only when the system should be active","Replace wet or failed check valves before water reaches the unit","Capture module label, tubing route, and flow context","Follow lamp replacement intervals for UV/AOP","Do not open energized ozone/UV equipment without qualified service"],
           severity:"medium", callpro:false },
+        { code:"SPA-SALT-MINERAL-FEEDER", name:"Spa Salt / Mineral / Bromine Feeder Not Maintaining Residual",
+          causes:["Cartridge depleted or expired","Flow path blocked","Water age/TDS high","Salt or bromine level outside range","Cell or feeder scaled","High bather load"],
+          fix:["Verify sanitizer with a manual test before trusting the feeder","Capture feeder model, cartridge date, salt/bromine reading, and water age","Clean only per manufacturer directions","Reset water with drain/refill when age or TDS is the root issue","Do not mix incompatible sanitizer systems without a full conversion process"],
+          severity:"medium", callpro:false },
         { code:"SPA-SMALL-VOLUME-DOSE", name:"Small-Volume Chemical Dose Risk",
           causes:["Residential pool dosage applied to spa volume","Gallons estimated too high","Chemical added before full circulation","High temperature accelerates reactions","Multiple products added too close together"],
           fix:["Confirm actual spa gallons before dosing","Use small increments and retest after circulation","Separate incompatible chemical additions per label","Save readings and dose math in the proof note","Drain/refill may be safer than chasing badly aged water"],
@@ -1410,7 +1446,7 @@ window.ERROR_DB.spa_hot_tub = {
       ]
     },
     "Spa Heat / Swim Spa / Covers": {
-      models:["spa heater tube","heat pump spa","swim spa","swim jet pump","spa cover","cover lifter","cover pump","vacation-range spa","commercial/hospitality spa"],
+      models:["spa heater tube","spa heat pump","cold plunge/spa heat-cool unit","swim spa","swim current pump","swim jet pump","endless current system","spa cover","cover lifter","cover pump","vacation-range spa","commercial/hospitality spa"],
       codes:[
         { code:"SPA-NO-HEAT", name:"Spa Not Heating",
           causes:["Flow switch open due to dirty filter","Heater relay or element fault","Temperature sensor issue","Spa pack in economy/sleep mode","Breaker/GFCI issue"],
@@ -1420,14 +1456,43 @@ window.ERROR_DB.spa_hot_tub = {
           causes:["Filters restricted","Swim jet pump not reaching speed","Diverter or gate valve partly closed","Jet nozzles misaligned","Debris in suction or impeller"],
           fix:["Clean filters and verify all swim-jet valves are open","Capture pump label, active mode, and affected zone","Check suction covers and visible debris safely","Compare each jet bank instead of guessing one part","Escalate electrical/drive faults to qualified service"],
           severity:"medium", callpro:false },
+        { code:"SPA-CURRENT-SURGE", name:"Swim Current Surges Or Feels Uneven",
+          causes:["Air being pulled into swim pump","Water level low","Filter or suction restriction","Diverter/current setting changed","Variable-speed/current controller issue"],
+          fix:["Verify water level and filter condition first","Compare current at multiple speed settings","Capture active mode, pump label, suction cover condition, and valve positions","Check for air bubbles or cavitation sound","Controller/drive diagnostics require qualified service or dealer support"],
+          severity:"medium", callpro:false },
+        { code:"SPA-HEAT-LOSS-OVERNIGHT", name:"Spa Or Swim Spa Loses Heat Overnight",
+          causes:["Cover waterlogged or poor seal","Economy/sleep mode active","Heat pump ambient limits","High wind exposure","Heater undersized for swim spa volume","Circulation schedule too short"],
+          fix:["Confirm mode, setpoint, and actual water temperature with a thermometer","Inspect cover weight, seal, hinge, and standing water","Capture outdoor temperature/wind context and heat source type","Check for flow errors before blaming the heater","Use utility/time data carefully; avoid guaranteeing operating cost"],
+          severity:"medium", callpro:false },
         { code:"SPA-COVER-WATERLOGGED", name:"Spa Cover Heavy / Waterlogged",
           causes:["Cover foam saturated","Vapor barrier failed","Sagging cover holds rain/snow","Hinge seam failed","Cover lifter stress"],
           fix:["Do not overload the lifter with a saturated cover","Document cover age, seam condition, water load, and heat loss complaint","Recommend replacement when foam is saturated","Use a cover pump only for standing water, not failed foam","Check cover fit before blaming heater runtime"],
+          severity:"low", callpro:false },
+        { code:"SPA-COVER-LIFTER-BIND", name:"Cover Lifter Binding Or Pulling Cover Crooked",
+          causes:["Waterlogged cover too heavy","Mounting brackets loose","Cabinet panels flexing","Wrong lifter for cover size","Hinge seam failing"],
+          fix:["Do not force the lifter with a saturated cover","Capture lifter model, bracket attachment, cover dimensions, and hinge condition","Check cabinet mounting surface before selling a replacement lifter","Recommend cover replacement when foam saturation is the root cause","Warn customer that forced lifters can damage cabinets and seams"],
           severity:"low", callpro:false },
         { code:"SPA-HOSPITALITY-RESET", name:"High-Use Spa Needs Reset Workflow",
           causes:["Commercial/vacation rental bather load","Drain interval too long","Filters undersized for use","Sanitizer reserve cannot recover","Guest turnover without purge history"],
           fix:["Capture water readings, usage context, and last drain/purge date","Use a purge-drain-refill-reset workflow when chemistry is unrecoverable","Check filters and sanitizer delivery before reopening","Keep customer-safe notes focused on operation and safety, not blame","Follow local code and operator rules for public/commercial spas"],
           severity:"high", callpro:true }
+      ]
+    },
+    "Spa Lights / Audio / Accessories": {
+      models:["spa LED light","light lens","waterfall valve","audio system","Bluetooth module","speaker", "subwoofer", "Wi-Fi module", "remote keypad", "stereo power supply"],
+      codes:[
+        { code:"SPA-LIGHT-OUT", name:"Spa Light Out / Wrong Color",
+          causes:["LED module failed","Water in lens or harness","Controller assignment issue","Low-voltage supply fault","Color-sync mode mismatch"],
+          fix:["Capture light location, lens style, controller mode, and whether one light or all lights fail","Check owner color/lock mode before parts","Look for water intrusion evidence","Do not splice underwater/low-voltage harnesses outside approved procedures","Electrical supply and pack outputs require qualified service"],
+          severity:"medium", callpro:true },
+        { code:"SPA-AUDIO-DEAD", name:"Spa Audio / Bluetooth Not Working",
+          causes:["Pairing limit or wrong source","Wet speaker or amplifier","Accessory fuse/power issue","Antenna or module disconnected","Controller audio setting disabled"],
+          fix:["Verify source/pairing and volume before hardware assumptions","Capture audio module/stereo label and whether speakers crackle, hum, or stay silent","Look for water intrusion around speakers and cabinet electronics","Keep audio separated from core spa operation in customer notes","Internal accessory power checks require qualified service"],
+          severity:"low", callpro:true },
+        { code:"SPA-WATERFALL-LOW", name:"Waterfall Or Feature Flow Low",
+          causes:["Feature valve closed","Jet pump speed low","Debris in waterfall line","Air lock after refill","Scale in feature outlet"],
+          fix:["Open the feature valve and compare flow at different pump speeds","Check whether other jets on the same pump are strong","Capture feature outlet, valve position, and pump mode","Flush only per manufacturer guidance","Do not force brittle feature valves or fittings"],
+          severity:"low", callpro:false }
       ]
     }
   }

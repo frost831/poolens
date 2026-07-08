@@ -169,9 +169,9 @@ window.SPLASHLENS_TECH_RADAR = {
     {
       name: "Hot Tubs / Spas",
       status: "Live spa lane",
-      examples: ["Balboa spa packs", "Gecko in.ye / in.yt / in.xe", "Waterway NEO 1100 / 1500 / 2100", "FROG hot tub systems", "spa jet plumbing", "swim spas", "Platinum Spas Vacation range", "ozone / UV spa systems", "pipe and jet cleanser", "spa covers"],
-      proof: ["spa pack label", "display code", "filter condition", "flow or pressure-switch context", "heater tube or sensor proof", "jet body", "sanitizer cartridge", "ozone/UV module", "manual water test", "drain/purge history", "cover condition"],
-      fieldFlags: ["flow/pressure error", "dry heater", "high limit", "sensor sync", "GFCI trip", "weak jets", "biofilm flush", "no heat", "rapid pH drift", "foaming", "sanitizer depletion", "cover waterlogged"]
+      examples: ["Balboa BP/VS/GS/GL and TP/spaTouch systems", "Gecko Y/XE/YT/in.touch", "Waterway NEO 1100 / 1500 / 2100", "Watkins / Hot Spring / Caldera controls", "Jacuzzi / Sundance controls", "Master Spas H2X", "Endless Pools fitness systems", "Hydropool swim spas", "PDC TruSwim / Summit", "Artesian TidalFit", "Bullfrog", "Marquis", "Coast", "Arctic", "Wellis", "FROG hot tub systems", "spa jet plumbing", "swim current pumps", "ozone / UV spa systems", "pipe and jet cleanser", "spa covers and lifters"],
+      proof: ["spa pack label", "topside display code", "filter condition", "flow or pressure-switch context", "heater tube or sensor proof", "pump wet-end and motor label", "jet body or manifold proof", "suction cover marking", "sanitizer cartridge", "ozone/UV module and check valve", "manual water test", "drain/purge history", "cover/lifter condition", "GFCI trip timing"],
+      fieldFlags: ["no power", "flow/pressure error", "dry heater", "high limit", "sensor sync", "GFCI trips immediately", "GFCI trips on heat call", "one pump or jet bank dead", "weak swim current", "app offline", "aux keypad dead", "biofilm flush", "no heat", "heat loss overnight", "rapid pH drift", "foaming", "sanitizer depletion", "cover waterlogged", "audio/light accessory dead"]
     }
   ]
 };

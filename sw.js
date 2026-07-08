@@ -1,4 +1,4 @@
-const CACHE = 'splashlens-v17-partsnap-frontdoor';
+const CACHE = 'splashlens-v18-spa-swim-spa-corpus';
 const ASSETS = ['/', '/index.html', '/js/errors.js', '/js/data.js', '/js/app.js?v=20260708-partsnap-frontdoor', '/favicon.svg', '/manifest.json'];
 
 self.addEventListener('install', e => {
