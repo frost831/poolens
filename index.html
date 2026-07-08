@@ -163,6 +163,10 @@
     .partsnap-step { background:#f0fdfa; border:1px solid #ccfbf1; border-radius:9px; padding:8px; min-height:68px; text-align:left; display:flex; flex-direction:column; justify-content:space-between; }
     .partsnap-step b { display:block; color:#0f766e; font-size:12px; font-weight:950; line-height:1.1; }
     .partsnap-step span { display:block; color:#64748b; font-size:10px; font-weight:800; margin-top:5px; line-height:1.2; }
+    .field-lane-strip { display:grid; grid-template-columns:repeat(3,1fr); gap:7px; margin-bottom:12px; }
+    .field-lane-chip { min-height:58px; background:#ffffff; border:1px solid #d8e3ea; border-radius:9px; padding:8px; text-align:left; cursor:pointer; box-shadow:var(--field-shadow-tight); }
+    .field-lane-chip strong { display:block; color:#075985; font-size:11px; font-weight:950; line-height:1.1; margin-bottom:3px; }
+    .field-lane-chip span { display:block; color:#64748b; font-size:9.8px; font-weight:800; line-height:1.2; }
     .rescue-strip { display: grid; grid-template-columns: repeat(3,1fr); gap: 6px; margin-bottom: 12px; }
     .rescue-chip { background: #ffffff; border: 1px solid #bae6fd; border-radius: 9px; padding: 8px 6px; text-align: center; }
     .rescue-chip strong { display: block; color: #0369a1; font-size: 14px; font-weight: 900; line-height: 1; }
@@ -179,7 +183,7 @@
     .tech-radar-tile span { display:block; color:#64748b; font-size:10.5px; font-weight:700; line-height:1.28; }
     @media (max-width: 360px) {
       .rescue-actions { grid-template-columns: 1fr; }
-      .rescue-strip, .tech-radar-grid { grid-template-columns: 1fr; }
+      .rescue-strip, .tech-radar-grid, .field-lane-strip { grid-template-columns: 1fr; }
       .field-workflow, .partsnap-steps { grid-template-columns:repeat(5,86px); }
       .nav-btn span { font-size: 9px; letter-spacing: 0; }
     }
@@ -336,6 +340,7 @@
       .field-workflow { grid-template-columns:1fr 1fr; overflow:visible; }
       .workflow-chip { min-height:86px; }
       .workflow-chip:last-child { grid-column:1 / -1; min-height:70px; }
+      .field-lane-strip { grid-template-columns:1fr 1fr; }
       .partsnap-steps { grid-template-columns:1fr 1fr; overflow:visible; }
       .partsnap-step:last-child { grid-column:1 / -1; min-height:58px; }
     }
@@ -349,17 +354,17 @@
       <div class="marketing-nav-actions">
         <button type="button" class="marketing-link" onclick="enterSplashLensApp('scan','parts')">PartSnap</button>
         <button type="button" class="marketing-link" onclick="enterSplashLensApp('errors')">Codes</button>
-        <button type="button" class="marketing-open" onclick="enterSplashLensApp('errors')">Open Tools</button>
+        <button type="button" class="marketing-open" onclick="enterSplashLensApp('scan','parts')">PartSnap</button>
       </div>
     </nav>
 
     <div class="marketing-hero">
       <div class="marketing-copy">
-        <h1>Get off the pad faster.</h1>
-        <p>SplashLens helps pool techs identify mystery parts, look up equipment codes, capture proof, dictate notes, and build a cleaner senior-tech or vendor packet before the stop eats the whole afternoon.</p>
+        <h1>Photo the part. Prove the path.</h1>
+        <p>PartSnap helps pool techs turn weird parts, labels, and equipment clues into possible matches, missing proof, callback risk, and a cleaner senior-tech or vendor packet before anyone orders blind.</p>
         <div class="marketing-actions">
-          <button type="button" class="marketing-primary" onclick="enterSplashLensApp('errors')">Open Field Tools</button>
-          <button type="button" class="marketing-secondary" onclick="enterSplashLensApp('scan','parts')">Try PartSnap</button>
+          <button type="button" class="marketing-primary" onclick="enterSplashLensApp('scan','parts')">Try PartSnap</button>
+          <button type="button" class="marketing-secondary" onclick="enterSplashLensApp('errors')">Open Field Tools</button>
           <button type="button" class="marketing-secondary" onclick="enterSplashLensApp('errors','search')">Look Up Codes</button>
         </div>
         <div class="marketing-proof">
@@ -442,9 +447,9 @@
     <div id="tab-errors" class="tab-panel active" style="padding:14px;">
 
       <section class="rescue-hero">
-        <p class="rescue-kicker">SplashLens field rescue - parts, codes, proof</p>
-        <h1 class="rescue-title">Find the part. Fix the stop.</h1>
-        <p class="rescue-sub">Tap the next job. No digging, no long read.</p>
+        <p class="rescue-kicker">PartSnap first - proof before ordering</p>
+        <h1 class="rescue-title">Find the part. Prove the path.</h1>
+        <p class="rescue-sub">Photo it, verify it, packet it, then move.</p>
         <div class="field-workflow" aria-label="Fast field workflow">
           <button type="button" class="workflow-chip partsnap" onclick="showTab('scan');setTimeout(()=>setScanMode('parts'),80)">
             <span class="workflow-num">1</span>
@@ -485,6 +490,15 @@
           <div class="partsnap-step"><b>5. Packet</b><span>senior / vendor</span></div>
         </div>
       </section>
+
+      <div class="field-lane-strip" aria-label="Fast troubleshooting lanes">
+        <button type="button" class="field-lane-chip" onclick="selectBrand('spa_hot_tub')"><strong>Spa Packs</strong><span>Balboa, Gecko, Waterway, flow proof.</span></button>
+        <button type="button" class="field-lane-chip" onclick="selectBrand('robots_expanded')"><strong>Robots</strong><span>Dolphin, Aiper, Polaris, Beatbot, WYBOT.</span></button>
+        <button type="button" class="field-lane-chip" onclick="showTab('route')"><strong>Automation</strong><span>Omni, IntelliCenter, iAquaLink, relays.</span></button>
+        <button type="button" class="field-lane-chip" onclick="focusErrorSearch('light')"><strong>Lights</strong><span>ColorLogic, IntelliBrite, GFCI, niches.</span></button>
+        <button type="button" class="field-lane-chip" onclick="focusErrorSearch('salt')"><strong>Salt</strong><span>Cells, flow sensors, comms, scaling.</span></button>
+        <button type="button" class="field-lane-chip" onclick="focusErrorSearch('controller')"><strong>Chem Feed</strong><span>ORP, pH, AOP, ozone, feeders.</span></button>
+      </div>
 
       <div class="rescue-strip" aria-label="SplashLens field tools">
         <div class="rescue-chip"><strong>260+</strong><span>Current entries</span></div>
@@ -1075,7 +1089,7 @@
 
   <script src="js/errors.js"></script>
   <script src="js/data.js"></script>
-  <script src="js/app.js?v=20260707-all7"></script>
+  <script src="js/app.js?v=20260708-partsnap-frontdoor"></script>
   <script src="js/analytics.js"></script>
   <script>
     if ('serviceWorker' in navigator) {

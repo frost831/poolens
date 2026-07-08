@@ -290,9 +290,14 @@ function enterSplashLensApp(tab = 'errors', mode) {
 }
 
 function initDeepLink() {
-  const tab = new URLSearchParams(window.location.search).get('tab');
+  const params = new URLSearchParams(window.location.search);
+  const tab = params.get('tab');
+  const mode = params.get('mode');
   const allowed = new Set(['errors', 'dosing', 'report', 'guide', 'pools', 'scan', 'volume', 'sand', 'route']);
-  if (tab && allowed.has(tab)) showTab(tab);
+  if (tab && allowed.has(tab)) {
+    showTab(tab);
+    if (tab === 'scan' && mode) setTimeout(() => setScanMode(mode), 120);
+  }
 }
 
 // ═══════════════════════════════════════════
@@ -589,11 +594,17 @@ function focusVolumeInput() {
   }, 80);
 }
 
-function focusErrorSearch() {
+function focusErrorSearch(query = '') {
   showTab('errors');
   setTimeout(() => {
     const el = document.getElementById('error-search');
     if (!el) return;
+    if (query) {
+      el.value = query;
+      onErrorSearch(query);
+      const clear = document.getElementById('search-clear');
+      if (clear) clear.style.display = 'block';
+    }
     el.focus();
     el.select();
     el.scrollIntoView({ behavior: 'auto', block: 'center' });
@@ -5090,6 +5101,7 @@ function renderPartsSnapResult(ai, result, status) {
       ` : ''}
       ${replacementNotes ? `<p style="color:#fbbf24;font-size:12px;font-weight:600;margin-bottom:10px;">⚠ ${replacementNotes}</p>` : ''}
       ${verificationNotes ? `<p style="color:#fbbf24;font-size:12px;font-weight:600;margin-bottom:10px;">Check: ${verificationNotes}</p>` : ''}
+      ${renderPartSnapProofSnapshot(ladder, risk, visibleEvidence, missingProof)}
       ${renderPartConfidenceLadder(ladder)}
       ${renderPartEvidencePanel(visibleEvidence, missingProof)}
       ${renderPartSnapCallbackRisk(risk)}
@@ -5119,6 +5131,35 @@ function renderPartsSnapResult(ai, result, status) {
     </div>
     <div id="partsnap-feedback-panel"></div>
   `;
+}
+
+function renderPartSnapProofSnapshot(ladder = {}, risk = {}, visibleEvidence = [], missingProof = []) {
+  const proofCount = visibleEvidence.length;
+  const missingCount = missingProof.length || (ladder.missing || []).length;
+  const packetState = missingCount ? 'Needs proof' : 'Packet ready';
+  return `
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin:10px 0;">
+      <div style="background:#ecfeff;border:1px solid #67e8f9;border-radius:8px;padding:9px;">
+        <p style="color:#0e7490;font-size:9px;font-weight:950;text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px;">Proof</p>
+        <p style="color:#0f172a;font-size:15px;font-weight:950;line-height:1;">${proofCount}</p>
+        <p style="color:#475569;font-size:10px;font-weight:800;margin-top:3px;">captured</p>
+      </div>
+      <div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;padding:9px;">
+        <p style="color:#92400e;font-size:9px;font-weight:950;text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px;">Missing</p>
+        <p style="color:#0f172a;font-size:15px;font-weight:950;line-height:1;">${missingCount}</p>
+        <p style="color:#92400e;font-size:10px;font-weight:800;margin-top:3px;">before order</p>
+      </div>
+      <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:9px;">
+        <p style="color:#991b1b;font-size:9px;font-weight:950;text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px;">Risk</p>
+        <p style="color:${risk.color || '#d97706'};font-size:15px;font-weight:950;line-height:1;">${escHtml(risk.level || 'hold')}</p>
+        <p style="color:#7f1d1d;font-size:10px;font-weight:800;margin-top:3px;">callback flag</p>
+      </div>
+      <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:9px;">
+        <p style="color:#166534;font-size:9px;font-weight:950;text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px;">Packet</p>
+        <p style="color:#0f172a;font-size:13px;font-weight:950;line-height:1.05;">${packetState}</p>
+        <p style="color:#166534;font-size:10px;font-weight:800;margin-top:3px;">senior/vendor</p>
+      </div>
+    </div>`;
 }
 
 function renderPartEvidencePanel(visibleEvidence, missingProof) {

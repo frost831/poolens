@@ -1,5 +1,5 @@
-const CACHE = 'splashlens-v16-store-dashboard-source-pages';
-const ASSETS = ['/', '/index.html', '/js/errors.js', '/js/data.js', '/js/app.js?v=20260707-all7', '/favicon.svg', '/manifest.json'];
+const CACHE = 'splashlens-v17-partsnap-frontdoor';
+const ASSETS = ['/', '/index.html', '/js/errors.js', '/js/data.js', '/js/app.js?v=20260708-partsnap-frontdoor', '/favicon.svg', '/manifest.json'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)));
