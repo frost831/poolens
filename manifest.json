@@ -1,7 +1,7 @@
 {
   "name": "SplashLens Field Reference",
   "short_name": "SplashLens",
-  "description": "Free pool service field reference app with PartSnap part identification assistance, Connected Pool Brain troubleshooting, robot cleaner references, equipment-code lookup, dosing calculators, voice notes, route tools, SLAM tracker, and checklists. Manual tools work offline.",
+  "description": "Free pool service field reference app with PartSnap part identification assistance, Connected Pool Network troubleshooting, robot cleaner references, equipment-code lookup, dosing calculators, voice notes, route tools, SLAM tracker, and checklists. Manual tools work offline.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#f0f9ff",
@@ -32,7 +32,7 @@
       "description": "Reference assistance for pool parts, labels, and error displays"
     },
     {
-      "name": "Connected Pool Brain",
+      "name": "Connected Pool Network",
       "url": "/?tab=route",
       "description": "Proof-first troubleshooting for robots, automation, lighting, covers, and controllers"
     }

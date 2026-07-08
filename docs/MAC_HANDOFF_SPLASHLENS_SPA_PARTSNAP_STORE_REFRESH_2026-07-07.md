@@ -23,10 +23,10 @@ Date: 2026-07-07
 
 Capture these from the real native shell, not desktop web:
 
-1. Field rescue home showing PartSnap + Connected Pool Brain.
+1. Field rescue home showing PartSnap + Connected Pool Network.
 2. PartSnap result with Proof Packet Drawer open.
 3. Spa Pack Lane / hot tub troubleshooting results.
-4. Connected Pool Brain or Route Brain proof workflow.
+4. Connected Pool Network or Route Brain proof workflow.
 5. Service Proof Passport / senior-tech packet workflow.
 
 ## Reviewer Path

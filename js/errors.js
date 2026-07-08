@@ -1250,7 +1250,7 @@ window.ERROR_DB.robots_expanded = {
 };
 
 window.ERROR_DB.connected_pool_brain = {
-  label:"Connected Pool Brain",
+  label:"Connected Pool Network",
   color:"#2563eb",
   categories:{
     "Automation / Smart Backyard": {

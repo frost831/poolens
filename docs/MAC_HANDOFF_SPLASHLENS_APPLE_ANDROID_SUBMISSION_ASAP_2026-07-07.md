@@ -60,11 +60,11 @@ These markers are already live on `https://app.splashlens.com`:
 
 Capture from the real iOS wrapper, not desktop browser screenshots:
 
-1. Field rescue home showing PartSnap + Connected Pool Brain.
+1. Field rescue home showing PartSnap + Connected Pool Network.
 2. PartSnap mode / possible part workflow.
 3. PartSnap proof packet drawer open.
 4. Spa Pack Lane / hot tub troubleshooting result.
-5. Connected Pool Brain or Route Brain proof workflow.
+5. Connected Pool Network or Route Brain proof workflow.
 
 ### iOS Reviewer Path
 
@@ -131,7 +131,7 @@ Capture from the real Android TWA build:
 2. PartSnap Proof / scanner mode.
 3. Proof packet drawer open.
 4. Spa Pack Lane.
-5. Connected Pool Brain / Route Brain.
+5. Connected Pool Network / Route Brain.
 
 Google Play feature graphic: use clean SplashLens branding, not a fake device screenshot with unreadable text.
 

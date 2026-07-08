@@ -10,7 +10,7 @@ Pool and spa field reference
 
 ## Positioning
 
-SplashLens helps pool and spa service techs move faster at the equipment pad with PartSnap part-identification assistance, equipment/error-code lookup, Connected Pool Brain, spa/hot tub proof checklists, robot cleaner references, dosing calculators, voice notes, and service proof workflows.
+SplashLens helps pool and spa service techs move faster at the equipment pad with PartSnap part-identification assistance, equipment/error-code lookup, Connected Pool Network, spa/hot tub proof checklists, robot cleaner references, dosing calculators, voice notes, and service proof workflows.
 
 It is a reference and documentation tool. It does not replace current manuals, qualified service judgment, manufacturer guidance, electrical/gas safety boundaries, or code requirements.
 
@@ -38,7 +38,7 @@ SplashLens does not diagnose equipment, guarantee part fit, replace official man
 
 ## Apple Promotional Text Draft
 
-New: expanded spa/hot tub lane, PartSnap proof packet drawer, and Connected Pool Brain coverage for robots, automation, lights, salt, and chemical controllers.
+New: expanded spa/hot tub lane, PartSnap proof packet drawer, and Connected Pool Network coverage for robots, automation, lights, salt, and chemical controllers.
 
 ## Apple Description Draft
 

@@ -2828,7 +2828,7 @@ function renderPoolFieldIntelligence(pool) {
         <button onclick="printPoolPacket('${pool.id}')" style="background:#f8fafc;color:#0369a1;border:1px solid #bae6fd;border-radius:9px;padding:10px;font-size:12px;font-weight:900;cursor:pointer;">Print / PDF</button>
       </div>
       <div id="next-visit-form-${pool.id}"></div>
-      <p style="color:#94a3b8;font-size:10px;line-height:1.35;margin-top:8px;">This is not a CRM replacement. Use this packet to feed Jobber, Skimmer, Pool Brain, QuickBooks, a dispatcher, or a senior tech.</p>
+      <p style="color:#94a3b8;font-size:10px;line-height:1.35;margin-top:8px;">This is not a CRM replacement. Use this packet to feed your service CRM, accounting notes, a dispatcher, or a senior tech.</p>
     </section>`;
 }
 
@@ -3029,7 +3029,7 @@ function buildPoolCRMPacket(pool) {
     ...(equipment.length ? equipment.slice(-10).reverse().map(item => `- ${[item.manufacturer, item.hardware, item.model].filter(Boolean).join(' / ') || 'Unknown equipment'}${item.symptom ? `: ${item.symptom}` : ''}${item.confidence ? ` (${item.confidence})` : ''}`) : ['- None saved yet']),
     '',
     pool.notes ? `Site notes: ${pool.notes}` : '',
-    'Use this as a field packet for Jobber, Skimmer, Pool Brain, QuickBooks, office notes, a senior tech, or a vendor counter.',
+    'Use this as a field packet for your service CRM, accounting notes, office notes, a senior tech, or a vendor counter.',
     'SplashLens is a reference aid. Verify with model numbers, manuals, qualified tech judgment, and manufacturer guidance before ordering parts or diagnosing.',
   ];
   return lines.filter(line => line !== '').join('\n');
@@ -3522,7 +3522,7 @@ function renderTechRadarPanel() {
   return `
     <section class="brain-card dark" aria-label="New Tech Radar">
       <p style="color:#7dd3fc;font-size:10px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;margin-bottom:4px;">New Tech Radar</p>
-      <h2 style="font-size:21px;line-height:1.06;font-weight:950;margin:0 0 6px;color:#fff;">PartSnap + Connected Pool Brain</h2>
+      <h2 style="font-size:21px;line-height:1.06;font-weight:950;margin:0 0 6px;color:#fff;">PartSnap + Connected Pool Network</h2>
       <p style="color:#cbd5e1;font-size:12px;line-height:1.45;">Track the fast-moving stuff: robots, smart automation, lights, heat pumps, covers, sensors, feeders, and chemical controllers. Use it to capture proof, spot callback risk, and build safer escalation packets.</p>
       <div class="brain-grid" style="margin-top:10px;">
         <span class="brain-pill ready" style="justify-content:center;">Daily data adds</span>

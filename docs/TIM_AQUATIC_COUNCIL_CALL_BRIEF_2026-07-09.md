@@ -19,7 +19,7 @@ SplashLens is my attempt to bridge that gap: help a tech identify, verify, docum
 3. Tap `PartSnap Proof`.
 4. Explain possible match, proof drawer, callback risk, and senior/vendor packet.
 5. Show `Spa Pack Lane`.
-6. Show Connected Pool Brain / Route Brain.
+6. Show Connected Pool Network / Route Brain.
 7. End with the training angle: short field lessons, proof-first checklists, senior tech review, and partner-verified cards.
 
 ## Positioning

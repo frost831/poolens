@@ -125,7 +125,7 @@ window.SPLASHLENS_TECH_RADAR = {
       fieldFlags: ["no power", "will not climb", "Wi-Fi pairing failure", "HydroComm/app offline", "water intrusion", "short runtime", "navigation/mapping miss", "AI vision miss", "demo unit missing dock/accessory"]
     },
     {
-      name: "Connected Pool Brain",
+      name: "Connected Pool Network",
       status: "Live reference layer",
       examples: ["Pentair IntelliCenter", "Hayward Omni", "Jandy iAquaLink", "CCEI Vigipool", "CCEI Tild VP", "CCEI Antea VS", "RS-485 pumps", "valve actuators", "smart heaters", "lighting relays", "automatic covers"],
       proof: ["controller model", "firmware/app screen", "relay label", "RS-485 wiring photo", "device assignment screen", "breaker/GFCI behavior"],
