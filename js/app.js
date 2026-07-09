@@ -4919,6 +4919,12 @@ function trackSplashLensEvent(name, props = {}) {
   } catch {}
 }
 
+function compactPartSnapList(items, limit = 3) {
+  return Array.isArray(items)
+    ? items.filter(Boolean).map(item => String(item).trim()).filter(Boolean).slice(0, limit)
+    : [];
+}
+
 function isStandaloneAppShell() {
   return Boolean(
     window.matchMedia?.('(display-mode: standalone)')?.matches ||
@@ -5079,7 +5085,21 @@ function renderPartsSnapResult(ai, result, status) {
   const ladder = partConfidenceLadder(confidence, partNumber, manufacturer, model, component);
   const risk = partSnapCallbackRisk(_lastPartSnapResult, ladder, visibleEvidence, missingProof);
   const buyLinks = ladder.allowLinks ? renderPartBuyLinks(searchTerms, partNumber, manufacturer, component) : '';
-  trackSplashLensEvent('partsnap_result', { confidence: confidence || 'unknown', category: category || 'unknown', risk: risk.level });
+  trackSplashLensEvent('partsnap_result', {
+    confidence: confidence || 'unknown',
+    category: category || 'unknown',
+    risk: risk.level,
+    manufacturer: manufacturer || '',
+    component: component || '',
+    model: model || '',
+    part_number_visible: partNumber || '',
+    condition: condition || 'unknown',
+    proof_visible_count: visibleEvidence.length,
+    proof_missing_count: missingProof.length || (ladder.missing || []).length,
+    proof_visible: compactPartSnapList(visibleEvidence),
+    proof_missing: compactPartSnapList(missingProof.length ? missingProof : ladder.missing),
+    result_summary: [manufacturer, component, model || partNumber].filter(Boolean).join(' / ') || 'Unknown PartSnap result',
+  });
 
   result.innerHTML = `
     <div style="background:#1e293b;border:1px solid ${low?'#334155':'#14b8a6'};border-radius:12px;padding:16px;margin-bottom:10px;border-left:4px solid ${low?'#334155':'#14b8a6'};">

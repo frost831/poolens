@@ -476,6 +476,22 @@ async function sendEventAlert(env, record) {
   const props = parseProps(record);
   const source = eventSource(record, props);
   const sourcePrefix = source && source !== 'app' ? `${source.toUpperCase()} - ` : '';
+  const partSnapLines = record.event === 'partsnap_result' ? [
+    '',
+    'PartSnap detail',
+    `- Summary: ${clean(props.result_summary || [props.manufacturer, props.component, props.model || props.part_number_visible].filter(Boolean).join(' / ') || 'Unknown PartSnap result', 220)}`,
+    `- Manufacturer: ${clean(props.manufacturer || '', 120)}`,
+    `- Component: ${clean(props.component || '', 120)}`,
+    `- Model/family: ${clean(props.model || '', 120)}`,
+    `- Visible part/model number: ${clean(props.part_number_visible || '', 120)}`,
+    `- Confidence: ${clean(props.confidence || 'unknown', 40)}`,
+    `- Callback risk: ${clean(props.risk || 'unknown', 40)}`,
+    `- Condition: ${clean(props.condition || 'unknown', 40)}`,
+    `- Visible proof count: ${clean(props.proof_visible_count ?? '', 20)}`,
+    `- Missing proof count: ${clean(props.proof_missing_count ?? '', 20)}`,
+    `- Visible proof: ${Array.isArray(props.proof_visible) ? props.proof_visible.map((item) => clean(item, 80)).join('; ') : ''}`,
+    `- Missing proof: ${Array.isArray(props.proof_missing) ? props.proof_missing.map((item) => clean(item, 80)).join('; ') : ''}`,
+  ] : [];
 
   const response = await fetch('https://api.sendgrid.com/v3/mail/send', {
     method: 'POST',
@@ -509,6 +525,7 @@ async function sendEventAlert(env, record) {
           `Preferred language: ${record.language.preferredLanguage}`,
           `Locale: ${record.language.locale}`,
           `Created: ${record.createdAt}`,
+          ...partSnapLines,
           '',
           `Props: ${record.propsJson}`,
         ].join('\n'),
