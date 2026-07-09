@@ -25,6 +25,13 @@ const ALERT_EVENTS = new Set([
   'store_review_needs_work',
   'waitlist_signup',
   'checkout_success',
+  'wizard_open',
+  'lane_start',
+  'lane_complete',
+  'packet_created',
+  'call_placed',
+  'scan_used',
+  'daily_check_logged',
 ]);
 
 function json(status, payload, extraHeaders = {}) {
@@ -163,6 +170,7 @@ async function eventSummary(request, env) {
 
   const url = new URL(request.url);
   const limit = Math.min(Math.max(Number(url.searchParams.get('limit') || 500), 50), 1000);
+  const facilityFilter = clean(url.searchParams.get('facilityId') || url.searchParams.get('facility') || '', 120);
   let cursor;
   const keyNames = [];
   const records = [];
@@ -184,6 +192,12 @@ async function eventSummary(request, env) {
   }
 
   records.sort((a, b) => eventTime(b) - eventTime(a));
+  const filteredRecords = facilityFilter
+    ? records.filter((record) => {
+      const props = parseProps(record);
+      return clean(props.facilityId || props.facility_id || '', 120) === facilityFilter;
+    })
+    : records;
 
   const now = Date.now();
   const dayMs = 24 * 60 * 60 * 1000;
@@ -276,7 +290,15 @@ async function eventSummary(request, env) {
   const meaningfulClients30d = new Set();
   const poolProClients30d = new Set();
 
-  for (const record of records) {
+  const facilityEvents = new Map();
+  const facilityLanes = new Map();
+  const facilityOutcomes = new Map();
+  let facilityEvents30d = 0;
+  let facilityPackets30d = 0;
+  let facilityCalls30d = 0;
+  let facilityDailyChecks30d = 0;
+
+  for (const record of filteredRecords) {
     const ts = eventTime(record);
     const props = parseProps(record);
     const clientId = clean(props.client_id || props.clientId || '', 120);
@@ -405,6 +427,15 @@ async function eventSummary(request, env) {
         if (props.field_tester_opt_in === true || props.field_tester_opt_in === 'true') fieldTesterOptIns30d += 1;
       }
       if (record.event === 'operator_pilot_wizard_opened') operatorWizard30d += 1;
+      if (props.facilityId || props.facility_id || ['wizard_open', 'lane_start', 'lane_complete', 'packet_created', 'call_placed', 'scan_used', 'daily_check_logged'].includes(record.event)) {
+        facilityEvents30d += 1;
+        inc(facilityEvents, record.event);
+        if (props.lane) inc(facilityLanes, props.lane);
+        if (props.outcome) inc(facilityOutcomes, props.outcome);
+        if (record.event === 'packet_created') facilityPackets30d += 1;
+        if (record.event === 'call_placed') facilityCalls30d += 1;
+        if (record.event === 'daily_check_logged') facilityDailyChecks30d += 1;
+      }
       if (record.event === 'checkout_success') {
         checkoutSuccess30d += 1;
         revenueCents30d += Math.max(0, Number(props.amount_total || props.amountTotal || 0) || 0);
@@ -428,6 +459,11 @@ async function eventSummary(request, env) {
     generatedAt: new Date().toISOString(),
     metrics: {
       storedEvents: records.length,
+      filteredEvents: filteredRecords.length,
+      facilityEvents30d,
+      facilityPackets30d,
+      facilityCalls30d,
+      facilityDailyChecks30d,
       events7d,
       events30d,
       appOpens7d,
@@ -486,6 +522,9 @@ async function eventSummary(request, env) {
     topCampaigns: topList(campaigns),
     topPaymentPlans: topList(paymentPlans),
     topDemandLanes: topList(laneDemand),
+    topFacilityEvents: topList(facilityEvents),
+    topFacilityLanes: topList(facilityLanes),
+    topFacilityOutcomes: topList(facilityOutcomes),
     topPartSnapCategories: topList(partSnapCategories),
     topPaths: topList(paths),
     scanModes: topList(scanModes),
@@ -495,7 +534,7 @@ async function eventSummary(request, env) {
     recentSessions: Array.from(sessionEvents.values())
       .sort((a, b) => eventTime({ createdAt: b.lastAt }) - eventTime({ createdAt: a.lastAt }))
       .slice(0, 30),
-    recentEvents: records.slice(0, 50).map((record) => ({
+    recentEvents: filteredRecords.slice(0, 50).map((record) => ({
       event: record.event,
       source: record.source,
       path: record.path,
@@ -503,6 +542,7 @@ async function eventSummary(request, env) {
       props: parseProps(record),
     })),
     caveats: [
+      facilityFilter ? `Filtered to facilityId=${facilityFilter}.` : 'Facility reporting can be filtered with ?summary=1&facilityId=FACILITY_ID.',
       'PWA install events are browser-dependent and may not fire on every iOS add-to-home-screen install.',
       'Native App Store downloads are only visible here after the app/web wrapper opens or when a tracked store click/referral reaches the app.',
       'Email alerts are intentionally limited to usage/conversion events, not outreach email opens.',
@@ -541,6 +581,13 @@ async function sendEventAlert(env, record) {
     store_review_needs_work: 'Review ask needs work',
     waitlist_signup: 'Waitlist signup',
     checkout_success: 'Checkout success',
+    wizard_open: 'Facility wizard opened',
+    lane_start: 'Facility lane started',
+    lane_complete: 'Facility lane completed',
+    packet_created: 'Facility support packet created',
+    call_placed: 'Facility support call placed',
+    scan_used: 'Facility scan used',
+    daily_check_logged: 'Facility daily check logged',
   };
   const props = parseProps(record);
   const source = eventSource(record, props);
@@ -591,6 +638,9 @@ async function sendEventAlert(env, record) {
           `Store shell: ${props.store_shell || ''}`,
           `Client ID: ${props.client_id || props.clientId || ''}`,
           `Session ID: ${props.session_id || props.sessionId || ''}`,
+          `Facility ID: ${props.facilityId || props.facility_id || ''}`,
+          `Facility lane: ${props.lane || ''}`,
+          `Outcome: ${props.outcome || ''}`,
           `Preferred language: ${record.language.preferredLanguage}`,
           `Locale: ${record.language.locale}`,
           `Created: ${record.createdAt}`,

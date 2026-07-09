@@ -7,3 +7,4 @@
 /*.md / 302
 /dashboad /dashboard 301
 /owner-dashboard /dashboard 301
+/f/* /index.html 200

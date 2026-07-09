@@ -35,6 +35,11 @@
       "name": "Connected Pool Network",
       "url": "/?tab=route",
       "description": "Proof-first troubleshooting for robots, automation, lighting, covers, and controllers"
+    },
+    {
+      "name": "Facility Assist",
+      "url": "/?mode=facility",
+      "description": "Light workflow for daily checks, contamination events, equipment proof, and support packets"
     }
   ]
 }

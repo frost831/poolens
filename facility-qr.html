@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SplashLens Facility QR Stickers</title>
+  <link rel="icon" href="/icons/icon-192.png" type="image/png">
+  <style>
+    * { box-sizing:border-box; }
+    body { margin:0; font-family:system-ui,-apple-system,Segoe UI,sans-serif; background:#eff8fb; color:#0f172a; }
+    header { background:#0369a1; color:#fff; padding:18px; }
+    header h1 { margin:0 0 5px; font-size:26px; line-height:1.05; }
+    header p { margin:0; color:#dff6ff; font-size:14px; }
+    main { max-width:980px; margin:0 auto; padding:18px; }
+    .controls { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; background:#fff; border:1px solid #d8e3ea; border-radius:12px; padding:12px; margin-bottom:14px; }
+    label { display:block; color:#64748b; font-size:11px; font-weight:900; text-transform:uppercase; letter-spacing:.08em; margin-bottom:5px; }
+    input { width:100%; border:1px solid #cbd5e1; border-radius:9px; padding:11px; font-size:15px; }
+    button { border:0; border-radius:9px; background:#0369a1; color:#fff; padding:11px 14px; font-weight:950; cursor:pointer; }
+    .sheet { display:grid; grid-template-columns:repeat(2,1fr); gap:14px; }
+    .sticker { background:#fff; border:1px solid #cbd5e1; border-radius:12px; padding:14px; min-height:230px; display:grid; grid-template-columns:150px 1fr; gap:14px; align-items:center; page-break-inside:avoid; }
+    .qr { width:150px; height:150px; border:1px solid #e2e8f0; border-radius:8px; }
+    .sticker h2 { margin:0 0 7px; font-size:19px; line-height:1.1; }
+    .sticker p { margin:0 0 9px; color:#475569; font-size:13px; line-height:1.35; }
+    .url { color:#0369a1; font-size:11px; font-weight:800; word-break:break-all; }
+    @media print {
+      header, .controls { display:none; }
+      body { background:#fff; }
+      main { max-width:none; padding:0; }
+      .sheet { gap:8px; }
+      .sticker { box-shadow:none; }
+    }
+    @media (max-width:700px) {
+      .controls, .sheet, .sticker { grid-template-columns:1fr; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Facility QR sticker sheet</h1>
+    <p>Print QR stickers that open SplashLens Facility Mode for a facility or equipment station.</p>
+  </header>
+  <main>
+    <section class="controls">
+      <div><label for="facility">Facility ID</label><input id="facility" value="demo"></div>
+      <div><label for="items">Equipment IDs</label><input id="items" value="pump-room,chlorinator,main-pool"></div>
+      <div style="display:flex;align-items:end;"><button type="button" onclick="render()">Build stickers</button></div>
+    </section>
+    <section id="sheet" class="sheet" aria-label="Printable QR stickers"></section>
+  </main>
+  <script>
+    function safe(value) {
+      return String(value || '').replace(/[^\w-]/g, '').slice(0, 80);
+    }
+    function qrUrl(url) {
+      return 'https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=' + encodeURIComponent(url);
+    }
+    function render() {
+      const params = new URLSearchParams(location.search);
+      const facility = safe(document.getElementById('facility').value || params.get('facility') || 'demo');
+      const rawItems = document.getElementById('items').value || params.get('items') || 'pump-room,chlorinator,main-pool';
+      const items = rawItems.split(',').map(safe).filter(Boolean).slice(0, 12);
+      const host = location.origin;
+      document.getElementById('sheet').innerHTML = items.map((item) => {
+        const url = `${host}/f/${facility}/${item}`;
+        return `<article class="sticker">
+          <img class="qr" src="${qrUrl(url)}" alt="QR for ${facility} ${item}">
+          <div>
+            <h2>SplashLens Facility Assist</h2>
+            <p><strong>${facility}</strong> / ${item}</p>
+            <p>Scan before calling support. Capture readings, symptoms, labels, photos, and the safe visible checks.</p>
+            <p class="url">${url}</p>
+          </div>
+        </article>`;
+      }).join('');
+    }
+    const params = new URLSearchParams(location.search);
+    if (params.get('facility')) document.getElementById('facility').value = safe(params.get('facility'));
+    if (params.get('items')) document.getElementById('items').value = params.get('items');
+    render();
+  </script>
+</body>
+</html>

@@ -1,0 +1,32 @@
+{
+  "id": "demo",
+  "name": "Demo Aquatic Facility",
+  "pool": "Main indoor pool",
+  "supportPhone": "+18444821777",
+  "supportEmail": "hello@splashlens.com",
+  "knownIssues": [
+    "Confirm local code and facility policy before reopening after contamination.",
+    "For equipment faults, capture the control display and model plate before calling."
+  ],
+  "equipment": [
+    {
+      "id": "pump-room",
+      "label": "Pump room pad",
+      "brand": "Mixed equipment",
+      "model": "Facility equipment set",
+      "knownIssues": [
+        "Start with water level, baskets, visible valve position, breaker/GFCI state, and alarm display.",
+        "Do not open energized panels from Facility Mode."
+      ]
+    },
+    {
+      "id": "chlorinator",
+      "label": "Sanitizer / controller station",
+      "brand": "Controller",
+      "model": "ORP / pH feed station",
+      "knownIssues": [
+        "Capture ORP, pH, flow, tank level, and alarm state before escalation."
+      ]
+    }
+  ]
+}

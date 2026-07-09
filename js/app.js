@@ -25,6 +25,13 @@ const STORE_REVIEW_KEY = 'splashlens-store-review-state';
 const STORE_REVIEW_COOLDOWN_MS = 45 * 24 * 60 * 60 * 1000;
 const SPLASHLENS_IOS_REVIEW_URL = 'https://apps.apple.com/us/app/splashlens/id6763644905?action=write-review';
 const SPLASHLENS_PLAY_REVIEW_URL = 'https://play.google.com/store/apps/details?id=com.splashlens.fieldtools';
+const SPLASHLENS_ROLE_KEY = 'sl_role';
+const FACILITY_PACKET_KEY = 'splashlens-facility-packets';
+let facilitySessionMode = '';
+let facilityForcedMode = false;
+let activeFacilityConfig = null;
+let activeFacilityId = '';
+let activeFacilityEquipmentId = '';
 const FIELD_FEEDBACK_ACTIONS = new Set([
   'ai_scan_started',
   'manual_code_search',
@@ -219,6 +226,7 @@ const DOSE_NEED_LABELS = {
 document.addEventListener('DOMContentLoaded', () => {
   initLanguageLayer();
   initMarketingGate();
+  initSplashLensPersonaMode();
   captureScanEntitlementFromUrl();
   initSplashLensAttribution();
   initInstallTracking();
@@ -274,6 +282,10 @@ function revealSplashLensApp() {
 function enterSplashLensApp(tab = 'errors', mode) {
   revealSplashLensApp();
   trackSplashLensEvent('marketing_gate_entered', { target_tab: tab, target_mode: mode || '' });
+  if (tab === 'facility' || mode === 'facility') {
+    setSplashLensRole('facility', { persist: false, forced: true });
+    return;
+  }
   showTab(tab);
   if (tab === 'scan' && mode) {
     setTimeout(() => setScanMode(mode), 80);
@@ -294,10 +306,377 @@ function initDeepLink() {
   const tab = params.get('tab');
   const mode = params.get('mode');
   const allowed = new Set(['errors', 'dosing', 'report', 'guide', 'pools', 'scan', 'volume', 'sand', 'route']);
+  if (mode === 'facility') {
+    setSplashLensRole('facility', { persist: false, forced: true });
+    return;
+  }
+  if (mode === 'tech') {
+    setSplashLensRole('tech', { persist: false, forced: true });
+  }
   if (tab && allowed.has(tab)) {
     showTab(tab);
     if (tab === 'scan' && mode) setTimeout(() => setScanMode(mode), 120);
   }
+}
+
+function getFacilityDeepLinkParts() {
+  const match = window.location.pathname.match(/^\/f\/([^/]+)(?:\/([^/]+))?/);
+  if (!match) return null;
+  return {
+    facilityId: decodeURIComponent(match[1] || ''),
+    equipmentId: decodeURIComponent(match[2] || ''),
+  };
+}
+
+function initSplashLensPersonaMode() {
+  const params = new URLSearchParams(window.location.search);
+  const qr = getFacilityDeepLinkParts();
+  if (qr?.facilityId) {
+    activeFacilityId = qr.facilityId;
+    activeFacilityEquipmentId = qr.equipmentId || '';
+    loadFacilityConfig(activeFacilityId, activeFacilityEquipmentId);
+    setSplashLensRole('facility', { persist: false, forced: true });
+    return;
+  }
+
+  const mode = params.get('mode');
+  if (mode === 'facility' || mode === 'tech' || mode === 'apprentice') {
+    setSplashLensRole(mode, { persist: false, forced: true });
+    return;
+  }
+
+  const storedRole = localStorage.getItem(SPLASHLENS_ROLE_KEY);
+  if (storedRole === 'facility' || storedRole === 'tech' || storedRole === 'apprentice') {
+    setSplashLensRole(storedRole, { persist: false });
+    return;
+  }
+  revealSplashLensApp();
+  showRolePicker();
+}
+
+function showRolePicker(manual = false) {
+  revealSplashLensApp();
+  const picker = document.getElementById('role-picker');
+  if (!picker) return;
+  picker.classList.add('active');
+  trackSplashLensEvent(manual ? 'role_picker_opened' : 'role_picker_first_open', {
+    current_role: getSplashLensRole(),
+    manual: Boolean(manual),
+  });
+}
+
+function hideRolePicker() {
+  const picker = document.getElementById('role-picker');
+  if (picker) picker.classList.remove('active');
+}
+
+function getSplashLensRole() {
+  return facilitySessionMode || localStorage.getItem(SPLASHLENS_ROLE_KEY) || '';
+}
+
+function setSplashLensRole(role, options = {}) {
+  const cleanRole = ['facility', 'tech', 'apprentice'].includes(role) ? role : 'tech';
+  if (options.persist) localStorage.setItem(SPLASHLENS_ROLE_KEY, cleanRole);
+  facilitySessionMode = options.persist ? '' : cleanRole;
+  facilityForcedMode = Boolean(options.forced);
+  hideRolePicker();
+  revealSplashLensApp();
+  document.body.classList.toggle('facility-mode', cleanRole === 'facility');
+  document.body.classList.toggle('facility-tools-hidden', cleanRole === 'facility');
+  document.body.classList.toggle('apprentice-mode', cleanRole === 'apprentice');
+  if (cleanRole === 'facility') {
+    renderFacilityHome();
+    trackFacilityEvent('wizard_open', { lane: '', role: cleanRole, forced: facilityForcedMode });
+  } else {
+    showFacilityTools();
+    if (cleanRole === 'apprentice') {
+      showTab('scan');
+      setTimeout(() => setScanMode('parts'), 120);
+      trackSplashLensEvent('partsnap_apprentice_started', { source: 'role_picker' });
+    } else {
+      showTab('errors');
+    }
+  }
+  trackSplashLensEvent('role_selected', {
+    role: cleanRole,
+    persisted: Boolean(options.persist),
+    session_override: !options.persist,
+    forced: Boolean(options.forced),
+  });
+}
+
+function showFacilityTools() {
+  document.body.classList.remove('facility-tools-hidden');
+  const result = document.getElementById('facility-result');
+  if (result) result.style.display = result.innerHTML.trim() ? 'block' : 'none';
+  if (!S.tab) showTab('errors');
+}
+
+async function loadFacilityConfig(facilityId, equipmentId = '') {
+  try {
+    const response = await fetch(`/facilities/${encodeURIComponent(facilityId)}.json`, { cache: 'no-store' });
+    if (!response.ok) throw new Error(`config ${response.status}`);
+    activeFacilityConfig = await response.json();
+    activeFacilityId = facilityId;
+    activeFacilityEquipmentId = equipmentId || '';
+    renderFacilityHome();
+  } catch {
+    activeFacilityConfig = {
+      id: facilityId,
+      name: `Facility ${facilityId}`,
+      supportPhone: '',
+      supportEmail: '',
+      equipment: equipmentId ? [{ id: equipmentId, label: equipmentId, knownIssues: ['Capture equipment label, code display, and symptom before calling.'] }] : [],
+      knownIssues: [],
+    };
+    renderFacilityHome();
+  }
+}
+
+function renderFacilityHome() {
+  const context = document.getElementById('facility-context');
+  const known = document.getElementById('facility-known-issues');
+  if (context) {
+    const name = activeFacilityConfig?.name || 'Facility Assist';
+    const eq = getActiveFacilityEquipment();
+    context.textContent = eq
+      ? `${name}: ${eq.label || eq.id}. Pick the situation, gather proof, then resolve or escalate.`
+      : 'Pick the situation, gather proof, and end with either Resolved - logged or Escalate - send packet.';
+  }
+  if (known) {
+    const issues = getFacilityKnownIssues();
+    known.innerHTML = issues.length ? `
+      <div class="facility-result" style="display:block;border-left:4px solid #b45309;">
+        <p style="color:#92400e;font-size:10px;font-weight:950;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;">Known issue prompts</p>
+        ${issues.map((issue) => `<div class="facility-step"><b>!</b><span>${escHtml(issue)}</span></div>`).join('')}
+      </div>` : '';
+  }
+}
+
+function getActiveFacilityEquipment() {
+  const equipment = Array.isArray(activeFacilityConfig?.equipment) ? activeFacilityConfig.equipment : [];
+  return equipment.find((item) => String(item.id || '') === activeFacilityEquipmentId) || null;
+}
+
+function getFacilityKnownIssues() {
+  const eq = getActiveFacilityEquipment();
+  const issues = [
+    ...(Array.isArray(eq?.knownIssues) ? eq.knownIssues : []),
+    ...(Array.isArray(activeFacilityConfig?.knownIssues) ? activeFacilityConfig.knownIssues : []),
+  ];
+  return issues.filter(Boolean).slice(0, 4);
+}
+
+const FACILITY_LANES = {
+  daily: {
+    title: 'Daily pool check',
+    event: 'daily_check_logged',
+    steps: ['Record FC, pH, clarity, temperature, and required facility readings.', 'Check water level, circulation sound, visible leaks, alarms, and gates/signage.', 'Add staff initials/time and save the log before reopening or shift handoff.'],
+    resolve: 'Resolved - logged',
+    escalate: 'Escalate - send packet',
+    nextTab: 'report',
+  },
+  dose: {
+    title: 'Dose the pool',
+    event: 'lane_complete',
+    steps: ['Confirm pool volume and product label strength.', 'Enter current and target reading in dosing tools.', 'Retest after circulation time and save the adjustment note.'],
+    resolve: 'Resolved - logged',
+    escalate: 'Escalate - send packet',
+    nextTab: 'dosing',
+  },
+  contamination: {
+    title: 'Contamination event',
+    event: 'lane_complete',
+    steps: ['Close access and document time, location, event type, and who responded.', 'Remove visible material using facility-approved PPE and procedure.', 'Follow current local health code, facility policy, and CPO/trainer-approved reopening standard before reopening.'],
+    resolve: 'Resolved - logged',
+    escalate: 'Escalate - send packet',
+    nextTab: 'report',
+    reopen: ['Required contact time/meters satisfied', 'FC/pH retested and documented', 'Supervisor/CPO signoff recorded', 'Facility policy followed before reopening'],
+  },
+  equipment: {
+    title: 'Equipment acting up',
+    event: 'lane_complete',
+    steps: ['Do not open energized equipment. Use visible checks only.', 'Check water level, baskets, valves, breaker/GFCI state, and visible alarm/code.', 'Photo equipment face, label, and code display before calling service.'],
+    resolve: 'Resolved - logged',
+    escalate: 'Escalate - send packet',
+    nextTab: 'scan',
+  },
+  manual: {
+    title: 'Find manual / what is this equipment',
+    event: 'lane_complete',
+    steps: ['Capture brand, model, serial, equipment face, and any QR or data plate.', 'Use PartSnap or lookup to identify the equipment family and missing proof.', 'Save or share the packet before ordering parts or asking for support.'],
+    resolve: 'Resolved - logged',
+    escalate: 'Escalate - send packet',
+    nextTab: 'scan',
+  },
+  help: {
+    title: 'I need help now',
+    event: 'packet_created',
+    steps: ['Capture what changed, current readings, symptoms, photos, and equipment proof.', 'Build the support packet so the expert is not starting cold.', 'Call or share with the configured support route.'],
+    resolve: 'Resolved - logged',
+    escalate: 'Escalate - send packet',
+    nextTab: 'report',
+  },
+};
+
+function startFacilityLane(laneId) {
+  const lane = FACILITY_LANES[laneId] || FACILITY_LANES.daily;
+  document.body.classList.add('facility-tools-hidden');
+  const result = document.getElementById('facility-result');
+  if (!result) return;
+  const reopen = Array.isArray(lane.reopen) ? `
+    <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:9px;padding:10px;margin:8px 0;">
+      <p style="color:#92400e;font-size:11px;font-weight:950;margin-bottom:6px;">Reopen checklist</p>
+      ${lane.reopen.map((item) => `<label class="cl-item" style="padding:6px 0;"><input type="checkbox"><span class="cl-text" style="font-size:12px;">${escHtml(item)}</span></label>`).join('')}
+    </div>` : '';
+  result.style.display = 'block';
+  result.innerHTML = `
+    <p style="color:#0284c7;font-size:10px;font-weight:950;text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Facility lane</p>
+    <h2 style="color:#0f172a;font-size:20px;font-weight:950;line-height:1.1;margin-bottom:10px;">${escHtml(lane.title)}</h2>
+    ${lane.steps.map((step, index) => `<div class="facility-step"><b>${index + 1}</b><span>${escHtml(step)}</span></div>`).join('')}
+    ${reopen}
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;">
+      <button type="button" class="facility-action-btn secondary" onclick="completeFacilityLane('${laneId}', 'resolved')">${escHtml(lane.resolve)}</button>
+      <button type="button" class="facility-action-btn" onclick="completeFacilityLane('${laneId}', 'escalate')">${escHtml(lane.escalate)}</button>
+    </div>
+    <button type="button" class="facility-action-btn secondary" style="width:100%;margin-top:8px;" onclick="showTab('${lane.nextTab}');showFacilityTools();${lane.nextTab === 'scan' ? "setTimeout(()=>setScanMode('parts'),80);" : ''}">Use related SplashLens tool</button>
+  `;
+  trackFacilityEvent('lane_start', { lane: laneId, title: lane.title });
+}
+
+function completeFacilityLane(laneId, outcome) {
+  const packet = buildFacilityPacket(laneId, outcome);
+  saveFacilityPacket(packet);
+  renderFacilityPacket(packet);
+  trackFacilityEvent(outcome === 'resolved' ? (FACILITY_LANES[laneId]?.event || 'lane_complete') : 'packet_created', {
+    lane: laneId,
+    outcome,
+    packet_id: packet.id,
+  });
+}
+
+function buildFacilityPacket(laneId, outcome) {
+  const lane = FACILITY_LANES[laneId] || FACILITY_LANES.daily;
+  const eq = getActiveFacilityEquipment();
+  const now = new Date().toISOString();
+  return {
+    id: `sl-fac-${Date.now().toString(36)}`,
+    facility: {
+      id: activeFacilityId || activeFacilityConfig?.id || '',
+      name: activeFacilityConfig?.name || '',
+    },
+    pool: activeFacilityConfig?.pool || activeFacilityConfig?.poolName || '',
+    timestamp: now,
+    lane: laneId,
+    laneTitle: lane.title,
+    readings: {},
+    symptoms: [],
+    recentChanges: [],
+    photoRefs: [],
+    equipment: {
+      id: activeFacilityEquipmentId || eq?.id || '',
+      label: eq?.label || '',
+      brand: eq?.brand || '',
+      model: eq?.model || '',
+      code: '',
+    },
+    steps: lane.steps,
+    outcome,
+    role: getSplashLensRole() || 'facility',
+    next: outcome === 'resolved' ? 'Resolved - logged' : 'Escalate - send packet',
+    support: {
+      phone: activeFacilityConfig?.supportPhone || '',
+      email: activeFacilityConfig?.supportEmail || '',
+    },
+  };
+}
+
+function formatFacilityPacket(packet) {
+  return [
+    `SplashLens Facility Packet: ${packet.next}`,
+    `ID: ${packet.id}`,
+    `Facility: ${packet.facility.name || packet.facility.id || 'Unspecified'}`,
+    `Pool: ${packet.pool || 'Unspecified'}`,
+    `Time: ${packet.timestamp}`,
+    `Lane: ${packet.laneTitle}`,
+    `Role: ${packet.role}`,
+    '',
+    'Equipment',
+    `- ID: ${packet.equipment.id || ''}`,
+    `- Label: ${packet.equipment.label || ''}`,
+    `- Brand/model/code: ${[packet.equipment.brand, packet.equipment.model, packet.equipment.code].filter(Boolean).join(' / ') || 'Needs proof'}`,
+    '',
+    'Steps checked',
+    ...packet.steps.map((step, index) => `${index + 1}. ${step}`),
+    '',
+    'Need before repair/order',
+    '- Confirm local code, facility policy, manufacturer manual, and qualified tech judgment.',
+    '- Add readings, photos, labels, recent changes, and symptom detail before escalation.',
+  ].join('\n');
+}
+
+function saveFacilityPacket(packet) {
+  try {
+    const packets = JSON.parse(localStorage.getItem(FACILITY_PACKET_KEY) || '[]');
+    packets.push(packet);
+    localStorage.setItem(FACILITY_PACKET_KEY, JSON.stringify(packets.slice(-30)));
+  } catch {}
+}
+
+function renderFacilityPacket(packet) {
+  const result = document.getElementById('facility-result');
+  if (!result) return;
+  const text = formatFacilityPacket(packet);
+  const call = packet.support.phone ? `<button type="button" class="facility-action-btn" onclick="callFacilitySupport('${escAttr(packet.support.phone)}','${escAttr(packet.id)}')">Call support</button>` : '';
+  result.style.display = 'block';
+  result.innerHTML = `
+    <div class="facility-packet">
+      <p style="color:#0284c7;font-size:10px;font-weight:950;text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">${escHtml(packet.next)}</p>
+      <h2 style="color:#0f172a;font-size:20px;font-weight:950;line-height:1.1;margin-bottom:8px;">${escHtml(packet.laneTitle)} packet</h2>
+      <pre id="facility-packet-text">${escHtml(text)}</pre>
+      <div style="display:grid;grid-template-columns:repeat(${call ? 3 : 2},1fr);gap:8px;">
+        <button type="button" class="facility-action-btn secondary" onclick="copyFacilityPacket()">Copy</button>
+        <button type="button" class="facility-action-btn secondary" onclick="shareFacilityPacket()">Share</button>
+        ${call}
+      </div>
+    </div>`;
+}
+
+function copyFacilityPacket() {
+  const text = document.getElementById('facility-packet-text')?.textContent || '';
+  navigator.clipboard?.writeText(text);
+  trackFacilityEvent('packet_created', { action: 'copy' });
+}
+
+function shareFacilityPacket() {
+  const text = document.getElementById('facility-packet-text')?.textContent || '';
+  if (navigator.share) {
+    navigator.share({ title: 'SplashLens Facility Packet', text }).catch(() => {});
+  } else {
+    navigator.clipboard?.writeText(text);
+  }
+  trackFacilityEvent('packet_created', { action: 'share' });
+}
+
+function callFacilitySupport(phone, packetId) {
+  trackFacilityEvent('call_placed', { packet_id: packetId, support_configured: true });
+  window.location.href = `tel:${phone}`;
+}
+
+function openFacilityQrSheet() {
+  const url = activeFacilityId ? `/facility-qr.html?facility=${encodeURIComponent(activeFacilityId)}` : '/facility-qr.html';
+  window.open(url, '_blank', 'noopener');
+}
+
+function trackFacilityEvent(event, extra = {}) {
+  trackSplashLensEvent(event, {
+    facilityId: activeFacilityId || activeFacilityConfig?.id || '',
+    equipmentId: activeFacilityEquipmentId || '',
+    lane: extra.lane || '',
+    anon_device_id: getScanClientId(),
+    role: getSplashLensRole() || 'facility',
+    ...extra,
+  });
 }
 
 // ═══════════════════════════════════════════
@@ -4415,6 +4794,9 @@ function updateAIStatusBar() {
 
 function setScanMode(mode) {
   _scanMode = mode;
+  if (getSplashLensRole() === 'facility') {
+    trackFacilityEvent('scan_used', { lane: 'manual', mode });
+  }
   const isCameraMode = mode === 'camera' || mode === 'parts' || mode === 'strip';
   // Update mode buttons — all camera sub-modes share the camera panel
   ['camera','parts','strip','lookup','chem'].forEach(m => {
