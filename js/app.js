@@ -737,6 +737,105 @@ function initErrors() {
   renderBrandGrid();
 }
 
+function startOperatorWizard(intent) {
+  const panel = document.getElementById('operator-wizard-result');
+  if (!panel) return;
+  const flows = {
+    daily: {
+      title: 'Daily pool check',
+      steps: [
+        'Record free chlorine, pH, clarity, temperature, and any required facility readings.',
+        'Walk the equipment area: water level, pump basket, unusual noise, leaks, controller alarms.',
+        'Document who checked it and when, especially if another staff member is covering.'
+      ],
+      actions: [
+        ['Open Visit Report', "showTab('report')"],
+        ['Chemical Guide', "showTab('guide')"]
+      ],
+      note: 'Use this as the light front door for non-technical staff. Local code, facility policy, and trained CPO procedures still control.'
+    },
+    dose: {
+      title: 'Chemical dose',
+      steps: [
+        'Confirm pool volume before calculating anything.',
+        'Enter current reading and target range, then split larger corrections when needed.',
+        'Retest after circulation time and document the adjustment.'
+      ],
+      actions: [
+        ['Open Dosing', "showTab('dosing')"],
+        ['Set Volume', "showTab('volume')"]
+      ],
+      note: 'SplashLens helps with math, but label directions, local rules, and trained judgment still matter.'
+    },
+    contamination: {
+      title: 'Contamination event',
+      steps: [
+        'Close access to the water and document the time, location, and event type.',
+        'Remove visible material using facility-approved PPE and procedures.',
+        'Follow the current local health-code, CDC/MAHC, facility, or trainer-approved response before reopening.'
+      ],
+      actions: [
+        ['Document Event', "showTab('report')"],
+        ['Call / Escalate', "startOperatorWizard('support')"]
+      ],
+      note: 'This is intentionally conservative. SplashLens should route the operator to the approved standard, not invent a reopening decision.'
+    },
+    pump: {
+      title: 'Pump or motor basic check',
+      steps: [
+        'Do not open energized equipment. Start with visible, non-invasive checks only.',
+        'Check water level, skimmer/pump baskets, obvious valve position, breaker/GFCI state, and alarm/code display.',
+        'Capture a photo of the pump label or controller display before calling a service tech.'
+      ],
+      actions: [
+        ['Scan Label / Code', "showTab('scan')"],
+        ['Save Notes', "showTab('report')"]
+      ],
+      note: 'This is the line Tim was drawing: help the CPO gather proof and decide when to call, not turn them into a repair tech.'
+    },
+    manual: {
+      title: 'Find manual or equipment proof',
+      steps: [
+        'Photo the model plate, equipment face, controller screen, or QR sticker if present.',
+        'Use PartSnap or lookup to identify the equipment family and missing proof.',
+        'Save the proof packet before calling support or ordering parts.'
+      ],
+      actions: [
+        ['Open PartSnap', "showTab('scan');setTimeout(()=>setScanMode('parts'),80)"],
+        ['Equipment Notes', "showTab('pools')"]
+      ],
+      note: 'For a retainer pilot, this becomes the tangible QR sticker path at each facility.'
+    },
+    support: {
+      title: 'Escalate to qualified support',
+      steps: [
+        'Capture the issue, readings, photos, model/serial proof, and what changed recently.',
+        'Use a short packet so the expert is not starting cold.',
+        'Call the configured support route when the issue is above staff scope or involves safety/code uncertainty.'
+      ],
+      actions: [
+        ['Build Report', "showTab('report')"],
+        ['Call Pilot Support', "window.location.href='tel:+18444821777'"]
+      ],
+      note: 'Pilot support routes should be configurable per client. The public app should not imply an official Aquatic Council support agreement until one is signed.'
+    }
+  };
+  const flow = flows[intent] || flows.daily;
+  trackSplashLensEvent('operator_pilot_wizard_opened', { intent, title: flow.title });
+  panel.innerHTML = `
+    <div style="background:#f8fafc;border:1px solid #dbeafe;border-radius:10px;padding:12px;">
+      <p style="color:#0369a1;font-size:10px;font-weight:950;text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px;">CPO / Facility Mode</p>
+      <h3 style="color:#0f172a;font-size:15px;font-weight:950;line-height:1.2;margin-bottom:8px;">${escHtml(flow.title)}</h3>
+      <div style="display:grid;gap:7px;margin-bottom:10px;">
+        ${flow.steps.map((step, index) => `<div style="display:flex;gap:8px;align-items:flex-start;background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:8px;"><b style="display:grid;place-items:center;width:22px;height:22px;border-radius:999px;background:#e0f2fe;color:#0369a1;font-size:11px;flex:0 0 auto;">${index + 1}</b><span style="color:#334155;font-size:12px;line-height:1.4;font-weight:750;">${escHtml(step)}</span></div>`).join('')}
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:10px;">
+        ${flow.actions.map(([label, action]) => `<button type="button" onclick="${action}" style="background:#0369a1;color:#fff;border:0;border-radius:9px;padding:10px 8px;font-size:12px;font-weight:950;cursor:pointer;">${escHtml(label)}</button>`).join('')}
+      </div>
+      <div class="operator-alert">${escHtml(flow.note)}</div>
+    </div>`;
+}
+
 function renderBrandGrid() {
   const el = document.getElementById('brand-grid');
   el.innerHTML = Object.entries(window.ERROR_DB).map(([id, b]) =>

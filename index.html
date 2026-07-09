@@ -183,9 +183,18 @@
     .tech-radar-tile { background:#f8fafc; border:1px solid #d8e3ea; border-radius:8px; padding:8px; }
     .tech-radar-tile strong { display:block; color:#0f766e; font-size:12px; font-weight:950; margin-bottom:3px; }
     .tech-radar-tile span { display:block; color:#64748b; font-size:10.5px; font-weight:700; line-height:1.28; }
+    .operator-card { background:#ffffff; border:1px solid #bae6fd; border-left:4px solid #0ea5e9; border-radius:10px; padding:12px; margin-bottom:12px; box-shadow:var(--field-shadow-tight); }
+    .operator-card h2 { color:#0f172a; font-size:16px; font-weight:950; line-height:1.15; margin-bottom:5px; }
+    .operator-card p { color:#475569; font-size:12px; line-height:1.45; margin-bottom:10px; }
+    .operator-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:7px; }
+    .operator-chip { background:#f8fafc; border:1px solid #dbeafe; border-radius:8px; padding:9px; min-height:68px; text-align:left; cursor:pointer; }
+    .operator-chip strong { display:block; color:#0369a1; font-size:12px; font-weight:950; margin-bottom:3px; }
+    .operator-chip span { display:block; color:#64748b; font-size:10.5px; font-weight:700; line-height:1.28; }
+    .operator-result { margin-top:10px; }
+    .operator-alert { background:#fffbeb; border:1px solid #fde68a; border-radius:9px; padding:10px; color:#92400e; font-size:11px; line-height:1.45; font-weight:750; }
     @media (max-width: 360px) {
       .rescue-actions { grid-template-columns: 1fr; }
-      .rescue-strip, .tech-radar-grid, .field-lane-strip { grid-template-columns: 1fr; }
+      .rescue-strip, .tech-radar-grid, .field-lane-strip, .operator-grid { grid-template-columns: 1fr; }
       .field-workflow, .partsnap-steps { grid-template-columns:repeat(5,86px); }
       .nav-btn span { font-size: 9px; letter-spacing: 0; }
     }
@@ -480,6 +489,20 @@
           </button>
         </div>
         <p class="rescue-proof"><strong>Offline:</strong> manual lookup, calculators, guides. <strong>Online:</strong> AI scan, PartSnap, voice.</p>
+      </section>
+
+      <section class="operator-card" aria-label="CPO and facility manager quick start">
+        <h2>CPO / Facility quick start</h2>
+        <p>For managers who need the first safe step, not a deep repair tree. Pick the situation, document it, then escalate when it is above CPO scope.</p>
+        <div class="operator-grid">
+          <button type="button" class="operator-chip" onclick="startOperatorWizard('daily')"><strong>Daily Pool Check</strong><span>readings, clarity, equipment sound</span></button>
+          <button type="button" class="operator-chip" onclick="startOperatorWizard('dose')"><strong>Chemical Dose</strong><span>volume, target, product math</span></button>
+          <button type="button" class="operator-chip" onclick="startOperatorWizard('contamination')"><strong>Contamination Event</strong><span>vomit, fecal, body fluid</span></button>
+          <button type="button" class="operator-chip" onclick="startOperatorWizard('pump')"><strong>Pump / Motor Basic</strong><span>water, baskets, breaker, noise</span></button>
+          <button type="button" class="operator-chip" onclick="startOperatorWizard('manual')"><strong>Find Manual / Label</strong><span>equipment proof and QR path</span></button>
+          <button type="button" class="operator-chip" onclick="startOperatorWizard('support')"><strong>Call Support</strong><span>packet first, then expert help</span></button>
+        </div>
+        <div id="operator-wizard-result" class="operator-result"></div>
       </section>
 
       <section class="partsnap-hero-card" aria-label="PartSnap parts identification">

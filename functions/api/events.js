@@ -220,6 +220,7 @@ async function eventSummary(request, env) {
     'service_report_saved',
     'proof_ready_report_saved',
     'field_feedback_submitted',
+    'operator_pilot_wizard_opened',
     'checkout_success',
   ]);
   let events7d = 0;
@@ -250,6 +251,7 @@ async function eventSummary(request, env) {
   let proofSaved30d = 0;
   let fieldFeedback30d = 0;
   let fieldTesterOptIns30d = 0;
+  let operatorWizard30d = 0;
   let checkoutSuccess30d = 0;
   let revenueCents30d = 0;
   const recentPayments = [];
@@ -402,6 +404,7 @@ async function eventSummary(request, env) {
         fieldFeedback30d += 1;
         if (props.field_tester_opt_in === true || props.field_tester_opt_in === 'true') fieldTesterOptIns30d += 1;
       }
+      if (record.event === 'operator_pilot_wizard_opened') operatorWizard30d += 1;
       if (record.event === 'checkout_success') {
         checkoutSuccess30d += 1;
         revenueCents30d += Math.max(0, Number(props.amount_total || props.amountTotal || 0) || 0);
@@ -455,6 +458,7 @@ async function eventSummary(request, env) {
       proofSaved30d,
       fieldFeedback30d,
       fieldTesterOptIns30d,
+      operatorWizard30d,
       checkoutSuccess30d,
       revenueCents30d,
       spaSearches30d,
@@ -632,6 +636,7 @@ async function sendDigestEmail(env, summary) {
     `- Proof saves 30d: ${m.proofSaved30d || 0}`,
     `- Field feedback 30d: ${m.fieldFeedback30d || 0}`,
     `- Field tester opt-ins 30d: ${m.fieldTesterOptIns30d || 0}`,
+    `- CPO/facility wizard opens 30d: ${m.operatorWizard30d || 0}`,
     `- Spa/hot tub demand 30d: ${m.spaSearches30d || 0}`,
     `- Robot demand 30d: ${m.robotSearches30d || 0}`,
     `- Automation demand 30d: ${m.automationSearches30d || 0}`,
