@@ -262,6 +262,10 @@
         <h2>Callback Risk</h2>
         <table id="callback-risks"></table>
       </div>
+      <div class="panel" style="grid-column:1/-1;">
+        <h2>Recent Sessions</h2>
+        <table class="events" id="recent-sessions"></table>
+      </div>
       <div class="panel">
         <h2>PartSnap Review Status</h2>
         <table id="review-status"></table>
@@ -310,6 +314,23 @@
         return `<tr><td>${new Date(row.createdAt).toLocaleString()}</td><td><code>${escapeHtml(row.event || '')}</code></td><td><code>${escapeHtml(row.source || 'app')}</code></td><td>${escapeHtml(row.path || '')}</td><td>${escapeHtml(props)}</td></tr>`;
       }).join('');
       el.innerHTML = '<thead><tr><th>Time</th><th>Event</th><th>Source</th><th>Path</th><th>Props</th></tr></thead><tbody>' + (body || '<tr><td colspan="5">No events yet.</td></tr>') + '</tbody>';
+    }
+
+    function renderSessions(rows) {
+      const el = document.getElementById('recent-sessions');
+      const body = (rows || []).map((row) => {
+        const events = (row.events || []).slice().reverse().map((event) => {
+          const detail = [event.summary, event.confidence, event.risk].filter(Boolean).join(' | ');
+          return `${new Date(event.at).toLocaleTimeString()} ${event.event}${detail ? ' - ' + detail : ''}`;
+        }).join('<br>');
+        return `<tr>
+          <td>${new Date(row.lastAt).toLocaleString()}<br><span class="hint">${escapeHtml(row.sessionId || row.clientId || '')}</span></td>
+          <td><span class="status-pill">${escapeHtml(row.source || 'app')}</span><br><span class="hint">${escapeHtml(row.latestPath || '')}</span></td>
+          <td>${Number(row.eventCount || 0)} events<br>${Number(row.scanCount || 0)} scans | ${Number(row.partSnapResults || 0)} results | ${Number(row.stuckSignals || 0)} stuck</td>
+          <td>${events || 'No timeline.'}</td>
+        </tr>`;
+      }).join('');
+      el.innerHTML = '<thead><tr><th>Last Seen</th><th>Source / Path</th><th>Signals</th><th>Timeline</th></tr></thead><tbody>' + (body || '<tr><td colspan="4">No recent sessions yet.</td></tr>') + '</tbody>';
     }
 
     function money(cents, currency) {
@@ -402,6 +423,10 @@
         metricCard('AI Scans 30d', m.scans30d, 'Scanner starts.'),
         metricCard('Manual Searches 30d', m.searches30d, 'Error/code lookup searches.'),
         metricCard('PartSnap Results 30d', m.partsnapResults30d, 'Possible part-result screens.'),
+        metricCard('Stuck PartSnap 30d', m.partSnapStuck30d, 'Low confidence, high risk, or 2+ missing proof items.'),
+        metricCard('Second Proof 30d', m.partSnapSecondProof30d, 'Techs who tapped the proof-photo recovery flow.'),
+        metricCard('Low Confidence 30d', m.partSnapLowConfidence30d, 'PartSnap results that likely need review.'),
+        metricCard('High Risk 30d', m.partSnapHighRisk30d, 'PartSnap results with high callback risk.'),
         metricCard('Meaningful Actions 30d', m.meaningfulActions30d, 'Installs, scans, proof saves, shares, searches.'),
         metricCard('PartSnap Packets 30d', m.partSnapPackets30d, 'Copied or shared senior/vendor packets.'),
         metricCard('Proof Drawers 30d', m.proofDrawerOpens30d, 'PartSnap proof checklist drawer opens.'),
@@ -430,6 +455,7 @@
       renderCountTable('callback-risks', data.callbackRisks, 'Risk');
       renderCountTable('top-paths', data.topPaths, 'Path');
       renderPayments(data.recentPayments);
+      renderSessions(data.recentSessions);
       renderRecent(data.recentEvents);
       await loadPartSnapReviewQueue(secret);
       setStatus(`Loaded ${Number(m.storedEvents || 0).toLocaleString()} stored events. Generated ${new Date(data.generatedAt).toLocaleString()}.`, false);

@@ -5125,6 +5125,7 @@ function renderPartsSnapResult(ai, result, status) {
       ${renderPartConfidenceLadder(ladder)}
       ${renderPartEvidencePanel(visibleEvidence, missingProof)}
       ${renderPartSnapCallbackRisk(risk)}
+      ${renderPartSnapNextProofNudge(_lastPartSnapResult, ladder, risk, visibleEvidence, missingProof)}
       ${renderPartAlternates(alternates)}
       ${renderPartSnapProofPacketDrawer(_lastPartSnapResult)}
       ${renderPartSnapPartnerCards(_lastPartSnapResult)}
@@ -5178,6 +5179,24 @@ function renderPartSnapProofSnapshot(ladder = {}, risk = {}, visibleEvidence = [
         <p style="color:#166534;font-size:9px;font-weight:950;text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px;">Packet</p>
         <p style="color:#0f172a;font-size:13px;font-weight:950;line-height:1.05;">${packetState}</p>
         <p style="color:#166534;font-size:10px;font-weight:800;margin-top:3px;">senior/vendor</p>
+      </div>
+    </div>`;
+}
+
+function renderPartSnapNextProofNudge(ai = {}, ladder = {}, risk = {}, visibleEvidence = [], missingProof = []) {
+  const missing = (missingProof.length ? missingProof : (ladder.missing || [])).filter(Boolean).slice(0, 3);
+  const shouldNudge = ai.confidence === 'low' || risk.level !== 'low' || missing.length > 0;
+  if (!shouldNudge) return '';
+  const nextShot = missing[0] || 'model plate or wider equipment-pad context';
+  return `
+    <div style="background:#082f49;border:1px solid #0284c7;border-radius:10px;padding:12px;margin:10px 0;">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap;">
+        <div style="min-width:0;flex:1;">
+          <p style="color:#bae6fd;font-size:10px;font-weight:950;text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px;">Next best photo</p>
+          <p style="color:#f8fafc;font-size:13px;font-weight:900;line-height:1.35;margin-bottom:4px;">Capture ${escHtml(nextShot)} before ordering or escalating.</p>
+          <p style="color:#bae6fd;font-size:11px;line-height:1.4;">PartSnap can be more useful with a label, casting number, model plate, wiring/control face, or a wider shot that shows where the part lives.</p>
+        </div>
+        <button onclick="requestPartSnapSecondProof()" style="background:#38bdf8;color:#082f49;border:0;border-radius:9px;padding:10px 12px;font-size:12px;font-weight:950;cursor:pointer;">Add Proof</button>
       </div>
     </div>`;
 }
@@ -5617,6 +5636,11 @@ function revealPartSnapApprenticeAnswer() {
 }
 
 function requestPartSnapSecondProof() {
+  const ai = _lastPartSnapResult || {};
+  const visibleEvidence = Array.isArray(ai.visibleEvidence) ? ai.visibleEvidence.filter(Boolean).slice(0, 4) : [];
+  const missingProof = Array.isArray(ai.missingProof) ? ai.missingProof.filter(Boolean).slice(0, 4) : [];
+  const ladder = partConfidenceLadder(ai.confidence, ai.partNumber, ai.manufacturer, ai.model, ai.component);
+  const risk = partSnapCallbackRisk(ai, ladder, visibleEvidence, missingProof);
   const result = document.getElementById('scan-result');
   const status = document.getElementById('scan-camera-status');
   if (status) status.textContent = 'SECOND PROOF: CAPTURE LABEL, MODEL PLATE, OR PART NUMBER';
@@ -5626,7 +5650,14 @@ function requestPartSnapSecondProof() {
       <p style="color:#94a3b8;font-size:12px;line-height:1.45;margin-bottom:10px;">Get the label, model plate, casting number, wiring label, or a wider shot that shows where the part lives.</p>
       <button onclick="setScanMode('parts')" style="background:#0f766e;color:#fff;border:none;border-radius:10px;padding:10px 18px;font-size:12px;font-weight:900;cursor:pointer;">Capture Second Proof</button>
     </div>`;
-  trackSplashLensEvent('partsnap_second_proof_requested', { confidence: (_lastPartSnapResult || {}).confidence || 'unknown' });
+  trackSplashLensEvent('partsnap_second_proof_requested', {
+    confidence: ai.confidence || 'unknown',
+    category: ai.category || ai.component || 'unknown',
+    risk: risk.level,
+    proof_visible_count: visibleEvidence.length,
+    proof_missing_count: missingProof.length || (ladder.missing || []).length,
+    result_summary: [ai.manufacturer, ai.component, ai.model || ai.partNumber].filter(Boolean).join(' / ') || 'Unknown PartSnap result',
+  });
 }
 
 function renderMysteryPartForm() {

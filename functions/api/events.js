@@ -200,6 +200,7 @@ async function eventSummary(request, env) {
   const campaigns = new Map();
   const laneDemand = new Map();
   const partSnapCategories = new Map();
+  const sessionEvents = new Map();
   const meaningfulEvents = new Set([
     'article_referral_open',
     'pwa_installed',
@@ -241,6 +242,11 @@ async function eventSummary(request, env) {
   let partSnapSaved30d = 0;
   let partSnapMystery30d = 0;
   let partSnapApprentice30d = 0;
+  let partSnapSecondProof30d = 0;
+  let partSnapStuck30d = 0;
+  let partSnapLowConfidence30d = 0;
+  let partSnapMediumRisk30d = 0;
+  let partSnapHighRisk30d = 0;
   let proofSaved30d = 0;
   let fieldFeedback30d = 0;
   let fieldTesterOptIns30d = 0;
@@ -272,6 +278,7 @@ async function eventSummary(request, env) {
     const ts = eventTime(record);
     const props = parseProps(record);
     const clientId = clean(props.client_id || props.clientId || '', 120);
+    const sessionId = clean(props.session_id || props.sessionId || '', 160);
     const source = eventSource(record, props);
     const poolPro = isPoolProEvent(record, props);
     inc(eventsByName, record.event);
@@ -286,6 +293,42 @@ async function eventSummary(request, env) {
       if (lane) inc(laneDemand, lane);
       events30d += 1;
       if (clientId) uniqueClients30d.add(clientId);
+      const sessionKey = sessionId || clientId || `event:${record.createdAt}`;
+      if (sessionKey) {
+        const existing = sessionEvents.get(sessionKey) || {
+          sessionId: sessionId || '',
+          clientId: clientId || '',
+          source,
+          firstAt: record.createdAt,
+          lastAt: record.createdAt,
+          eventCount: 0,
+          scanCount: 0,
+          partSnapResults: 0,
+          stuckSignals: 0,
+          checkoutSuccess: 0,
+          latestPath: record.path || props.path || '',
+          events: [],
+        };
+        existing.eventCount += 1;
+        existing.firstAt = eventTime(record) < eventTime({ createdAt: existing.firstAt }) ? record.createdAt : existing.firstAt;
+        existing.lastAt = eventTime(record) > eventTime({ createdAt: existing.lastAt }) ? record.createdAt : existing.lastAt;
+        existing.source = existing.source || source;
+        existing.latestPath = record.path || props.path || existing.latestPath || '';
+        if (record.event === 'ai_scan_started') existing.scanCount += 1;
+        if (record.event === 'partsnap_result') existing.partSnapResults += 1;
+        if (record.event === 'checkout_success') existing.checkoutSuccess += 1;
+        existing.events.push({
+          event: record.event,
+          at: record.createdAt,
+          source,
+          mode: clean(props.mode || record.mode || '', 60),
+          summary: clean(props.result_summary || [props.manufacturer, props.component, props.model || props.part_number_visible].filter(Boolean).join(' / ') || '', 220),
+          confidence: clean(props.confidence || '', 40),
+          risk: clean(props.risk || props.callbackRisk || '', 40),
+        });
+        existing.events = existing.events.sort((a, b) => eventTime({ createdAt: b.at }) - eventTime({ createdAt: a.at })).slice(0, 8);
+        sessionEvents.set(sessionKey, existing);
+      }
       if (meaningfulEvents.has(record.event) && clientId) meaningfulClients30d.add(clientId);
       if (poolPro) {
         poolProEvents30d += 1;
@@ -329,6 +372,19 @@ async function eventSummary(request, env) {
       if (record.event === 'partsnap_result') {
         partsnapResults30d += 1;
         inc(partSnapCategories, props.category || props.component || 'unknown');
+        const risk = clean(props.risk || props.callbackRisk || 'unknown', 40).toLowerCase();
+        const confidence = clean(props.confidence || 'unknown', 40).toLowerCase();
+        const missingCount = Number(props.proof_missing_count || 0) || 0;
+        const stuck = confidence === 'low' || risk === 'high' || missingCount >= 2;
+        if (confidence === 'low') partSnapLowConfidence30d += 1;
+        if (risk === 'medium') partSnapMediumRisk30d += 1;
+        if (risk === 'high') partSnapHighRisk30d += 1;
+        if (stuck) {
+          partSnapStuck30d += 1;
+          const sessionKey = sessionId || clientId || `event:${record.createdAt}`;
+          const existing = sessionEvents.get(sessionKey);
+          if (existing) existing.stuckSignals += 1;
+        }
       }
       if (record.event === 'partsnap_proof_packet_drawer_opened') {
         proofDrawerOpens30d += 1;
@@ -340,6 +396,7 @@ async function eventSummary(request, env) {
       if (record.event === 'partsnap_saved_to_pool') partSnapSaved30d += 1;
       if (record.event === 'partsnap_mystery_submitted') partSnapMystery30d += 1;
       if (record.event === 'partsnap_apprentice_started') partSnapApprentice30d += 1;
+      if (record.event === 'partsnap_second_proof_requested') partSnapSecondProof30d += 1;
       if (record.event === 'partsnap_saved_to_pool' || record.event === 'route_brain_saved_to_pool' || record.event === 'service_report_saved' || record.event === 'proof_ready_report_saved') proofSaved30d += 1;
       if (record.event === 'field_feedback_submitted') {
         fieldFeedback30d += 1;
@@ -390,6 +447,11 @@ async function eventSummary(request, env) {
       partSnapSaved30d,
       partSnapMystery30d,
       partSnapApprentice30d,
+      partSnapSecondProof30d,
+      partSnapStuck30d,
+      partSnapLowConfidence30d,
+      partSnapMediumRisk30d,
+      partSnapHighRisk30d,
       proofSaved30d,
       fieldFeedback30d,
       fieldTesterOptIns30d,
@@ -426,6 +488,9 @@ async function eventSummary(request, env) {
     callbackRisks: topList(callbackRisks),
     manualQueries: topList(manualQueries, 20),
     recentPayments: recentPayments.slice(0, 20),
+    recentSessions: Array.from(sessionEvents.values())
+      .sort((a, b) => eventTime({ createdAt: b.lastAt }) - eventTime({ createdAt: a.lastAt }))
+      .slice(0, 30),
     recentEvents: records.slice(0, 50).map((record) => ({
       event: record.event,
       source: record.source,
@@ -559,6 +624,10 @@ async function sendDigestEmail(env, summary) {
     `- AI scans 30d: ${m.scans30d || 0}`,
     `- Manual searches 30d: ${m.searches30d || 0}`,
     `- PartSnap results 30d: ${m.partsnapResults30d || 0}`,
+    `- Stuck PartSnap results 30d: ${m.partSnapStuck30d || 0}`,
+    `- Second proof requests 30d: ${m.partSnapSecondProof30d || 0}`,
+    `- Low-confidence PartSnap 30d: ${m.partSnapLowConfidence30d || 0}`,
+    `- High-risk PartSnap 30d: ${m.partSnapHighRisk30d || 0}`,
     `- PartSnap packets 30d: ${m.partSnapPackets30d || 0}`,
     `- Proof saves 30d: ${m.proofSaved30d || 0}`,
     `- Field feedback 30d: ${m.fieldFeedback30d || 0}`,
@@ -584,6 +653,9 @@ async function sendDigestEmail(env, summary) {
     '',
     'Recent events',
     ...(summary.recentEvents || []).slice(0, 12).map(x => `- ${x.createdAt} ${x.event} ${x.source || ''} ${x.path || ''}`),
+    '',
+    'Recent sessions',
+    ...(summary.recentSessions || []).slice(0, 8).map(x => `- ${x.lastAt} ${x.source || 'app'} events=${x.eventCount || 0} scans=${x.scanCount || 0} results=${x.partSnapResults || 0} stuck=${x.stuckSignals || 0}`),
   ];
 
   const response = await fetch('https://api.sendgrid.com/v3/mail/send', {
