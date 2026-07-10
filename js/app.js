@@ -2499,7 +2499,7 @@ function reportProofRiskFlags(passport = null, pool = null) {
   if (p.proof && p.proof.complete === false) flags.push('Proof is incomplete before this should be treated as customer-ready.');
   if (/heater|gas|ignition|flame|rollout|high limit|heat exchanger/.test(fields)) flags.push('Heater-related issue: capture model plate, code display, water flow proof, and qualified-tech verification.');
   if (/gfci|breaker|voltage|electrical|light|transformer|relay|automation|rs-485/.test(fields)) flags.push('Electrical/automation issue: document visible proof and route qualified electrical checks appropriately.');
-  if (/green|algae|cloudy|foam|biofilm|chlorine|cya|ph|alkalinity|or[p]?/.test(fields)) flags.push('Water-quality trend candidate: compare against recent chemistry before promising a one-visit fix.');
+  if (/\b(green|algae|cloudy|foam|biofilm|chlorine|cya|ph|alkalinity|orp)\b/.test(fields)) flags.push('Water-quality trend candidate: compare against recent chemistry before promising a one-visit fix.');
   if (/\b(robot|cleaner|cordless|track|tracks|brushes|drive brush|cable|power supply)\b/.test(fields)) flags.push('Robot/cleaner issue: save power supply, tracks/brushes, basket, cable, and model proof before parts ordering.');
   if (pool) {
     const recent = (pool.servicePassports || []).slice(-4);
@@ -2598,7 +2598,11 @@ function copyServiceTrustPortalPreview() {
     flags.length ? `Trend/risk signals: ${flags.join(' | ')}` : '',
     `Reference only. Verify repair decisions with labels, manuals, and qualified service judgment.`,
   ].filter(Boolean).join('\n');
-  navigator.clipboard.writeText(text).then(() => alert('Trust portal preview copied.')).catch(() => alert(text));
+  if (navigator.clipboard?.writeText) {
+    navigator.clipboard.writeText(text).then(() => alert('Trust portal preview copied.')).catch(() => alert(text));
+  } else {
+    alert(text);
+  }
   trackSplashLensEvent('service_proof_portal_copied', { risk_flags: flags.length });
 }
 
