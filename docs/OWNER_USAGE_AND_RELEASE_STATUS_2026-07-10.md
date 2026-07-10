@@ -7,12 +7,15 @@ Live app-owner surfaces checked on 2026-07-10:
 - `https://app.splashlens.com/api/events` returned `{"ok":true,"status":"SplashLens app event endpoint ready.","storageConfigured":true,"emailConfigured":true}` on direct `GET`.
 - `https://app.splashlens.com/api/events?digest=1` returned `401 Unauthorized`, which still matches the intended protected auth gate for the digest path rather than a public outage.
 - Public app shell at `https://app.splashlens.com` returned HTTP `200`.
+- `https://app.splashlens.com/dashboard` returned HTTP `200`.
+- `https://app.splashlens.com/owner-dashboard` returned `301 -> /dashboard` in this pass.
 
 Current interpretation:
 
 - Public owner-notification plumbing still looks healthy from public evidence.
 - Event storage and owner-email configuration remain present on the public readiness probe.
 - The digest path remains protected as expected; this check did not validate the private stats secret itself.
+- The owner dashboard route is publicly reachable through the redirect chain, but the earlier direct-`200` behavior seen on 2026-07-09 is no longer the current public truth.
 
 ## Site, Intake, And Discovery
 
