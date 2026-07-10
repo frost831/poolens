@@ -25,6 +25,13 @@ const STORE_REVIEW_KEY = 'splashlens-store-review-state';
 const STORE_REVIEW_COOLDOWN_MS = 45 * 24 * 60 * 60 * 1000;
 const SPLASHLENS_IOS_REVIEW_URL = 'https://apps.apple.com/us/app/splashlens/id6763644905?action=write-review';
 const SPLASHLENS_PLAY_REVIEW_URL = 'https://play.google.com/store/apps/details?id=com.splashlens.fieldtools';
+const SPLASHLENS_ROLE_KEY = 'sl_role';
+const FACILITY_PACKET_KEY = 'splashlens-facility-packets';
+let facilitySessionMode = '';
+let facilityForcedMode = false;
+let activeFacilityConfig = null;
+let activeFacilityId = '';
+let activeFacilityEquipmentId = '';
 const FIELD_FEEDBACK_ACTIONS = new Set([
   'ai_scan_started',
   'manual_code_search',
@@ -219,6 +226,7 @@ const DOSE_NEED_LABELS = {
 document.addEventListener('DOMContentLoaded', () => {
   initLanguageLayer();
   initMarketingGate();
+  initSplashLensPersonaMode();
   captureScanEntitlementFromUrl();
   initSplashLensAttribution();
   initInstallTracking();
@@ -274,6 +282,10 @@ function revealSplashLensApp() {
 function enterSplashLensApp(tab = 'errors', mode) {
   revealSplashLensApp();
   trackSplashLensEvent('marketing_gate_entered', { target_tab: tab, target_mode: mode || '' });
+  if (tab === 'facility' || mode === 'facility') {
+    setSplashLensRole('facility', { persist: false, forced: true });
+    return;
+  }
   showTab(tab);
   if (tab === 'scan' && mode) {
     setTimeout(() => setScanMode(mode), 80);
@@ -294,10 +306,377 @@ function initDeepLink() {
   const tab = params.get('tab');
   const mode = params.get('mode');
   const allowed = new Set(['errors', 'dosing', 'report', 'guide', 'pools', 'scan', 'volume', 'sand', 'route']);
+  if (mode === 'facility') {
+    setSplashLensRole('facility', { persist: false, forced: true });
+    return;
+  }
+  if (mode === 'tech') {
+    setSplashLensRole('tech', { persist: false, forced: true });
+  }
   if (tab && allowed.has(tab)) {
     showTab(tab);
     if (tab === 'scan' && mode) setTimeout(() => setScanMode(mode), 120);
   }
+}
+
+function getFacilityDeepLinkParts() {
+  const match = window.location.pathname.match(/^\/f\/([^/]+)(?:\/([^/]+))?/);
+  if (!match) return null;
+  return {
+    facilityId: decodeURIComponent(match[1] || ''),
+    equipmentId: decodeURIComponent(match[2] || ''),
+  };
+}
+
+function initSplashLensPersonaMode() {
+  const params = new URLSearchParams(window.location.search);
+  const qr = getFacilityDeepLinkParts();
+  if (qr?.facilityId) {
+    activeFacilityId = qr.facilityId;
+    activeFacilityEquipmentId = qr.equipmentId || '';
+    loadFacilityConfig(activeFacilityId, activeFacilityEquipmentId);
+    setSplashLensRole('facility', { persist: false, forced: true });
+    return;
+  }
+
+  const mode = params.get('mode');
+  if (mode === 'facility' || mode === 'tech' || mode === 'apprentice') {
+    setSplashLensRole(mode, { persist: false, forced: true });
+    return;
+  }
+
+  const storedRole = localStorage.getItem(SPLASHLENS_ROLE_KEY);
+  if (storedRole === 'facility' || storedRole === 'tech' || storedRole === 'apprentice') {
+    setSplashLensRole(storedRole, { persist: false });
+    return;
+  }
+  revealSplashLensApp();
+  showRolePicker();
+}
+
+function showRolePicker(manual = false) {
+  revealSplashLensApp();
+  const picker = document.getElementById('role-picker');
+  if (!picker) return;
+  picker.classList.add('active');
+  trackSplashLensEvent(manual ? 'role_picker_opened' : 'role_picker_first_open', {
+    current_role: getSplashLensRole(),
+    manual: Boolean(manual),
+  });
+}
+
+function hideRolePicker() {
+  const picker = document.getElementById('role-picker');
+  if (picker) picker.classList.remove('active');
+}
+
+function getSplashLensRole() {
+  return facilitySessionMode || localStorage.getItem(SPLASHLENS_ROLE_KEY) || '';
+}
+
+function setSplashLensRole(role, options = {}) {
+  const cleanRole = ['facility', 'tech', 'apprentice'].includes(role) ? role : 'tech';
+  if (options.persist) localStorage.setItem(SPLASHLENS_ROLE_KEY, cleanRole);
+  facilitySessionMode = options.persist ? '' : cleanRole;
+  facilityForcedMode = Boolean(options.forced);
+  hideRolePicker();
+  revealSplashLensApp();
+  document.body.classList.toggle('facility-mode', cleanRole === 'facility');
+  document.body.classList.toggle('facility-tools-hidden', cleanRole === 'facility');
+  document.body.classList.toggle('apprentice-mode', cleanRole === 'apprentice');
+  if (cleanRole === 'facility') {
+    renderFacilityHome();
+    trackFacilityEvent('wizard_open', { lane: '', role: cleanRole, forced: facilityForcedMode });
+  } else {
+    showFacilityTools();
+    if (cleanRole === 'apprentice') {
+      showTab('scan');
+      setTimeout(() => setScanMode('parts'), 120);
+      trackSplashLensEvent('partsnap_apprentice_started', { source: 'role_picker' });
+    } else {
+      showTab('errors');
+    }
+  }
+  trackSplashLensEvent('role_selected', {
+    role: cleanRole,
+    persisted: Boolean(options.persist),
+    session_override: !options.persist,
+    forced: Boolean(options.forced),
+  });
+}
+
+function showFacilityTools() {
+  document.body.classList.remove('facility-tools-hidden');
+  const result = document.getElementById('facility-result');
+  if (result) result.style.display = result.innerHTML.trim() ? 'block' : 'none';
+  if (!S.tab) showTab('errors');
+}
+
+async function loadFacilityConfig(facilityId, equipmentId = '') {
+  try {
+    const response = await fetch(`/facilities/${encodeURIComponent(facilityId)}.json`, { cache: 'no-store' });
+    if (!response.ok) throw new Error(`config ${response.status}`);
+    activeFacilityConfig = await response.json();
+    activeFacilityId = facilityId;
+    activeFacilityEquipmentId = equipmentId || '';
+    renderFacilityHome();
+  } catch {
+    activeFacilityConfig = {
+      id: facilityId,
+      name: `Facility ${facilityId}`,
+      supportPhone: '',
+      supportEmail: '',
+      equipment: equipmentId ? [{ id: equipmentId, label: equipmentId, knownIssues: ['Capture equipment label, code display, and symptom before calling.'] }] : [],
+      knownIssues: [],
+    };
+    renderFacilityHome();
+  }
+}
+
+function renderFacilityHome() {
+  const context = document.getElementById('facility-context');
+  const known = document.getElementById('facility-known-issues');
+  if (context) {
+    const name = activeFacilityConfig?.name || 'Facility Assist';
+    const eq = getActiveFacilityEquipment();
+    context.textContent = eq
+      ? `${name}: ${eq.label || eq.id}. Pick the situation, gather proof, then resolve or escalate.`
+      : 'Pick the situation, gather proof, and end with either Resolved - logged or Escalate - send packet.';
+  }
+  if (known) {
+    const issues = getFacilityKnownIssues();
+    known.innerHTML = issues.length ? `
+      <div class="facility-result" style="display:block;border-left:4px solid #b45309;">
+        <p style="color:#92400e;font-size:10px;font-weight:950;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;">Known issue prompts</p>
+        ${issues.map((issue) => `<div class="facility-step"><b>!</b><span>${escHtml(issue)}</span></div>`).join('')}
+      </div>` : '';
+  }
+}
+
+function getActiveFacilityEquipment() {
+  const equipment = Array.isArray(activeFacilityConfig?.equipment) ? activeFacilityConfig.equipment : [];
+  return equipment.find((item) => String(item.id || '') === activeFacilityEquipmentId) || null;
+}
+
+function getFacilityKnownIssues() {
+  const eq = getActiveFacilityEquipment();
+  const issues = [
+    ...(Array.isArray(eq?.knownIssues) ? eq.knownIssues : []),
+    ...(Array.isArray(activeFacilityConfig?.knownIssues) ? activeFacilityConfig.knownIssues : []),
+  ];
+  return issues.filter(Boolean).slice(0, 4);
+}
+
+const FACILITY_LANES = {
+  daily: {
+    title: 'Daily pool check',
+    event: 'daily_check_logged',
+    steps: ['Record FC, pH, clarity, temperature, and required facility readings.', 'Check water level, circulation sound, visible leaks, alarms, and gates/signage.', 'Add staff initials/time and save the log before reopening or shift handoff.'],
+    resolve: 'Resolved - logged',
+    escalate: 'Escalate - send packet',
+    nextTab: 'report',
+  },
+  dose: {
+    title: 'Dose the pool',
+    event: 'lane_complete',
+    steps: ['Confirm pool volume and product label strength.', 'Enter current and target reading in dosing tools.', 'Retest after circulation time and save the adjustment note.'],
+    resolve: 'Resolved - logged',
+    escalate: 'Escalate - send packet',
+    nextTab: 'dosing',
+  },
+  contamination: {
+    title: 'Contamination event',
+    event: 'lane_complete',
+    steps: ['Close access and document time, location, event type, and who responded.', 'Remove visible material using facility-approved PPE and procedure.', 'Follow current local health code, facility policy, and CPO/trainer-approved reopening standard before reopening.'],
+    resolve: 'Resolved - logged',
+    escalate: 'Escalate - send packet',
+    nextTab: 'report',
+    reopen: ['Required contact time/meters satisfied', 'FC/pH retested and documented', 'Supervisor/CPO signoff recorded', 'Facility policy followed before reopening'],
+  },
+  equipment: {
+    title: 'Equipment acting up',
+    event: 'lane_complete',
+    steps: ['Do not open energized equipment. Use visible checks only.', 'Check water level, baskets, valves, breaker/GFCI state, and visible alarm/code.', 'Photo equipment face, label, and code display before calling service.'],
+    resolve: 'Resolved - logged',
+    escalate: 'Escalate - send packet',
+    nextTab: 'scan',
+  },
+  manual: {
+    title: 'Find manual / what is this equipment',
+    event: 'lane_complete',
+    steps: ['Capture brand, model, serial, equipment face, and any QR or data plate.', 'Use PartSnap or lookup to identify the equipment family and missing proof.', 'Save or share the packet before ordering parts or asking for support.'],
+    resolve: 'Resolved - logged',
+    escalate: 'Escalate - send packet',
+    nextTab: 'scan',
+  },
+  help: {
+    title: 'I need help now',
+    event: 'packet_created',
+    steps: ['Capture what changed, current readings, symptoms, photos, and equipment proof.', 'Build the support packet so the expert is not starting cold.', 'Call or share with the configured support route.'],
+    resolve: 'Resolved - logged',
+    escalate: 'Escalate - send packet',
+    nextTab: 'report',
+  },
+};
+
+function startFacilityLane(laneId) {
+  const lane = FACILITY_LANES[laneId] || FACILITY_LANES.daily;
+  document.body.classList.add('facility-tools-hidden');
+  const result = document.getElementById('facility-result');
+  if (!result) return;
+  const reopen = Array.isArray(lane.reopen) ? `
+    <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:9px;padding:10px;margin:8px 0;">
+      <p style="color:#92400e;font-size:11px;font-weight:950;margin-bottom:6px;">Reopen checklist</p>
+      ${lane.reopen.map((item) => `<label class="cl-item" style="padding:6px 0;"><input type="checkbox"><span class="cl-text" style="font-size:12px;">${escHtml(item)}</span></label>`).join('')}
+    </div>` : '';
+  result.style.display = 'block';
+  result.innerHTML = `
+    <p style="color:#0284c7;font-size:10px;font-weight:950;text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Facility lane</p>
+    <h2 style="color:#0f172a;font-size:20px;font-weight:950;line-height:1.1;margin-bottom:10px;">${escHtml(lane.title)}</h2>
+    ${lane.steps.map((step, index) => `<div class="facility-step"><b>${index + 1}</b><span>${escHtml(step)}</span></div>`).join('')}
+    ${reopen}
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;">
+      <button type="button" class="facility-action-btn secondary" onclick="completeFacilityLane('${laneId}', 'resolved')">${escHtml(lane.resolve)}</button>
+      <button type="button" class="facility-action-btn" onclick="completeFacilityLane('${laneId}', 'escalate')">${escHtml(lane.escalate)}</button>
+    </div>
+    <button type="button" class="facility-action-btn secondary" style="width:100%;margin-top:8px;" onclick="showTab('${lane.nextTab}');showFacilityTools();${lane.nextTab === 'scan' ? "setTimeout(()=>setScanMode('parts'),80);" : ''}">Use related SplashLens tool</button>
+  `;
+  trackFacilityEvent('lane_start', { lane: laneId, title: lane.title });
+}
+
+function completeFacilityLane(laneId, outcome) {
+  const packet = buildFacilityPacket(laneId, outcome);
+  saveFacilityPacket(packet);
+  renderFacilityPacket(packet);
+  trackFacilityEvent(outcome === 'resolved' ? (FACILITY_LANES[laneId]?.event || 'lane_complete') : 'packet_created', {
+    lane: laneId,
+    outcome,
+    packet_id: packet.id,
+  });
+}
+
+function buildFacilityPacket(laneId, outcome) {
+  const lane = FACILITY_LANES[laneId] || FACILITY_LANES.daily;
+  const eq = getActiveFacilityEquipment();
+  const now = new Date().toISOString();
+  return {
+    id: `sl-fac-${Date.now().toString(36)}`,
+    facility: {
+      id: activeFacilityId || activeFacilityConfig?.id || '',
+      name: activeFacilityConfig?.name || '',
+    },
+    pool: activeFacilityConfig?.pool || activeFacilityConfig?.poolName || '',
+    timestamp: now,
+    lane: laneId,
+    laneTitle: lane.title,
+    readings: {},
+    symptoms: [],
+    recentChanges: [],
+    photoRefs: [],
+    equipment: {
+      id: activeFacilityEquipmentId || eq?.id || '',
+      label: eq?.label || '',
+      brand: eq?.brand || '',
+      model: eq?.model || '',
+      code: '',
+    },
+    steps: lane.steps,
+    outcome,
+    role: getSplashLensRole() || 'facility',
+    next: outcome === 'resolved' ? 'Resolved - logged' : 'Escalate - send packet',
+    support: {
+      phone: activeFacilityConfig?.supportPhone || '',
+      email: activeFacilityConfig?.supportEmail || '',
+    },
+  };
+}
+
+function formatFacilityPacket(packet) {
+  return [
+    `SplashLens Facility Packet: ${packet.next}`,
+    `ID: ${packet.id}`,
+    `Facility: ${packet.facility.name || packet.facility.id || 'Unspecified'}`,
+    `Pool: ${packet.pool || 'Unspecified'}`,
+    `Time: ${packet.timestamp}`,
+    `Lane: ${packet.laneTitle}`,
+    `Role: ${packet.role}`,
+    '',
+    'Equipment',
+    `- ID: ${packet.equipment.id || ''}`,
+    `- Label: ${packet.equipment.label || ''}`,
+    `- Brand/model/code: ${[packet.equipment.brand, packet.equipment.model, packet.equipment.code].filter(Boolean).join(' / ') || 'Needs proof'}`,
+    '',
+    'Steps checked',
+    ...packet.steps.map((step, index) => `${index + 1}. ${step}`),
+    '',
+    'Need before repair/order',
+    '- Confirm local code, facility policy, manufacturer manual, and qualified tech judgment.',
+    '- Add readings, photos, labels, recent changes, and symptom detail before escalation.',
+  ].join('\n');
+}
+
+function saveFacilityPacket(packet) {
+  try {
+    const packets = JSON.parse(localStorage.getItem(FACILITY_PACKET_KEY) || '[]');
+    packets.push(packet);
+    localStorage.setItem(FACILITY_PACKET_KEY, JSON.stringify(packets.slice(-30)));
+  } catch {}
+}
+
+function renderFacilityPacket(packet) {
+  const result = document.getElementById('facility-result');
+  if (!result) return;
+  const text = formatFacilityPacket(packet);
+  const call = packet.support.phone ? `<button type="button" class="facility-action-btn" onclick="callFacilitySupport('${escAttr(packet.support.phone)}','${escAttr(packet.id)}')">Call support</button>` : '';
+  result.style.display = 'block';
+  result.innerHTML = `
+    <div class="facility-packet">
+      <p style="color:#0284c7;font-size:10px;font-weight:950;text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">${escHtml(packet.next)}</p>
+      <h2 style="color:#0f172a;font-size:20px;font-weight:950;line-height:1.1;margin-bottom:8px;">${escHtml(packet.laneTitle)} packet</h2>
+      <pre id="facility-packet-text">${escHtml(text)}</pre>
+      <div style="display:grid;grid-template-columns:repeat(${call ? 3 : 2},1fr);gap:8px;">
+        <button type="button" class="facility-action-btn secondary" onclick="copyFacilityPacket()">Copy</button>
+        <button type="button" class="facility-action-btn secondary" onclick="shareFacilityPacket()">Share</button>
+        ${call}
+      </div>
+    </div>`;
+}
+
+function copyFacilityPacket() {
+  const text = document.getElementById('facility-packet-text')?.textContent || '';
+  navigator.clipboard?.writeText(text);
+  trackFacilityEvent('packet_created', { action: 'copy' });
+}
+
+function shareFacilityPacket() {
+  const text = document.getElementById('facility-packet-text')?.textContent || '';
+  if (navigator.share) {
+    navigator.share({ title: 'SplashLens Facility Packet', text }).catch(() => {});
+  } else {
+    navigator.clipboard?.writeText(text);
+  }
+  trackFacilityEvent('packet_created', { action: 'share' });
+}
+
+function callFacilitySupport(phone, packetId) {
+  trackFacilityEvent('call_placed', { packet_id: packetId, support_configured: true });
+  window.location.href = `tel:${phone}`;
+}
+
+function openFacilityQrSheet() {
+  const url = activeFacilityId ? `/facility-qr.html?facility=${encodeURIComponent(activeFacilityId)}` : '/facility-qr.html';
+  window.open(url, '_blank', 'noopener');
+}
+
+function trackFacilityEvent(event, extra = {}) {
+  trackSplashLensEvent(event, {
+    facilityId: activeFacilityId || activeFacilityConfig?.id || '',
+    equipmentId: activeFacilityEquipmentId || '',
+    lane: extra.lane || '',
+    anon_device_id: getScanClientId(),
+    role: getSplashLensRole() || 'facility',
+    ...extra,
+  });
 }
 
 // ═══════════════════════════════════════════
@@ -2095,6 +2474,220 @@ function validateReportProof(opts = {}) {
   return { complete, missing, source };
 }
 
+function reportReadingSummary() {
+  return [
+    ['FC', _rptVal('rpt-fc')],
+    ['CC', _rptVal('rpt-cc')],
+    ['pH', _rptVal('rpt-ph')],
+    ['TA', _rptVal('rpt-ta')],
+    ['CH', _rptVal('rpt-ch')],
+    ['CYA', _rptVal('rpt-cya')],
+  ].filter(([, value]) => value).map(([label, value]) => `${label} ${value}`).join(', ');
+}
+
+function reportProofRiskFlags(passport = null, pool = null) {
+  const p = passport || buildServicePassport();
+  const fields = [
+    p.proof?.issueNote,
+    p.proof?.customerSummary,
+    p.workPerformed,
+    p.equipmentNotes,
+    p.recommendations,
+    p.visitType,
+  ].filter(Boolean).join(' ').toLowerCase();
+  const issueFields = [
+    p.proof?.issueNote,
+    p.workPerformed,
+    p.equipmentNotes,
+    p.recommendations,
+    p.visitType,
+  ].filter(Boolean).join(' ').toLowerCase();
+  const waterRiskPattern = /\b(algae|cloudy|foam|biofilm|chlorine|orp)\b|\bgreen\s+(water|pool)\b|\b(cya|ph|alkalinity)\b.{0,30}\b(high|low|drift|swing|off|adjust|raise|lower|problem|issue)\b|\b(high|low|drift|swing|off|adjust|raise|lower|problem|issue)\b.{0,30}\b(cya|ph|alkalinity)\b/;
+  const flags = [];
+  if (p.proof && p.proof.complete === false) flags.push('Proof is incomplete before this should be treated as customer-ready.');
+  if (/heater|gas|ignition|flame|rollout|high limit|heat exchanger/.test(fields)) flags.push('Heater-related issue: capture model plate, code display, water flow proof, and qualified-tech verification.');
+  if (/gfci|breaker|voltage|electrical|light|transformer|relay|automation|rs-485/.test(fields)) flags.push('Electrical/automation issue: document visible proof and route qualified electrical checks appropriately.');
+  if (waterRiskPattern.test(issueFields)) flags.push('Water-quality trend candidate: compare against recent chemistry before promising a one-visit fix.');
+  if (/\b(robot|cleaner|cordless|track|tracks|brushes|drive brush|cable|power supply)\b/.test(fields)) flags.push('Robot/cleaner issue: save power supply, tracks/brushes, basket, cable, and model proof before parts ordering.');
+  if (pool) {
+    const recent = (pool.servicePassports || []).slice(-4);
+    const repeatText = recent.map(x => [x.visitType, x.proof?.issueNote, x.equipmentNotes, x.recommendations].filter(Boolean).join(' ')).join(' ').toLowerCase();
+    ['heater','salt','robot','light','automation','algae','cloudy','pump','filter'].forEach((term) => {
+      const count = (repeatText.match(new RegExp(term, 'g')) || []).length;
+      if (count >= 2 && !flags.some(flag => flag.toLowerCase().includes(term))) flags.push(`Repeat ${term} signal in recent history: review before closing the stop.`);
+    });
+  }
+  return flags.slice(0, 5);
+}
+
+function buildServiceProofCustomerSummary() {
+  const visitType = _rptVal('rpt-type') || 'service visit';
+  const readings = reportReadingSummary();
+  const work = _rptVal('rpt-work');
+  const equip = _rptVal('rpt-equip');
+  const rec = _rptVal('rpt-rec');
+  const proof = validateReportProof({ quiet: true });
+  const pieces = [];
+  pieces.push(`Today we completed a ${visitType.toLowerCase()} and documented the visit for your pool record.`);
+  if (readings) pieces.push(`Current readings recorded: ${readings}.`);
+  if (work) pieces.push(`Work completed: ${work}`);
+  if (equip) pieces.push(`Equipment note: ${equip}`);
+  if (rec) pieces.push(`Recommended next step: ${rec}`);
+  if (!proof.complete) pieces.push(`A few proof items still need to be confirmed before this should be treated as final: ${proof.missing.join(', ')}.`);
+  pieces.push('This summary is a field reference note and should be verified against labels, manuals, and qualified service judgment when repair decisions are involved.');
+  return pieces.join(' ');
+}
+
+function generateServiceProofSummary() {
+  const summary = buildServiceProofCustomerSummary();
+  const target = document.getElementById('rpt-customer-summary');
+  if (target) {
+    target.value = summary;
+    target.dispatchEvent(new Event('input'));
+  }
+  validateReportProof({ quiet: true });
+  const output = document.getElementById('rpt-proof-os-output');
+  if (output) {
+    output.innerHTML = `
+      <section class="brain-card">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px;">
+          <h3 style="font-size:14px;font-weight:950;color:#0f172a;margin:0;">Homeowner-safe draft</h3>
+          <span class="brain-pill ready">Generated</span>
+        </div>
+        <p style="color:#334155;font-size:12px;line-height:1.5;">${escHtml(summary)}</p>
+      </section>`;
+  }
+  trackSplashLensEvent('service_proof_summary_generated', { proof_ready: validateReportProof({ quiet: true }).complete });
+}
+
+function previewServiceTrustPortal() {
+  const passport = buildServicePassport();
+  const pool = findPoolForReport();
+  const flags = reportProofRiskFlags(passport, pool);
+  const proof = validateReportProof({ quiet: true });
+  const output = document.getElementById('rpt-proof-os-output');
+  if (!output) return;
+  output.innerHTML = `
+    <section class="brain-card" aria-label="Customer trust portal preview">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:10px;">
+        <div>
+          <p style="color:#0f766e;font-size:10px;font-weight:950;letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px;">Customer trust portal preview</p>
+          <h3 style="color:#0f172a;font-size:18px;line-height:1.1;font-weight:950;margin:0;">${escHtml(passport.customer || 'Customer')} - ${escHtml(passport.visitType || 'Service visit')}</h3>
+        </div>
+        <span class="brain-pill ${proof.complete ? 'ready' : 'risk'}">${proof.complete ? 'proof ready' : 'needs proof'}</span>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:10px;">
+        <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:9px;text-align:center;"><strong style="display:block;color:#0369a1;font-size:15px;">${escHtml(passport.date)}</strong><span style="display:block;color:#64748b;font-size:10px;font-weight:800;">visit date</span></div>
+        <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:9px;text-align:center;"><strong style="display:block;color:#0369a1;font-size:15px;">${passport.chemicals.length}</strong><span style="display:block;color:#64748b;font-size:10px;font-weight:800;">chemical rows</span></div>
+        <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:9px;text-align:center;"><strong style="display:block;color:#0369a1;font-size:15px;">${flags.length}</strong><span style="display:block;color:#64748b;font-size:10px;font-weight:800;">risk flags</span></div>
+      </div>
+      <p style="color:#334155;font-size:12px;line-height:1.5;margin-bottom:9px;"><strong>Customer summary:</strong> ${escHtml(passport.proof.customerSummary || buildServiceProofCustomerSummary())}</p>
+      ${passport.proof.photoProof ? `<p style="color:#334155;font-size:12px;line-height:1.5;margin-bottom:9px;"><strong>Photos/proof:</strong> ${escHtml(passport.proof.photoProof)}</p>` : ''}
+      ${flags.length ? `<div class="warn-box" style="margin-bottom:9px;"><strong>Trend/risk signals:</strong><br>${flags.map(escHtml).join('<br>')}</div>` : '<div class="info-box" style="margin-bottom:9px;">No strong risk signal from this visit yet. Save more visits to build trend memory.</div>'}
+      <div class="brain-grid">
+        <button type="button" class="brain-action green" onclick="copyServiceTrustPortalPreview()">Copy portal text</button>
+        <button type="button" class="brain-action secondary" onclick="saveReportToPoolHistory()">Save Passport</button>
+      </div>
+    </section>`;
+  trackSplashLensEvent('service_proof_portal_previewed', { proof_ready: proof.complete, risk_flags: flags.length });
+}
+
+function copyServiceTrustPortalPreview() {
+  const passport = buildServicePassport();
+  const pool = findPoolForReport();
+  const flags = reportProofRiskFlags(passport, pool);
+  const text = [
+    `SplashLens Service Proof Passport`,
+    `Customer: ${passport.customer}`,
+    `Visit: ${passport.visitType} on ${passport.date}`,
+    reportReadingSummary() ? `Readings: ${reportReadingSummary()}` : '',
+    passport.proof.photoProof ? `Photos/proof: ${passport.proof.photoProof}` : '',
+    `Summary: ${passport.proof.customerSummary || buildServiceProofCustomerSummary()}`,
+    flags.length ? `Trend/risk signals: ${flags.join(' | ')}` : '',
+    `Reference only. Verify repair decisions with labels, manuals, and qualified service judgment.`,
+  ].filter(Boolean).join('\n');
+  if (navigator.clipboard?.writeText) {
+    navigator.clipboard.writeText(text).then(() => alert('Trust portal preview copied.')).catch(() => alert(text));
+  } else {
+    alert(text);
+  }
+  trackSplashLensEvent('service_proof_portal_copied', { risk_flags: flags.length });
+}
+
+const SERVICE_PROOF_FAQ = [
+  {
+    keys: ['crm', 'jobber', 'skimmer', 'pool brain', 'replace'],
+    answer: 'SplashLens Service Proof OS is meant to sit beside your CRM first. Use your CRM for scheduling, invoices, and customer records. Use SplashLens for proof, field memory, PartSnap, customer-safe summaries, and trend flags.'
+  },
+  {
+    keys: ['customer', 'homeowner', 'summary', 'explain'],
+    answer: 'Use Generate Summary after the tech notes are entered. It rewrites the stop into plain language: what was checked, what changed, why it matters, and what should happen next.'
+  },
+  {
+    keys: ['photo', 'proof', 'picture', 'part'],
+    answer: 'Best proof is wide equipment context, model plate, code display, close-up part marking, chemistry screenshot, and before/after condition. If a part order is involved, capture a second proof photo.'
+  },
+  {
+    keys: ['ai', 'agent', 'chat'],
+    answer: 'The current assistant is local and rule-based so it works without a backend key. It can answer workflows and write draft summaries. A true agentic chat can be added on top with a server endpoint and an OpenAI key, with disclaimers and no diagnosis claims.'
+  },
+  {
+    keys: ['price', 'paid', 'subscription'],
+    answer: 'The free app stays useful. Paid Service Proof OS should be the team layer: proof history, branded reports, customer links, owner dashboard, trend flags, and advanced AI summaries.'
+  },
+  {
+    keys: ['trend', 'callback', 'risk', 'repeat'],
+    answer: 'Trend flags look for incomplete proof, repeated symptoms, repeated equipment categories, water-quality drift, and high-risk hardware like heaters, electrical, lights, covers, and automation.'
+  },
+  {
+    keys: ['facility', 'cpo', 'apartment', 'swim school'],
+    answer: 'Facility users should start with Facility Assist for daily checks, contamination events, dose records, equipment proof, and escalation packets. Service Proof Passport stores the longer history.'
+  }
+];
+
+function serviceProofAssistantAnswer(query) {
+  const q = String(query || '').toLowerCase();
+  const hit = SERVICE_PROOF_FAQ.find(item => item.keys.some(key => q.includes(key)));
+  if (hit) return hit.answer;
+  return 'Start with the visit workflow: capture readings, add photo/proof names, dictate a tech note, generate the homeowner summary, preview the trust portal, then save the Service Proof Passport. Keep repair language cautious until model numbers, manuals, and qualified checks are verified.';
+}
+
+function renderServiceProofAssistant() {
+  const output = document.getElementById('rpt-proof-os-output');
+  if (!output) return;
+  output.innerHTML = `
+    <section class="brain-card" aria-label="Service Proof assistant">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:9px;">
+        <h3 style="font-size:14px;font-weight:950;color:#0f172a;margin:0;">Service Proof Assistant</h3>
+        <span class="brain-pill warn">Local FAQ</span>
+      </div>
+      <p style="color:#64748b;font-size:12px;line-height:1.45;margin-bottom:10px;">Ask about workflow, customer summaries, proof photos, CRM fit, pricing, trend flags, or Facility Assist. This is a field-help assistant, not a diagnosis engine.</p>
+      <div style="display:grid;grid-template-columns:1fr auto;gap:8px;margin-bottom:10px;">
+        <input type="text" id="proof-assistant-question" placeholder="Ask: what proof should I capture for a heater call?">
+        <button type="button" class="brain-action" onclick="answerServiceProofAssistant()" style="padding:10px 12px;">Ask</button>
+      </div>
+      <div style="display:flex;gap:6px;overflow-x:auto;margin-bottom:10px;">
+        ${['CRM fit','Customer summary','Proof photos','AI chat','Callback risk','Facility workflow'].map(q => `<button type="button" class="brain-chip primary" onclick="askServiceProofAssistant('${escAttr(q)}')">${escHtml(q)}</button>`).join('')}
+      </div>
+      <div id="proof-assistant-answer" class="info-box">Pick a chip or ask a question.</div>
+    </section>`;
+  trackSplashLensEvent('service_proof_assistant_opened', {});
+}
+
+function askServiceProofAssistant(question) {
+  const input = document.getElementById('proof-assistant-question');
+  if (input) input.value = question;
+  answerServiceProofAssistant();
+}
+
+function answerServiceProofAssistant() {
+  const input = document.getElementById('proof-assistant-question');
+  const answer = document.getElementById('proof-assistant-answer');
+  const q = input ? input.value : '';
+  if (answer) answer.textContent = serviceProofAssistantAnswer(q);
+  trackSplashLensEvent('service_proof_assistant_answered', { topic: String(q || '').slice(0, 80) });
+}
+
 function buildReportText() {
   const customer = _rptVal('rpt-customer') || 'Customer';
   const address  = _rptVal('rpt-address');
@@ -2162,7 +2755,7 @@ function buildServicePassport() {
   const proof = validateReportProof({ quiet: true });
   const chemRows = getReportChemRows();
   const totalCost = chemRows.reduce((sum, c) => sum + (c.cost || 0), 0);
-  return {
+  const passport = {
     id: `svc-${Date.now()}`,
     type: 'service_passport',
     savedAt: new Date().toISOString(),
@@ -2196,6 +2789,14 @@ function buildServicePassport() {
     nextVisit: _rptVal('rpt-next'),
     reportText: buildReportText(),
   };
+  const pool = findPoolForReport();
+  const flags = reportProofRiskFlags(passport, pool);
+  passport.trendFlags = flags;
+  passport.callbackRisk = {
+    level: flags.length >= 3 || (proof.missing && proof.missing.length >= 2) ? 'high' : flags.length ? 'medium' : 'low',
+    flags,
+  };
+  return passport;
 }
 
 function findPoolForReport() {
@@ -2895,6 +3496,7 @@ function poolPill(text) {
 
 function renderPoolFieldIntelligence(pool) {
   const intel = poolFieldIntel(pool);
+  const trendFlags = poolTrendFlags(pool);
   const next = pool.nextVisitReminder || {};
   const due = next.date ? next.date : 'Not set';
   const dueColor = intel.callbackRisk.level === 'high' ? '#991b1b' : intel.callbackRisk.level === 'medium' ? '#92400e' : '#166534';
@@ -2917,6 +3519,10 @@ function renderPoolFieldIntelligence(pool) {
         <p style="color:#64748b;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;">Next visit reminder</p>
         <p style="color:#0f172a;font-size:12px;font-weight:900;">${escHtml(due)}</p>
         ${next.note ? `<p style="color:#64748b;font-size:11px;line-height:1.35;margin-top:4px;">${escHtml(next.note)}</p>` : '<p style="color:#94a3b8;font-size:11px;line-height:1.35;margin-top:4px;">Set a reminder for the thing that will create the callback.</p>'}
+      </div>
+      <div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;padding:9px;margin-bottom:10px;">
+        <p style="color:#9a3412;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Service memory trends</p>
+        ${trendFlags.length ? `<ul style="margin:0 0 0 16px;color:#7c2d12;font-size:11px;line-height:1.45;font-weight:750;">${trendFlags.map(flag => `<li>${escHtml(flag)}</li>`).join('')}</ul>` : '<p style="color:#9a3412;font-size:11px;line-height:1.45;font-weight:750;">No repeat pattern yet. Save a few visits, PartSnap packets, or Route Brain checks to build signal.</p>'}
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
         <button onclick="copyPoolCRMPacket('${pool.id}')" style="background:#0369a1;color:#fff;border:0;border-radius:9px;padding:10px;font-size:12px;font-weight:900;cursor:pointer;">Copy CRM Packet</button>
@@ -2950,6 +3556,38 @@ function poolFieldIntel(pool) {
       label: level === 'high' ? 'High Callback Risk' : level === 'medium' ? 'Watch Next Visit' : 'Clean History',
     },
   };
+}
+
+function poolTrendFlags(pool) {
+  const passports = pool.servicePassports || [];
+  const readings = pool.history || [];
+  const flags = [];
+  const incomplete = passports.filter(p => p.proof && p.proof.complete === false).length;
+  if (incomplete >= 2) flags.push(`${incomplete} saved visits still have incomplete proof.`);
+  const recentText = passports.slice(-8).map(p => [
+    p.visitType,
+    p.proof?.issueNote,
+    p.proof?.customerSummary,
+    p.workPerformed,
+    p.equipmentNotes,
+    p.recommendations,
+    ...(Array.isArray(p.trendFlags) ? p.trendFlags : []),
+  ].filter(Boolean).join(' ')).join(' ').toLowerCase();
+  ['heater','salt','robot','light','automation','pump','filter','algae','cloudy','leak','cover'].forEach((term) => {
+    const count = (recentText.match(new RegExp(term, 'g')) || []).length;
+    if (count >= 2) flags.push(`Repeat ${term} language in recent service memory.`);
+  });
+  const recentFc = readings.slice(-5).map(r => Number(r.fc)).filter(v => !Number.isNaN(v));
+  if (recentFc.length >= 3 && recentFc.every(v => v > 8)) flags.push('Free chlorine has been high across recent readings.');
+  if (recentFc.length >= 3 && recentFc.every(v => v < 1)) flags.push('Free chlorine has been low across recent readings.');
+  const recentPh = readings.slice(-5).map(r => Number(r.ph)).filter(v => !Number.isNaN(v));
+  if (recentPh.length >= 3 && recentPh.every(v => v > 7.9)) flags.push('pH has been high across recent readings.');
+  if (recentPh.length >= 3 && recentPh.every(v => v < 7.2)) flags.push('pH has been low across recent readings.');
+  const proofFlags = passports.slice(-5).flatMap(p => Array.isArray(p.trendFlags) ? p.trendFlags : []);
+  proofFlags.slice(-3).forEach(flag => {
+    if (!flags.includes(flag)) flags.push(flag);
+  });
+  return flags.slice(0, 6);
 }
 
 function renderPoolEquipmentTree(pool) {
@@ -3095,6 +3733,7 @@ function clearNextVisitReminder(poolId) {
 
 function buildPoolCRMPacket(pool) {
   const intel = poolFieldIntel(pool);
+  const trendFlags = poolTrendFlags(pool);
   const passports = pool.servicePassports || [];
   const readings = pool.history || [];
   const equipment = pool.equipmentTree || [];
@@ -3110,6 +3749,7 @@ function buildPoolCRMPacket(pool) {
     pool.heater ? `Primary equipment note: ${pool.heater}` : '',
     '',
     `Callback risk: ${intel.callbackRisk.label}`,
+    trendFlags.length ? `Trend flags: ${trendFlags.join(' | ')}` : '',
     next.date || next.note ? `Next visit: ${[next.date, next.note].filter(Boolean).join(' - ')}` : 'Next visit: Not set',
     '',
     latestPassport ? `Latest proof (${latestPassport.date || 'undated'}): ${latestPassport.proof?.customerSummary || latestPassport.workPerformed || latestPassport.equipmentNotes || 'Saved service proof.'}` : 'Latest proof: none saved',
@@ -4415,6 +5055,9 @@ function updateAIStatusBar() {
 
 function setScanMode(mode) {
   _scanMode = mode;
+  if (getSplashLensRole() === 'facility') {
+    trackFacilityEvent('scan_used', { lane: 'manual', mode });
+  }
   const isCameraMode = mode === 'camera' || mode === 'parts' || mode === 'strip';
   // Update mode buttons — all camera sub-modes share the camera panel
   ['camera','parts','strip','lookup','chem'].forEach(m => {

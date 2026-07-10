@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>SplashLens - Pool Service Field Reference and PartSnap</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <link rel="icon" href="/icons/icon-192.png" type="image/png" sizes="192x192">
   <link rel="apple-touch-icon" href="/icons/icon-192.png">
   <link rel="shortcut icon" href="/icons/icon-192.png" type="image/png">
@@ -22,11 +23,16 @@
   <meta property="og:title" content="SplashLens - Pool Service Field Reference and PartSnap">
   <meta property="og:description" content="Free pool-service field reference with PartSnap, Connected Pool Network, robot and automation troubleshooting, equipment-code lookup, dosing calculators, voice notes, checklists, and route tools.">
   <meta property="og:url" content="https://app.splashlens.com/">
-  <meta property="og:image" content="https://app.splashlens.com/icons/icon-512.png">
-  <meta name="twitter:card" content="summary">
+  <meta property="og:image" content="https://splashlens.com/splashlens-share-card.png">
+  <meta property="og:image:secure_url" content="https://splashlens.com/splashlens-share-card.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:type" content="image/png">
+  <meta property="og:image:alt" content="SplashLens field reference app for pool, spa, and aquatic service teams">
+  <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="SplashLens - Pool Service Field Reference and PartSnap">
   <meta name="twitter:description" content="Free no-account field app for pool techs: PartSnap, Connected Pool Network, robot and automation references, equipment codes, dosing, voice notes, checklists, and route tools.">
-  <meta name="twitter:image" content="https://app.splashlens.com/icons/icon-512.png">
+  <meta name="twitter:image" content="https://splashlens.com/splashlens-share-card.png">
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -192,6 +198,41 @@
     .operator-chip span { display:block; color:#64748b; font-size:10.5px; font-weight:700; line-height:1.28; }
     .operator-result { margin-top:10px; }
     .operator-alert { background:#fffbeb; border:1px solid #fde68a; border-radius:9px; padding:10px; color:#92400e; font-size:11px; line-height:1.45; font-weight:750; }
+    .role-picker { position:fixed; inset:0; z-index:1000; background:linear-gradient(145deg,#082f49,#0f172a 58%,#134e4a); padding:22px; display:none; align-items:center; justify-content:center; }
+    .role-picker.active { display:flex; }
+    .role-card { width:min(720px,100%); background:#ffffff; border-radius:16px; padding:18px; box-shadow:0 30px 80px rgba(2,6,23,.36); }
+    .role-card h1 { color:#0f172a; font-size:28px; line-height:1.05; font-weight:950; margin-bottom:8px; }
+    .role-card p { color:#475569; font-size:14px; line-height:1.45; margin-bottom:14px; }
+    .role-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+    .role-choice { min-height:132px; background:#f8fafc; border:1px solid #dbe8ef; border-radius:12px; padding:13px; text-align:left; cursor:pointer; box-shadow:var(--field-shadow-tight); }
+    .role-choice strong { display:block; color:#075985; font-size:16px; line-height:1.1; font-weight:950; margin-bottom:8px; }
+    .role-choice span { display:block; color:#475569; font-size:12px; line-height:1.35; font-weight:750; }
+    .role-choice.primary { background:#e0f2fe; border-color:#7dd3fc; }
+    .facility-home { display:none; padding:14px; }
+    .facility-mode .facility-home { display:block; }
+    .facility-mode.facility-tools-hidden main .tab-panel, .facility-mode.facility-tools-hidden nav[aria-label="SplashLens field tools"] { display:none !important; }
+    .facility-hero { background:linear-gradient(145deg,#075985,#0f172a); border:1px solid #7dd3fc; border-radius:14px; padding:15px; margin-bottom:12px; box-shadow:var(--field-shadow); }
+    .facility-kicker { color:#bae6fd; font-size:10px; font-weight:950; letter-spacing:.12em; text-transform:uppercase; margin-bottom:7px; }
+    .facility-hero h1 { color:#fff; font-size:26px; line-height:1.05; font-weight:950; margin-bottom:8px; }
+    .facility-hero p { color:#dbeafe; font-size:13px; line-height:1.35; }
+    .facility-toolbar { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:12px; }
+    .facility-toolbar button, .facility-action-btn { min-height:44px; border:0; border-radius:9px; background:#0369a1; color:#fff; font-size:12px; font-weight:950; cursor:pointer; padding:9px; }
+    .facility-toolbar button.secondary, .facility-action-btn.secondary { background:#ffffff; color:#075985; border:1px solid #bae6fd; }
+    .facility-lanes { display:grid; grid-template-columns:repeat(2,1fr); gap:9px; margin-bottom:12px; }
+    .facility-lane { background:#ffffff; border:1px solid #dbe8ef; border-left:4px solid #0284c7; border-radius:11px; padding:12px; min-height:116px; text-align:left; cursor:pointer; box-shadow:var(--field-shadow-tight); }
+    .facility-lane strong { display:block; color:#0f172a; font-size:15px; line-height:1.12; font-weight:950; margin-bottom:7px; }
+    .facility-lane span { display:block; color:#64748b; font-size:11px; line-height:1.32; font-weight:750; }
+    .facility-lane.warn { border-left-color:#b45309; }
+    .facility-lane.help { border-left-color:#b91c1c; }
+    .facility-result { background:#ffffff; border:1px solid #dbe8ef; border-radius:12px; padding:12px; box-shadow:var(--field-shadow-tight); margin-bottom:12px; }
+    .facility-step { display:flex; gap:9px; align-items:flex-start; background:#f8fafc; border:1px solid #e2e8f0; border-radius:9px; padding:9px; margin-bottom:7px; }
+    .facility-step b { display:grid; place-items:center; width:24px; height:24px; border-radius:999px; background:#e0f2fe; color:#0369a1; font-size:11px; flex:0 0 auto; }
+    .facility-step span { color:#334155; font-size:12px; line-height:1.4; font-weight:760; }
+    .facility-packet pre { white-space:pre-wrap; word-break:break-word; background:#0f172a; color:#e0f2fe; border-radius:10px; padding:11px; font-size:11px; line-height:1.45; margin:10px 0; }
+    @media (max-width: 560px) {
+      .role-grid, .facility-toolbar, .facility-lanes { grid-template-columns:1fr; }
+      .role-card h1 { font-size:24px; }
+    }
     @media (max-width: 360px) {
       .rescue-actions { grid-template-columns: 1fr; }
       .rescue-strip, .tech-radar-grid, .field-lane-strip, .operator-grid { grid-template-columns: 1fr; }
@@ -450,6 +491,42 @@
       <option value="fr">Francais</option>
     </select>
   </div>
+
+  <section id="role-picker" class="role-picker" aria-label="Choose SplashLens mode">
+    <div class="role-card">
+      <p style="color:#0284c7;font-size:10px;font-weight:950;letter-spacing:.12em;text-transform:uppercase;margin-bottom:7px;">Choose your front door</p>
+      <h1>What kind of pool day is this?</h1>
+      <p>SplashLens keeps every tool available. This just chooses the first workflow you see.</p>
+      <div class="role-grid">
+        <button type="button" class="role-choice primary" onclick="setSplashLensRole('tech', { persist: true })"><strong>I fix pools for a living</strong><span>PartSnap, codes, route notes, dosing, and deeper field tools first.</span></button>
+        <button type="button" class="role-choice" onclick="setSplashLensRole('facility', { persist: true })"><strong>I am responsible for a pool</strong><span>Daily checks, contamination response, basic visible checks, and support packets.</span></button>
+        <button type="button" class="role-choice" onclick="setSplashLensRole('apprentice', { persist: true })"><strong>I am learning the trade</strong><span>Tech tools with training prompts, proof steps, and senior-tech review paths promoted.</span></button>
+      </div>
+    </div>
+  </section>
+
+  <section id="facility-home" class="facility-home" aria-label="SplashLens Facility Mode">
+    <div class="facility-hero">
+      <p class="facility-kicker">Facility Assist</p>
+      <h1>What is going on?</h1>
+      <p id="facility-context">Pick the situation, gather proof, and end with either Resolved - logged or Escalate - send packet.</p>
+    </div>
+    <div class="facility-toolbar">
+      <button type="button" onclick="showFacilityTools()">All tools</button>
+      <button type="button" class="secondary" onclick="showRolePicker(true)">Switch mode</button>
+      <button type="button" class="secondary" onclick="openFacilityQrSheet()">QR stickers</button>
+    </div>
+    <div id="facility-known-issues"></div>
+    <div class="facility-lanes" id="facility-lanes">
+      <button type="button" class="facility-lane" data-lane="daily" onclick="startFacilityLane('daily')"><strong>Daily pool check</strong><span>Readings, clarity, equipment sound, and required log proof.</span></button>
+      <button type="button" class="facility-lane" data-lane="dose" onclick="startFacilityLane('dose')"><strong>Dose the pool</strong><span>Volume, current reading, target, product label, and retest note.</span></button>
+      <button type="button" class="facility-lane warn" data-lane="contamination" onclick="startFacilityLane('contamination')"><strong>Contamination event</strong><span>Close access, document time/type, follow approved standard, reopen checklist.</span></button>
+      <button type="button" class="facility-lane" data-lane="equipment" onclick="startFacilityLane('equipment')"><strong>Equipment acting up</strong><span>Safe visible checks only: water level, baskets, breaker state, alarms, labels.</span></button>
+      <button type="button" class="facility-lane" data-lane="manual" onclick="startFacilityLane('manual')"><strong>Find manual / what is this?</strong><span>Capture brand, model, code, label, and equipment proof before calling.</span></button>
+      <button type="button" class="facility-lane help" data-lane="help" onclick="startFacilityLane('help')"><strong>I need help now</strong><span>Build the support packet, then call/share using the configured route.</span></button>
+    </div>
+    <div id="facility-result" class="facility-result" style="display:none;"></div>
+  </section>
 
   <!-- MAIN -->
   <main style="padding-bottom:96px;">
@@ -812,6 +889,24 @@
       <div class="info-box" style="margin-bottom:14px;">
         Built for the tech at the stop: fewer taps, faster notes, cleaner proof, and less after-hours paperwork.
       </div>
+      <section class="brain-card dark" style="margin-bottom:14px;" aria-label="Service Proof OS">
+        <p style="color:#7dd3fc;font-size:10px;font-weight:950;letter-spacing:.12em;text-transform:uppercase;margin-bottom:5px;">Service Proof OS</p>
+        <h2 style="color:#fff;font-size:22px;line-height:1.05;font-weight:950;margin-bottom:7px;">Turn this stop into a Service Proof Passport.</h2>
+        <p style="color:#cbd5e1;font-size:12px;line-height:1.45;margin-bottom:10px;">Capture readings, photos, voice notes, parts, approvals, and recommendations. Then generate a homeowner-safe summary and save the visit into the pool's permanent memory.</p>
+        <div class="brain-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:10px;">
+          <span class="brain-pill ready" style="justify-content:center;">Proof</span>
+          <span class="brain-pill ready" style="justify-content:center;">Memory</span>
+          <span class="brain-pill warn" style="justify-content:center;">Risk flags</span>
+          <span class="brain-pill warn" style="justify-content:center;">Portal preview</span>
+        </div>
+        <div class="brain-grid">
+          <button type="button" class="brain-action green" onclick="generateServiceProofSummary()">Generate Summary</button>
+          <button type="button" class="brain-action secondary" onclick="previewServiceTrustPortal()">Trust Portal Preview</button>
+          <button type="button" class="brain-action secondary" onclick="renderServiceProofAssistant()">Ask Proof Assistant</button>
+          <button type="button" class="brain-action orange" onclick="saveReportToPoolHistory()">Save Passport</button>
+        </div>
+      </section>
+      <div id="rpt-proof-os-output" style="margin-bottom:14px;"></div>
 
       <div class="field-group">
         <label class="field-label">Customer Name</label>
@@ -1073,7 +1168,7 @@
   </main>
 
   <!-- BOTTOM NAV -->
-  <nav style="background:#ffffff;border-top:1px solid #e2e8f0;position:fixed;bottom:0;left:0;right:0;z-index:50;padding-bottom:env(safe-area-inset-bottom,0);display:flex;overflow:hidden;box-shadow:0 -2px 8px rgba(0,0,0,0.07);">
+  <nav aria-label="SplashLens field tools" style="background:#ffffff;border-top:1px solid #e2e8f0;position:fixed;bottom:0;left:0;right:0;z-index:50;padding-bottom:env(safe-area-inset-bottom,0);display:flex;overflow:hidden;box-shadow:0 -2px 8px rgba(0,0,0,0.07);">
     <button class="nav-btn active" id="nav-errors" onclick="showTab('errors')">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
       <span>Errors</span>
@@ -1112,10 +1207,10 @@
     </button>
   </nav>
 
-  <script src="js/errors.js"></script>
-  <script src="js/data.js"></script>
-  <script src="js/app.js?v=20260708-partsnap-frontdoor"></script>
-  <script src="js/analytics.js"></script>
+  <script src="/js/errors.js"></script>
+  <script src="/js/data.js"></script>
+  <script src="/js/app.js?v=20260710-service-proof-os"></script>
+  <script src="/js/analytics.js"></script>
   <script>
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/sw.js').catch(() => {});
