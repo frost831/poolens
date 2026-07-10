@@ -889,6 +889,24 @@
       <div class="info-box" style="margin-bottom:14px;">
         Built for the tech at the stop: fewer taps, faster notes, cleaner proof, and less after-hours paperwork.
       </div>
+      <section class="brain-card dark" style="margin-bottom:14px;" aria-label="Service Proof OS">
+        <p style="color:#7dd3fc;font-size:10px;font-weight:950;letter-spacing:.12em;text-transform:uppercase;margin-bottom:5px;">Service Proof OS</p>
+        <h2 style="color:#fff;font-size:22px;line-height:1.05;font-weight:950;margin-bottom:7px;">Turn this stop into a Service Proof Passport.</h2>
+        <p style="color:#cbd5e1;font-size:12px;line-height:1.45;margin-bottom:10px;">Capture readings, photos, voice notes, parts, approvals, and recommendations. Then generate a homeowner-safe summary and save the visit into the pool's permanent memory.</p>
+        <div class="brain-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:10px;">
+          <span class="brain-pill ready" style="justify-content:center;">Proof</span>
+          <span class="brain-pill ready" style="justify-content:center;">Memory</span>
+          <span class="brain-pill warn" style="justify-content:center;">Risk flags</span>
+          <span class="brain-pill warn" style="justify-content:center;">Portal preview</span>
+        </div>
+        <div class="brain-grid">
+          <button type="button" class="brain-action green" onclick="generateServiceProofSummary()">Generate Summary</button>
+          <button type="button" class="brain-action secondary" onclick="previewServiceTrustPortal()">Trust Portal Preview</button>
+          <button type="button" class="brain-action secondary" onclick="renderServiceProofAssistant()">Ask Proof Assistant</button>
+          <button type="button" class="brain-action orange" onclick="saveReportToPoolHistory()">Save Passport</button>
+        </div>
+      </section>
+      <div id="rpt-proof-os-output" style="margin-bottom:14px;"></div>
 
       <div class="field-group">
         <label class="field-label">Customer Name</label>
@@ -1191,7 +1209,7 @@
 
   <script src="/js/errors.js"></script>
   <script src="/js/data.js"></script>
-  <script src="/js/app.js?v=20260709-facility-mode"></script>
+  <script src="/js/app.js?v=20260710-service-proof-os"></script>
   <script src="/js/analytics.js"></script>
   <script>
     if ('serviceWorker' in navigator) {
