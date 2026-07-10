@@ -10,6 +10,9 @@
   "categories": ["utilities", "productivity"],
   "lang": "en-US",
   "icons": [
+    { "src": "/apple-touch-icon.png", "sizes": "180x180", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
     { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
     { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
     { "src": "/icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
@@ -35,6 +38,11 @@
       "name": "Connected Pool Network",
       "url": "/?tab=route",
       "description": "Proof-first troubleshooting for robots, automation, lighting, covers, and controllers"
+    },
+    {
+      "name": "Facility Assist",
+      "url": "/?mode=facility",
+      "description": "Light workflow for daily checks, contamination events, equipment proof, and support packets"
     }
   ]
 }
