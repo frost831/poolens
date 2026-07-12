@@ -5519,10 +5519,14 @@ function canUseAIScan() {
   return isPartSnapPro() || getScanUsage().count < SCAN_LIMIT_FREE;
 }
 
-function recordAIScan(mode) {
+function recordAIScan(mode, serverUsage) {
   if (!isPartSnapPro()) {
     const usage = getScanUsage();
-    usage.count += 1;
+    if (serverUsage && Number.isFinite(Number(serverUsage.count))) {
+      usage.count = Number(serverUsage.count);
+    } else {
+      usage.count += 1;
+    }
     saveScanUsage(usage);
   }
   trackSplashLensEvent('ai_scan_started', { mode });
@@ -5600,13 +5604,13 @@ function showScanLimitModal(result, status) {
     result.innerHTML = `
       <div style="background:#1e293b;border:1px solid #7c3aed;border-radius:14px;padding:18px;margin:0 0 14px;text-align:center;border-left:4px solid #7c3aed;">
         <p style="color:#f1f5f9;font-size:19px;font-weight:900;margin-bottom:6px;">You've used ${usage.count} of ${SCAN_LIMIT_FREE} free AI scans this month.</p>
-        <p style="color:#94a3b8;font-size:13px;line-height:1.5;margin-bottom:14px;">Manual code lookup, dosing, reports, filters, and checklists stay free. Upgrade PartSnap Pro for unlimited web scanner access.</p>
+        <p style="color:#94a3b8;font-size:13px;line-height:1.5;margin-bottom:14px;">Manual code lookup, dosing, reports, filters, and checklists stay free. Upgrade PartSnap Pro after your proof packet for extended web scanner access.</p>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
           <a href="${PARTSNAP_MONTHLY_LINK}" target="_blank" rel="noopener" onclick="trackSplashLensEvent('upgrade_click',{plan:'monthly'})" style="background:#0284c7;color:#fff;text-decoration:none;border-radius:10px;padding:12px 8px;font-size:13px;font-weight:900;">$4.99 / mo</a>
           <a href="${PARTSNAP_YEARLY_LINK}" target="_blank" rel="noopener" onclick="trackSplashLensEvent('upgrade_click',{plan:'yearly'})" style="background:#16a34a;color:#fff;text-decoration:none;border-radius:10px;padding:12px 8px;font-size:13px;font-weight:900;">$39 / yr</a>
         </div>
         <button onclick="restorePartSnapPro()" style="width:100%;background:#334155;color:#e2e8f0;border:0;border-radius:10px;padding:10px 8px;font-size:12px;font-weight:900;cursor:pointer;">Restore Pro from checkout email</button>
-        <p style="color:#64748b;font-size:10px;line-height:1.4;margin-top:10px;">After web checkout, use the signed activation link. If browser storage is cleared, restore with the checkout email. Store builds remain free-core until native billing is added.</p>
+        <p style="color:#64748b;font-size:10px;line-height:1.4;margin-top:10px;">After web checkout, Stripe returns you with a signed scanner activation link. If browser storage is cleared, restore with the checkout email. Store builds remain free-core until native billing is added.</p>
       </div>`;
   }
 }
@@ -5723,8 +5727,8 @@ async function callAIScan(canvas, mode, result, status) {
       body:    JSON.stringify(withLanguageMetadata({ image: base64, mode, clientId: getScanClientId() })),
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const { result: aiResult } = await res.json();
-    recordAIScan(mode);
+    const { result: aiResult, usage } = await res.json();
+    recordAIScan(mode, usage);
 
     if (mode === 'parts_snap') {
       renderPartsSnapResult(aiResult, result, status);

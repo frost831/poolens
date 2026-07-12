@@ -279,6 +279,21 @@ async function issueEntitlement(verified, spec, env) {
       ...record,
       createdAt: new Date().toISOString(),
     }), { expirationTtl: 365 * 24 * 60 * 60 });
+    await env.SCAN_USAGE_KV.put(`event:${new Date().toISOString()}:${crypto.randomUUID()}`, JSON.stringify({
+      event: 'checkout_success',
+      source: verified.store || 'native_store',
+      path: '/api/native-entitlement',
+      language: { preferredLanguage: 'en', locale: 'en', autoTranslate: false },
+      createdAt: new Date().toISOString(),
+      propsJson: JSON.stringify({
+        subject: verified.subject,
+        plan: record.plan,
+        product: verified.productId,
+        store: verified.store,
+        transaction_id: verified.transactionId,
+        payment_source: 'native_store',
+      }).slice(0, 2000),
+    }), { expirationTtl: 60 * 60 * 24 * 365 });
   }
 
   return { ok: true, activateUrl, entitlement: record };

@@ -213,6 +213,13 @@ async function handleCheckoutSession(event, env) {
   if (!isRecognizedSplashLensCheckout(session, env)) {
     return { ok: true, action: 'ignored_unrecognized_checkout', sessionId: clean(session.id, 120) };
   }
+  const sessionId = clean(session.id, 120);
+  if (sessionId && env.SCAN_USAGE_KV && typeof env.SCAN_USAGE_KV.get === 'function') {
+    const existingPayment = await env.SCAN_USAGE_KV.get(`payment:${sessionId}`);
+    if (existingPayment) {
+      return { ok: true, action: 'already_fulfilled', sessionId };
+    }
+  }
 
   const activation = await issueActivation(session, env);
   if (!activation.ok) return { ok: false, error: activation.error };

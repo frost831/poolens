@@ -63,6 +63,10 @@ function cleanPlan(session) {
   return 'PartSnap Pro';
 }
 
+function clean(value, max = 180) {
+  return String(value || '').replace(/[\u0000-\u001f\u007f]/g, '').trim().slice(0, max);
+}
+
 async function signToken(secret, payload) {
   const payloadPart = base64UrlEncode(textEncoder.encode(JSON.stringify(payload)));
   const signed = `${TOKEN_PREFIX}.${payloadPart}`;
@@ -110,16 +114,38 @@ async function issueActivation(session, env) {
   const activateUrl = `https://app.splashlens.com/?tab=scan&scan_token=${encodeURIComponent(token)}`;
 
   if (env.SCAN_USAGE_KV && typeof env.SCAN_USAGE_KV.put === 'function') {
-    await env.SCAN_USAGE_KV.put(`entitlement:${subject}`, JSON.stringify({
+    const record = {
       subject,
       plan: payload.plan,
       scopes: payload.scopes,
       source: payload.source,
       stripeSessionId: payload.stripeSessionId,
       stripeCustomerId: payload.stripeCustomerId,
+      amountTotal: Number(session.amount_total || 0),
+      currency: clean(session.currency, 12),
       issuedAt: new Date(payload.iat * 1000).toISOString(),
       expiresAt: new Date(payload.exp * 1000).toISOString(),
+    };
+    await env.SCAN_USAGE_KV.put(`entitlement:${subject}`, JSON.stringify(record), { expirationTtl: 365 * 24 * 60 * 60 });
+    await env.SCAN_USAGE_KV.put(`payment:${payload.stripeSessionId || crypto.randomUUID()}`, JSON.stringify({
+      ...record,
+      createdAt: new Date().toISOString(),
     }), { expirationTtl: 365 * 24 * 60 * 60 });
+    await env.SCAN_USAGE_KV.put(`event:${new Date().toISOString()}:${crypto.randomUUID()}`, JSON.stringify({
+      event: 'checkout_success',
+      source: 'stripe',
+      path: '/api/checkout-success',
+      language: { preferredLanguage: 'en', locale: 'en', autoTranslate: false },
+      createdAt: new Date().toISOString(),
+      propsJson: JSON.stringify({
+        subject,
+        plan: record.plan,
+        amount_total: record.amountTotal,
+        currency: record.currency,
+        stripe_session_id: record.stripeSessionId,
+        payment_source: 'stripe_checkout_success',
+      }).slice(0, 2000),
+    }), { expirationTtl: 60 * 60 * 24 * 365 });
   }
 
   return { activateUrl, subject };

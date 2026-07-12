@@ -29,6 +29,12 @@ const ALERT_EVENTS = new Set([
   'store_review_click',
   'store_review_needs_work',
   'waitlist_signup',
+  'checkout_click',
+  'upgrade_click',
+  'native_purchase_click',
+  'native_restore_click',
+  'app_store_download_click',
+  'google_play_download_click',
   'checkout_success',
   'wizard_open',
   'lane_start',
@@ -38,6 +44,23 @@ const ALERT_EVENTS = new Set([
   'scan_used',
   'daily_check_logged',
 ]);
+
+function corsHeaders(request) {
+  const origin = request?.headers?.get('Origin') || '';
+  const allowed = new Set([
+    'https://splashlens.com',
+    'https://www.splashlens.com',
+    'https://app.splashlens.com',
+  ]);
+  return allowed.has(origin)
+    ? {
+      'Access-Control-Allow-Origin': origin,
+      'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type,Authorization,X-SplashLens-Stats-Secret',
+      'Vary': 'Origin',
+    }
+    : {};
+}
 
 function json(status, payload, extraHeaders = {}) {
   return new Response(JSON.stringify(payload), {
@@ -304,6 +327,10 @@ async function eventSummary(request, env) {
   let fieldFeedback30d = 0;
   let fieldTesterOptIns30d = 0;
   let operatorWizard30d = 0;
+  let checkoutStarts30d = 0;
+  let upgradeClicks30d = 0;
+  let appStoreClicks30d = 0;
+  let googlePlayClicks30d = 0;
   let checkoutSuccess30d = 0;
   let revenueCents30d = 0;
   const recentPayments = [];
@@ -472,6 +499,10 @@ async function eventSummary(request, env) {
         if (props.field_tester_opt_in === true || props.field_tester_opt_in === 'true') fieldTesterOptIns30d += 1;
       }
       if (record.event === 'operator_pilot_wizard_opened') operatorWizard30d += 1;
+      if (record.event === 'checkout_click' || record.event === 'upgrade_click' || record.event === 'native_purchase_click') checkoutStarts30d += 1;
+      if (record.event === 'upgrade_click') upgradeClicks30d += 1;
+      if (record.event === 'app_store_download_click') appStoreClicks30d += 1;
+      if (record.event === 'google_play_download_click') googlePlayClicks30d += 1;
       if (props.facilityId || props.facility_id || ['wizard_open', 'lane_start', 'lane_complete', 'packet_created', 'call_placed', 'scan_used', 'daily_check_logged'].includes(record.event)) {
         facilityEvents30d += 1;
         inc(facilityEvents, record.event);
@@ -540,6 +571,10 @@ async function eventSummary(request, env) {
       fieldFeedback30d,
       fieldTesterOptIns30d,
       operatorWizard30d,
+      checkoutStarts30d,
+      upgradeClicks30d,
+      appStoreClicks30d,
+      googlePlayClicks30d,
       checkoutSuccess30d,
       revenueCents30d,
       spaSearches30d,
@@ -637,6 +672,12 @@ async function sendEventAlert(env, record) {
     store_review_click: 'Store review clicked',
     store_review_needs_work: 'Review ask needs work',
     waitlist_signup: 'Waitlist signup',
+    checkout_click: 'Checkout clicked',
+    upgrade_click: 'PartSnap Pro upgrade clicked',
+    native_purchase_click: 'Native purchase clicked',
+    native_restore_click: 'Native restore clicked',
+    app_store_download_click: 'App Store clicked',
+    google_play_download_click: 'Google Play clicked',
     checkout_success: 'Checkout success',
     wizard_open: 'Facility wizard opened',
     lane_start: 'Facility lane started',
@@ -744,6 +785,10 @@ async function sendDigestEmail(env, summary) {
     `- Field feedback 30d: ${m.fieldFeedback30d || 0}`,
     `- Field tester opt-ins 30d: ${m.fieldTesterOptIns30d || 0}`,
     `- CPO/facility wizard opens 30d: ${m.operatorWizard30d || 0}`,
+    `- Checkout starts 30d: ${m.checkoutStarts30d || 0}`,
+    `- Upgrade clicks 30d: ${m.upgradeClicks30d || 0}`,
+    `- App Store clicks 30d: ${m.appStoreClicks30d || 0}`,
+    `- Google Play clicks 30d: ${m.googlePlayClicks30d || 0}`,
     `- Spa/hot tub demand 30d: ${m.spaSearches30d || 0}`,
     `- Robot demand 30d: ${m.robotSearches30d || 0}`,
     `- Automation demand 30d: ${m.automationSearches30d || 0}`,
@@ -809,11 +854,11 @@ export async function onRequestPost({ request, env }) {
   try {
     body = await request.json();
   } catch {
-    return json(400, { ok: false, error: 'Invalid JSON' });
+    return json(400, { ok: false, error: 'Invalid JSON' }, corsHeaders(request));
   }
 
   const event = clean(body.event || body.name, 80);
-  if (!event) return json(400, { ok: false, error: 'Event name required' });
+  if (!event) return json(400, { ok: false, error: 'Event name required' }, corsHeaders(request));
 
   const props = body.props && typeof body.props === 'object' ? body.props : {};
   const record = {
@@ -845,7 +890,7 @@ export async function onRequestPost({ request, env }) {
     stored: Boolean(env.SCAN_USAGE_KV),
     alertQueued: Boolean(alert.sent),
     emailConfigured: alert.reason !== 'missing_sendgrid_config',
-  });
+  }, corsHeaders(request));
 }
 
 export async function onRequestGet({ request, env }) {
@@ -862,5 +907,12 @@ export async function onRequestGet({ request, env }) {
     status: 'SplashLens app event endpoint ready.',
     storageConfigured: Boolean(env.SCAN_USAGE_KV),
     emailConfigured: Boolean((env.SENDGRID_API_KEY || '').trim() && (env.SPLASHLENS_NOTIFY_TO || env.FLAGSHIP_NOTIFY_TO || env.LEAD_NOTIFY_TO || env.ADMIN_EMAIL || '').trim()),
+  }, corsHeaders(request));
+}
+
+export async function onRequestOptions({ request }) {
+  return new Response(null, {
+    status: 204,
+    headers: corsHeaders(request),
   });
 }
