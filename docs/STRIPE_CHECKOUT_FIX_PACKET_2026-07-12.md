@@ -34,14 +34,35 @@ Cloudflare currently lists these payment-related secrets:
 
 - `SPLASHLENS_CHECKOUT_MODE`
 - `STRIPE_SECRET_KEY`
+- `SPLASHLENS_STRIPE_PAYMENT_LINK_MONTHLY_ID`
+- `SPLASHLENS_STRIPE_PAYMENT_LINK_YEARLY_ID`
 
 Cloudflare does **not** currently list:
 
 - `STRIPE_WEBHOOK_SECRET`
-- `SPLASHLENS_STRIPE_PAYMENT_LINK_MONTHLY_ID`
-- `SPLASHLENS_STRIPE_PAYMENT_LINK_YEARLY_ID`
 
-That means the payment page is live, but automatic webhook fulfillment for Payment Link purchases cannot be considered fully wired until those are added.
+That means the payment page is live and Payment Link IDs are configured, but automatic webhook fulfillment for Payment Link purchases cannot be considered fully wired until `STRIPE_WEBHOOK_SECRET` is added.
+
+## Current Live Payment Link IDs
+
+These are now set in Cloudflare:
+
+```text
+SPLASHLENS_STRIPE_PAYMENT_LINK_MONTHLY_ID=plink_1TbApG25fqLun6cVhSMjlpXa
+SPLASHLENS_STRIPE_PAYMENT_LINK_YEARLY_ID=plink_1TbApH25fqLun6cVQE7XvDrT
+```
+
+## Stripe Permission Blocker Found
+
+The local Stripe CLI is logged in, but the available live restricted key can read live Payment Links and cannot create live webhook endpoints or live Checkout Sessions.
+
+Stripe returned:
+
+```text
+The provided key does not have the required permissions for this endpoint on account acct_1TJ23t25fqLun6cV.
+```
+
+So the remaining fix must be done with a Stripe Dashboard user/key that can create webhook endpoints, or by replacing the Cloudflare `STRIPE_SECRET_KEY` with a live key allowed to create Checkout Sessions.
 
 ## Best Final State
 
@@ -78,15 +99,14 @@ checkout.session.async_payment_succeeded
 npx wrangler pages secret put STRIPE_WEBHOOK_SECRET --project-name poolens
 ```
 
-6. Open each SplashLens Stripe Payment Link in Stripe and copy its `plink_...` ID.
-7. Add:
+6. Payment Link IDs are already set in Cloudflare. If links are recreated, replace:
 
 ```powershell
 npx wrangler pages secret put SPLASHLENS_STRIPE_PAYMENT_LINK_MONTHLY_ID --project-name poolens
 npx wrangler pages secret put SPLASHLENS_STRIPE_PAYMENT_LINK_YEARLY_ID --project-name poolens
 ```
 
-8. Redeploy:
+7. Redeploy:
 
 ```powershell
 npx wrangler pages deploy . --project-name poolens --branch main --commit-dirty=true
@@ -120,4 +140,3 @@ If it returns `stripe_api_401`, switch back to `payment_link_direct`.
 - Checkout-success is idempotent by `payment:<stripeSessionId>`.
 - Successful webhook or checkout-success writes dashboard-compatible `checkout_success` events.
 - Native entitlement writes dashboard-compatible `checkout_success` events.
-
