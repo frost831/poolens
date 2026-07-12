@@ -114,6 +114,10 @@ async function issueActivation(session, env) {
   const activateUrl = `https://app.splashlens.com/?tab=scan&scan_token=${encodeURIComponent(token)}`;
 
   if (env.SCAN_USAGE_KV && typeof env.SCAN_USAGE_KV.put === 'function') {
+    const paymentKey = `payment:${payload.stripeSessionId || crypto.randomUUID()}`;
+    const existingPayment = payload.stripeSessionId ? await env.SCAN_USAGE_KV.get(paymentKey) : null;
+    if (existingPayment) return { activateUrl, subject, alreadyFulfilled: true };
+
     const record = {
       subject,
       plan: payload.plan,
@@ -127,7 +131,7 @@ async function issueActivation(session, env) {
       expiresAt: new Date(payload.exp * 1000).toISOString(),
     };
     await env.SCAN_USAGE_KV.put(`entitlement:${subject}`, JSON.stringify(record), { expirationTtl: 365 * 24 * 60 * 60 });
-    await env.SCAN_USAGE_KV.put(`payment:${payload.stripeSessionId || crypto.randomUUID()}`, JSON.stringify({
+    await env.SCAN_USAGE_KV.put(paymentKey, JSON.stringify({
       ...record,
       createdAt: new Date().toISOString(),
     }), { expirationTtl: 365 * 24 * 60 * 60 });
