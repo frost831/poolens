@@ -209,6 +209,10 @@
     .role-choice strong { display:block; color:#075985; font-size:16px; line-height:1.1; font-weight:950; margin-bottom:8px; }
     .role-choice span { display:block; color:#475569; font-size:12px; line-height:1.35; font-weight:750; }
     .role-choice.primary { background:#e0f2fe; border-color:#7dd3fc; }
+    .role-workflow { display:grid; grid-template-columns:repeat(5,1fr); gap:6px; margin:12px 0 14px; }
+    .role-step { background:#f8fafc; border:1px solid #dbe8ef; border-radius:9px; padding:8px 7px; }
+    .role-step b { display:block; color:#0f766e; font-size:11px; font-weight:950; line-height:1.05; margin-bottom:3px; }
+    .role-step span { display:block; color:#64748b; font-size:9.5px; font-weight:750; line-height:1.2; }
     .facility-home { display:none; padding:14px; }
     .facility-mode .facility-home { display:block; }
     .facility-mode.facility-tools-hidden main .tab-panel, .facility-mode.facility-tools-hidden nav[aria-label="SplashLens field tools"] { display:none !important; }
@@ -232,6 +236,7 @@
     .facility-packet pre { white-space:pre-wrap; word-break:break-word; background:#0f172a; color:#e0f2fe; border-radius:10px; padding:11px; font-size:11px; line-height:1.45; margin:10px 0; }
     @media (max-width: 560px) {
       .role-grid, .facility-toolbar, .facility-lanes { grid-template-columns:1fr; }
+      .role-workflow { grid-template-columns:repeat(5,106px); overflow-x:auto; padding-bottom:2px; }
       .role-card h1 { font-size:24px; }
     }
     @media (max-width: 360px) {
@@ -353,7 +358,7 @@
     .marketing-primary, .marketing-secondary { border-radius:8px; min-height:48px; padding:0 18px; font-size:15px; font-weight:950; cursor:pointer; }
     .marketing-primary { border:0; background:#0284c7; color:#ffffff; box-shadow:0 10px 26px rgba(2,132,199,.22); }
     .marketing-secondary { background:#ffffff; color:#0369a1; border:1px solid #b9d9e8; box-shadow:0 1px 2px rgba(15,23,42,.06); }
-    .marketing-proof { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; max-width:620px; }
+    .marketing-proof { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:8px; max-width:760px; }
     .marketing-proof div { border:1px solid #dbe8ef; background:#ffffff; border-radius:8px; padding:12px; }
     .marketing-proof strong { display:block; color:#0f172a; font-size:14px; font-weight:950; margin-bottom:4px; }
     .marketing-proof span { display:block; color:#64748b; font-size:12px; line-height:1.35; }
@@ -377,6 +382,7 @@
     @media (max-width: 860px) {
       .marketing-hero { grid-template-columns:1fr; padding-top:30px; gap:22px; }
       .preview-screen { min-height:0; }
+      .marketing-proof { grid-template-columns:repeat(2,minmax(0,1fr)); max-width:none; }
       .marketing-lanes { grid-template-columns:1fr; }
     }
     @media (max-width: 520px) {
@@ -413,17 +419,19 @@
 
     <div class="marketing-hero">
       <div class="marketing-copy">
-        <h1>Photo the part. Prove the path.</h1>
-        <p>PartSnap helps pool techs turn weird parts, labels, and equipment clues into possible matches, missing proof, callback risk, and a cleaner senior-tech or vendor packet before anyone orders blind.</p>
+        <h1>Identify it. Prove it. Move faster.</h1>
+        <p>PartSnap is the front door. SplashLens then helps the tech explain the stop, train from the proof, and remember what happened before the next callback starts cold.</p>
         <div class="marketing-actions">
           <button type="button" class="marketing-primary" onclick="enterSplashLensApp('scan','parts')">Try PartSnap</button>
           <button type="button" class="marketing-secondary" onclick="enterSplashLensApp('errors')">Open Field Tools</button>
           <button type="button" class="marketing-secondary" onclick="enterSplashLensApp('errors','search')">Look Up Codes</button>
         </div>
         <div class="marketing-proof">
-          <div><strong>PartSnap</strong><span>Possible part families, missing proof, callback risk, and clean escalation.</span></div>
-          <div><strong>Connected Network</strong><span>Automation, robots, lights, heat pumps, salt, covers, and smart gear.</span></div>
-          <div><strong>Time Back</strong><span>Voice notes, proof passports, dosing math, and fewer after-hours rewrites.</span></div>
+          <div><strong>Identify</strong><span>PartSnap, codes, labels, and equipment clues.</span></div>
+          <div><strong>Prove</strong><span>Photos, readings, missing proof, and callback risk.</span></div>
+          <div><strong>Explain</strong><span>Customer-safe summaries and senior-tech packets.</span></div>
+          <div><strong>Train</strong><span>Apprentice cards and Facility Assist workflows.</span></div>
+          <div><strong>Remember</strong><span>Service Proof Passport and owner usage signals.</span></div>
         </div>
       </div>
 
@@ -456,8 +464,8 @@
 
     <div class="marketing-lanes">
       <article class="marketing-lane"><h2>Identify the part.</h2><p>Use PartSnap for seals, lids, grids, cells, valves, robot parts, lights, boards, sensors, and the stuff nobody wants to guess at.</p></article>
-      <article class="marketing-lane"><h2>Verify the proof.</h2><p>SplashLens keeps the language cautious: possible matches, missing proof, and manual/vendor/manufacturer verification before ordering.</p></article>
-      <article class="marketing-lane"><h2>Finish the stop.</h2><p>Use dosing math, notes, Route Brain, training cards, and customer-safe summaries to leave cleaner and faster.</p></article>
+      <article class="marketing-lane"><h2>Build the proof.</h2><p>Capture the label, model, readings, photos, symptom, and missing evidence before anyone orders blind.</p></article>
+      <article class="marketing-lane"><h2>Leave a memory.</h2><p>Save a Service Proof Passport so the next tech has context, not a mystery photo buried in a text thread.</p></article>
     </div>
   </section>
 
@@ -498,6 +506,13 @@
       <p style="color:#0284c7;font-size:10px;font-weight:950;letter-spacing:.12em;text-transform:uppercase;margin-bottom:7px;">Choose your front door</p>
       <h1>What kind of pool day is this?</h1>
       <p>SplashLens keeps every tool available. This just chooses the first workflow you see.</p>
+      <div class="role-workflow" aria-label="SplashLens field workflow">
+        <div class="role-step"><b>Identify it</b><span>Part, code, symptom, or lane.</span></div>
+        <div class="role-step"><b>Prove it</b><span>Photos, labels, readings, risk.</span></div>
+        <div class="role-step"><b>Explain it</b><span>Customer or support packet.</span></div>
+        <div class="role-step"><b>Train from it</b><span>Apprentice prompt or review.</span></div>
+        <div class="role-step"><b>Remember it</b><span>Save to proof history.</span></div>
+      </div>
       <div class="role-grid">
         <button type="button" class="role-choice primary" onclick="setSplashLensRole('tech', { persist: true })"><strong>I fix pools for a living</strong><span>PartSnap, codes, route notes, dosing, and deeper field tools first.</span></button>
         <button type="button" class="role-choice" onclick="setSplashLensRole('facility', { persist: true })"><strong>I am responsible for a pool</strong><span>Daily checks, contamination response, basic visible checks, and support packets.</span></button>

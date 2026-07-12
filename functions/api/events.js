@@ -220,6 +220,39 @@ async function eventSummary(request, env) {
   const laneDemand = new Map();
   const partSnapCategories = new Map();
   const sessionEvents = new Map();
+  const workflowStageDefs = [
+    {
+      key: 'identify',
+      label: 'Identify it',
+      hint: 'Scans, PartSnap results, and manual lookup demand.',
+      events: new Set(['ai_scan_started', 'manual_code_search', 'partsnap_result', 'operator_pilot_wizard_opened', 'wizard_open', 'lane_start']),
+    },
+    {
+      key: 'prove',
+      label: 'Prove it',
+      hint: 'Proof drawers, second proof, packets, and risk evidence.',
+      events: new Set(['partsnap_proof_packet_drawer_opened', 'partsnap_second_proof_requested', 'partsnap_packet_copied', 'partsnap_share_used', 'service_proof_summary_generated', 'service_proof_portal_previewed', 'packet_created']),
+    },
+    {
+      key: 'explain',
+      label: 'Explain it',
+      hint: 'Customer summaries, portals, assistant answers, and shares.',
+      events: new Set(['service_proof_portal_copied', 'service_proof_assistant_opened', 'service_proof_assistant_answered', 'service_report_shared', 'pool_crm_packet_copied', 'pool_crm_packet_shared']),
+    },
+    {
+      key: 'train',
+      label: 'Train from it',
+      hint: 'Apprentice mode and guided Route Brain lessons.',
+      events: new Set(['partsnap_apprentice_started', 'route_brain_training_generated', 'route_brain_training_module_opened']),
+    },
+    {
+      key: 'remember',
+      label: 'Remember it',
+      hint: 'Service Proof Passport, report, and pool-history saves.',
+      events: new Set(['partsnap_saved_to_pool', 'route_brain_saved_to_pool', 'service_report_saved', 'proof_ready_report_saved', 'manual_equipment_saved', 'next_visit_reminder_saved', 'daily_check_logged', 'lane_complete']),
+    },
+  ];
+  const workflowStageCounts = new Map(workflowStageDefs.map((stage) => [stage.key, { count7d: 0, count30d: 0 }]));
   const meaningfulEvents = new Set([
     'article_referral_open',
     'pwa_installed',
@@ -318,6 +351,13 @@ async function eventSummary(request, env) {
 
     if (ts >= since7d) events7d += 1;
     if (ts >= since30d) {
+      for (const stage of workflowStageDefs) {
+        if (stage.events.has(record.event)) {
+          const counts = workflowStageCounts.get(stage.key);
+          counts.count30d += 1;
+          if (ts >= since7d) counts.count7d += 1;
+        }
+      }
       const lane = demandLane(record, props);
       if (lane) inc(laneDemand, lane);
       events30d += 1;
@@ -531,6 +571,13 @@ async function eventSummary(request, env) {
     topFacilityLanes: topList(facilityLanes),
     topFacilityOutcomes: topList(facilityOutcomes),
     topPartSnapCategories: topList(partSnapCategories),
+    workflowStages: workflowStageDefs.map((stage) => ({
+      key: stage.key,
+      label: stage.label,
+      hint: stage.hint,
+      count30d: workflowStageCounts.get(stage.key).count30d,
+      count7d: workflowStageCounts.get(stage.key).count7d,
+    })),
     topPaths: topList(paths),
     scanModes: topList(scanModes),
     callbackRisks: topList(callbackRisks),

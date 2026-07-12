@@ -154,6 +154,53 @@
       font-size: 15px;
       letter-spacing: 0;
     }
+    .workflow-panel {
+      grid-column: 1 / -1;
+      padding: 14px;
+    }
+    .workflow-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: baseline;
+      margin-bottom: 12px;
+    }
+    .workflow-head h2 {
+      border: 0;
+      padding: 0;
+    }
+    .workflow-grid {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 8px;
+    }
+    .workflow-card {
+      min-height: 118px;
+      border: 1px solid #dbe8ef;
+      border-radius: 8px;
+      background: #f8fafc;
+      padding: 11px;
+    }
+    .workflow-card strong {
+      display: block;
+      color: #0f172a;
+      font-size: 13px;
+      font-weight: 900;
+      margin-bottom: 8px;
+    }
+    .workflow-num {
+      color: #075985;
+      font-size: 30px;
+      line-height: 1;
+      font-weight: 950;
+      font-variant-numeric: tabular-nums;
+    }
+    .workflow-delta {
+      margin-top: 6px;
+      color: #64748b;
+      font-size: 11px;
+      line-height: 1.35;
+    }
     table {
       width: 100%;
       border-collapse: collapse;
@@ -209,10 +256,12 @@
     @media (max-width: 820px) {
       header, .auth, .panels { grid-template-columns: 1fr; display: grid; }
       .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .workflow-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     }
     @media (max-width: 520px) {
       main { width: min(100% - 20px, 1120px); padding-top: 18px; }
       .grid { grid-template-columns: 1fr; }
+      .workflow-grid { grid-template-columns: 1fr; }
       th, td { padding: 9px 10px; }
     }
   </style>
@@ -236,6 +285,13 @@
     <section class="grid" id="metrics"></section>
 
     <section class="panels">
+      <div class="panel workflow-panel">
+        <div class="workflow-head">
+          <h2>Workflow Trend</h2>
+          <span class="hint">30-day actions, with 7-day pulse from the same event stream.</span>
+        </div>
+        <div class="workflow-grid" id="workflow-trend"></div>
+      </div>
       <div class="panel">
         <h2>Top Events</h2>
         <table id="top-events"></table>
@@ -393,6 +449,25 @@
       });
     }
 
+    function renderWorkflowTrend(stages) {
+      const el = document.getElementById('workflow-trend');
+      const fallback = [
+        ['Identify it', 0, 0, 'Scans, PartSnap results, manual lookup.'],
+        ['Prove it', 0, 0, 'Proof drawers, second proof, packets.'],
+        ['Explain it', 0, 0, 'Summaries, portals, assistant answers.'],
+        ['Train from it', 0, 0, 'Apprentice and Route Brain lessons.'],
+        ['Remember it', 0, 0, 'Passport and report saves.']
+      ];
+      const rows = Array.isArray(stages) && stages.length ? stages : fallback.map(([label, count30d, count7d, hint]) => ({ label, count30d, count7d, hint }));
+      el.innerHTML = rows.map((stage) => `
+        <div class="workflow-card">
+          <strong>${escapeHtml(stage.label)}</strong>
+          <div class="workflow-num">${Number(stage.count30d || 0).toLocaleString()}</div>
+          <div class="workflow-delta">${Number(stage.count7d || 0).toLocaleString()} in 7d<br>${escapeHtml(stage.hint || '')}</div>
+        </div>
+      `).join('');
+    }
+
     function escapeHtml(value) {
       return String(value || '').replace(/[&<>"']/g, (char) => ({
         '&': '&amp;',
@@ -473,6 +548,7 @@
       renderCountTable('scan-modes', data.scanModes, 'Mode');
       renderCountTable('callback-risks', data.callbackRisks, 'Risk');
       renderCountTable('top-paths', data.topPaths, 'Path');
+      renderWorkflowTrend(data.workflowStages);
       renderPayments(data.recentPayments);
       renderSessions(data.recentSessions);
       renderRecent(data.recentEvents);

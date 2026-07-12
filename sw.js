@@ -1,4 +1,4 @@
-const CACHE = 'splashlens-v20-logo-fallbacks';
+const CACHE = 'splashlens-v21-field-intelligence';
 const ASSETS = ['/', '/index.html', '/js/errors.js', '/js/data.js', '/js/app.js?v=20260710-service-proof-os', '/favicon.svg', '/favicon.ico', '/apple-touch-icon.png', '/icon-192.png', '/icon-512.png', '/manifest.json'];
 
 self.addEventListener('install', e => {
