@@ -1,0 +1,6 @@
+name = "splashlens-api"
+main = "worker.js"
+compatibility_date = "2026-05-28"
+
+[vars]
+SPLASHLENS_FORWARD_URL = "https://app.splashlens.com/api/stripe-forward"

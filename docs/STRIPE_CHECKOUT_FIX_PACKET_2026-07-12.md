@@ -28,7 +28,7 @@ Response header:
 X-Splashlens-Checkout-Mode: payment_link_direct
 ```
 
-## Not Yet 100% Automatic
+## Automatic Fulfillment Bridge
 
 Cloudflare currently lists these payment-related secrets:
 
@@ -36,12 +36,13 @@ Cloudflare currently lists these payment-related secrets:
 - `STRIPE_SECRET_KEY`
 - `SPLASHLENS_STRIPE_PAYMENT_LINK_MONTHLY_ID`
 - `SPLASHLENS_STRIPE_PAYMENT_LINK_YEARLY_ID`
+- `SPLASHLENS_STRIPE_FORWARD_SECRET`
 
-Cloudflare does **not** currently list:
+Cloudflare Pages does **not** currently list:
 
 - `STRIPE_WEBHOOK_SECRET`
 
-That means the payment page is live and Payment Link IDs are configured, but automatic webhook fulfillment for Payment Link purchases cannot be considered fully wired until `STRIPE_WEBHOOK_SECRET` is added.
+That direct app webhook secret is still absent because Stripe Dashboard permissions are restricted. To close the production gap without waiting on dashboard access, the existing live Stripe webhook endpoint points to the legacy `splashlens-api` Worker, and that Worker verifies Stripe's signature with its already-installed `STRIPE_WEBHOOK_SECRET`, then forwards checkout events to the current app through `/api/stripe-forward` using `SPLASHLENS_STRIPE_FORWARD_SECRET`.
 
 ## Current Live Payment Link IDs
 
@@ -62,7 +63,43 @@ Stripe returned:
 The provided key does not have the required permissions for this endpoint on account acct_1TJ23t25fqLun6cV.
 ```
 
-So the remaining fix must be done with a Stripe Dashboard user/key that can create webhook endpoints, or by replacing the Cloudflare `STRIPE_SECRET_KEY` with a live key allowed to create Checkout Sessions.
+So the remaining optional cleanup must be done with a Stripe Dashboard user/key that can create webhook endpoints, or by replacing the Cloudflare `STRIPE_SECRET_KEY` with a live key allowed to create Checkout Sessions.
+
+## Production Bridge Installed
+
+Because the existing Stripe account already had a live SplashLens webhook endpoint, production fulfillment now uses this bridge:
+
+```text
+Stripe live webhook we_1TPZOp25fqLun6cVI8G7t2At
+-> https://splashlens-api.warmsnowman831.workers.dev/stripe/webhook
+-> verifies Stripe signature with Worker STRIPE_WEBHOOK_SECRET
+-> signs the raw event with SPLASHLENS_STRIPE_FORWARD_SECRET
+-> https://app.splashlens.com/api/stripe-forward
+-> writes entitlement/payment/event rows in SCAN_USAGE_KV and sends activation/owner emails
+```
+
+Deployed pieces:
+
+- Cloudflare Pages app deploy: `https://3e01c3a8.poolens.pages.dev`
+- Worker deploy: `splashlens-api`, version `aa5540fd-8e13-4a27-9097-adf33cc6af5a`
+- Pages secret added: `SPLASHLENS_STRIPE_FORWARD_SECRET`
+- Worker secret added: `SPLASHLENS_STRIPE_FORWARD_SECRET`
+
+Live checks on 2026-07-12:
+
+```text
+https://app.splashlens.com/api/stripe-forward
+-> 200, signed worker forwards required
+
+https://splashlens-api.warmsnowman831.workers.dev/stripe/webhook
+-> 200, verifier/forwarder ready
+
+https://app.splashlens.com/api/checkout?plan=monthly
+-> 302, X-Splashlens-Checkout-Mode: payment_link_direct
+
+https://app.splashlens.com/api/checkout?plan=yearly
+-> 302, X-Splashlens-Checkout-Mode: payment_link_direct
+```
 
 ## Best Final State
 
@@ -76,7 +113,7 @@ Keep:
 SPLASHLENS_CHECKOUT_MODE=payment_link_direct
 ```
 
-Then in Stripe Dashboard:
+Current bridge is installed through the existing live Stripe endpoint. If dashboard permissions are later available, the cleaner direct endpoint is still:
 
 1. Open Developers -> Webhooks.
 2. Add endpoint:

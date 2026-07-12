@@ -207,7 +207,7 @@ async function sendActivationEmails(env, session, activation) {
   return { buyer, owner };
 }
 
-async function handleCheckoutSession(event, env) {
+export async function handleCheckoutSession(event, env) {
   const session = event.data?.object || {};
   if (!paidEnough(session)) return { ok: true, action: 'ignored_unpaid_or_incomplete' };
   if (!isRecognizedSplashLensCheckout(session, env)) {
