@@ -1,4 +1,4 @@
-SplashLens Field Tools is a pool service app for technicians who need PartSnap pool parts ID, fast equipment troubleshooting lookup, connected-pool field guidance, chemical dosing math, route notes, and proof-ready field records.
+SplashLens Field Tools is a proof-first pool and spa service app for technicians, CPOs, and facility operators who need PartSnap pool parts ID, fast equipment troubleshooting lookup, connected-pool field guidance, chemical dosing math, route notes, and Service Proof Passport records.
 
 Use SplashLens to:
 
@@ -6,6 +6,8 @@ Use SplashLens to:
 - Use PartSnap to photograph unknown pool parts and receive possible manufacturer/model/part-number clues with verification prompts
 - Review PartSnap Callback Risk Score, missing proof, Service Proof Passport saves, Mystery Part ticket IDs, and Apprentice Mode prompts
 - Build cleaner field packets for senior tech review, vendor support, or CRM notes
+- Capture Service Proof Passport history with readings, photos, voice notes, customer-safe summaries, and next-visit context
+- Use Facility Assist for daily checks, contamination events, basic equipment proof, and escalation packets
 - Calculate common chemical dosing adjustments
 - Build service notes, Route Brain field plans, Field Intelligence profiles, escalation packets, and report-style field records
 - Check filter guides, pump/filter checklists, and manual reference tools
@@ -13,4 +15,4 @@ Use SplashLens to:
 
 Manual lookup, Route Brain planning, calculators, notes, filters, and checklists are designed for field use and can work from the app shell after first load. Online AI scan features require internet access and are assistance only. Always verify AI scan output and Route Brain guidance against equipment manuals, calibrated tests, label directions, and professional field judgment.
 
-SplashLens does not guarantee diagnosis, repair, chemical safety, manufacturer support, part fit, CRM sync, or training certification.
+SplashLens is designed to help techs save time and reduce messy follow-up by documenting the stop more clearly. It does not guarantee diagnosis, repair, chemical safety, manufacturer support, part fit, CRM sync, or training certification.

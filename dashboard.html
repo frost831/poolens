@@ -125,6 +125,47 @@
       grid-template-columns: 1fr 1fr;
       gap: 12px;
     }
+    .attention-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .attention-card {
+      background: #0f172a;
+      border: 1px solid #1e3a5f;
+      border-radius: 8px;
+      padding: 14px;
+      color: #e2e8f0;
+      min-height: 126px;
+      box-shadow: 0 1px 2px rgba(15, 23, 42, .08);
+    }
+    .attention-card b {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      padding: 3px 8px;
+      background: #0e7490;
+      color: #ecfeff;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      margin-bottom: 10px;
+    }
+    .attention-card strong {
+      display: block;
+      color: #fff;
+      font-size: 24px;
+      line-height: 1;
+      margin-bottom: 8px;
+      font-variant-numeric: tabular-nums;
+    }
+    .attention-card span {
+      display: block;
+      color: #cbd5e1;
+      font-size: 12px;
+      line-height: 1.38;
+    }
     .panel {
       overflow: hidden;
     }
@@ -190,6 +231,7 @@
     }
     @media (max-width: 820px) {
       header, .auth, .panels { grid-template-columns: 1fr; display: grid; }
+      .attention-grid { grid-template-columns: 1fr; }
       .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     }
     @media (max-width: 520px) {
@@ -216,6 +258,8 @@
     <div class="status" id="status">Enter your stats secret to load current usage.</div>
 
     <section class="grid" id="metrics"></section>
+
+    <section class="attention-grid" id="attention"></section>
 
     <section class="panels">
       <div class="panel">
@@ -299,6 +343,29 @@
 
     function metricCard(label, value, hint) {
       return `<div class="metric"><div class="label">${label}</div><div class="value">${Number(value || 0).toLocaleString()}</div><div class="hint">${hint || ''}</div></div>`;
+    }
+
+    function attentionCard(label, value, note) {
+      return `<div class="attention-card"><b>${escapeHtml(label)}</b><strong>${escapeHtml(value)}</strong><span>${escapeHtml(note)}</span></div>`;
+    }
+
+    function renderAttention(data) {
+      const m = data.metrics || {};
+      const recent = data.recentSessions || [];
+      const stuck = Number(m.partSnapStuck30d || 0);
+      const facility = Number(m.operatorWizard30d || 0);
+      const checkouts = Number(m.checkoutSuccess30d || 0);
+      const meaningful = Number(m.meaningfulActions30d || 0);
+      const poolPro = Number(m.poolProClients30d || 0);
+      const hotSession = recent.find((row) => Number(row.stuckSignals || 0) > 0 || Number(row.scanCount || 0) > 1 || Number(row.checkoutSuccess || 0) > 0);
+      document.getElementById('attention').innerHTML = [
+        attentionCard('Act Today', stuck ? `${stuck} stuck` : 'No stuck parts', stuck ? 'Low-confidence or high-risk PartSnap results need senior-tech/vendor proof language.' : 'PartSnap risk queue is quiet in this sample.'),
+        attentionCard('Media Lift', poolPro ? `${poolPro} clients` : 'No PoolPro lift', poolPro ? 'PoolPro-attributed devices are reaching the app. Watch scans and proof saves next.' : 'No PoolPro-attributed clients in the loaded event window.'),
+        attentionCard('Facility Lane', facility ? `${facility} opens` : 'No CPO opens', facility ? 'Facility Assist is being touched. Good signal for Tim/Aquatic Council pilot.' : 'Push Facility Assist in the next warm training conversation.'),
+        attentionCard('Money Signal', checkouts ? `${checkouts} paid` : 'No paid yet', checkouts ? 'Checkout success is present. Confirm entitlement and onboarding follow-up.' : 'Traffic exists but no checkout success in this sample; keep CTA and Pro proof clear.'),
+        attentionCard('Meaningful Use', meaningful ? `${meaningful} actions` : 'No actions', 'Installs, scans, searches, proof saves, packets, checkout, and feedback count here.'),
+        attentionCard('Hot Session', hotSession ? `${Number(hotSession.eventCount || 0)} events` : 'None flagged', hotSession ? `${hotSession.source || 'app'} on ${hotSession.latestPath || 'unknown path'} had scan/stuck/payment activity.` : 'No obvious session needing immediate review.')
+      ].join('');
     }
 
     function renderCountTable(id, rows, nameLabel) {
@@ -405,6 +472,7 @@
       }
 
       const m = data.metrics || {};
+      renderAttention(data);
       document.getElementById('metrics').innerHTML = [
         metricCard('App Opens 7d', m.appOpens7d, 'Real app usage, not email opens.'),
         metricCard('PoolPro Clients 30d', m.poolProClients30d, 'Anonymous devices from PoolPro attribution.'),

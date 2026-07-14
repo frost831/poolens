@@ -357,6 +357,11 @@
     .marketing-proof div { border:1px solid #dbe8ef; background:#ffffff; border-radius:8px; padding:12px; }
     .marketing-proof strong { display:block; color:#0f172a; font-size:14px; font-weight:950; margin-bottom:4px; }
     .marketing-proof span { display:block; color:#64748b; font-size:12px; line-height:1.35; }
+    .marketing-outcomes { display:grid; grid-template-columns:repeat(5,minmax(96px,1fr)); gap:8px; margin:14px 0 16px; max-width:760px; }
+    .marketing-outcome { min-height:74px; border:1px solid #cbd5e1; border-radius:10px; background:#ffffff; color:#0f172a; padding:10px; text-align:left; cursor:pointer; box-shadow:var(--field-shadow-tight); }
+    .marketing-outcome b { display:block; color:#0369a1; font-size:11px; font-weight:950; margin-bottom:5px; }
+    .marketing-outcome strong { display:block; font-size:13px; font-weight:950; line-height:1.1; }
+    .marketing-outcome span { display:block; color:#64748b; font-size:10px; font-weight:800; margin-top:5px; line-height:1.25; }
     .marketing-preview { background:#082f49; border:1px solid #0e7490; border-radius:14px; padding:14px; box-shadow:0 24px 60px rgba(8,47,73,.2); }
     .preview-top { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:12px; color:#dff6ff; font-size:12px; font-weight:900; }
     .preview-screen { background:#ffffff; border-radius:10px; padding:14px; min-height:420px; display:flex; flex-direction:column; gap:10px; }
@@ -386,6 +391,7 @@
       .marketing-copy h1 { font-size:46px; }
       .marketing-copy p { font-size:16px; }
       .marketing-proof { grid-template-columns:1fr; }
+      .marketing-outcomes { grid-template-columns:1fr 1fr; }
       .marketing-actions { display:grid; grid-template-columns:1fr; }
       .marketing-primary, .marketing-secondary { width:100%; }
       .preview-row { grid-template-columns:1fr; }
@@ -413,17 +419,24 @@
 
     <div class="marketing-hero">
       <div class="marketing-copy">
-        <h1>Photo the part. Prove the path.</h1>
-        <p>PartSnap helps pool techs turn weird parts, labels, and equipment clues into possible matches, missing proof, callback risk, and a cleaner senior-tech or vendor packet before anyone orders blind.</p>
+        <h1>Proof-first pool work.</h1>
+        <p>Identify the part, capture the stop, build the packet, and get back to the next job without rewriting everything after dinner.</p>
         <div class="marketing-actions">
           <button type="button" class="marketing-primary" onclick="enterSplashLensApp('scan','parts')">Try PartSnap</button>
           <button type="button" class="marketing-secondary" onclick="enterSplashLensApp('errors')">Open Field Tools</button>
           <button type="button" class="marketing-secondary" onclick="enterSplashLensApp('errors','search')">Look Up Codes</button>
         </div>
+        <div class="marketing-outcomes" aria-label="Choose a SplashLens workflow">
+          <button type="button" class="marketing-outcome" onclick="enterSplashLensApp('scan','parts')"><b>01</b><strong>ID part</strong><span>photo + proof</span></button>
+          <button type="button" class="marketing-outcome" onclick="enterSplashLensApp('report')"><b>02</b><strong>Save proof</strong><span>passport</span></button>
+          <button type="button" class="marketing-outcome" onclick="setSplashLensRole('facility', { persist: true })"><b>03</b><strong>Facility</strong><span>CPO path</span></button>
+          <button type="button" class="marketing-outcome" onclick="enterSplashLensApp('route')"><b>04</b><strong>Smart pad</strong><span>robots + controls</span></button>
+          <button type="button" class="marketing-outcome" onclick="quickServiceNote();enterSplashLensApp('report')"><b>05</b><strong>Voice note</strong><span>talk + save</span></button>
+        </div>
         <div class="marketing-proof">
           <div><strong>PartSnap</strong><span>Possible part families, missing proof, callback risk, and clean escalation.</span></div>
-          <div><strong>Connected Network</strong><span>Automation, robots, lights, heat pumps, salt, covers, and smart gear.</span></div>
-          <div><strong>Time Back</strong><span>Voice notes, proof passports, dosing math, and fewer after-hours rewrites.</span></div>
+          <div><strong>Service Proof OS</strong><span>Photos, readings, notes, summaries, and saved stop history.</span></div>
+          <div><strong>Time Back</strong><span>Bigger taps, shorter paths, voice notes, and fewer after-hours rewrites.</span></div>
         </div>
       </div>
 

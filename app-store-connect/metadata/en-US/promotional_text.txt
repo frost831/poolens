@@ -1,1 +1,1 @@
-New Field Intelligence exports: PartSnap proof, equipment trees, callback risk, CRM packets, and quick feedback loops for faster pool stops.
+New proof-first workflows: PartSnap, Service Proof Passport, Facility Assist, callback risk, voice notes, and senior-tech/vendor packets.
