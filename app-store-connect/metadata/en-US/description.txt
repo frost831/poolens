@@ -14,3 +14,5 @@ Use SplashLens to:
 Manual lookup, Route Brain planning, calculators, notes, filters, and checklists are designed for field use and can work from the app shell after first load. Online AI scan features require internet access and are assistance only. Always verify AI scan output and Route Brain guidance against equipment manuals, calibrated tests, label directions, and professional field judgment.
 
 SplashLens does not guarantee diagnosis, repair, chemical safety, manufacturer support, part fit, CRM sync, or training certification.
+
+Terms of Use (Apple Standard EULA): https://www.apple.com/legal/internet-services/itunes/dev/stdeula/

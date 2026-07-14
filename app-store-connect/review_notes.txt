@@ -7,3 +7,5 @@ Store wrapper mode is intended to stay free-core and must not show direct Stripe
 Current web release also includes PartSnap Callback Risk Score, Service Proof Passport save flow, Mystery Part ticket IDs, local review queue, and Apprentice Mode. These are reference workflows only. They do not confirm part fit or replace manufacturer documentation.
 
 This build does not include native paid entitlements, unlimited AI scanning, completed training certificates, manufacturer endorsement, sponsored manufacturer placements, vendor stock/pricing integration, or guaranteed diagnosis/part-fit claims.
+
+Terms of Use (Apple Standard EULA): https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
