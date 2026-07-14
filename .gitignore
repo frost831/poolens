@@ -6,3 +6,7 @@ node_modules/
 dist/
 _deploy/
 .secrets.local/
+
+# Local release proof/evidence folders stay in Dropbox, not Git.
+SplashLens-ios-proof-*/
+release-evidence/
