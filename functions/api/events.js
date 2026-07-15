@@ -180,18 +180,26 @@ async function eventSummary(request, env) {
 
   const url = new URL(request.url);
   const limit = Math.min(Math.max(Number(url.searchParams.get('limit') || 500), 50), 1000);
+  const days = Math.min(Math.max(Number(url.searchParams.get('days') || 30), 1), 90);
   const facilityFilter = clean(url.searchParams.get('facilityId') || url.searchParams.get('facility') || '', 120);
-  let cursor;
-  const keyNames = [];
+  const keySet = new Set();
   const records = [];
 
-  do {
-    const page = await env.SCAN_USAGE_KV.list({ prefix: 'event:', cursor, limit: 1000 });
-    for (const key of page.keys || []) keyNames.push(key.name);
-    cursor = page.list_complete ? undefined : page.cursor;
-  } while (cursor);
+  const nowDate = new Date();
+  for (let dayOffset = 0; dayOffset < days; dayOffset += 1) {
+    const date = new Date(nowDate.getTime() - dayOffset * 24 * 60 * 60 * 1000);
+    const prefix = `event:${date.toISOString().slice(0, 10)}`;
+    let cursor;
+    let pageCount = 0;
+    do {
+      const page = await env.SCAN_USAGE_KV.list({ prefix, cursor, limit: 1000 });
+      for (const key of page.keys || []) keySet.add(key.name);
+      cursor = page.list_complete ? undefined : page.cursor;
+      pageCount += 1;
+    } while (cursor && pageCount < 3);
+  }
 
-  const newestKeys = keyNames.sort((a, b) => b.localeCompare(a)).slice(0, limit);
+  const newestKeys = Array.from(keySet).sort((a, b) => b.localeCompare(a)).slice(0, limit);
   for (const keyName of newestKeys) {
     const raw = await env.SCAN_USAGE_KV.get(keyName);
     if (!raw) continue;
@@ -472,6 +480,7 @@ async function eventSummary(request, env) {
     generatedAt: new Date().toISOString(),
     metrics: {
       storedEvents: records.length,
+      coverageDays: days,
       filteredEvents: filteredRecords.length,
       facilityEvents30d,
       facilityPackets30d,
