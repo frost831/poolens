@@ -61,6 +61,17 @@
       font: inherit;
       font-size: 14px;
     }
+    select {
+      min-height: 40px;
+      border: 1px solid #cbd5e1;
+      border-radius: 7px;
+      padding: 9px 11px;
+      background: #fff;
+      color: #0f172a;
+      font: inherit;
+      font-size: 13px;
+      font-weight: 800;
+    }
     button {
       min-height: 40px;
       border: 0;
@@ -250,6 +261,12 @@
       </div>
       <form class="auth" id="auth-form">
         <input id="secret" type="password" autocomplete="current-password" placeholder="Stats/admin secret">
+        <select id="usage-days" aria-label="Usage window">
+          <option value="7">7 days</option>
+          <option value="1">Today</option>
+          <option value="3">3 days</option>
+          <option value="30">30 days</option>
+        </select>
         <button type="submit">Load</button>
         <button class="secondary" type="button" id="forget">Forget</button>
       </form>
@@ -460,9 +477,10 @@
         return;
       }
       localStorage.setItem(STORAGE_KEY, secret);
-      setStatus('Loading current usage...', false);
+      const days = document.getElementById('usage-days')?.value || '7';
+      setStatus(`Loading current usage for the last ${days === '1' ? 'day' : days + ' days'}...`, false);
 
-      const response = await fetch('/api/events?summary=1&limit=750', {
+      const response = await fetch(`/api/events?summary=1&limit=300&days=${encodeURIComponent(days)}`, {
         headers: { Authorization: `Bearer ${secret}` },
         cache: 'no-store'
       });

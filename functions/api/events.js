@@ -26,6 +26,12 @@ const HIGH_VALUE_PARTSNAP_SIGNALS = new Set([
   'high risk',
 ]);
 
+function chunks(items, size) {
+  const groups = [];
+  for (let i = 0; i < items.length; i += size) groups.push(items.slice(i, i + size));
+  return groups;
+}
+
 function json(status, payload, extraHeaders = {}) {
   return new Response(JSON.stringify(payload), {
     status,
@@ -179,8 +185,8 @@ async function eventSummary(request, env) {
   }
 
   const url = new URL(request.url);
-  const limit = Math.min(Math.max(Number(url.searchParams.get('limit') || 500), 50), 1000);
-  const days = Math.min(Math.max(Number(url.searchParams.get('days') || 30), 1), 90);
+  const limit = Math.min(Math.max(Number(url.searchParams.get('limit') || 250), 50), 1000);
+  const days = Math.min(Math.max(Number(url.searchParams.get('days') || 7), 1), 90);
   const facilityFilter = clean(url.searchParams.get('facilityId') || url.searchParams.get('facility') || '', 120);
   const keySet = new Set();
   const records = [];
@@ -200,13 +206,15 @@ async function eventSummary(request, env) {
   }
 
   const newestKeys = Array.from(keySet).sort((a, b) => b.localeCompare(a)).slice(0, limit);
-  for (const keyName of newestKeys) {
-    const raw = await env.SCAN_USAGE_KV.get(keyName);
-    if (!raw) continue;
-    try {
-      const record = JSON.parse(raw);
-      records.push(record);
-    } catch {}
+  for (const group of chunks(newestKeys, 50)) {
+    const values = await Promise.all(group.map((keyName) => env.SCAN_USAGE_KV.get(keyName)));
+    for (const raw of values) {
+      if (!raw) continue;
+      try {
+        const record = JSON.parse(raw);
+        records.push(record);
+      } catch {}
+    }
   }
 
   records.sort((a, b) => eventTime(b) - eventTime(a));
