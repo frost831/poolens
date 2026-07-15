@@ -689,12 +689,14 @@ function readFieldFeedbackState() {
       meaningfulActions: 0,
       signals: [],
       promptShown: 0,
+      quickPromptShown: 0,
+      quickSnoozedUntil: 0,
       snoozedUntil: 0,
       submittedAt: 0,
       ...JSON.parse(localStorage.getItem(FIELD_FEEDBACK_KEY) || '{}'),
     };
   } catch {
-    return { opens: 0, meaningfulActions: 0, signals: [], promptShown: 0, snoozedUntil: 0, submittedAt: 0 };
+    return { opens: 0, meaningfulActions: 0, signals: [], promptShown: 0, quickPromptShown: 0, quickSnoozedUntil: 0, snoozedUntil: 0, submittedAt: 0 };
   }
 }
 
@@ -720,12 +722,83 @@ function recordFieldFeedbackSignal(eventName) {
     state.signals = [...(state.signals || []), { event: eventName, tab: S.tab, at: new Date().toISOString() }].slice(-8);
   }
   writeFieldFeedbackState(state);
-  if (shouldShowFieldFeedback(state)) setTimeout(() => showFieldFeedbackPrompt(eventName), 900);
+  if (shouldShowQuickFeedback(state, eventName)) setTimeout(() => showQuickFeedbackPrompt(eventName), 1100);
+  else if (shouldShowFieldFeedback(state)) setTimeout(() => showFieldFeedbackPrompt(eventName), 900);
 }
 
-function showFieldFeedbackPrompt(trigger = 'usage') {
+function shouldShowQuickFeedback(state, eventName = '') {
+  const now = Date.now();
+  if (!['partsnap_result', 'ai_scan_started', 'manual_code_search', 'service_report_saved', 'proof_ready_report_saved'].includes(eventName)) return false;
+  if (document.getElementById('field-feedback-overlay') || document.getElementById('field-quick-feedback')) return false;
+  if (state.quickSnoozedUntil && now < Number(state.quickSnoozedUntil)) return false;
+  if (state.submittedAt && now - Number(state.submittedAt) < FIELD_FEEDBACK_AFTER_SUBMIT_MS) return false;
+  if (state.quickPromptShown && now - Number(state.quickPromptShown) < 18 * 60 * 60 * 1000) return false;
+  return Number(state.meaningfulActions || 0) >= 1;
+}
+
+function showQuickFeedbackPrompt(trigger = 'usage') {
   const state = readFieldFeedbackState();
-  if (!shouldShowFieldFeedback(state)) return;
+  if (!shouldShowQuickFeedback(state, trigger)) return;
+  state.quickPromptShown = Date.now();
+  writeFieldFeedbackState(state);
+  trackSplashLensEvent('field_feedback_quick_shown', { trigger, meaningful_actions: state.meaningfulActions, current_tab: S.tab });
+
+  const label = trigger === 'partsnap_result'
+    ? 'Did PartSnap help?'
+    : trigger === 'ai_scan_started'
+      ? 'Did the scan help?'
+      : 'Did this help?';
+  const toast = document.createElement('div');
+  toast.id = 'field-quick-feedback';
+  toast.setAttribute('role', 'dialog');
+  toast.setAttribute('aria-live', 'polite');
+  toast.style.cssText = 'position:fixed;left:12px;right:12px;bottom:14px;z-index:9998;display:flex;justify-content:center;pointer-events:none;';
+  toast.innerHTML = `
+    <div style="width:min(520px,100%);background:#ffffff;border:1px solid #bae6fd;border-radius:14px;box-shadow:0 18px 46px rgba(15,23,42,.24);padding:12px;pointer-events:auto;">
+      <p style="color:#0f172a;font-size:15px;font-weight:950;margin-bottom:9px;">${label}</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:8px;">
+        <button type="button" onclick="answerQuickFeedback('helped','${escAttr(trigger)}')" style="background:#0f766e;color:#fff;border:0;border-radius:10px;padding:11px 8px;font-size:13px;font-weight:950;cursor:pointer;">Yes</button>
+        <button type="button" onclick="answerQuickFeedback('missed','${escAttr(trigger)}')" style="background:#fef3c7;color:#92400e;border:1px solid #fde68a;border-radius:10px;padding:11px 8px;font-size:13px;font-weight:950;cursor:pointer;">Wrong / missing</button>
+        <button type="button" onclick="answerQuickFeedback('close','${escAttr(trigger)}')" aria-label="Close feedback" style="background:#f8fafc;color:#64748b;border:1px solid #cbd5e1;border-radius:10px;padding:0 12px;font-size:16px;font-weight:950;cursor:pointer;">x</button>
+      </div>
+    </div>`;
+  document.body.appendChild(toast);
+}
+
+function closeQuickFeedbackPrompt() {
+  document.getElementById('field-quick-feedback')?.remove();
+}
+
+function answerQuickFeedback(answer, trigger = 'usage') {
+  const state = readFieldFeedbackState();
+  state.quickSnoozedUntil = Date.now() + (answer === 'missed' ? 60 * 1000 : 7 * 24 * 60 * 60 * 1000);
+  writeFieldFeedbackState(state);
+  trackSplashLensEvent('field_feedback_quick_answered', {
+    answer,
+    trigger,
+    meaningful_actions: state.meaningfulActions || 0,
+    current_tab: S.tab,
+  });
+  closeQuickFeedbackPrompt();
+  if (answer === 'missed') {
+    state.promptShown = 0;
+    state.snoozedUntil = 0;
+    writeFieldFeedbackState(state);
+    showFieldFeedbackPrompt(trigger, {
+      feedback: trigger === 'partsnap_result'
+        ? 'PartSnap missed or needed: '
+        : trigger === 'ai_scan_started'
+          ? 'The scan missed or needed: '
+          : 'This workflow missed or needed: ',
+      rating: '2',
+      force: true,
+    });
+  }
+}
+
+function showFieldFeedbackPrompt(trigger = 'usage', prefill = {}) {
+  const state = readFieldFeedbackState();
+  if (!prefill.force && !shouldShowFieldFeedback(state)) return;
   state.promptShown = Date.now();
   writeFieldFeedbackState(state);
   trackSplashLensEvent('field_feedback_prompt_shown', { trigger, meaningful_actions: state.meaningfulActions, opens: state.opens });
@@ -746,17 +819,17 @@ function showFieldFeedbackPrompt(trigger = 'usage') {
       </div>
       <p style="color:#64748b;font-size:13px;line-height:1.45;margin-bottom:12px;">One honest note helps shape SplashLens around real pool tech work. Email is optional unless you want Joshua to follow up.</p>
       <label class="field-label" for="field-feedback-text">Feedback</label>
-      <textarea id="field-feedback-text" rows="4" placeholder="Example: PartSnap needed a better label prompt, this code was missing, or this saved me time..." style="width:100%;border:1px solid #cbd5e1;border-radius:10px;padding:11px;font-size:14px;line-height:1.35;resize:vertical;margin-bottom:10px;"></textarea>
+      <textarea id="field-feedback-text" rows="4" placeholder="Example: PartSnap needed a better label prompt, this code was missing, or this saved me time..." style="width:100%;border:1px solid #cbd5e1;border-radius:10px;padding:11px;font-size:14px;line-height:1.35;resize:vertical;margin-bottom:10px;">${escHtml(prefill.feedback || '')}</textarea>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
         <div>
           <label class="field-label" for="field-feedback-rating">How useful was this stop?</label>
           <select id="field-feedback-rating" style="width:100%;border:1px solid #cbd5e1;border-radius:10px;padding:10px;font-size:14px;background:#fff;">
-            <option value="">Pick one</option>
-            <option value="5">5 - saved real time</option>
-            <option value="4">4 - useful</option>
-            <option value="3">3 - okay</option>
-            <option value="2">2 - rough</option>
-            <option value="1">1 - missed it</option>
+            <option value="" ${prefill.rating ? '' : 'selected'}>Pick one</option>
+            <option value="5" ${prefill.rating === '5' ? 'selected' : ''}>5 - saved real time</option>
+            <option value="4" ${prefill.rating === '4' ? 'selected' : ''}>4 - useful</option>
+            <option value="3" ${prefill.rating === '3' ? 'selected' : ''}>3 - okay</option>
+            <option value="2" ${prefill.rating === '2' ? 'selected' : ''}>2 - rough</option>
+            <option value="1" ${prefill.rating === '1' ? 'selected' : ''}>1 - missed it</option>
           </select>
         </div>
         <div>

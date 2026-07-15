@@ -7,8 +7,8 @@ settings:
   base:
     DEVELOPMENT_TEAM: 2XSLXV9H74
     CODE_SIGN_STYLE: Automatic
-    MARKETING_VERSION: "1.0.2"
-    CURRENT_PROJECT_VERSION: 11
+    MARKETING_VERSION: "1.0.6"
+    CURRENT_PROJECT_VERSION: 13
 targets:
   SplashLens:
     type: application

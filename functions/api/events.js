@@ -292,6 +292,8 @@ async function eventSummary(request, env) {
   let proofSaved30d = 0;
   let fieldFeedback30d = 0;
   let fieldTesterOptIns30d = 0;
+  let quickFeedbackHelpful30d = 0;
+  let quickFeedbackMissed30d = 0;
   let operatorWizard30d = 0;
   let checkoutSuccess30d = 0;
   let serviceProofShareLinks30d = 0;
@@ -454,6 +456,10 @@ async function eventSummary(request, env) {
         fieldFeedback30d += 1;
         if (props.field_tester_opt_in === true || props.field_tester_opt_in === 'true') fieldTesterOptIns30d += 1;
       }
+      if (record.event === 'field_feedback_quick_answered') {
+        if (props.answer === 'helped') quickFeedbackHelpful30d += 1;
+        if (props.answer === 'missed') quickFeedbackMissed30d += 1;
+      }
       if (record.event === 'operator_pilot_wizard_opened') operatorWizard30d += 1;
       if (props.facilityId || props.facility_id || ['wizard_open', 'lane_start', 'lane_complete', 'packet_created', 'call_placed', 'scan_used', 'daily_check_logged'].includes(record.event)) {
         facilityEvents30d += 1;
@@ -524,6 +530,8 @@ async function eventSummary(request, env) {
       proofSaved30d,
       fieldFeedback30d,
       fieldTesterOptIns30d,
+      quickFeedbackHelpful30d,
+      quickFeedbackMissed30d,
       operatorWizard30d,
       checkoutSuccess30d,
       serviceProofShareLinks30d,
