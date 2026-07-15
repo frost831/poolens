@@ -2614,6 +2614,96 @@ function copyServiceTrustPortalPreview() {
   trackSplashLensEvent('service_proof_portal_copied', { risk_flags: flags.length });
 }
 
+function serviceProofSharePayload() {
+  const passport = buildServicePassport();
+  const pool = findPoolForReport();
+  const flags = reportProofRiskFlags(passport, pool);
+  const proof = validateReportProof({ quiet: true });
+  return {
+    v: 1,
+    kind: 'splashlens_service_proof_packet',
+    generatedAt: new Date().toISOString(),
+    customer: passport.customer || 'Customer',
+    address: passport.address || '',
+    tech: passport.tech || '',
+    date: passport.date || '',
+    visitType: passport.visitType || 'Service visit',
+    readings: passport.readings || {},
+    proof: {
+      complete: proof.complete,
+      missing: proof.missing || [],
+      photoProof: passport.proof?.photoProof || '',
+      issueNote: passport.proof?.issueNote || '',
+      customerSummary: passport.proof?.customerSummary || buildServiceProofCustomerSummary(),
+    },
+    chemicals: (passport.chemicals || []).slice(0, 12).map((item) => ({
+      name: item.name || '',
+      amount: item.amount || '',
+      cost: item.cost || 0,
+    })),
+    workPerformed: passport.workPerformed || '',
+    equipmentNotes: passport.equipmentNotes || '',
+    recommendations: passport.recommendations || '',
+    nextVisit: passport.nextVisit || '',
+    callbackRisk: passport.callbackRisk || { level: flags.length ? 'medium' : 'low', flags },
+    disclaimer: 'SplashLens is a reference and documentation workflow. Verify repair decisions, part fit, chemical safety, and code requirements with manuals, labels, manufacturer guidance, and qualified service judgment.',
+  };
+}
+
+function encodeProofPacketPayload(payload) {
+  const json = JSON.stringify(payload);
+  const bytes = new TextEncoder().encode(json);
+  let binary = '';
+  bytes.forEach((byte) => { binary += String.fromCharCode(byte); });
+  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+}
+
+function createServiceProofShareLink() {
+  const proof = validateReportProof({ quiet: true });
+  if (!proof.complete && !confirm(`Stop proof is incomplete: ${proof.missing.join(', ')}. Create a share link anyway?`)) return;
+  const payload = serviceProofSharePayload();
+  const encoded = encodeProofPacketPayload(payload);
+  const url = `${window.location.origin}/proof-packet.html?p=${encoded}`;
+  const message = `SplashLens Service Proof Packet\n${url}\n\nReference only. Verify repairs, part fit, chemical safety, and code requirements with qualified service judgment.`;
+  const output = document.getElementById('rpt-proof-os-output');
+  if (output) {
+    output.innerHTML = `
+      <section class="brain-card" aria-label="Service Proof share link">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:10px;">
+          <div>
+            <p style="color:#0f766e;font-size:10px;font-weight:950;letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px;">Shareable proof packet</p>
+            <h3 style="color:#0f172a;font-size:18px;line-height:1.1;font-weight:950;margin:0;">${escHtml(payload.customer)} - ${escHtml(payload.visitType)}</h3>
+          </div>
+          <span class="brain-pill ${proof.complete ? 'ready' : 'risk'}">${proof.complete ? 'proof ready' : 'needs proof'}</span>
+        </div>
+        <p style="color:#334155;font-size:12px;line-height:1.45;margin-bottom:10px;">This creates a customer/senior-tech packet link from this visit. The packet is reference-only and keeps all repair decisions in qualified hands.</p>
+        <input type="text" readonly value="${escAttr(url)}" onclick="this.select()" style="width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:10px;font-size:12px;margin-bottom:10px;">
+        <div class="brain-grid">
+          <button type="button" class="brain-action green" onclick="copyTextToClipboard('${escAttr(message)}','Proof packet link copied.')">Copy link</button>
+          <a class="brain-action secondary" href="${escAttr(url)}" target="_blank" rel="noopener" style="text-align:center;text-decoration:none;">Open packet</a>
+        </div>
+      </section>`;
+  }
+  if (navigator.share) {
+    navigator.share({ title: 'SplashLens Service Proof Packet', text: message, url }).catch(() => {});
+  } else if (navigator.clipboard?.writeText) {
+    navigator.clipboard.writeText(message).catch(() => {});
+  }
+  trackSplashLensEvent('service_proof_share_link_created', {
+    proof_ready: proof.complete,
+    risk: payload.callbackRisk?.level || 'unknown',
+    has_customer_summary: Boolean(payload.proof?.customerSummary),
+  });
+}
+
+function copyTextToClipboard(text, confirmation) {
+  if (navigator.clipboard?.writeText) {
+    navigator.clipboard.writeText(text).then(() => alert(confirmation || 'Copied.')).catch(() => alert(text));
+  } else {
+    alert(text);
+  }
+}
+
 const SERVICE_PROOF_FAQ = [
   {
     keys: ['crm', 'jobber', 'skimmer', 'pool brain', 'replace'],

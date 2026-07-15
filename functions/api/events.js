@@ -1,42 +1,29 @@
 const ALERT_EVENTS = new Set([
-  'article_referral_open',
-  'first_app_open',
-  'app_open',
-  'pwa_install_prompt_seen',
   'pwa_installed',
-  'pwa_standalone_open',
   'native_shell_first_open',
-  'ai_scan_started',
-  'manual_code_search',
   'partsnap_result',
-  'partsnap_proof_packet_drawer_opened',
-  'partsnap_packet_copied',
-  'partsnap_share_used',
   'partsnap_saved_to_pool',
   'partsnap_mystery_submitted',
-  'partsnap_apprentice_started',
-  'partsnap_partner_card_opened',
   'partsnap_second_proof_requested',
   'route_brain_saved_to_pool',
-  'service_proof_summary_generated',
-  'service_proof_portal_previewed',
-  'service_proof_portal_copied',
-  'service_proof_assistant_opened',
-  'service_proof_assistant_answered',
+  'service_proof_share_link_created',
   'service_report_saved',
   'proof_ready_report_saved',
   'field_feedback_submitted',
-  'store_review_click',
   'store_review_needs_work',
   'waitlist_signup',
   'checkout_success',
-  'wizard_open',
-  'lane_start',
-  'lane_complete',
   'packet_created',
   'call_placed',
-  'scan_used',
-  'daily_check_logged',
+]);
+
+const HIGH_VALUE_PARTSNAP_SIGNALS = new Set([
+  'low',
+  'cautious',
+  'needs-proof',
+  'needs proof',
+  'high-risk',
+  'high risk',
 ]);
 
 function json(status, payload, extraHeaders = {}) {
@@ -84,6 +71,24 @@ function parseProps(record) {
     if (record.propsJson) return JSON.parse(record.propsJson);
   } catch {}
   return {};
+}
+
+function shouldSendImmediateAlert(record) {
+  if (!ALERT_EVENTS.has(record.event)) return false;
+
+  if (record.event === 'partsnap_result') {
+    const props = parseProps(record);
+    const confidence = clean(props.confidence || props.match_confidence || props.certainty || '', 80).toLowerCase();
+    const risk = clean(props.callback_risk || props.callbackRisk || props.risk || '', 80).toLowerCase();
+    const proofMissing = Array.isArray(props.proof_missing) ? props.proof_missing.length : Number(props.proof_missing_count || 0);
+    return HIGH_VALUE_PARTSNAP_SIGNALS.has(confidence) ||
+      HIGH_VALUE_PARTSNAP_SIGNALS.has(risk) ||
+      risk.includes('high') ||
+      confidence.includes('low') ||
+      proofMissing >= 2;
+  }
+
+  return true;
 }
 
 function inc(map, key) {
@@ -238,6 +243,7 @@ async function eventSummary(request, env) {
     'route_brain_saved_to_pool',
     'service_report_saved',
     'proof_ready_report_saved',
+    'service_proof_share_link_created',
     'field_feedback_submitted',
     'operator_pilot_wizard_opened',
     'checkout_success',
@@ -272,6 +278,7 @@ async function eventSummary(request, env) {
   let fieldTesterOptIns30d = 0;
   let operatorWizard30d = 0;
   let checkoutSuccess30d = 0;
+  let serviceProofShareLinks30d = 0;
   let revenueCents30d = 0;
   const recentPayments = [];
   let poolProEvents30d = 0;
@@ -454,6 +461,7 @@ async function eventSummary(request, env) {
           source: clean(props.payment_source || record.source || 'stripe', 60),
         });
       }
+      if (record.event === 'service_proof_share_link_created') serviceProofShareLinks30d += 1;
       if (props.risk || props.callbackRisk) inc(callbackRisks, props.risk || props.callbackRisk);
     }
     if (ts >= since7d && record.event === 'app_open') appOpens7d += 1;
@@ -501,6 +509,7 @@ async function eventSummary(request, env) {
       fieldTesterOptIns30d,
       operatorWizard30d,
       checkoutSuccess30d,
+      serviceProofShareLinks30d,
       revenueCents30d,
       spaSearches30d,
       robotSearches30d,
@@ -582,6 +591,7 @@ async function sendEventAlert(env, record) {
     service_proof_summary_generated: 'Service Proof summary generated',
     service_proof_portal_previewed: 'Service Proof trust portal previewed',
     service_proof_portal_copied: 'Service Proof trust portal copied',
+    service_proof_share_link_created: 'Service Proof share link created',
     service_proof_assistant_opened: 'Service Proof assistant opened',
     service_proof_assistant_answered: 'Service Proof assistant answered',
     service_report_saved: 'Service report saved',
@@ -788,7 +798,7 @@ export async function onRequestPost({ request, env }) {
   }
 
   let alert = { sent: false, skipped: true };
-  if (ALERT_EVENTS.has(event)) {
+  if (shouldSendImmediateAlert(record)) {
     alert = await sendEventAlert(env, record);
     console.log('SplashLens app event alert:', JSON.stringify({ event, alert }));
   }
