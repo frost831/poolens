@@ -238,6 +238,9 @@ async function eventSummary(request, env) {
   const sources = new Map();
   const referrers = new Map();
   const campaigns = new Map();
+  const activationTypes = new Map();
+  const activationSources = new Map();
+  const activationCampaigns = new Map();
   const laneDemand = new Map();
   const partSnapCategories = new Map();
   const sessionEvents = new Map();
@@ -262,6 +265,9 @@ async function eventSummary(request, env) {
     'service_proof_share_link_created',
     'field_feedback_submitted',
     'operator_pilot_wizard_opened',
+    'facility_workflow_action_selected',
+    'facility_workflow_completed',
+    'activation_completed',
     'checkout_success',
   ]);
   let events7d = 0;
@@ -316,8 +322,10 @@ async function eventSummary(request, env) {
   let chemicalControllerSearches30d = 0;
   let sourcePageViews30d = 0;
   let proofDrawerOpens30d = 0;
+  let activationCompletions30d = 0;
   const uniqueClients30d = new Set();
   const meaningfulClients30d = new Set();
+  const activatedClients30d = new Set();
   const poolProClients30d = new Set();
 
   const facilityEvents = new Map();
@@ -461,7 +469,14 @@ async function eventSummary(request, env) {
         if (props.answer === 'missed') quickFeedbackMissed30d += 1;
       }
       if (record.event === 'operator_pilot_wizard_opened') operatorWizard30d += 1;
-      if (props.facilityId || props.facility_id || ['wizard_open', 'lane_start', 'lane_complete', 'packet_created', 'call_placed', 'scan_used', 'daily_check_logged'].includes(record.event)) {
+      if (record.event === 'activation_completed') {
+        activationCompletions30d += 1;
+        if (clientId) activatedClients30d.add(clientId);
+        inc(activationTypes, props.activation_type || 'unknown');
+        inc(activationSources, props.activation_source || source || 'direct');
+        inc(activationCampaigns, props.activation_campaign || props.attribution_campaign || 'untagged');
+      }
+      if (props.facilityId || props.facility_id || ['wizard_open', 'lane_start', 'lane_complete', 'packet_created', 'call_placed', 'scan_used', 'daily_check_logged', 'facility_workflow_action_selected', 'facility_workflow_completed'].includes(record.event)) {
         facilityEvents30d += 1;
         inc(facilityEvents, record.event);
         if (props.lane) inc(facilityLanes, props.lane);
@@ -507,6 +522,8 @@ async function eventSummary(request, env) {
       firstOpens30d,
       uniqueClients30d: uniqueClients30d.size,
       meaningfulClients30d: meaningfulClients30d.size,
+      activatedClients30d: activatedClients30d.size,
+      activationCompletions30d,
       installPrompts30d,
       installs30d,
       standaloneOpens30d,
@@ -559,6 +576,9 @@ async function eventSummary(request, env) {
     topSources: topList(sources),
     topReferrers: topList(referrers),
     topCampaigns: topList(campaigns),
+    topActivationTypes: topList(activationTypes),
+    topActivationSources: topList(activationSources),
+    topActivationCampaigns: topList(activationCampaigns),
     topPaymentPlans: topList(paymentPlans),
     topDemandLanes: topList(laneDemand),
     topFacilityEvents: topList(facilityEvents),
@@ -718,6 +738,8 @@ async function sendDigestEmail(env, summary) {
     `- App opens 30d: ${m.appOpens30d || 0}`,
     `- Unique clients 30d: ${m.uniqueClients30d || 0}`,
     `- Meaningful clients 30d: ${m.meaningfulClients30d || 0}`,
+    `- Activated clients 30d: ${m.activatedClients30d || 0}`,
+    `- Activation completions 30d: ${m.activationCompletions30d || 0}`,
     '',
     'Field actions',
     `- AI scans 30d: ${m.scans30d || 0}`,

@@ -296,6 +296,18 @@
         <table id="top-campaigns"></table>
       </div>
       <div class="panel">
+        <h2>Activation Types</h2>
+        <table id="activation-types"></table>
+      </div>
+      <div class="panel">
+        <h2>Activation Sources</h2>
+        <table id="activation-sources"></table>
+      </div>
+      <div class="panel">
+        <h2>Activation Campaigns</h2>
+        <table id="activation-campaigns"></table>
+      </div>
+      <div class="panel">
         <h2>Payment Plans</h2>
         <table id="payment-plans"></table>
       </div>
@@ -373,12 +385,14 @@
       const facility = Number(m.operatorWizard30d || 0);
       const checkouts = Number(m.checkoutSuccess30d || 0);
       const meaningful = Number(m.meaningfulActions30d || 0);
+      const activated = Number(m.activatedClients30d || 0);
       const poolPro = Number(m.poolProClients30d || 0);
       const hotSession = recent.find((row) => Number(row.stuckSignals || 0) > 0 || Number(row.scanCount || 0) > 1 || Number(row.checkoutSuccess || 0) > 0);
       document.getElementById('attention').innerHTML = [
         attentionCard('Act Today', stuck ? `${stuck} stuck` : 'No stuck parts', stuck ? 'Low-confidence or high-risk PartSnap results need senior-tech/vendor proof language.' : 'PartSnap risk queue is quiet in this sample.'),
         attentionCard('Media Lift', poolPro ? `${poolPro} clients` : 'No PoolPro lift', poolPro ? 'PoolPro-attributed devices are reaching the app. Watch scans and proof saves next.' : 'No PoolPro-attributed clients in the loaded event window.'),
-        attentionCard('Facility Lane', facility ? `${facility} opens` : 'No CPO opens', facility ? 'Facility Assist is being touched. Good signal for Tim/Aquatic Council pilot.' : 'Push Facility Assist in the next warm training conversation.'),
+        attentionCard('Facility Lane', facility ? `${facility} opens` : 'No CPO opens', facility ? 'Facility Assist is being used. Watch completed workflows and saved reports next.' : 'No Facility Assist wizard opens in the loaded event window.'),
+        attentionCard('Activation', activated ? `${activated} clients` : 'No activations', activated ? 'Clients completed a first lookup, PartSnap, proof-save, or Facility Assist action.' : 'No first-value completion in the loaded event window.'),
         attentionCard('Money Signal', checkouts ? `${checkouts} paid` : 'No paid yet', checkouts ? 'Checkout success is present. Confirm entitlement and onboarding follow-up.' : 'Traffic exists but no checkout success in this sample; keep CTA and Pro proof clear.'),
         attentionCard('Proof Links', Number(m.serviceProofShareLinks30d || 0) ? `${m.serviceProofShareLinks30d} links` : 'No links', Number(m.serviceProofShareLinks30d || 0) ? 'Techs are creating shareable proof packets. This is the strongest Service Proof OS usage signal.' : 'No shareable proof packets in this sample yet.'),
         attentionCard('Meaningful Use', meaningful ? `${meaningful} actions` : 'No actions', 'Installs, scans, searches, proof saves, packets, checkout, and feedback count here.'),
@@ -502,6 +516,8 @@
         metricCard('PoolPro Standalone', m.poolProStandaloneOpens30d, 'Installed/native shell opens from PoolPro.'),
         metricCard('PoolPro Scans', m.poolProScans30d, 'Scanner starts from PoolPro traffic.'),
         metricCard('App Opens 30d', m.appOpens30d, 'Anonymous event count.'),
+        metricCard('Activated Clients 30d', m.activatedClients30d, 'Distinct devices reaching a first-value completion.'),
+        metricCard('Activation Completions 30d', m.activationCompletions30d, 'One-time activation_completed events.'),
         metricCard('Native First Opens', m.nativeFirstOpens30d, 'First iOS/Android app shell opens.'),
         metricCard('iOS First Opens', m.iosFirstOpens30d, 'Apple app first-open signal.'),
         metricCard('Android First Opens', m.androidFirstOpens30d, 'Google Play first-open signal.'),
@@ -537,6 +553,9 @@
       renderCountTable('top-sources', data.topSources, 'Source');
       renderCountTable('top-referrers', data.topReferrers, 'Referrer');
       renderCountTable('top-campaigns', data.topCampaigns, 'Campaign');
+      renderCountTable('activation-types', data.topActivationTypes, 'Activation Type');
+      renderCountTable('activation-sources', data.topActivationSources, 'Source');
+      renderCountTable('activation-campaigns', data.topActivationCampaigns, 'Campaign');
       renderCountTable('payment-plans', data.topPaymentPlans, 'Plan');
       renderCountTable('manual-queries', data.manualQueries, 'Query');
       renderCountTable('demand-lanes', data.topDemandLanes, 'Lane');

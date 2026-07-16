@@ -27,6 +27,7 @@ const SPLASHLENS_IOS_REVIEW_URL = 'https://apps.apple.com/us/app/splashlens/id67
 const SPLASHLENS_PLAY_REVIEW_URL = 'https://play.google.com/store/apps/details?id=com.splashlens.fieldtools';
 const SPLASHLENS_ROLE_KEY = 'sl_role';
 const FACILITY_PACKET_KEY = 'splashlens-facility-packets';
+const ACTIVATION_COMPLETED_KEY = 'splashlens-activation-completed-v1';
 let facilitySessionMode = '';
 let facilityForcedMode = false;
 let activeFacilityConfig = null;
@@ -62,6 +63,17 @@ const STORE_REVIEW_SUCCESS_EVENTS = new Set([
   'pool_crm_packet_shared',
   'pool_csv_downloaded',
   'pool_packet_printed',
+]);
+const ACTIVATION_EVENT_TYPES = new Map([
+  ['manual_code_search', 'manual_lookup'],
+  ['partsnap_result', 'partsnap_result'],
+  ['partsnap_packet_copied', 'partsnap_copy'],
+  ['partsnap_share_used', 'partsnap_share'],
+  ['partsnap_saved_to_pool', 'partsnap_save'],
+  ['service_report_saved', 'proof_report_save'],
+  ['proof_ready_report_saved', 'proof_report_save'],
+  ['facility_workflow_action_selected', 'facility_assist_action'],
+  ['facility_workflow_completed', 'facility_assist_completed'],
 ]);
 
 function normalizeLanguage(value) {
@@ -548,6 +560,11 @@ function completeFacilityLane(laneId, outcome) {
   const packet = buildFacilityPacket(laneId, outcome);
   saveFacilityPacket(packet);
   renderFacilityPacket(packet);
+  trackFacilityEvent('facility_workflow_completed', {
+    lane: laneId,
+    outcome,
+    packet_id: packet.id,
+  });
   trackFacilityEvent(outcome === 'resolved' ? (FACILITY_LANES[laneId]?.event || 'lane_complete') : 'packet_created', {
     lane: laneId,
     outcome,
@@ -1201,8 +1218,8 @@ function startOperatorWizard(intent) {
         'Document who checked it and when, especially if another staff member is covering.'
       ],
       actions: [
-        ['Open Visit Report', "showTab('report')"],
-        ['Chemical Guide', "showTab('guide')"]
+        ['Open Visit Report', 'report'],
+        ['Chemical Guide', 'guide']
       ],
       note: 'Use this as the light front door for non-technical staff. Local code, facility policy, and trained CPO procedures still control.'
     },
@@ -1214,8 +1231,8 @@ function startOperatorWizard(intent) {
         'Retest after circulation time and document the adjustment.'
       ],
       actions: [
-        ['Open Dosing', "showTab('dosing')"],
-        ['Set Volume', "showTab('volume')"]
+        ['Open Dosing', 'dosing'],
+        ['Set Volume', 'volume']
       ],
       note: 'SplashLens helps with math, but label directions, local rules, and trained judgment still matter.'
     },
@@ -1227,8 +1244,8 @@ function startOperatorWizard(intent) {
         'Follow the current local health-code, CDC/MAHC, facility, or trainer-approved response before reopening.'
       ],
       actions: [
-        ['Document Event', "showTab('report')"],
-        ['Call / Escalate', "startOperatorWizard('support')"]
+        ['Document Event', 'report'],
+        ['Save / Share Report', 'report']
       ],
       note: 'This is intentionally conservative. SplashLens should route the operator to the approved standard, not invent a reopening decision.'
     },
@@ -1240,10 +1257,10 @@ function startOperatorWizard(intent) {
         'Capture a photo of the pump label or controller display before calling a service tech.'
       ],
       actions: [
-        ['Scan Label / Code', "showTab('scan')"],
-        ['Save Notes', "showTab('report')"]
+        ['Scan Label / Code', 'scan'],
+        ['Save Notes', 'report']
       ],
-      note: 'This is the line Tim was drawing: help the CPO gather proof and decide when to call, not turn them into a repair tech.'
+      note: 'Gather visible proof and document the issue before deciding whether qualified service is needed.'
     },
     manual: {
       title: 'Find manual or equipment proof',
@@ -1253,10 +1270,10 @@ function startOperatorWizard(intent) {
         'Save the proof packet before calling support or ordering parts.'
       ],
       actions: [
-        ['Open PartSnap', "showTab('scan');setTimeout(()=>setScanMode('parts'),80)"],
-        ['Equipment Notes', "showTab('pools')"]
+        ['Open PartSnap', 'partsnap'],
+        ['Save Equipment Proof', 'pools']
       ],
-      note: 'For a retainer pilot, this becomes the tangible QR sticker path at each facility.'
+      note: 'Keep equipment proof attached to the facility record before ordering parts or requesting support.'
     },
     support: {
       title: 'Escalate to qualified support',
@@ -1266,10 +1283,10 @@ function startOperatorWizard(intent) {
         'Call the configured support route when the issue is above staff scope or involves safety/code uncertainty.'
       ],
       actions: [
-        ['Build Report', "showTab('report')"],
-        ['Call Pilot Support', "window.location.href='tel:+18444821777'"]
+        ['Build Report', 'report'],
+        ['Save / Share Report', 'report']
       ],
-      note: 'Pilot support routes should be configurable per client. The public app should not imply an official Aquatic Council support agreement until one is signed.'
+      note: 'Save or share a complete report through the facility\'s approved support route.'
     }
   };
   const flow = flows[intent] || flows.daily;
@@ -1282,10 +1299,24 @@ function startOperatorWizard(intent) {
         ${flow.steps.map((step, index) => `<div style="display:flex;gap:8px;align-items:flex-start;background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:8px;"><b style="display:grid;place-items:center;width:22px;height:22px;border-radius:999px;background:#e0f2fe;color:#0369a1;font-size:11px;flex:0 0 auto;">${index + 1}</b><span style="color:#334155;font-size:12px;line-height:1.4;font-weight:750;">${escHtml(step)}</span></div>`).join('')}
       </div>
       <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:10px;">
-        ${flow.actions.map(([label, action]) => `<button type="button" onclick="${action}" style="background:#0369a1;color:#fff;border:0;border-radius:9px;padding:10px 8px;font-size:12px;font-weight:950;cursor:pointer;">${escHtml(label)}</button>`).join('')}
+        ${flow.actions.map(([label, target]) => `<button type="button" data-intent="${escAttr(intent)}" data-action="${escAttr(label)}" data-target="${escAttr(target)}" onclick="selectFacilityWorkflowAction(this.dataset.intent,this.dataset.action,this.dataset.target)" style="background:#0369a1;color:#fff;border:0;border-radius:9px;padding:10px 8px;font-size:12px;font-weight:950;cursor:pointer;">${escHtml(label)}</button>`).join('')}
       </div>
       <div class="operator-alert">${escHtml(flow.note)}</div>
     </div>`;
+}
+
+function selectFacilityWorkflowAction(intent, action, target) {
+  trackSplashLensEvent('facility_workflow_action_selected', {
+    intent: intent || 'unknown',
+    action: action || 'unknown',
+    target: target || 'report',
+  });
+  if (target === 'partsnap') {
+    showTab('scan');
+    setTimeout(() => setScanMode('parts'), 80);
+    return;
+  }
+  showTab(target || 'report');
 }
 
 function renderBrandGrid() {
@@ -1442,6 +1473,15 @@ function onErrorSearch(q) {
        ${codeCard(code, `srch-${brandId}-${i}`, brand.color)}
      </div>`
   ).join('');
+  if (q.length >= 2 && onErrorSearch._lastTracked !== q) {
+    onErrorSearch._lastTracked = q;
+    trackSplashLensEvent('manual_code_search', {
+      query: q.slice(0, 40),
+      brand: S.brand || 'all',
+      result_count: matches.length,
+      surface: 'error_search',
+    });
+  }
 }
 
 function clearSearch() {
@@ -5660,6 +5700,37 @@ function getSplashLensAttribution() {
   return readAttribution(sessionStorage) || readAttribution(localStorage) || initSplashLensAttribution() || {};
 }
 
+function claimActivationCompletion(activationType) {
+  const value = JSON.stringify({ activation_type: activationType, completed_at: new Date().toISOString() });
+  try {
+    if (localStorage.getItem(ACTIVATION_COMPLETED_KEY)) return false;
+    localStorage.setItem(ACTIVATION_COMPLETED_KEY, value);
+    return true;
+  } catch {
+    try {
+      if (sessionStorage.getItem(ACTIVATION_COMPLETED_KEY)) return false;
+      sessionStorage.setItem(ACTIVATION_COMPLETED_KEY, value);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+}
+
+function maybeTrackActivationCompleted(eventName, props = {}) {
+  const activationType = ACTIVATION_EVENT_TYPES.get(eventName);
+  if (!activationType || !claimActivationCompletion(activationType)) return;
+  const attribution = getSplashLensAttribution();
+  trackSplashLensEvent('activation_completed', {
+    activation_type: activationType,
+    activation_trigger: eventName,
+    activation_source: attribution.source || props.attribution_source || props.source || 'direct',
+    activation_medium: attribution.medium || props.attribution_medium || '',
+    activation_campaign: attribution.campaign || props.attribution_campaign || '',
+    activation_referrer_host: attribution.referrer_host || props.attribution_referrer_host || '',
+  });
+}
+
 function trackReferralLandingOpen() {
   const attribution = getSplashLensAttribution();
   const source = normalizeAttributionSource(attribution.source);
@@ -5802,6 +5873,7 @@ function trackSplashLensEvent(name, props = {}) {
   if (window.plausible) window.plausible(name, { props: eventProps });
   recordFieldFeedbackSignal(name);
   recordReviewableWin(name);
+  maybeTrackActivationCompleted(name, eventProps);
 
   const payload = JSON.stringify(withLanguageMetadata({
     event: name,
@@ -6764,12 +6836,17 @@ function scanCodeSearch(val) {
     return;
   }
   const safeQuery = query.replace(/[^a-zA-Z0-9 ._-]/g, '').slice(0, 40);
-  if (safeQuery.length >= 2 && scanCodeSearch._lastTracked !== safeQuery) {
-    scanCodeSearch._lastTracked = safeQuery;
-    trackSplashLensEvent('manual_code_search', { query: safeQuery, brand: _scanBrand || 'all' });
-  }
   const hits = searchErrorDB(query, _scanBrand);
   el.innerHTML = renderScanHits(hits, query);
+  const trackingKey = `${_scanBrand || 'all'}:${safeQuery}`;
+  if (safeQuery.length >= 2 && scanCodeSearch._lastTracked !== trackingKey) {
+    scanCodeSearch._lastTracked = trackingKey;
+    trackSplashLensEvent('manual_code_search', {
+      query: safeQuery,
+      brand: _scanBrand || 'all',
+      result_count: hits.length,
+    });
+  }
 }
 
 function searchErrorDB(query, brandFilter) {
