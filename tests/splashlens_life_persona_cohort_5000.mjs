@@ -5,10 +5,16 @@ import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(__dirname, '..');
-const observedPath = path.join(root, 'docs', 'persona-lab', '2026-07-16', 'observed-workflows.json');
-const outputDir = process.argv[2]
-  ? path.resolve(process.argv[2])
+const args = process.argv.slice(2);
+const implementedMode = args.includes('--implemented');
+const positionalArgs = args.filter((arg) => !arg.startsWith('--'));
+const observedPath = positionalArgs[1]
+  ? path.resolve(positionalArgs[1])
+  : path.join(root, 'docs', 'persona-lab', '2026-07-16', 'observed-workflows.json');
+const outputDir = positionalArgs[0]
+  ? path.resolve(positionalArgs[0])
   : path.join(root, 'docs', 'persona-lab', '2026-07-16-5000');
+const runScenario = implementedMode ? 'implemented_recommendations' : 'baseline_plus_recommendations';
 
 if (!fs.existsSync(observedPath)) {
   throw new Error(`Missing browser evidence anchor: ${observedPath}`);
@@ -16,6 +22,7 @@ if (!fs.existsSync(observedPath)) {
 
 const observed = JSON.parse(fs.readFileSync(observedPath, 'utf8'));
 const observedByRole = Object.fromEntries(observed.roles.map((entry) => [entry.role, entry]));
+const observedBaseUrl = observed.base_url || 'browser smoke anchor';
 
 const ROLE_CONFIG = {
   tech: {
@@ -613,6 +620,19 @@ const bundleSummary = {
   bundle_time_to_value_seconds: average(bundlePredicted, 'ttv'),
   evidence_type: 'synthetic_counterfactual_not_observed_product_performance',
 };
+const currentPredicted = implementedMode ? bundlePredicted : baselinePredicted;
+const currentSummary = {
+  scenario: runScenario,
+  expected_completion_rate: average(currentPredicted, 'completion'),
+  expected_wow_rate: average(currentPredicted, 'wow'),
+  expected_love_score: average(currentPredicted, 'love'),
+  expected_time_to_value_seconds: average(currentPredicted, 'ttv'),
+  compared_to_baseline_completion_lift_pp: round(average(currentPredicted, 'completion') - average(baselinePredicted, 'completion')),
+  compared_to_baseline_wow_lift_pp: round(average(currentPredicted, 'wow') - average(baselinePredicted, 'wow')),
+  compared_to_baseline_love_lift: round(average(currentPredicted, 'love') - average(baselinePredicted, 'love')),
+  compared_to_baseline_ttv_reduction_seconds: round(average(baselinePredicted, 'ttv') - average(currentPredicted, 'ttv')),
+  evidence_type: implementedMode ? 'synthetic_post_implementation_estimate_anchored_to_browser_smoke' : 'synthetic_baseline_estimate',
+};
 const bundleRoleSummary = Object.keys(ROLE_CONFIG).map((role) => {
   const roleRows = allRows.filter((row) => row.role === role);
   const baseline = roleRows.map((row) => predictedOutcome(row, []));
@@ -629,6 +649,25 @@ const bundleRoleSummary = Object.keys(ROLE_CONFIG).map((role) => {
     baseline_time_to_value_seconds: average(baseline, 'ttv'),
     bundle_time_to_value_seconds: average(changed, 'ttv'),
     evidence_type: 'synthetic_counterfactual_not_observed_product_performance',
+  };
+});
+const currentRoleSummary = Object.keys(ROLE_CONFIG).map((role) => {
+  const roleRows = allRows.filter((row) => row.role === role);
+  const baseline = roleRows.map((row) => predictedOutcome(row, []));
+  const current = roleRows.map((row) => predictedOutcome(row, implementedMode ? bundle : []));
+  return {
+    role,
+    role_label: ROLE_CONFIG[role].label,
+    scenario: runScenario,
+    expected_completion_rate: average(current, 'completion'),
+    expected_wow_rate: average(current, 'wow'),
+    expected_love_score: average(current, 'love'),
+    expected_time_to_value_seconds: average(current, 'ttv'),
+    baseline_completion_rate: average(baseline, 'completion'),
+    baseline_wow_rate: average(baseline, 'wow'),
+    baseline_love_score: average(baseline, 'love'),
+    baseline_time_to_value_seconds: average(baseline, 'ttv'),
+    evidence_type: implementedMode ? 'synthetic_post_implementation_estimate_anchored_to_browser_smoke' : 'synthetic_baseline_estimate',
   };
 });
 
@@ -660,6 +699,8 @@ writeCsv(path.join(outputDir, 'splashlens-life-pain-points.csv'), pains);
 writeCsv(path.join(outputDir, 'splashlens-intervention-ranking.csv'), interventionRanking);
 writeCsv(path.join(outputDir, 'splashlens-intervention-role-ranking.csv'), interventionRoleRanking);
 writeCsv(path.join(outputDir, 'splashlens-bundle-role-lift.csv'), bundleRoleSummary);
+writeCsv(path.join(outputDir, 'splashlens-current-landing-summary.csv'), [currentSummary]);
+writeCsv(path.join(outputDir, 'splashlens-current-role-landing.csv'), currentRoleSummary);
 writeCsv(path.join(outputDir, 'splashlens-persona-ranking-5000.csv'), personaRanking);
 
 const rankedRoles = [...roleSummary].sort((a, b) => b.wow_rate - a.wow_rate);
@@ -678,6 +719,9 @@ const topTable = topSegments.map((row) => `| ${row.dimension} | ${row.group} | $
 const roleLiftTable = bundleRoleSummary.map((row) =>
   `| ${row.role_label} | ${row.baseline_expected_completion_rate}% | ${row.bundle_expected_completion_rate}% | ${row.baseline_expected_wow_rate}% | ${row.bundle_expected_wow_rate}% | ${row.baseline_time_to_value_seconds}s | ${row.bundle_time_to_value_seconds}s |`,
 ).join('\n');
+const currentRoleTable = currentRoleSummary.map((row) =>
+  `| ${row.role_label} | ${row.expected_completion_rate}% | ${row.expected_wow_rate}% | ${row.expected_love_score} | ${row.expected_time_to_value_seconds}s |`,
+).join('\n');
 const roleFixTable = Object.keys(ROLE_CONFIG).map((role) => {
   const fixes = interventionRoleRanking.filter((row) => row.role === role).slice(0, 3);
   return `| ${ROLE_CONFIG[role].label} | ${fixes.map((row) => row.intervention).join('; ')} |`;
@@ -692,12 +736,15 @@ Run label: DEMO TEST SPLASHLENS 5000 LIFE PERSONA LAB
 
 SplashLens already creates the strongest first-use payoff for Facility / CPO and Service Tech users. Its broadest conversion problem is not lack of capability; it is that the right capability is sometimes hidden behind a generic tool surface. Trainer, Homeowner, and Counter users need to see their own outcome before they are asked to understand the whole product.
 
-The modeled fix bundle raises expected first-value completion from **${bundleSummary.baseline_expected_completion_rate}% to ${bundleSummary.bundle_expected_completion_rate}%**, expected wow from **${bundleSummary.baseline_expected_wow_rate}% to ${bundleSummary.bundle_expected_wow_rate}%**, and love score from **${bundleSummary.baseline_love_score} to ${bundleSummary.bundle_love_score}** while reducing modeled time-to-value from **${bundleSummary.baseline_time_to_value_seconds}s to ${bundleSummary.bundle_time_to_value_seconds}s**. These are synthetic counterfactual estimates, not measured customer outcomes.
+${implementedMode
+  ? `After implementing the recommended role-first bundle, the model lands at **${currentSummary.expected_completion_rate}% expected first-value completion**, **${currentSummary.expected_wow_rate}% expected wow**, **${currentSummary.expected_love_score} love score**, and **${currentSummary.expected_time_to_value_seconds}s modeled time-to-value**. Compared with the original baseline, that is **+${currentSummary.compared_to_baseline_completion_lift_pp} pp completion**, **+${currentSummary.compared_to_baseline_wow_lift_pp} pp wow**, **+${currentSummary.compared_to_baseline_love_lift} love**, and **${currentSummary.compared_to_baseline_ttv_reduction_seconds}s faster**. These remain synthetic post-implementation estimates anchored to browser smoke evidence, not measured customer outcomes.`
+  : `The modeled fix bundle raises expected first-value completion from **${bundleSummary.baseline_expected_completion_rate}% to ${bundleSummary.bundle_expected_completion_rate}%**, expected wow from **${bundleSummary.baseline_expected_wow_rate}% to ${bundleSummary.bundle_expected_wow_rate}%**, and love score from **${bundleSummary.baseline_love_score} to ${bundleSummary.bundle_love_score}** while reducing modeled time-to-value from **${bundleSummary.baseline_time_to_value_seconds}s to ${bundleSummary.bundle_time_to_value_seconds}s**. These are synthetic counterfactual estimates, not measured customer outcomes.`}
 
 ## Evidence Boundary
 
 - **5,000 synthetic lives:** 1,000 per role in ten exact 100-person batches.
-- **Browser anchor:** the existing five-role live smoke run against https://app.splashlens.com, with event and feedback writes intercepted.
+- **Browser anchor:** five-role browser smoke against ${observedBaseUrl}, with event and feedback writes intercepted.
+- **Run scenario:** ${runScenario}.
 - **Not testimonials:** every opinion is labeled SIMULATED PERSONA FEEDBACK.
 - **No production pollution:** zero accounts, zero analytics writes, zero retained app records.
 - **Relevant life context only:** no race, religion, sexual orientation, politics, or other irrelevant protected profiling.
@@ -708,6 +755,12 @@ The modeled fix bundle raises expected first-value completion from **${bundleSum
 | Rank | Role | Completion | Wow | Love | Confidence lift | Stress reduction | Time-back resonance | Minutes saved | Time to value |
 |---:|---|---:|---:|---:|---:|---:|---:|---:|---:|
 ${roleTable}
+
+## Current Landing After Recommendations
+
+| Role | Expected completion | Expected wow | Expected love | Expected time to value |
+|---|---:|---:|---:|---:|
+${currentRoleTable}
 
 ## What Creates The Aha
 
@@ -848,6 +901,7 @@ fs.writeFileSync(path.join(outputDir, 'SPLASHLENS_AHA_FIX_BLUEPRINT_2026-07-16.m
 
 const manifest = {
   run_label: 'DEMO TEST SPLASHLENS 5000 LIFE PERSONA LAB',
+  scenario: runScenario,
   generated_at: new Date().toISOString(),
   deterministic_seed: '0x5000A11A',
   browser_anchor: path.relative(root, observedPath).replaceAll('\\', '/'),
@@ -863,6 +917,7 @@ const manifest = {
   evidence_types: ['browser_observed_anchor', 'synthetic_model_not_real_user_feedback', 'synthetic_counterfactual_not_observed_product_performance'],
   balance_design: 'exact marginal quotas per 100-person batch; randomized combinations; pairwise balance not enforced',
   bundle_summary: bundleSummary,
+  current_summary: currentSummary,
   generator_sha256: hashFile(fileURLToPath(import.meta.url)),
   observed_input_sha256: hashFile(observedPath),
   cohort_sha256: hashFile(cohortFile),
@@ -871,6 +926,8 @@ const manifest = {
     role_summary: hashFile(path.join(outputDir, 'splashlens-life-role-summary.csv')),
     segment_summary: hashFile(path.join(outputDir, 'splashlens-life-segment-summary.csv')),
     intervention_ranking: hashFile(path.join(outputDir, 'splashlens-intervention-ranking.csv')),
+    current_landing_summary: hashFile(path.join(outputDir, 'splashlens-current-landing-summary.csv')),
+    current_role_landing: hashFile(path.join(outputDir, 'splashlens-current-role-landing.csv')),
     persona_ranking: hashFile(path.join(outputDir, 'splashlens-persona-ranking-5000.csv')),
   },
 };

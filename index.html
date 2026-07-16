@@ -209,6 +209,34 @@
     .role-choice strong { display:block; color:#075985; font-size:16px; line-height:1.1; font-weight:950; margin-bottom:8px; }
     .role-choice span { display:block; color:#475569; font-size:12px; line-height:1.35; font-weight:750; }
     .role-choice.primary { background:#e0f2fe; border-color:#7dd3fc; }
+    .role-preferences { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:0 0 14px; }
+    .role-pref-card { background:#f8fafc; border:1px solid #dbe8ef; border-radius:12px; padding:10px; }
+    .role-pref-card strong { display:block; color:#0f172a; font-size:12px; font-weight:950; margin-bottom:7px; }
+    .role-pref-row { display:flex; flex-wrap:wrap; gap:6px; }
+    .role-pref-row button { min-height:36px; background:#ffffff; border:1px solid #cbd5e1; color:#334155; border-radius:999px; padding:7px 10px; font-size:11px; font-weight:900; cursor:pointer; }
+    .role-pref-row button.active { background:#0369a1; color:#ffffff; border-color:#0284c7; }
+    .role-next-action { display:none; background:#ffffff; border:1px solid #99f6e4; border-left:4px solid #0f766e; border-radius:12px; padding:12px; margin-bottom:12px; box-shadow:var(--field-shadow-tight); }
+    .role-next-action.active { display:block; }
+    .role-next-grid { display:grid; grid-template-columns:1.1fr .9fr; gap:10px; align-items:stretch; }
+    .role-next-action h2 { color:#0f172a; font-size:20px; line-height:1.08; font-weight:950; margin-bottom:5px; }
+    .role-next-action p { color:#475569; font-size:12px; line-height:1.4; margin-bottom:9px; }
+    .role-next-actions { display:grid; grid-template-columns:1fr 1fr; gap:7px; }
+    .role-next-actions button { min-height:50px; border-radius:10px; border:1px solid #bae6fd; background:#f8fafc; color:#0f172a; padding:9px; font-size:12px; font-weight:950; text-align:left; cursor:pointer; }
+    .role-next-actions button.primary { background:#0f766e; color:#ffffff; border-color:#5eead4; }
+    .role-next-payoff { background:#0f172a; border-radius:10px; padding:10px; display:flex; flex-direction:column; justify-content:space-between; }
+    .role-next-payoff strong { color:#5eead4; font-size:11px; font-weight:950; text-transform:uppercase; letter-spacing:.08em; }
+    .role-next-payoff span { color:#e2e8f0; font-size:13px; font-weight:900; line-height:1.25; margin-top:8px; display:block; }
+    .role-nudge { position:fixed; left:12px; right:12px; bottom:82px; z-index:70; display:none; justify-content:center; pointer-events:none; }
+    .role-nudge.active { display:flex; }
+    .role-nudge-card { width:min(560px,100%); background:#ffffff; border:1px solid #99f6e4; border-left:4px solid #0f766e; border-radius:12px; padding:10px; box-shadow:0 18px 45px rgba(15,23,42,.22); pointer-events:auto; }
+    .role-nudge-card p { color:#334155; font-size:12px; line-height:1.35; font-weight:800; margin-bottom:8px; }
+    .role-nudge-actions { display:grid; grid-template-columns:repeat(5,1fr); gap:5px; }
+    .role-nudge-actions button { min-height:36px; border:1px solid #dbe8ef; background:#f8fafc; color:#075985; border-radius:8px; font-size:10px; font-weight:950; cursor:pointer; padding:6px 4px; }
+    .homeowner-mode nav[aria-label="SplashLens field tools"] .nav-btn { display:none; }
+    .homeowner-mode nav[aria-label="SplashLens field tools"] #nav-volume,
+    .homeowner-mode nav[aria-label="SplashLens field tools"] #nav-dosing,
+    .homeowner-mode nav[aria-label="SplashLens field tools"] #nav-guide,
+    .homeowner-mode nav[aria-label="SplashLens field tools"] #nav-report { display:flex; }
     .facility-home { display:none; padding:14px; }
     .facility-mode .facility-home { display:block; }
     .facility-mode.facility-tools-hidden main .tab-panel, .facility-mode.facility-tools-hidden nav[aria-label="SplashLens field tools"] { display:none !important; }
@@ -231,8 +259,9 @@
     .facility-step span { color:#334155; font-size:12px; line-height:1.4; font-weight:760; }
     .facility-packet pre { white-space:pre-wrap; word-break:break-word; background:#0f172a; color:#e0f2fe; border-radius:10px; padding:11px; font-size:11px; line-height:1.45; margin:10px 0; }
     @media (max-width: 560px) {
-      .role-grid, .facility-toolbar, .facility-lanes { grid-template-columns:1fr; }
+      .role-grid, .facility-toolbar, .facility-lanes, .role-preferences, .role-next-grid, .role-next-actions { grid-template-columns:1fr; }
       .role-card h1 { font-size:24px; }
+      .role-nudge-actions { grid-template-columns:repeat(3,1fr); }
     }
     @media (max-width: 360px) {
       .rescue-actions { grid-template-columns: 1fr; }
@@ -511,6 +540,24 @@
       <p style="color:#0284c7;font-size:10px;font-weight:950;letter-spacing:.12em;text-transform:uppercase;margin-bottom:7px;">Choose your front door</p>
       <h1>Who are you today?</h1>
       <p>SplashLens keeps every tool available. This just chooses the first workflow you see.</p>
+      <div class="role-preferences" aria-label="First-use preferences">
+        <div class="role-pref-card">
+          <strong>Language</strong>
+          <div class="role-pref-row">
+            <button type="button" data-pref-language="en" onclick="chooseRoleLanguage('en')">English</button>
+            <button type="button" data-pref-language="es" onclick="chooseRoleLanguage('es')">Espanol</button>
+            <button type="button" data-pref-language="pt-BR" onclick="chooseRoleLanguage('pt-BR')">Portugues</button>
+          </div>
+        </div>
+        <div class="role-pref-card">
+          <strong>First result style</strong>
+          <div class="role-pref-row">
+            <button type="button" data-pref-style="steps" onclick="setWorkflowStyle('steps')">Numbered steps</button>
+            <button type="button" data-pref-style="visual" onclick="setWorkflowStyle('visual')">Visual proof</button>
+            <button type="button" data-pref-style="compact" onclick="setWorkflowStyle('compact')">Compact</button>
+          </div>
+        </div>
+      </div>
       <div class="role-grid">
         <button type="button" class="role-choice primary" onclick="setSplashLensRole('tech', { persist: true })"><strong>Service Tech</strong><span>PartSnap, codes, route notes, dosing, and proof packets first.</span></button>
         <button type="button" class="role-choice" onclick="setSplashLensRole('facility', { persist: true })"><strong>Facility / CPO</strong><span>Daily checks, contamination response, basic proof, and support packets.</span></button>
@@ -543,6 +590,19 @@
     </div>
     <div id="facility-result" class="facility-result" style="display:none;"></div>
   </section>
+
+  <aside id="role-nudge" class="role-nudge" aria-label="Choose a SplashLens mode">
+    <div class="role-nudge-card">
+      <p>Want SplashLens to trim this screen for your job today?</p>
+      <div class="role-nudge-actions">
+        <button type="button" onclick="setSplashLensRole('tech', { persist: true, source: 'nudge' })">Tech</button>
+        <button type="button" onclick="setSplashLensRole('facility', { persist: true, source: 'nudge' })">CPO</button>
+        <button type="button" onclick="setSplashLensRole('counter', { persist: true, source: 'nudge' })">Counter</button>
+        <button type="button" onclick="setSplashLensRole('trainer', { persist: true, source: 'nudge' })">Trainer</button>
+        <button type="button" onclick="setSplashLensRole('homeowner', { persist: true, source: 'nudge' })">Homeowner</button>
+      </div>
+    </div>
+  </aside>
 
   <!-- MAIN -->
   <main style="padding-bottom:96px;">
@@ -583,6 +643,8 @@
         </div>
         <p class="rescue-proof"><strong>Offline:</strong> manual lookup, calculators, guides. <strong>Online:</strong> AI scan, PartSnap, voice.</p>
       </section>
+
+      <section id="role-next-action" class="role-next-action" aria-live="polite"></section>
 
       <section class="operator-card" aria-label="CPO and facility manager quick start">
         <h2>CPO / Facility quick start</h2>
@@ -1272,7 +1334,7 @@
 
   <script src="/js/errors.js"></script>
   <script src="/js/data.js"></script>
-  <script src="/js/app.js?v=20260716-aqua-intelligence"></script>
+  <script src="/js/app.js?v=20260716-role-aha"></script>
   <script src="/js/analytics.js"></script>
   <script>
     if ('serviceWorker' in navigator) {

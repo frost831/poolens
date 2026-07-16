@@ -1,0 +1,2 @@
+"scenario","expected_completion_rate","expected_wow_rate","expected_love_score","expected_time_to_value_seconds","compared_to_baseline_completion_lift_pp","compared_to_baseline_wow_lift_pp","compared_to_baseline_love_lift","compared_to_baseline_ttv_reduction_seconds","evidence_type"
+"implemented_recommendations","78","64.9","84.2","63.6","17","28.3","18.3","25.7","synthetic_post_implementation_estimate_anchored_to_browser_smoke"

@@ -26,6 +26,7 @@ const STORE_REVIEW_COOLDOWN_MS = 45 * 24 * 60 * 60 * 1000;
 const SPLASHLENS_IOS_REVIEW_URL = 'https://apps.apple.com/us/app/splashlens/id6763644905?action=write-review';
 const SPLASHLENS_PLAY_REVIEW_URL = 'https://play.google.com/store/apps/details?id=com.splashlens.fieldtools';
 const SPLASHLENS_ROLE_KEY = 'sl_role';
+const WORKFLOW_STYLE_KEY = 'splashlens-workflow-style';
 const FACILITY_PACKET_KEY = 'splashlens-facility-packets';
 const ACTIVATION_COMPLETED_KEY = 'splashlens-activation-completed-v1';
 const SPLASHLENS_ROLES = ['tech', 'facility', 'counter', 'trainer', 'homeowner'];
@@ -140,6 +141,34 @@ function initLanguageLayer() {
     const profile = setPreferredLanguage(select.value);
     trackSplashLensEvent('language_preference_set', { preferred_language: profile.preferredLanguage, locale: profile.locale });
   });
+  refreshFirstUsePreferenceButtons();
+}
+
+function getWorkflowStyle() {
+  try { return localStorage.getItem(WORKFLOW_STYLE_KEY) || 'steps'; }
+  catch { return 'steps'; }
+}
+
+function setWorkflowStyle(style) {
+  const clean = ['steps', 'visual', 'compact'].includes(String(style || '')) ? style : 'steps';
+  try { localStorage.setItem(WORKFLOW_STYLE_KEY, clean); } catch {}
+  refreshFirstUsePreferenceButtons();
+  trackSplashLensEvent('workflow_style_selected', { style: clean, role: getSplashLensRole() });
+}
+
+function chooseRoleLanguage(language) {
+  const profile = setPreferredLanguage(language);
+  const select = document.getElementById('language-select');
+  if (select) select.value = profile.preferredLanguage;
+  refreshFirstUsePreferenceButtons();
+  trackSplashLensEvent('language_preference_set', { preferred_language: profile.preferredLanguage, locale: profile.locale, source: 'first_use_role_picker' });
+}
+
+function refreshFirstUsePreferenceButtons() {
+  const language = getLanguageProfile().preferredLanguage;
+  const style = getWorkflowStyle();
+  document.querySelectorAll('[data-pref-language]').forEach((btn) => btn.classList.toggle('active', btn.dataset.prefLanguage === language));
+  document.querySelectorAll('[data-pref-style]').forEach((btn) => btn.classList.toggle('active', btn.dataset.prefStyle === style));
 }
 
 const CL_MAP = {
@@ -359,6 +388,17 @@ function initSplashLensPersonaMode() {
     return;
   }
 
+  if (params.get('tab') === 'scan' && (params.get('mode') === 'parts' || params.get('activate_scan') === 'parts')) {
+    revealSplashLensApp();
+    showTab('scan');
+    setTimeout(() => {
+      setScanMode('parts');
+      showRoleNudge('partsnap_direct');
+    }, 120);
+    trackSplashLensEvent('partsnap_direct_entry', { role: '', nonblocking_role_prompt: true });
+    return;
+  }
+
   const storedRole = localStorage.getItem(SPLASHLENS_ROLE_KEY);
   if (SPLASHLENS_ROLES.includes(storedRole)) {
     setSplashLensRole(storedRole, { persist: false });
@@ -370,6 +410,7 @@ function initSplashLensPersonaMode() {
 
 function showRolePicker(manual = false) {
   revealSplashLensApp();
+  hideRoleNudge();
   const picker = document.getElementById('role-picker');
   if (!picker) return;
   picker.classList.add('active');
@@ -382,6 +423,17 @@ function showRolePicker(manual = false) {
 function hideRolePicker() {
   const picker = document.getElementById('role-picker');
   if (picker) picker.classList.remove('active');
+}
+
+function showRoleNudge(source = 'usage') {
+  const nudge = document.getElementById('role-nudge');
+  if (!nudge || getSplashLensRole()) return;
+  nudge.classList.add('active');
+  trackSplashLensEvent('role_nudge_shown', { source });
+}
+
+function hideRoleNudge() {
+  document.getElementById('role-nudge')?.classList.remove('active');
 }
 
 function getSplashLensRole() {
@@ -404,6 +456,7 @@ function setSplashLensRole(role, options = {}) {
   facilitySessionMode = options.persist ? '' : cleanRole;
   facilityForcedMode = Boolean(options.forced);
   hideRolePicker();
+  hideRoleNudge();
   revealSplashLensApp();
   document.body.classList.toggle('facility-mode', cleanRole === 'facility');
   document.body.classList.toggle('facility-tools-hidden', cleanRole === 'facility');
@@ -415,15 +468,26 @@ function setSplashLensRole(role, options = {}) {
     trackFacilityEvent('wizard_open', { lane: '', role: cleanRole, forced: facilityForcedMode });
   } else {
     showFacilityTools();
+    renderRoleNextAction(cleanRole);
     if (cleanRole === 'trainer') {
       showTab('scan');
-      setTimeout(() => setScanMode('parts'), 120);
+      setTimeout(() => {
+        setScanMode('parts');
+        renderTrainerSampleLesson();
+      }, 120);
       trackSplashLensEvent('partsnap_apprentice_started', { source: 'role_picker', role: cleanRole });
     } else if (cleanRole === 'counter') {
       showTab('scan');
-      setTimeout(() => setScanMode('parts'), 120);
+      setTimeout(() => {
+        setScanMode('parts');
+        renderCounterSamplePacket();
+      }, 120);
     } else if (cleanRole === 'homeowner') {
       showTab('volume');
+      setTimeout(() => {
+        document.getElementById('turn-vol')?.focus();
+        renderRoleNextAction(cleanRole);
+      }, 120);
     } else {
       showTab('errors');
     }
@@ -433,6 +497,94 @@ function setSplashLensRole(role, options = {}) {
     persisted: Boolean(options.persist),
     session_override: !options.persist,
     forced: Boolean(options.forced),
+    source: options.source || 'role_picker',
+    workflow_style: getWorkflowStyle(),
+  });
+}
+
+const ROLE_NEXT_ACTIONS = {
+  tech: {
+    kicker: 'Service Tech mode',
+    title: 'Start with the thing slowing the stop down.',
+    body: 'Pick code lookup or PartSnap first, then turn the result into proof you can send or save.',
+    payoff: 'Goal: verified next step in under a minute.',
+    actions: [
+      ['Look up a code', 'primary', "focusErrorSearch()"],
+      ['Identify a part', '', "openLivePartSnap()"],
+      ['Save service proof', '', "showTab('report')"],
+      ['Calculate dose', '', "showTab('dosing')"],
+    ],
+  },
+  counter: {
+    kicker: 'Counter / distributor mode',
+    title: 'Prevent the wrong part sale.',
+    body: 'Preview the vendor packet, collect missing proof, then hand off cleaner questions to the tech or vendor.',
+    payoff: 'Goal: fewer callbacks from incomplete proof.',
+    actions: [
+      ['Preview packet', 'primary', "showTab('scan');setTimeout(()=>{setScanMode('parts');renderCounterSamplePacket();},80)"],
+      ['Identify walk-in part', '', "openLivePartSnap()"],
+      ['Copy vendor text', '', "renderCounterSamplePacket()"],
+      ['Search family', '', "focusErrorSearch('pump lid')"],
+    ],
+  },
+  trainer: {
+    kicker: 'Trainer mode',
+    title: 'Turn a weird part into a five-minute lesson.',
+    body: 'Show observe, prove, order, and safety language before asking a student to trust a result.',
+    payoff: 'Goal: teach proof-before-ordering fast.',
+    actions: [
+      ['Open sample lesson', 'primary', "showTab('scan');setTimeout(()=>{setScanMode('parts');renderTrainerSampleLesson();},80)"],
+      ['Use real part', '', "openLivePartSnap()"],
+      ['Facility scenario', '', "setSplashLensRole('facility',{persist:false,forced:true,source:'trainer_facility'})"],
+      ['Training notes', '', "showTab('guide')"],
+    ],
+  },
+  homeowner: {
+    kicker: 'Homeowner-safe mode',
+    title: 'Get a basic answer, then know when to call a pro.',
+    body: 'Start with volume or a simple service note. Technical repair tools stay out of the way until you choose them.',
+    payoff: 'Goal: clarity without pretending to diagnose.',
+    actions: [
+      ['Pool volume', 'primary', "showTab('volume');setTimeout(()=>document.getElementById('turn-vol')?.focus(),80)"],
+      ['Basic dose math', '', "showTab('dosing')"],
+      ['Prepare pro note', '', "showTab('report');quickServiceNote()"],
+      ['Show pro tools', '', "document.body.classList.remove('homeowner-mode');showTab('errors')"],
+    ],
+  },
+};
+
+function renderRoleNextAction(role = getSplashLensRole()) {
+  const panel = document.getElementById('role-next-action');
+  if (!panel) return;
+  const cfg = ROLE_NEXT_ACTIONS[normalizeSplashLensRole(role || '')];
+  if (!cfg) {
+    panel.classList.remove('active');
+    panel.innerHTML = '';
+    return;
+  }
+  panel.classList.add('active');
+  panel.innerHTML = `
+    <div class="role-next-grid">
+      <div>
+        <p style="color:#0f766e;font-size:10px;font-weight:950;letter-spacing:.1em;text-transform:uppercase;margin-bottom:5px;">${escHtml(cfg.kicker)}</p>
+        <h2>${escHtml(cfg.title)}</h2>
+        <p>${escHtml(cfg.body)}</p>
+        <div class="role-next-actions">
+          ${cfg.actions.map(([label, variant, action]) => `<button type="button" class="${variant}" onclick="trackFirstActionStarted('${escAttr(role)}','${escAttr(label)}');${action}">${escHtml(label)}</button>`).join('')}
+        </div>
+      </div>
+      <div class="role-next-payoff">
+        <strong>Time-back payoff</strong>
+        <span>${escHtml(cfg.payoff)}</span>
+      </div>
+    </div>`;
+}
+
+function trackFirstActionStarted(role, action) {
+  trackSplashLensEvent('first_action_started', {
+    role: normalizeSplashLensRole(role) || getSplashLensRole() || '',
+    action,
+    workflow_style: getWorkflowStyle(),
   });
 }
 
@@ -566,6 +718,16 @@ function startFacilityLane(laneId) {
     <h2 style="color:#0f172a;font-size:20px;font-weight:950;line-height:1.1;margin-bottom:10px;">${escHtml(lane.title)}</h2>
     ${lane.steps.map((step, index) => `<div class="facility-step"><b>${index + 1}</b><span>${escHtml(step)}</span></div>`).join('')}
     ${reopen}
+    <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:10px;margin:10px 0;">
+      <p style="color:#0f766e;font-size:10px;font-weight:950;text-transform:uppercase;letter-spacing:.08em;margin-bottom:7px;">Evidence before packet</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:7px;">
+        <input id="facility-reading-fc" type="text" placeholder="FC / sanitizer" aria-label="Facility FC reading" style="font-size:13px;padding:10px;">
+        <input id="facility-reading-ph" type="text" placeholder="pH" aria-label="Facility pH reading" style="font-size:13px;padding:10px;">
+      </div>
+      <input id="facility-symptoms" type="text" placeholder="Symptoms or code on display" aria-label="Facility symptoms" style="font-size:13px;padding:10px;margin-bottom:7px;">
+      <input id="facility-recent-changes" type="text" placeholder="Recent changes: pump speed, filter clean, storm, bather load" aria-label="Facility recent changes" style="font-size:13px;padding:10px;margin-bottom:7px;">
+      <input id="facility-photo-refs" type="text" placeholder="Photo refs: label, equipment face, water, reading screenshot" aria-label="Facility photo references" style="font-size:13px;padding:10px;">
+    </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;">
       <button type="button" class="facility-action-btn secondary" onclick="completeFacilityLane('${laneId}', 'resolved')">${escHtml(lane.resolve)}</button>
       <button type="button" class="facility-action-btn" onclick="completeFacilityLane('${laneId}', 'escalate')">${escHtml(lane.escalate)}</button>
@@ -584,6 +746,14 @@ function completeFacilityLane(laneId, outcome) {
     outcome,
     packet_id: packet.id,
   });
+  trackSplashLensEvent('first_value_completed', {
+    role: getSplashLensRole() || 'facility',
+    workflow: 'facility_assist_packet',
+    lane: laneId,
+    outcome,
+    packet_id: packet.id,
+    time_back_message: 'Facility path ended with resolve or escalation packet.',
+  });
   trackFacilityEvent(outcome === 'resolved' ? (FACILITY_LANES[laneId]?.event || 'lane_complete') : 'packet_created', {
     lane: laneId,
     outcome,
@@ -595,6 +765,11 @@ function buildFacilityPacket(laneId, outcome) {
   const lane = FACILITY_LANES[laneId] || FACILITY_LANES.daily;
   const eq = getActiveFacilityEquipment();
   const now = new Date().toISOString();
+  const fc = document.getElementById('facility-reading-fc')?.value?.trim() || '';
+  const ph = document.getElementById('facility-reading-ph')?.value?.trim() || '';
+  const symptoms = (document.getElementById('facility-symptoms')?.value || '').split(/[,;|]/).map((item) => item.trim()).filter(Boolean);
+  const recentChanges = (document.getElementById('facility-recent-changes')?.value || '').split(/[,;|]/).map((item) => item.trim()).filter(Boolean);
+  const photoRefs = (document.getElementById('facility-photo-refs')?.value || '').split(/[,;|]/).map((item) => item.trim()).filter(Boolean);
   return {
     id: `sl-fac-${Date.now().toString(36)}`,
     facility: {
@@ -605,10 +780,10 @@ function buildFacilityPacket(laneId, outcome) {
     timestamp: now,
     lane: laneId,
     laneTitle: lane.title,
-    readings: {},
-    symptoms: [],
-    recentChanges: [],
-    photoRefs: [],
+    readings: { fc, ph },
+    symptoms,
+    recentChanges,
+    photoRefs,
     equipment: {
       id: activeFacilityEquipmentId || eq?.id || '',
       label: eq?.label || '',
@@ -641,6 +816,12 @@ function formatFacilityPacket(packet) {
     `- ID: ${packet.equipment.id || ''}`,
     `- Label: ${packet.equipment.label || ''}`,
     `- Brand/model/code: ${[packet.equipment.brand, packet.equipment.model, packet.equipment.code].filter(Boolean).join(' / ') || 'Needs proof'}`,
+    '',
+    'Evidence captured',
+    `- Readings: ${Object.entries(packet.readings || {}).filter(([, value]) => value).map(([key, value]) => `${key.toUpperCase()} ${value}`).join(' / ') || 'Needs reading proof'}`,
+    `- Symptoms/code: ${(packet.symptoms || []).join(' / ') || 'Needs symptom detail'}`,
+    `- Recent changes: ${(packet.recentChanges || []).join(' / ') || 'None recorded'}`,
+    `- Photo refs: ${(packet.photoRefs || []).join(' / ') || 'Needs photo references'}`,
     '',
     'Steps checked',
     ...packet.steps.map((step, index) => `${index + 1}. ${step}`),
@@ -755,10 +936,14 @@ function recordFieldFeedbackSignal(eventName) {
   if (eventName === 'app_open') state.opens = Number(state.opens || 0) + 1;
   if (FIELD_FEEDBACK_ACTIONS.has(eventName)) {
     state.meaningfulActions = Number(state.meaningfulActions || 0) + 1;
+    state.lastValueAt = Date.now();
+    if (!state.firstValueAt) state.firstValueAt = state.lastValueAt;
     state.signals = [...(state.signals || []), { event: eventName, tab: S.tab, at: new Date().toISOString() }].slice(-8);
   }
   writeFieldFeedbackState(state);
-  if (shouldShowQuickFeedback(state, eventName)) setTimeout(() => showQuickFeedbackPrompt(eventName), 1100);
+  if (['partsnap_result', 'ai_scan_started', 'manual_code_search', 'service_report_saved', 'proof_ready_report_saved'].includes(eventName)) {
+    setTimeout(() => showQuickFeedbackPrompt(eventName), 8500);
+  }
   else if (shouldShowFieldFeedback(state)) setTimeout(() => showFieldFeedbackPrompt(eventName), 900);
 }
 
@@ -769,7 +954,7 @@ function shouldShowQuickFeedback(state, eventName = '') {
   if (state.quickSnoozedUntil && now < Number(state.quickSnoozedUntil)) return false;
   if (state.submittedAt && now - Number(state.submittedAt) < FIELD_FEEDBACK_AFTER_SUBMIT_MS) return false;
   if (state.quickPromptShown && now - Number(state.quickPromptShown) < 18 * 60 * 60 * 1000) return false;
-  return Number(state.meaningfulActions || 0) >= 1;
+  return Number(state.meaningfulActions || 0) >= 2 || (state.firstValueAt && now - Number(state.firstValueAt) >= 8000);
 }
 
 function showQuickFeedbackPrompt(trigger = 'usage') {
@@ -1546,6 +1731,12 @@ function onErrorSearch(q) {
       brand: S.brand || 'all',
       result_count: matches.length,
       surface: 'error_search',
+    });
+    trackSplashLensEvent('first_value_completed', {
+      role: getSplashLensRole(),
+      workflow: 'manual_code_search',
+      result_count: matches.length,
+      time_back_message: 'Code path found without leaving the stop.',
     });
   }
 }
@@ -3554,6 +3745,13 @@ function calcTurnoverRate() {
                : isOk   ? { label:'Marginal', color:'#92400e', bg:'#fffbeb', border:'#fcd34d' }
                :           { label:'Too Slow', color:'#991b1b', bg:'#fef2f2', border:'#fca5a5' };
   const dailyRec = Math.ceil(8 / hours);
+  trackSplashLensEvent('first_value_completed', {
+    role: getSplashLensRole(),
+    workflow: 'turnover_calculator',
+    hours: Number(hours.toFixed(2)),
+    status: status.label,
+    time_back_message: 'Turnover answer calculated without a spreadsheet.',
+  });
   setEl('turn-result', `
     <div class="result-wrap">
       <p style="color:#64748b;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;">Turnover Rate</p>
@@ -5549,6 +5747,83 @@ function setScanMode(mode) {
   updateAIStatusBar();
 }
 
+function openLivePartSnap() {
+  showTab('scan');
+  setTimeout(() => {
+    const result = document.getElementById('scan-result');
+    if (result) result.innerHTML = '';
+    setScanMode('parts');
+    trackSplashLensEvent('first_action_started', {
+      role: getSplashLensRole(),
+      action: 'Use real PartSnap',
+      workflow_style: getWorkflowStyle(),
+    });
+  }, 80);
+}
+
+function renderCounterSamplePacket() {
+  const result = document.getElementById('scan-result');
+  if (!result) return;
+  result.innerHTML = `
+    <div style="margin:12px 0 16px;background:#f8fafc;border:1px solid #99f6e4;border-left:4px solid #0f766e;border-radius:14px;padding:14px;">
+      <p style="color:#0f766e;font-size:10px;font-weight:950;letter-spacing:.12em;text-transform:uppercase;margin-bottom:6px;">Counter sample - no live fitment</p>
+      <h3 style="color:#0f172a;font-size:19px;font-weight:950;line-height:1.08;margin-bottom:7px;">Walk-in pump lid packet</h3>
+      <p style="color:#475569;font-size:12px;line-height:1.45;margin-bottom:10px;">Use this sample to show how SplashLens slows down a risky sale: possible family, missing proof, callback risk, and vendor questions before anyone orders.</p>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:10px;">
+        <div style="background:#ecfeff;border:1px solid #67e8f9;border-radius:9px;padding:9px;"><b style="display:block;color:#0e7490;font-size:12px;">Visible</b><span style="display:block;color:#475569;font-size:11px;margin-top:4px;">lid profile, molded ribs</span></div>
+        <div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:9px;padding:9px;"><b style="display:block;color:#92400e;font-size:12px;">Missing</b><span style="display:block;color:#475569;font-size:11px;margin-top:4px;">pump model plate, diameter</span></div>
+        <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:9px;padding:9px;"><b style="display:block;color:#991b1b;font-size:12px;">Risk</b><span style="display:block;color:#475569;font-size:11px;margin-top:4px;">medium callback risk</span></div>
+      </div>
+      <div style="background:#0f172a;border-radius:10px;padding:11px;margin-bottom:10px;">
+        <p style="color:#94a3b8;font-size:10px;font-weight:950;text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Vendor packet</p>
+        <p style="color:#e2e8f0;font-size:12px;line-height:1.45;">Possible pump lid family only. Need model plate, lid OD, union size, and current parts diagram before fitment or order. Customer should not be told this is confirmed.</p>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <button type="button" onclick="copyCounterSamplePacket()" style="background:#0f766e;color:#fff;border:0;border-radius:10px;padding:11px;font-size:12px;font-weight:950;cursor:pointer;">Copy sample packet</button>
+        <button type="button" onclick="openLivePartSnap()" style="background:#ffffff;color:#075985;border:1px solid #bae6fd;border-radius:10px;padding:11px;font-size:12px;font-weight:950;cursor:pointer;">Use real part</button>
+      </div>
+    </div>`;
+  trackSplashLensEvent('counter_sample_packet_viewed', { role: getSplashLensRole(), demo: true });
+}
+
+function copyCounterSamplePacket() {
+  const text = [
+    'SplashLens counter sample packet - DEMO TEST',
+    'Possible family: pump lid / strainer cover',
+    'Visible proof: lid profile, molded ribs',
+    'Missing proof: pump model plate, lid outside diameter, union size, current parts diagram',
+    'Risk: medium callback risk until proof improves',
+    'Language: do not confirm fitment or order until manufacturer diagram and model proof agree.',
+  ].join('\n');
+  navigator.clipboard?.writeText(text);
+  trackSplashLensEvent('counter_sample_packet_copied', { role: getSplashLensRole(), demo: true });
+}
+
+function renderTrainerSampleLesson() {
+  const result = document.getElementById('scan-result');
+  if (!result) return;
+  result.innerHTML = `
+    <div style="margin:12px 0 16px;background:#f8fafc;border:1px solid #bae6fd;border-left:4px solid #0284c7;border-radius:14px;padding:14px;">
+      <p style="color:#0369a1;font-size:10px;font-weight:950;letter-spacing:.12em;text-transform:uppercase;margin-bottom:6px;">DEMO TEST five-minute lesson</p>
+      <h3 style="color:#0f172a;font-size:19px;font-weight:950;line-height:1.08;margin-bottom:7px;">Observe, prove, then order.</h3>
+      <p style="color:#475569;font-size:12px;line-height:1.45;margin-bottom:10px;">Student task: look at a possible pump lid result and decide what proof is still missing before a counter or senior tech should trust it.</p>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:10px;">
+        <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:9px;padding:9px;"><b style="display:block;color:#0369a1;font-size:12px;">1. Observe</b><span style="display:block;color:#475569;font-size:11px;margin-top:4px;">part shape, markings, damage</span></div>
+        <div style="background:#ecfeff;border:1px solid #67e8f9;border-radius:9px;padding:9px;"><b style="display:block;color:#0e7490;font-size:12px;">2. Prove</b><span style="display:block;color:#475569;font-size:11px;margin-top:4px;">model plate, dimensions</span></div>
+        <div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:9px;padding:9px;"><b style="display:block;color:#92400e;font-size:12px;">3. Hold</b><span style="display:block;color:#475569;font-size:11px;margin-top:4px;">no fitment claim yet</span></div>
+      </div>
+      <details style="background:#0f172a;border:1px solid #334155;border-radius:10px;padding:10px;margin-bottom:10px;">
+        <summary style="color:#e2e8f0;font-size:12px;font-weight:950;cursor:pointer;">Show answer key</summary>
+        <p style="color:#cbd5e1;font-size:12px;line-height:1.45;margin-top:8px;">Correct answer: this is not order-ready. The student should request the equipment model plate, lid OD, part markings, and current diagram. A cautious app helps by saying what proof is missing instead of pretending certainty.</p>
+      </details>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <button type="button" onclick="openLivePartSnap()" style="background:#0284c7;color:#fff;border:0;border-radius:10px;padding:11px;font-size:12px;font-weight:950;cursor:pointer;">Use real part</button>
+        <button type="button" onclick="startOperatorWizard('contamination')" style="background:#ffffff;color:#075985;border:1px solid #bae6fd;border-radius:10px;padding:11px;font-size:12px;font-weight:950;cursor:pointer;">CPO scenario</button>
+      </div>
+    </div>`;
+  trackSplashLensEvent('trainer_sample_lesson_viewed', { role: getSplashLensRole(), demo: true });
+}
+
 function renderPartSnapPrimer() {
   const result = document.getElementById('scan-result');
   if (!result || result.innerHTML.trim()) return;
@@ -6316,6 +6591,15 @@ function renderPartsSnapResult(ai, result, status) {
     proof_visible: compactPartSnapList(visibleEvidence),
     proof_missing: compactPartSnapList(missingProof.length ? missingProof : ladder.missing),
     result_summary: [manufacturer, component, model || partNumber].filter(Boolean).join(' / ') || 'Unknown PartSnap result',
+  });
+  trackSplashLensEvent('first_value_completed', {
+    role: getSplashLensRole(),
+    workflow: 'partsnap_result',
+    confidence: confidence || 'unknown',
+    risk: risk.level,
+    proof_visible_count: visibleEvidence.length,
+    proof_missing_count: missingProof.length || (ladder.missing || []).length,
+    time_back_message: 'Part path, missing proof, and packet actions are visible.',
   });
 
   result.innerHTML = `
@@ -7085,6 +7369,12 @@ function scanCodeSearch(val) {
       query: safeQuery,
       brand: _scanBrand || 'all',
       result_count: hits.length,
+    });
+    trackSplashLensEvent('first_value_completed', {
+      role: getSplashLensRole(),
+      workflow: 'scan_lookup_search',
+      result_count: hits.length,
+      time_back_message: 'Lookup answer found inside scanner mode.',
     });
   }
 }

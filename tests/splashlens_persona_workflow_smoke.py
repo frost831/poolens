@@ -141,6 +141,9 @@ def run_role(page: Page, role: str, label: str, base_url: str) -> dict:
 
     elif role == "counter":
         page.locator("#tab-scan.active").wait_for(timeout=5000)
+        page.get_by_text("Counter sample - no live fitment", exact=True).wait_for(timeout=5000)
+        result["sample_packet_visible"] = True
+        page.get_by_role("button", name="Use real part", exact=True).click()
         page.get_by_text("PartSnap AI Service", exact=True).wait_for(timeout=5000)
         inject_demo_part(page)
         text = page.locator("#scan-result").inner_text()
@@ -151,6 +154,10 @@ def run_role(page: Page, role: str, label: str, base_url: str) -> dict:
 
     elif role == "trainer":
         page.locator("#tab-scan.active").wait_for(timeout=5000)
+        page.get_by_text("DEMO TEST five-minute lesson", exact=True).wait_for(timeout=5000)
+        result["sample_lesson_visible"] = True
+        page.get_by_role("button", name="Use real part", exact=True).click()
+        page.get_by_text("PartSnap AI Service", exact=True).wait_for(timeout=5000)
         inject_demo_part(page)
         page.get_by_role("button", name="Apprentice Mode", exact=True).click()
         page.get_by_text("Apprentice Mode", exact=True).last.wait_for(timeout=5000)
@@ -177,6 +184,7 @@ def run_role(page: Page, role: str, label: str, base_url: str) -> dict:
 
     result["active_tab"] = page.locator(".tab-panel.active").get_attribute("id")
     result["nav_item_count"] = page.locator('nav[aria-label="SplashLens field tools"] .nav-btn').count()
+    result["visible_nav_item_count"] = page.locator('nav[aria-label="SplashLens field tools"] .nav-btn:visible').count()
     result["full_feedback_overlay_observed"] = page.locator("#field-feedback-overlay").is_visible()
     result["horizontal_overflow_px"] = page.evaluate(
         "() => Math.max(0, document.documentElement.scrollWidth - document.documentElement.clientWidth)"
