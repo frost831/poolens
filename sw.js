@@ -1,5 +1,5 @@
-const CACHE = 'splashlens-v22-activation-evidence';
-const ASSETS = ['/', '/index.html', '/js/errors.js', '/js/data.js', '/js/app.js?v=20260715-activation-evidence', '/favicon.svg', '/favicon.ico', '/apple-touch-icon.png', '/icon-192.png', '/icon-512.png', '/manifest.json'];
+const CACHE = 'splashlens-v23-aqua-intelligence';
+const ASSETS = ['/', '/index.html', '/js/errors.js', '/js/data.js', '/js/app.js?v=20260716-aqua-intelligence', '/favicon.svg', '/favicon.ico', '/apple-touch-icon.png', '/icon-192.png', '/icon-512.png', '/manifest.json'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)));

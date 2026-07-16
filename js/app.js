@@ -2476,6 +2476,7 @@ function resetChecklist() {
 // ═══════════════════════════════════════════
 let _chemRowId = 0;
 let _reportPoolId = null;
+const REPORT_DRAFT_KEY = 'splashlens-report-draft-v1';
 
 function initReport() {
   const today = new Date().toISOString().split('T')[0];
@@ -2492,6 +2493,7 @@ function initReport() {
   });
   updateReportCostSummary();
   validateReportProof({ quiet: true });
+  renderReportDraftStatus();
   // Show share button only when Web Share API is available (iOS Safari, Android Chrome)
   const shareBtn = document.getElementById('rpt-share-btn');
   if (shareBtn && !navigator.share) shareBtn.style.display = 'none';
@@ -2751,9 +2753,10 @@ function serviceProofSharePayload() {
     },
     chemicals: (passport.chemicals || []).slice(0, 12).map((item) => ({
       name: item.name || '',
-      amount: item.amount || '',
+      amount: item.amount || item.amt || '',
       cost: item.cost || 0,
     })),
+    doseBasis: passport.doseBasis || '',
     workPerformed: passport.workPerformed || '',
     equipmentNotes: passport.equipmentNotes || '',
     recommendations: passport.recommendations || '',
@@ -2898,6 +2901,8 @@ function buildReportText() {
   const rawDate  = _rptVal('rpt-date');
   const date     = rawDate ? new Date(rawDate + 'T12:00:00').toLocaleDateString() : new Date().toLocaleDateString();
   const type     = _rptVal('rpt-type');
+  const priority = _rptVal('rpt-priority') || 'routine';
+  const reviewTo = _rptVal('rpt-review-to');
   const work     = _rptVal('rpt-work');
   const equip    = _rptVal('rpt-equip');
   const rec      = _rptVal('rpt-rec');
@@ -2907,6 +2912,7 @@ function buildReportText() {
   const photoProof = _rptVal('rpt-photo-proof');
   const issueNote = _rptVal('rpt-issue-note');
   const customerSummary = _rptVal('rpt-customer-summary');
+  const doseBasis = _rptVal('rpt-dose-basis');
   const proof = validateReportProof({ quiet: true });
 
   const readings = [
@@ -2932,6 +2938,8 @@ function buildReportText() {
     ...(address ? [`Address  : ${address}`] : []),
     `Tech     : ${tech}`,
     `Visit    : ${type}`,
+    `Priority : ${priority}`,
+    ...(reviewTo ? [`Review   : ${reviewTo}`] : []),
     '',
     ...(readings ? ['WATER READINGS:', readings, `Source: ${readingSource}`, ''] : []),
     'STOP PROOF:',
@@ -2943,6 +2951,7 @@ function buildReportText() {
     '',
     ...(chems.length ? ['CHEMICALS ADDED:', ...chems, ''] : []),
     ...(chemRows.length ? [`EST. CHEMICAL COST: $${totalCost.toFixed(2)}`, ''] : []),
+    ...(doseBasis ? [`DOSE BASIS: ${doseBasis}`, ''] : []),
     ...(work  ? ['WORK PERFORMED:', work, '']  : []),
     ...(equip ? ['EQUIPMENT NOTES:', equip, ''] : []),
     ...(rec   ? ['RECOMMENDATIONS:', rec, '']  : []),
@@ -2968,6 +2977,8 @@ function buildServicePassport() {
     tech: _rptVal('rpt-tech') || 'Tech',
     date: rawDate || new Date().toISOString().split('T')[0],
     visitType: _rptVal('rpt-type') || 'Regular Service',
+    priority: _rptVal('rpt-priority') || 'routine',
+    reviewTo: _rptVal('rpt-review-to'),
     readings: {
       source: _rptVal('rpt-reading-source') || 'manual',
       fc: _rptVal('rpt-fc'),
@@ -2986,6 +2997,7 @@ function buildServicePassport() {
     },
     chemicals: chemRows,
     totalChemicalCost: totalCost,
+    doseBasis: _rptVal('rpt-dose-basis'),
     workPerformed: _rptVal('rpt-work'),
     equipmentNotes: _rptVal('rpt-equip'),
     recommendations: _rptVal('rpt-rec'),
@@ -3000,6 +3012,112 @@ function buildServicePassport() {
     flags,
   };
   return passport;
+}
+
+function readReportDraft() {
+  try { return JSON.parse(localStorage.getItem(REPORT_DRAFT_KEY) || 'null'); }
+  catch (err) { return null; }
+}
+
+function renderReportDraftStatus() {
+  const draft = readReportDraft();
+  const pill = document.getElementById('rpt-draft-pill');
+  const status = document.getElementById('rpt-draft-status');
+  if (!pill || !status) return;
+  if (!draft) {
+    pill.textContent = 'No draft';
+    pill.className = 'brain-pill warn';
+    status.textContent = 'Save an incomplete stop locally before the route pulls you away.';
+    return;
+  }
+  pill.textContent = draft.priority === 'senior-review' ? 'Senior review' : 'Draft saved';
+  pill.className = draft.priority === 'callback-risk' || draft.priority === 'senior-review' ? 'brain-pill risk' : 'brain-pill ready';
+  const when = draft.savedAt ? new Date(draft.savedAt).toLocaleString() : 'recently';
+  status.textContent = `${draft.customer || 'Unnamed stop'} - ${draft.visitType || 'Service'} - saved ${when}.`;
+}
+
+function saveReportDraft() {
+  const draft = buildServicePassport();
+  draft.status = 'draft';
+  draft.proofChecks = {
+    water: _rptChecked('rpt-proof-water'),
+    equipment: _rptChecked('rpt-proof-equipment'),
+    summary: _rptChecked('rpt-proof-summary'),
+  };
+  try {
+    localStorage.setItem(REPORT_DRAFT_KEY, JSON.stringify(draft));
+    renderReportDraftStatus();
+    trackSplashLensEvent('service_report_draft_saved', {
+      priority: draft.priority,
+      proof_ready: !!(draft.proof && draft.proof.complete),
+      chemical_rows: draft.chemicals.length,
+    });
+  } catch (err) {
+    alert('This device could not save the draft locally. Copy or share the report before leaving the page.');
+  }
+}
+
+function setReportDraftValue(id, value) {
+  const el = document.getElementById(id);
+  if (el) el.value = value == null ? '' : String(value);
+}
+
+function resumeReportDraft() {
+  const draft = readReportDraft();
+  if (!draft) {
+    alert('No saved Service Proof draft is available on this device.');
+    return;
+  }
+  _reportPoolId = draft.poolId || null;
+  setReportDraftValue('rpt-customer', draft.customer);
+  setReportDraftValue('rpt-address', draft.address);
+  setReportDraftValue('rpt-tech', draft.tech);
+  setReportDraftValue('rpt-date', draft.date);
+  setReportDraftValue('rpt-type', draft.visitType);
+  setReportDraftValue('rpt-priority', draft.priority || 'routine');
+  setReportDraftValue('rpt-review-to', draft.reviewTo);
+  setReportDraftValue('rpt-dose-basis', draft.doseBasis);
+  const readings = draft.readings || {};
+  setReportDraftValue('rpt-reading-source', readings.source || 'manual');
+  ['fc','cc','ph','ta','ch','cya'].forEach(key => setReportDraftValue(`rpt-${key}`, readings[key]));
+  const proof = draft.proof || {};
+  setReportDraftValue('rpt-photo-proof', proof.photoProof);
+  setReportDraftValue('rpt-issue-note', proof.issueNote);
+  setReportDraftValue('rpt-customer-summary', proof.customerSummary);
+  setReportDraftValue('rpt-work', draft.workPerformed);
+  setReportDraftValue('rpt-equip', draft.equipmentNotes);
+  setReportDraftValue('rpt-rec', draft.recommendations);
+  setReportDraftValue('rpt-next', draft.nextVisit);
+  const checks = draft.proofChecks || {};
+  ['water','equipment','summary'].forEach(key => {
+    const el = document.getElementById(`rpt-proof-${key}`);
+    if (el) el.checked = !!checks[key];
+  });
+  const container = document.getElementById('chem-rows');
+  if (container) container.innerHTML = '';
+  _chemRowId = 0;
+  const chemicals = Array.isArray(draft.chemicals) && draft.chemicals.length ? draft.chemicals : [{}];
+  chemicals.forEach(chemical => {
+    addChemRow();
+    const id = _chemRowId;
+    setReportDraftValue(`cr-name-${id}`, chemical.name);
+    setReportDraftValue(`cr-amt-${id}`, chemical.amt);
+    setReportDraftValue(`cr-cost-${id}`, chemical.cost || '');
+    setReportDraftValue(`cr-stock-${id}`, chemical.stock || 'Truck');
+  });
+  updateReportCostSummary();
+  validateReportProof({ quiet: true });
+  renderReportDraftStatus();
+  trackSplashLensEvent('service_report_draft_resumed', { priority: draft.priority || 'routine' });
+}
+
+function clearReportDraft() {
+  const draft = readReportDraft();
+  if (!draft) return;
+  if (!confirm('Clear the saved Service Proof draft from this device?')) return;
+  localStorage.removeItem(REPORT_DRAFT_KEY);
+  renderReportDraftStatus();
+  trackSplashLensEvent('service_report_draft_cleared', {});
 }
 
 function findPoolForReport() {

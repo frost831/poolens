@@ -1277,6 +1277,11 @@ window.ERROR_DB.connected_pool_brain = {
           causes:["Antea VS antenna not paired to Vigipool app","Tild VP automation supply not configured","Pump model/control mode not supported","Weak wireless signal at pump room","Power to pump/controller interrupted"],
           fix:["Confirm exact pump model and Antea VS compatibility before promising control","Verify Tild VP and Vigipool app see the same equipment room device","Check pump has proper line power and the automation controller is not cycling it incorrectly","Capture app pairing screen, controller label, and pump model plate for vendor support"],
           severity:"medium", callpro:false }
+        ,
+        { code:"CCEI-VIGI-ALERT", name:"Vigipool Remote Alert Or Chemistry Mismatch",
+          causes:["Remote data is stale or the equipment room is offline","Manual water test does not match the app value","Temperature, filtration, pump, light, pH, or ORP alert is tied to one disconnected device","Controller clock or schedule differs from the app","Sensor needs cleaning, calibration, or qualified review"],
+          fix:["Confirm the alert timestamp and whether the local panel still controls the equipment","Capture the Vigipool alert screen, controller label, device status, and network state","Verify chemistry with a fresh manual test before changing feed settings","Compare app schedules with the local controller clock and active mode","Escalate repeated sensor, pH/ORP feed, or electrical faults with the proof packet"],
+          severity:"medium", callpro:false }
       ]
     }
   }
@@ -1446,7 +1451,7 @@ window.ERROR_DB.spa_hot_tub = {
       ]
     },
     "Spa Heat / Swim Spa / Covers": {
-      models:["spa heater tube","spa heat pump","cold plunge/spa heat-cool unit","swim spa","swim current pump","swim jet pump","endless current system","spa cover","cover lifter","cover pump","vacation-range spa","commercial/hospitality spa"],
+      models:["spa heater tube","spa heat pump","cold plunge/spa heat-cool unit","Plunge All-In Gen 2","swim spa","swim current pump","swim jet pump","endless current system","spa cover","cover lifter","cover pump","vacation-range spa","commercial/hospitality spa"],
       codes:[
         { code:"SPA-NO-HEAT", name:"Spa Not Heating",
           causes:["Flow switch open due to dirty filter","Heater relay or element fault","Temperature sensor issue","Spa pack in economy/sleep mode","Breaker/GFCI issue"],
@@ -1476,6 +1481,11 @@ window.ERROR_DB.spa_hot_tub = {
           causes:["Commercial/vacation rental bather load","Drain interval too long","Filters undersized for use","Sanitizer reserve cannot recover","Guest turnover without purge history"],
           fix:["Capture water readings, usage context, and last drain/purge date","Use a purge-drain-refill-reset workflow when chemistry is unrecoverable","Check filters and sanitizer delivery before reopening","Keep customer-safe notes focused on operation and safety, not blame","Follow local code and operator rules for public/commercial spas"],
           severity:"high", callpro:true }
+        ,
+        { code:"PLUNGE-ALLIN-PROOF", name:"Connected Cold Plunge Cooling, Flow, Or App Alert",
+          causes:["Filter or circulation path restricted","Ozone or sanitation maintenance is overdue","Temperature, pressure, or flow sensor alert","Wi-Fi connection weak or app data stale","Setpoint, schedule, or ambient conditions changed"],
+          fix:["Verify actual water temperature with a reliable thermometer before assuming a cooling fault","Capture setpoint, app alert, filter condition, circulation, ozone status, and maintenance reminder","Confirm local controls work before troubleshooting Wi-Fi or cloud status","Check visible flow and filter condition without opening energized equipment","Use current Plunge documentation or qualified service for refrigeration, sensor, electrical, or internal sanitation work"],
+          severity:"medium", callpro:true }
       ]
     },
     "Spa Lights / Audio / Accessories": {
@@ -1527,7 +1537,7 @@ window.ERROR_DB.advanced_sanitizers = {
   color:"#14b8a6",
   categories:{
     "UV / Ozone / AOP Systems": {
-      models:["CMP DEL Ozone","DEL AOP","Paramount Clear O3","Ultra UV2","Hayward HydraPure","Pentair BioShield","AOP 40"],
+      models:["CMP DEL Ozone","DEL AOP","Paramount Clear O3","Ultra UV2","Hayward HydraPure","Pentair BioShield","AOP 40","Jandy X-Series AOP In-Line","Jandy X-Series AOP Off-Line"],
       codes:[
         { code:"AOP-FLOW", name:"AOP / UV / Ozone Flow Fault",
           causes:["Pump not running","Flow switch stuck open","Bypass valve closed","Dirty filter lowering flow"],
@@ -1541,6 +1551,11 @@ window.ERROR_DB.advanced_sanitizers = {
           causes:["Check valve failed","Injector vacuum weak","Tubing routed below water level","Pump off siphon condition"],
           fix:["Replace check valve immediately if water is in ozone tubing","Verify injector vacuum when pump runs","Route tubing per manual with high loop where required","Inspect ozone module for water damage before restarting"],
           severity:"high", callpro:false }
+        ,
+        { code:"JANDY-X-AOP-STATUS", name:"Jandy X-Series AOP Status / Proof Check",
+          causes:["LED state not documented","Flow or installation configuration not verified","Lamp service interval unknown","Ozone tubing or check valve condition unknown","Pool volume or in-line/off-line model does not match the service record"],
+          fix:["Capture the model plate, LED state, plumbing orientation, mounting, and full pad context","Record pool volume and whether the unit is in-line or off-line","Verify circulation flow, lamp age, ozone tubing, and check valve against the current Jandy manual","Keep required sanitizer residuals and manual water testing in place; AOP is supplemental treatment","De-energize equipment and use qualified service for UV-C, ozone, electrical, or pressure-side work"],
+          severity:"medium", callpro:false }
       ]
     },
     "Liquid / Tablet Feeders": {
@@ -1592,7 +1607,7 @@ window.ERROR_DB.automatic_covers = {
   color:"#64748b",
   categories:{
     "Automatic Pool Covers - Coverstar / Cover-Pools / APC": {
-      models:["Coverstar","Cover-Pools","Automatic Pool Covers Inc.","Coverstar Central","Save-T Cover","PowerTouch"],
+      models:["Coverstar","Cover-Pools","Automatic Pool Covers Inc.","Coverstar Central","Save-T Cover","PowerTouch","Latham MeasureGO","Latham MeasurePRO"],
       codes:[
         { code:"COVER-NO-MOVE", name:"Cover Will Not Open Or Close",
           causes:["Key switch/controller not sending power","Breaker/GFCI tripped","Motor thermal overload","Cover track obstructed","Mechanism jammed"],
@@ -1609,6 +1624,31 @@ window.ERROR_DB.automatic_covers = {
         { code:"COVER-SAFETY", name:"Safety / Manual Operation Warning",
           causes:["Emergency/manual operation needed","Power failure","Cover used as only safety layer"],
           fix:["Follow manufacturer manual for manual operation; do not improvise around mechanism","Keep switch/key under responsible control and maintain line of sight","Treat cover as one safety layer, not the only protection","Call cover specialist for rope, motor, or mechanism failures"],
+          severity:"high", callpro:true }
+        ,
+        { code:"COVER-MEASURE-PROOF", name:"Safety Cover Measurement Proof Before Quote",
+          causes:["Pool perimeter or anchor context is incomplete","Steps, raised walls, slides, rocks, or obstructions were not documented","Device lacks the required LiDAR capability","Point map or photos do not match the current pool condition","Manufacturer portal review is still pending"],
+          fix:["Capture the full perimeter, steps, obstructions, raised walls, deck condition, and existing anchor context","Verify the phone/device meets the selected manufacturer measuring workflow requirements","Save wide photos plus close proof of unusual geometry before leaving","Treat the scan as measurement evidence, not final fitment approval","Use the manufacturer's current portal, drawings, and verification process before quoting or ordering"],
+          severity:"medium", callpro:false }
+      ]
+    }
+  }
+};
+
+window.ERROR_DB.pool_safety_monitoring = {
+  label:"Pool Safety Monitoring",
+  color:"#b91c1c",
+  categories:{
+    "Pool Cameras / Smart Alarms": {
+      models:["SwamCam","SwamCam OverWatchAI Dual Camera","smart pool camera","pool alarm","gate alarm","wearable pool alarm"],
+      codes:[
+        { code:"SAFETY-CAM-COVERAGE", name:"Camera Coverage / Blind-Spot Proof",
+          causes:["Camera field of view does not cover every approach","Detection zone or second camera is misaligned","Landscaping, furniture, glare, or structures block coverage","Recent layout changes were not retested"],
+          fix:["Capture both camera views plus wide photos of every pool approach","Document detection-zone boundaries and remaining blind spots","Run a witnessed walk test and record the time, alert destinations, and audible alarm result","Retest after moving furniture, changing landscaping, or servicing the system","Treat camera monitoring as one supplemental layer only; it never replaces supervision, barriers, gates, covers, code-compliant alarms, lifeguards, or an emergency plan"],
+          severity:"high", callpro:true },
+        { code:"SAFETY-CAM-OFFLINE", name:"Safety Camera / Alert Path Offline",
+          causes:["Power or backup power failed","Wi-Fi or account session is offline","Phone/watch notification permissions are disabled","Indoor or outdoor audible alarm did not sound","Keypad, auto-arm, or access configuration failed"],
+          fix:["Keep the pool area secured and supervised while any monitoring layer is unavailable","Verify mains power, backup power, local alarm, network state, app permissions, and every alert destination","Test auto-arm, keypad access, and the documented escalation path without relying on a single phone","Record the failed test and escalate to the installer or manufacturer before returning the system to service","Protect recordings and access credentials; follow local privacy and consent requirements, especially where minors or employees may be recorded"],
           severity:"high", callpro:true }
       ]
     }

@@ -903,6 +903,19 @@
       <div class="info-box" style="margin-bottom:14px;">
         Built for the tech at the stop: fewer taps, faster notes, cleaner proof, and less after-hours paperwork.
       </div>
+      <section class="brain-card" style="margin-bottom:14px;" aria-label="Field Proof Queue">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:9px;">
+          <div><p style="color:#0f766e;font-size:10px;font-weight:950;letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px;">Field Proof Queue</p><h2 style="color:#0f172a;font-size:18px;line-height:1.1;font-weight:950;">Pause the stop. Finish it cleanly later.</h2></div>
+          <span id="rpt-draft-pill" class="brain-pill warn">No draft</span>
+        </div>
+        <p id="rpt-draft-status" style="color:#64748b;font-size:12px;line-height:1.4;margin-bottom:10px;">Save an incomplete stop locally before the route pulls you away.</p>
+        <div class="brain-grid">
+          <button type="button" class="brain-action green" onclick="saveReportDraft()">Save Draft</button>
+          <button type="button" class="brain-action secondary" onclick="resumeReportDraft()">Resume Draft</button>
+          <button type="button" class="brain-action secondary" onclick="createServiceProofShareLink()">Senior Tech Packet</button>
+          <button type="button" class="brain-action orange" onclick="clearReportDraft()">Clear Draft</button>
+        </div>
+      </section>
       <section class="brain-card dark" style="margin-bottom:14px;" aria-label="Service Proof OS">
         <p style="color:#7dd3fc;font-size:10px;font-weight:950;letter-spacing:.12em;text-transform:uppercase;margin-bottom:5px;">Service Proof OS</p>
         <h2 style="color:#fff;font-size:22px;line-height:1.05;font-weight:950;margin-bottom:7px;">Turn this stop into a Service Proof Passport.</h2>
@@ -952,6 +965,21 @@
           <option>Equipment Install</option>
           <option>Inspection</option>
         </select>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div class="field-group">
+          <label class="field-label">Proof Priority</label>
+          <select id="rpt-priority">
+            <option value="routine">Routine</option>
+            <option value="today">Finish Today</option>
+            <option value="callback-risk">Callback Risk</option>
+            <option value="senior-review">Senior Review</option>
+          </select>
+        </div>
+        <div class="field-group">
+          <label class="field-label">Review / Handoff To</label>
+          <input type="text" id="rpt-review-to" placeholder="Senior tech, vendor, office">
+        </div>
       </div>
 
       <hr class="section-div">
@@ -1025,6 +1053,11 @@
           <span id="rpt-cost-total" style="background:#dcfce7;color:#166534;border-radius:999px;padding:3px 8px;font-size:10px;font-weight:900;">$0.00</span>
         </div>
         <p id="rpt-inventory-summary" style="color:#64748b;font-size:12px;line-height:1.45;">Add chemical costs and stock source to estimate stop cost.</p>
+        <div class="field-group" style="margin:10px 0 0;">
+          <label class="field-label" for="rpt-dose-basis">Dose Basis / Calculator Source</label>
+          <input type="text" id="rpt-dose-basis" placeholder="e.g. manual test + product label, SplashLens calculator">
+          <p style="color:#64748b;font-size:11px;line-height:1.4;margin-top:5px;">Record where the recommendation came from. Verify volume, product strength, label directions, and the applied dose before closing the stop.</p>
+        </div>
       </div>
 
       <hr class="section-div">
@@ -1226,7 +1259,7 @@
 
   <script src="/js/errors.js"></script>
   <script src="/js/data.js"></script>
-  <script src="/js/app.js?v=20260715-activation-evidence"></script>
+  <script src="/js/app.js?v=20260716-aqua-intelligence"></script>
   <script src="/js/analytics.js"></script>
   <script>
     if ('serviceWorker' in navigator) {

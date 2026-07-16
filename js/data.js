@@ -110,7 +110,7 @@ window.CHEM_DATA = {
 };
 
 window.SPLASHLENS_TECH_RADAR = {
-  updated: "2026-07-07",
+  updated: "2026-07-16",
   cadence: {
     daily: "Add 3-5 codes, model clues, part families, or proof prompts when new field patterns show up.",
     weekly: "Publish one field card, training scenario, or SEO/AEO hub update for pool tech search.",
@@ -128,13 +128,13 @@ window.SPLASHLENS_TECH_RADAR = {
       name: "Connected Pool Network",
       status: "Live reference layer",
       examples: ["Pentair IntelliCenter", "Hayward Omni", "Jandy iAquaLink", "CCEI Vigipool", "CCEI Tild VP", "CCEI Antea VS", "RS-485 pumps", "valve actuators", "smart heaters", "lighting relays", "automatic covers"],
-      proof: ["controller model", "firmware/app screen", "relay label", "RS-485 wiring photo", "device assignment screen", "breaker/GFCI behavior"],
-      fieldFlags: ["offline app", "lost communication", "wrong relay", "actuator wrong direction", "pump not seen by automation", "light schedule mismatch"]
+      proof: ["controller model", "firmware/app screen", "alert timestamp", "manual chemistry check", "local panel state", "relay label", "RS-485 wiring photo", "device assignment screen", "breaker/GFCI behavior"],
+      fieldFlags: ["offline app", "stale remote alert", "chemistry mismatch", "lost communication", "wrong relay", "actuator wrong direction", "pump not seen by automation", "light schedule mismatch"]
     },
     {
       name: "Heat / Cool",
       status: "Expanding",
-      examples: ["Raypak", "Pentair MasterTemp / UltraTemp", "Hayward Universal H-Series / HeatPro", "Jandy JXi / VersaTemp", "AquaCal", "Gulfstream", "Rheem / Ruud"],
+      examples: ["Raypak", "Pentair MasterTemp / UltraTemp", "Hayward Universal H-Series / HeatPro", "Jandy JXi / VersaTemp", "AquaCal", "Gulfstream", "Rheem / Ruud", "Plunge All-In Gen 2"],
       proof: ["model plate", "fault display", "water flow reading", "filter pressure", "gas/electrical context", "ambient temperature"],
       fieldFlags: ["LO/IF/HL faults", "flow switch", "defrost", "refrigerant/service call", "heater lockout", "cooler/chiller sizing question"]
     },
@@ -153,11 +153,25 @@ window.SPLASHLENS_TECH_RADAR = {
       fieldFlags: ["ORP low", "pH high", "probe drift", "no sample flow", "overfeed risk", "blocked injection fitting", "low tablets", "stale app trend"]
     },
     {
+      name: "Advanced Sanitizers",
+      status: "Updated July 2026",
+      examples: ["Jandy X-Series AOP In-Line", "Jandy X-Series AOP Off-Line", "CMP DEL Ozone", "Paramount Clear O3", "Hayward HydraPure", "Pentair BioShield", "UV-C systems", "ozone systems"],
+      proof: ["model plate", "in-line or off-line configuration", "pool volume", "LED state", "flow and plumbing orientation", "mounting", "lamp age", "ozone tubing and check valve", "manual sanitizer reading"],
+      fieldFlags: ["status light", "low flow", "lamp service interval", "water in ozone tubing", "check-valve failure", "configuration mismatch", "sanitizer residual not verified"]
+    },
+    {
+      name: "Pool Safety Monitoring",
+      status: "New proof lane",
+      examples: ["SwamCam", "SwamCam OverWatchAI Dual Camera", "smart pool cameras", "pool alarms", "gate alarms", "wearable alarms"],
+      proof: ["camera fields of view", "blind spots", "armed state", "walk-test timestamp", "audible alarm", "alert destinations", "network state", "backup power", "keypad and auto-arm", "privacy/access settings"],
+      fieldFlags: ["coverage gap", "camera offline", "alert path failed", "backup power failed", "auto-arm failed", "notification permissions off", "privacy review needed", "supplemental safety layer only"]
+    },
+    {
       name: "Covers / Safety",
       status: "Live reference layer",
-      examples: ["Coverstar", "Cover-Pools", "APC", "Coverstar Central", "Save-T Cover", "cover pumps"],
-      proof: ["track condition", "rope/pulley view", "motor/key switch", "controller label", "standing water load", "fabric alignment"],
-      fieldFlags: ["will not move", "travels crooked", "water on cover", "manual operation", "safety layer warning"]
+      examples: ["Coverstar", "Cover-Pools", "APC", "Coverstar Central", "Save-T Cover", "cover pumps", "Latham MeasureGO", "Latham MeasurePRO"],
+      proof: ["track condition", "rope/pulley view", "motor/key switch", "controller label", "standing water load", "fabric alignment", "full pool perimeter", "steps and raised walls", "obstructions and anchor context", "measurement device capability"],
+      fieldFlags: ["will not move", "travels crooked", "water on cover", "manual operation", "safety layer warning", "measure proof incomplete", "manufacturer review pending"]
     },
     {
       name: "Salt Systems",
