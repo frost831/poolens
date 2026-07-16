@@ -1,0 +1,22 @@
+{
+  "run_label": "DEMO TEST SPLASHLENS PERSONA LAB 2026-07-16",
+  "generated_at": "2026-07-16T22:21:11.865Z",
+  "deterministic_seed": "0x51A5C0DE",
+  "roles": [
+    "tech",
+    "facility",
+    "counter",
+    "trainer",
+    "homeowner"
+  ],
+  "personas_per_role": 500,
+  "batch_size": 100,
+  "total_personas": 2500,
+  "production_accounts_created": 0,
+  "production_writes": "intercepted in browser smoke; cohort is offline only",
+  "cleanup": "ephemeral browser contexts closed; no persistent test records",
+  "evidence_types": [
+    "browser_observed",
+    "synthetic_model_not_real_user_feedback"
+  ]
+}

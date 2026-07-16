@@ -1,0 +1,6 @@
+"group","personas","completion_rate","wow_rate","ease_score","clarity_score","trust_score","usefulness_score","use_again_score","time_to_value_seconds","role_label","observed_status"
+"tech","500","79.6","68","79.8","79.2","75.1","85.1","80.9","66.6","Service Tech","passed"
+"facility","500","85.2","76.2","82.8","85.2","81.3","86.1","83.9","59.1","Facility / CPO","passed"
+"counter","500","69","51.6","69.1","75.4","75.4","75.7","73.2","87.9","Counter / Distributor","passed"
+"trainer","500","65.6","39.2","61.3","65","75.4","66.4","65.9","103.4","Trainer","passed"
+"homeowner","500","67.2","39.2","67.6","64","75.5","62.6","63.5","83.9","Homeowner","passed"
