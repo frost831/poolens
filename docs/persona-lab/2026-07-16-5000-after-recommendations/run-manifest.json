@@ -1,9 +1,9 @@
 {
   "run_label": "DEMO TEST SPLASHLENS 5000 LIFE PERSONA LAB",
   "scenario": "implemented_recommendations",
-  "generated_at": "2026-07-16T23:23:11.024Z",
+  "generated_at": "2026-07-16T23:27:57.532Z",
   "deterministic_seed": "0x5000A11A",
-  "browser_anchor": "docs/persona-lab/2026-07-16-after-recommendations/observed-workflows.json",
+  "browser_anchor": "docs/persona-lab/2026-07-16-production-after-recommendations/observed-workflows.json",
   "roles": [
     "tech",
     "facility",
@@ -54,10 +54,10 @@
     "evidence_type": "synthetic_post_implementation_estimate_anchored_to_browser_smoke"
   },
   "generator_sha256": "d1344ce575f49d48b169d97b877e549e23717051f087499808b7c11349ec130f",
-  "observed_input_sha256": "f3b161f91b49b5e33deda637d0f01fb6d40f49e76284fa15ae55e9138e636c38",
+  "observed_input_sha256": "e453bfaad87c07285f7ecba252e94f2c89772798db5edad0412f7d3ce209f0c8",
   "cohort_sha256": "feb9b2bf4167dd9984c739c28df785b46b9ba96d9d1dd6745b498f7dcce7ff33",
   "output_sha256": {
-    "report": "9a03d2218fb3a8fb5240913eeb741d0f31b8cadf546b162a088d0229ab70863f",
+    "report": "0d5267611a6298e752553596842b30d5589b4ec686be6c076a55686712e97c88",
     "role_summary": "902434e2c25cabe85cc82a6ed6530a83555d85f1892dd03d6dc145077dc02afb",
     "segment_summary": "1750c6a1c4b4a504438f36651f92839445bb2145577f9fe467c964ea1a5cbd2d",
     "intervention_ranking": "583e8ff275df564476b5c1943db8fb940822bac5095e6d44d1e9fcc5b71a6ef1",

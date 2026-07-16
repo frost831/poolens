@@ -1,0 +1,157 @@
+{
+  "name": "SplashLens persona workflow smoke",
+  "run_label": "DEMO TEST SPLASHLENS PERSONA LAB 2026-07-16",
+  "base_url": "https://app.splashlens.com/",
+  "production_writes": "intercepted",
+  "persistent_accounts_created": 0,
+  "roles": [
+    {
+      "role": "tech",
+      "label": "Service Tech",
+      "role_choice_count": 5,
+      "status": "passed",
+      "wow_trigger": "manual code lookup",
+      "wow_evidence": "E05 result rendered with verification language",
+      "feedback_prompt_observed": false,
+      "result_excerpt": "Hayward \u2014 H-Series Gas Heater E05 HIGH Pressure Switch Open Pentair \u2014 MasterTemp / Max-E-Therm Gas Heater E05 HIGH CALL PRO Stack Flue Temperature Fault Jandy / Zodiac \u2014 LXi / LRZ Gas Heater E05 HIGH CALL PRO Flue / Stack Fault Jandy / Zodiac \u2014 JXi Gas Heater E05 HIGH CALL PRO Stack / Flue Temperatu",
+      "active_tab": "tab-errors",
+      "nav_item_count": 9,
+      "visible_nav_item_count": 9,
+      "full_feedback_overlay_observed": false,
+      "horizontal_overflow_px": 0,
+      "local_storage_keys": [
+        "sl_role",
+        "splashlens-activation-completed-v1",
+        "splashlens-field-feedback-state",
+        "splashlens-first-open-tracked",
+        "splashlens-scan-client-id"
+      ],
+      "duration_ms": 2400,
+      "console_errors": [],
+      "page_errors": [],
+      "cleanup": "ephemeral browser context closed; no account or retained test data",
+      "evidence_type": "browser_observed"
+    },
+    {
+      "role": "facility",
+      "label": "Facility / CPO",
+      "role_choice_count": 5,
+      "status": "passed",
+      "wow_trigger": "contamination response lane",
+      "wow_evidence": "3 numbered steps and resolve/escalate choices rendered",
+      "feedback_prompt_observed": false,
+      "action_labels": [
+        "Resolved - logged",
+        "Escalate - send packet",
+        "Use related SplashLens tool"
+      ],
+      "active_tab": "tab-errors",
+      "nav_item_count": 9,
+      "visible_nav_item_count": 0,
+      "full_feedback_overlay_observed": false,
+      "horizontal_overflow_px": 0,
+      "local_storage_keys": [
+        "sl_role",
+        "splashlens-field-feedback-state",
+        "splashlens-first-open-tracked",
+        "splashlens-scan-client-id"
+      ],
+      "duration_ms": 852,
+      "console_errors": [],
+      "page_errors": [],
+      "cleanup": "ephemeral browser context closed; no account or retained test data",
+      "evidence_type": "browser_observed"
+    },
+    {
+      "role": "counter",
+      "label": "Counter / Distributor",
+      "role_choice_count": 5,
+      "status": "passed",
+      "wow_trigger": "PartSnap proof and vendor packet",
+      "wow_evidence": "Synthetic possible match rendered with missing proof, callback risk, and vendor packet",
+      "feedback_prompt_observed": false,
+      "sample_packet_visible": true,
+      "active_tab": "tab-scan",
+      "nav_item_count": 9,
+      "visible_nav_item_count": 9,
+      "full_feedback_overlay_observed": false,
+      "horizontal_overflow_px": 0,
+      "local_storage_keys": [
+        "sl_role",
+        "splashlens-activation-completed-v1",
+        "splashlens-field-feedback-state",
+        "splashlens-first-open-tracked",
+        "splashlens-scan-client-id"
+      ],
+      "duration_ms": 1157,
+      "console_errors": [],
+      "page_errors": [],
+      "cleanup": "ephemeral browser context closed; no account or retained test data",
+      "evidence_type": "browser_observed"
+    },
+    {
+      "role": "trainer",
+      "label": "Trainer",
+      "role_choice_count": 5,
+      "status": "passed",
+      "wow_trigger": "PartSnap Apprentice Mode",
+      "wow_evidence": "Observe/prove/order exercise and answer key rendered from a DEMO TEST result",
+      "feedback_prompt_observed": false,
+      "sample_lesson_visible": true,
+      "active_tab": "tab-scan",
+      "nav_item_count": 9,
+      "visible_nav_item_count": 9,
+      "full_feedback_overlay_observed": true,
+      "horizontal_overflow_px": 0,
+      "local_storage_keys": [
+        "sl_role",
+        "splashlens-activation-completed-v1",
+        "splashlens-field-feedback-state",
+        "splashlens-first-open-tracked",
+        "splashlens-scan-client-id"
+      ],
+      "duration_ms": 2153,
+      "console_errors": [],
+      "page_errors": [],
+      "cleanup": "ephemeral browser context closed; no account or retained test data",
+      "evidence_type": "browser_observed"
+    },
+    {
+      "role": "homeowner",
+      "label": "Homeowner",
+      "role_choice_count": 5,
+      "status": "passed",
+      "wow_trigger": "pool turnover calculation",
+      "wow_evidence": "15,000-gallon / 60-GPM result rendered immediately",
+      "feedback_prompt_observed": false,
+      "result_excerpt": "TURNOVER RATE 4.2 hrs per full pool turnover Good On target. Residential pools need at least 1 full turnover per 8 hours of pump runtime. 15,000 gal \u00f7 60 GPM \u00b7 Recommended: \u2264 8 hrs residential, \u2264 6 hrs commercial",
+      "active_tab": "tab-volume",
+      "nav_item_count": 9,
+      "visible_nav_item_count": 4,
+      "full_feedback_overlay_observed": false,
+      "horizontal_overflow_px": 0,
+      "local_storage_keys": [
+        "sl_role",
+        "splashlens-field-feedback-state",
+        "splashlens-first-open-tracked",
+        "splashlens-scan-client-id"
+      ],
+      "duration_ms": 634,
+      "console_errors": [],
+      "page_errors": [],
+      "cleanup": "ephemeral browser context closed; no account or retained test data",
+      "evidence_type": "browser_observed"
+    }
+  ],
+  "deep_link_checks": [
+    {
+      "name": "public PartSnap fresh-context deep link",
+      "url": "https://app.splashlens.com/?tab=scan&mode=parts",
+      "active_tab": "tab-scan",
+      "role_picker_visible": false,
+      "partsnap_primer_visible": true,
+      "tool_blocked_by_role_picker": false,
+      "evidence_type": "browser_observed"
+    }
+  ]
+}

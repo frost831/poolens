@@ -12,7 +12,7 @@ After implementing the recommended role-first bundle, the model lands at **78% e
 ## Evidence Boundary
 
 - **5,000 synthetic lives:** 1,000 per role in ten exact 100-person batches.
-- **Browser anchor:** five-role browser smoke against http://127.0.0.1:4177/, with event and feedback writes intercepted.
+- **Browser anchor:** five-role browser smoke against https://app.splashlens.com/, with event and feedback writes intercepted.
 - **Run scenario:** implemented_recommendations.
 - **Not testimonials:** every opinion is labeled SIMULATED PERSONA FEEDBACK.
 - **No production pollution:** zero accounts, zero analytics writes, zero retained app records.
