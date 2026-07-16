@@ -1,4 +1,4 @@
-const CACHE = 'splashlens-v23-aqua-intelligence';
+const CACHE = 'splashlens-v24-persona-proof-feedback';
 const ASSETS = ['/', '/index.html', '/js/errors.js', '/js/data.js', '/js/app.js?v=20260716-aqua-intelligence', '/favicon.svg', '/favicon.ico', '/apple-touch-icon.png', '/icon-192.png', '/icon-512.png', '/manifest.json'];
 
 self.addEventListener('install', e => {

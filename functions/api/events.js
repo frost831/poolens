@@ -1,3 +1,5 @@
+import { buildSplashLensAggregate } from '../_shared/splashlens-intelligence.mjs';
+
 const ALERT_EVENTS = new Set([
   'pwa_installed',
   'native_shell_first_open',
@@ -7,6 +9,9 @@ const ALERT_EVENTS = new Set([
   'partsnap_second_proof_requested',
   'route_brain_saved_to_pool',
   'service_proof_share_link_created',
+  'service_proof_customer_summary_copied',
+  'service_proof_json_exported',
+  'service_proof_route_note_copied',
   'service_report_saved',
   'proof_ready_report_saved',
   'field_feedback_submitted',
@@ -30,6 +35,16 @@ function chunks(items, size) {
   const groups = [];
   for (let i = 0; i < items.length; i += size) groups.push(items.slice(i, i + size));
   return groups;
+}
+
+async function readKvValues(kv, keyNames) {
+  try {
+    const bulk = await kv.get(keyNames);
+    if (bulk instanceof Map) return keyNames.map((keyName) => bulk.get(keyName));
+  } catch (error) {
+    console.warn('SplashLens KV bulk read unavailable; falling back to individual reads.', String(error));
+  }
+  return Promise.all(keyNames.map((keyName) => kv.get(keyName)));
 }
 
 function json(status, payload, extraHeaders = {}) {
@@ -185,8 +200,10 @@ async function eventSummary(request, env) {
   }
 
   const url = new URL(request.url);
-  const limit = Math.min(Math.max(Number(url.searchParams.get('limit') || 250), 50), 1000);
-  const days = Math.min(Math.max(Number(url.searchParams.get('days') || 7), 1), 90);
+  const aggregateMode = url.searchParams.get('aggregate') === '1';
+  const maxLimit = aggregateMode ? 3000 : 1000;
+  const limit = Math.min(Math.max(Number(url.searchParams.get('limit') || (aggregateMode ? 3000 : 250)), 50), maxLimit);
+  const days = Math.min(Math.max(Number(url.searchParams.get('days') || 30), 1), 90);
   const facilityFilter = clean(url.searchParams.get('facilityId') || url.searchParams.get('facility') || '', 120);
   const keySet = new Set();
   const records = [];
@@ -205,9 +222,10 @@ async function eventSummary(request, env) {
     } while (cursor && pageCount < 3);
   }
 
+  const aggregateTruncated = keySet.size > limit;
   const newestKeys = Array.from(keySet).sort((a, b) => b.localeCompare(a)).slice(0, limit);
-  for (const group of chunks(newestKeys, 50)) {
-    const values = await Promise.all(group.map((keyName) => env.SCAN_USAGE_KV.get(keyName)));
+  for (const group of chunks(newestKeys, 100)) {
+    const values = await readKvValues(env.SCAN_USAGE_KV, group);
     for (const raw of values) {
       if (!raw) continue;
       try {
@@ -243,6 +261,7 @@ async function eventSummary(request, env) {
   const activationCampaigns = new Map();
   const laneDemand = new Map();
   const partSnapCategories = new Map();
+  const roles = new Map();
   const sessionEvents = new Map();
   const meaningfulEvents = new Set([
     'article_referral_open',
@@ -263,6 +282,9 @@ async function eventSummary(request, env) {
     'service_report_saved',
     'proof_ready_report_saved',
     'service_proof_share_link_created',
+    'service_proof_customer_summary_copied',
+    'service_proof_json_exported',
+    'service_proof_route_note_copied',
     'field_feedback_submitted',
     'operator_pilot_wizard_opened',
     'facility_workflow_action_selected',
@@ -303,6 +325,9 @@ async function eventSummary(request, env) {
   let operatorWizard30d = 0;
   let checkoutSuccess30d = 0;
   let serviceProofShareLinks30d = 0;
+  let serviceProofCustomerSummaries30d = 0;
+  let serviceProofJsonExports30d = 0;
+  let serviceProofRouteNotes30d = 0;
   let revenueCents30d = 0;
   const recentPayments = [];
   let poolProEvents30d = 0;
@@ -346,6 +371,7 @@ async function eventSummary(request, env) {
     inc(eventsByName, record.event);
     inc(paths, record.path || props.path || 'unknown');
     inc(sources, source);
+    if (props.splashlens_role || props.role) inc(roles, props.splashlens_role || props.role);
     if (props.attribution_referrer_host || props.attribution_referrer) inc(referrers, props.attribution_referrer_host || props.attribution_referrer);
     if (props.attribution_campaign) inc(campaigns, props.attribution_campaign);
 
@@ -466,7 +492,7 @@ async function eventSummary(request, env) {
       }
       if (record.event === 'field_feedback_quick_answered') {
         if (props.answer === 'helped') quickFeedbackHelpful30d += 1;
-        if (props.answer === 'missed') quickFeedbackMissed30d += 1;
+        if (['missed', 'wrong', 'missing'].includes(props.answer)) quickFeedbackMissed30d += 1;
       }
       if (record.event === 'operator_pilot_wizard_opened') operatorWizard30d += 1;
       if (record.event === 'activation_completed') {
@@ -499,6 +525,9 @@ async function eventSummary(request, env) {
         });
       }
       if (record.event === 'service_proof_share_link_created') serviceProofShareLinks30d += 1;
+      if (record.event === 'service_proof_customer_summary_copied') serviceProofCustomerSummaries30d += 1;
+      if (record.event === 'service_proof_json_exported') serviceProofJsonExports30d += 1;
+      if (record.event === 'service_proof_route_note_copied') serviceProofRouteNotes30d += 1;
       if (props.risk || props.callbackRisk) inc(callbackRisks, props.risk || props.callbackRisk);
     }
     if (ts >= since7d && record.event === 'app_open') appOpens7d += 1;
@@ -507,8 +536,11 @@ async function eventSummary(request, env) {
   return json(200, {
     ok: true,
     generatedAt: new Date().toISOString(),
+    dataThrough: filteredRecords[0]?.createdAt || null,
     metrics: {
       storedEvents: records.length,
+      aggregateKeysFound: keySet.size,
+      aggregateTruncated,
       coverageDays: days,
       filteredEvents: filteredRecords.length,
       facilityEvents30d,
@@ -552,6 +584,9 @@ async function eventSummary(request, env) {
       operatorWizard30d,
       checkoutSuccess30d,
       serviceProofShareLinks30d,
+      serviceProofCustomerSummaries30d,
+      serviceProofJsonExports30d,
+      serviceProofRouteNotes30d,
       revenueCents30d,
       spaSearches30d,
       robotSearches30d,
@@ -579,6 +614,7 @@ async function eventSummary(request, env) {
     topActivationTypes: topList(activationTypes),
     topActivationSources: topList(activationSources),
     topActivationCampaigns: topList(activationCampaigns),
+    topRoles: topList(roles),
     topPaymentPlans: topList(paymentPlans),
     topDemandLanes: topList(laneDemand),
     topFacilityEvents: topList(facilityEvents),
@@ -637,6 +673,9 @@ async function sendEventAlert(env, record) {
     service_proof_portal_previewed: 'Service Proof trust portal previewed',
     service_proof_portal_copied: 'Service Proof trust portal copied',
     service_proof_share_link_created: 'Service Proof share link created',
+    service_proof_customer_summary_copied: 'Customer-safe Service Proof summary copied',
+    service_proof_json_exported: 'Service Proof JSON exported',
+    service_proof_route_note_copied: 'Service Proof route note copied',
     service_proof_assistant_opened: 'Service Proof assistant opened',
     service_proof_assistant_answered: 'Service Proof assistant answered',
     service_report_saved: 'Service report saved',
@@ -865,6 +904,22 @@ export async function onRequestGet({ request, env }) {
   }
   if (url.searchParams.get('summary') === '1') {
     return eventSummary(request, env);
+  }
+  if (url.searchParams.get('aggregate') === '1') {
+    const summaryResponse = await eventSummary(request, env);
+    if (!summaryResponse.ok) return summaryResponse;
+    const summary = await summaryResponse.json();
+    const checkoutMode = String(env.SPLASHLENS_CHECKOUT_MODE || '').trim().toLowerCase();
+    const paymentLinkDirect = ['payment_link_direct', 'payment_links', 'links'].includes(checkoutMode);
+    const firstPartyCheckoutVerified = !paymentLinkDirect && Boolean(String(env.STRIPE_SECRET_KEY || '').trim());
+    const webhookVerified = String(env.STRIPE_WEBHOOK_SECRET || env.SPLASHLENS_STRIPE_WEBHOOK_SECRET || '').trim().startsWith('whsec_');
+    return json(200, buildSplashLensAggregate(summary, {
+      observedAt: new Date().toISOString(),
+      revenueConfigured: Boolean(
+        env.SCAN_USAGE_KV &&
+        (firstPartyCheckoutVerified || webhookVerified)
+      ),
+    }));
   }
 
   return json(200, {

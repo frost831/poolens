@@ -1,3 +1,5 @@
+import { recordVerifiedSplashLensPayment } from '../_shared/splashlens-payment.mjs';
+
 const TOKEN_PREFIX = 'sl_scan_v1';
 const textEncoder = new TextEncoder();
 
@@ -133,27 +135,14 @@ async function issueActivation(session, env) {
     await env.SCAN_USAGE_KV.put(`entitlement:${subject}`, JSON.stringify(record), {
       expirationTtl: 365 * 24 * 60 * 60,
     });
-    await env.SCAN_USAGE_KV.put(`payment:${payload.stripeSessionId || crypto.randomUUID()}`, JSON.stringify({
-      ...record,
-      createdAt: new Date().toISOString(),
-    }), { expirationTtl: 365 * 24 * 60 * 60 });
-    await env.SCAN_USAGE_KV.put(`event:${new Date().toISOString()}:${crypto.randomUUID()}`, JSON.stringify({
-      event: 'checkout_success',
-      source: 'stripe',
-      path: '/api/stripe-webhook',
-      language: { preferredLanguage: 'en', locale: 'en', autoTranslate: false },
-      createdAt: new Date().toISOString(),
-      propsJson: JSON.stringify({
-        subject,
-        plan: record.plan,
-        amount_total: record.amountTotal,
-        currency: record.currency,
-        stripe_session_id: record.stripeSessionId,
-        stripe_payment_link_id: record.stripePaymentLinkId,
-        payment_source: 'stripe_webhook',
-      }).slice(0, 2000),
-    }), { expirationTtl: 60 * 60 * 24 * 365 });
   }
+
+  await recordVerifiedSplashLensPayment(env, session, {
+    subject,
+    plan: record.plan,
+    source: 'stripe_webhook',
+    path: '/api/stripe-webhook',
+  });
 
   return { ok: true, subject, activateUrl, entitlement: record };
 }

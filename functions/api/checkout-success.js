@@ -1,3 +1,5 @@
+import { recordVerifiedSplashLensPayment } from '../_shared/splashlens-payment.mjs';
+
 const TOKEN_PREFIX = 'sl_scan_v1';
 const textEncoder = new TextEncoder();
 
@@ -49,6 +51,12 @@ async function stripeGet(path, env) {
 
 function isPaid(session) {
   return session && (session.payment_status === 'paid' || session.status === 'complete');
+}
+
+function isSplashLensSession(session) {
+  const product = String(session?.metadata?.product || '').trim().toLowerCase();
+  const feature = String(session?.metadata?.feature || '').trim().toLowerCase();
+  return product === 'splashlens' && feature === 'scanner';
 }
 
 function cleanSubject(session) {
@@ -143,6 +151,16 @@ export async function onRequestGet({ request, env }) {
   if (!isPaid(session)) {
     return html('<h1>SplashLens checkout</h1><p>Payment is not complete yet. Refresh after Stripe finishes processing.</p>', 402);
   }
+  if (!isSplashLensSession(session)) {
+    return html('<h1>SplashLens checkout</h1><p>This checkout session does not belong to SplashLens.</p>', 400);
+  }
+
+  await recordVerifiedSplashLensPayment(env, session, {
+    subject: cleanSubject(session),
+    plan: cleanPlan(session),
+    source: 'stripe_checkout_success_verification',
+    path: '/api/checkout-success',
+  });
 
   const activation = await issueActivation(session, env);
   if (activation.error) {

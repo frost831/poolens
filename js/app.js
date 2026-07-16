@@ -28,6 +28,7 @@ const SPLASHLENS_PLAY_REVIEW_URL = 'https://play.google.com/store/apps/details?i
 const SPLASHLENS_ROLE_KEY = 'sl_role';
 const FACILITY_PACKET_KEY = 'splashlens-facility-packets';
 const ACTIVATION_COMPLETED_KEY = 'splashlens-activation-completed-v1';
+const SPLASHLENS_ROLES = ['tech', 'facility', 'counter', 'trainer', 'homeowner'];
 let facilitySessionMode = '';
 let facilityForcedMode = false;
 let activeFacilityConfig = null;
@@ -352,13 +353,14 @@ function initSplashLensPersonaMode() {
   }
 
   const mode = params.get('mode');
-  if (mode === 'facility' || mode === 'tech' || mode === 'apprentice') {
-    setSplashLensRole(mode, { persist: false, forced: true });
+  const cleanMode = normalizeSplashLensRole(mode);
+  if (cleanMode) {
+    setSplashLensRole(cleanMode, { persist: false, forced: true });
     return;
   }
 
   const storedRole = localStorage.getItem(SPLASHLENS_ROLE_KEY);
-  if (storedRole === 'facility' || storedRole === 'tech' || storedRole === 'apprentice') {
+  if (SPLASHLENS_ROLES.includes(storedRole)) {
     setSplashLensRole(storedRole, { persist: false });
     return;
   }
@@ -386,8 +388,18 @@ function getSplashLensRole() {
   return facilitySessionMode || localStorage.getItem(SPLASHLENS_ROLE_KEY) || '';
 }
 
+function normalizeSplashLensRole(role) {
+  const value = String(role || '').toLowerCase().trim();
+  if (!value) return '';
+  if (value === 'apprentice' || value === 'education' || value === 'teacher') return 'trainer';
+  if (value === 'operator' || value === 'cpo') return 'facility';
+  if (value === 'distributor' || value === 'vendor' || value === 'counter') return 'counter';
+  if (value === 'owner' || value === 'consumer') return 'homeowner';
+  return SPLASHLENS_ROLES.includes(value) ? value : '';
+}
+
 function setSplashLensRole(role, options = {}) {
-  const cleanRole = ['facility', 'tech', 'apprentice'].includes(role) ? role : 'tech';
+  const cleanRole = normalizeSplashLensRole(role) || 'tech';
   if (options.persist) localStorage.setItem(SPLASHLENS_ROLE_KEY, cleanRole);
   facilitySessionMode = options.persist ? '' : cleanRole;
   facilityForcedMode = Boolean(options.forced);
@@ -395,16 +407,23 @@ function setSplashLensRole(role, options = {}) {
   revealSplashLensApp();
   document.body.classList.toggle('facility-mode', cleanRole === 'facility');
   document.body.classList.toggle('facility-tools-hidden', cleanRole === 'facility');
-  document.body.classList.toggle('apprentice-mode', cleanRole === 'apprentice');
+  document.body.classList.toggle('trainer-mode', cleanRole === 'trainer');
+  document.body.classList.toggle('counter-mode', cleanRole === 'counter');
+  document.body.classList.toggle('homeowner-mode', cleanRole === 'homeowner');
   if (cleanRole === 'facility') {
     renderFacilityHome();
     trackFacilityEvent('wizard_open', { lane: '', role: cleanRole, forced: facilityForcedMode });
   } else {
     showFacilityTools();
-    if (cleanRole === 'apprentice') {
+    if (cleanRole === 'trainer') {
       showTab('scan');
       setTimeout(() => setScanMode('parts'), 120);
-      trackSplashLensEvent('partsnap_apprentice_started', { source: 'role_picker' });
+      trackSplashLensEvent('partsnap_apprentice_started', { source: 'role_picker', role: cleanRole });
+    } else if (cleanRole === 'counter') {
+      showTab('scan');
+      setTimeout(() => setScanMode('parts'), 120);
+    } else if (cleanRole === 'homeowner') {
+      showTab('volume');
     } else {
       showTab('errors');
     }
@@ -773,9 +792,10 @@ function showQuickFeedbackPrompt(trigger = 'usage') {
   toast.innerHTML = `
     <div style="width:min(520px,100%);background:#ffffff;border:1px solid #bae6fd;border-radius:14px;box-shadow:0 18px 46px rgba(15,23,42,.24);padding:12px;pointer-events:auto;">
       <p style="color:#0f172a;font-size:15px;font-weight:950;margin-bottom:9px;">${label}</p>
-      <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:8px;">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:8px;">
         <button type="button" onclick="answerQuickFeedback('helped','${escAttr(trigger)}')" style="background:#0f766e;color:#fff;border:0;border-radius:10px;padding:11px 8px;font-size:13px;font-weight:950;cursor:pointer;">Yes</button>
-        <button type="button" onclick="answerQuickFeedback('missed','${escAttr(trigger)}')" style="background:#fef3c7;color:#92400e;border:1px solid #fde68a;border-radius:10px;padding:11px 8px;font-size:13px;font-weight:950;cursor:pointer;">Wrong / missing</button>
+        <button type="button" onclick="answerQuickFeedback('wrong','${escAttr(trigger)}')" style="background:#fee2e2;color:#991b1b;border:1px solid #fecaca;border-radius:10px;padding:11px 8px;font-size:13px;font-weight:950;cursor:pointer;">Wrong</button>
+        <button type="button" onclick="answerQuickFeedback('missing','${escAttr(trigger)}')" style="background:#fef3c7;color:#92400e;border:1px solid #fde68a;border-radius:10px;padding:11px 8px;font-size:13px;font-weight:950;cursor:pointer;">Missing info</button>
         <button type="button" onclick="answerQuickFeedback('close','${escAttr(trigger)}')" aria-label="Close feedback" style="background:#f8fafc;color:#64748b;border:1px solid #cbd5e1;border-radius:10px;padding:0 12px;font-size:16px;font-weight:950;cursor:pointer;">x</button>
       </div>
     </div>`;
@@ -788,34 +808,57 @@ function closeQuickFeedbackPrompt() {
 
 function answerQuickFeedback(answer, trigger = 'usage') {
   const state = readFieldFeedbackState();
-  state.quickSnoozedUntil = Date.now() + (answer === 'missed' ? 60 * 1000 : 7 * 24 * 60 * 60 * 1000);
+  const needsDetail = answer === 'wrong' || answer === 'missing' || answer === 'missed';
+  state.quickSnoozedUntil = Date.now() + (needsDetail ? 60 * 1000 : 7 * 24 * 60 * 60 * 1000);
   writeFieldFeedbackState(state);
   trackSplashLensEvent('field_feedback_quick_answered', {
     answer,
     trigger,
     meaningful_actions: state.meaningfulActions || 0,
     current_tab: S.tab,
+    role: getSplashLensRole(),
+    context: getFieldFeedbackContext(trigger),
   });
   closeQuickFeedbackPrompt();
-  if (answer === 'missed') {
+  if (needsDetail) {
     state.promptShown = 0;
     state.snoozedUntil = 0;
     writeFieldFeedbackState(state);
     showFieldFeedbackPrompt(trigger, {
-      feedback: trigger === 'partsnap_result'
-        ? 'PartSnap missed or needed: '
-        : trigger === 'ai_scan_started'
-          ? 'The scan missed or needed: '
-          : 'This workflow missed or needed: ',
+      feedback: answer === 'wrong'
+        ? 'Wrong result: '
+        : trigger === 'partsnap_result'
+          ? 'PartSnap was missing: '
+          : trigger === 'ai_scan_started'
+            ? 'The scan was missing: '
+            : 'This workflow was missing: ',
       rating: '2',
+      issueType: answer === 'wrong' ? 'wrong' : 'missing',
       force: true,
     });
   }
 }
 
+function getFieldFeedbackContext(trigger = '') {
+  const part = typeof _lastPartSnapResult !== 'undefined' ? (_lastPartSnapResult || {}) : {};
+  const manualQuery = (document.getElementById('error-search')?.value || document.getElementById('scan-lookup-input')?.value || '').trim();
+  return {
+    trigger,
+    role: getSplashLensRole(),
+    tab: S.tab || '',
+    code: manualQuery || part.code || '',
+    brand: part.manufacturer || part.brand || '',
+    component: part.component || part.category || '',
+    model: part.model || part.partNumber || '',
+    confidence: part.confidence || '',
+    photo_type: trigger === 'partsnap_result' ? 'part/photo/label' : trigger === 'ai_scan_started' ? 'scanner/photo' : '',
+  };
+}
+
 function showFieldFeedbackPrompt(trigger = 'usage', prefill = {}) {
   const state = readFieldFeedbackState();
   if (!prefill.force && !shouldShowFieldFeedback(state)) return;
+  const context = getFieldFeedbackContext(trigger);
   state.promptShown = Date.now();
   writeFieldFeedbackState(state);
   trackSplashLensEvent('field_feedback_prompt_shown', { trigger, meaningful_actions: state.meaningfulActions, opens: state.opens });
@@ -837,6 +880,22 @@ function showFieldFeedbackPrompt(trigger = 'usage', prefill = {}) {
       <p style="color:#64748b;font-size:13px;line-height:1.45;margin-bottom:12px;">One honest note helps shape SplashLens around real pool tech work. Email is optional unless you want Joshua to follow up.</p>
       <label class="field-label" for="field-feedback-text">Feedback</label>
       <textarea id="field-feedback-text" rows="4" placeholder="Example: PartSnap needed a better label prompt, this code was missing, or this saved me time..." style="width:100%;border:1px solid #cbd5e1;border-radius:10px;padding:11px;font-size:14px;line-height:1.35;resize:vertical;margin-bottom:10px;">${escHtml(prefill.feedback || '')}</textarea>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px;">
+        <div>
+          <label class="field-label" for="field-feedback-code">Code / part clue</label>
+          <input id="field-feedback-code" type="text" value="${escAttr(context.code || context.model || '')}" placeholder="E05, TruClear, impeller..." style="width:100%;border:1px solid #cbd5e1;border-radius:10px;padding:10px;font-size:14px;">
+        </div>
+        <div>
+          <label class="field-label" for="field-feedback-brand">Brand</label>
+          <input id="field-feedback-brand" type="text" value="${escAttr(context.brand || '')}" placeholder="Pentair, Jandy..." style="width:100%;border:1px solid #cbd5e1;border-radius:10px;padding:10px;font-size:14px;">
+        </div>
+        <div>
+          <label class="field-label" for="field-feedback-photo-type">Photo type</label>
+          <select id="field-feedback-photo-type" style="width:100%;border:1px solid #cbd5e1;border-radius:10px;padding:10px;font-size:14px;background:#fff;">
+            ${['', 'part close-up', 'model plate', 'control display', 'wide equipment pad', 'water test', 'other'].map(item => `<option value="${escAttr(item)}" ${item === (context.photo_type || '') ? 'selected' : ''}>${item || 'Pick one'}</option>`).join('')}
+          </select>
+        </div>
+      </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
         <div>
           <label class="field-label" for="field-feedback-rating">How useful was this stop?</label>
@@ -890,6 +949,9 @@ function submitFieldFeedback() {
   const rating = (document.getElementById('field-feedback-rating')?.value || '').trim();
   const email = (document.getElementById('field-feedback-email')?.value || '').trim();
   const tester = Boolean(document.getElementById('field-feedback-tester')?.checked);
+  const code = (document.getElementById('field-feedback-code')?.value || '').trim();
+  const brand = (document.getElementById('field-feedback-brand')?.value || '').trim();
+  const photoType = (document.getElementById('field-feedback-photo-type')?.value || '').trim();
   const error = document.getElementById('field-feedback-error');
   if (!text && !rating && !tester) {
     if (error) {
@@ -908,18 +970,22 @@ function submitFieldFeedback() {
   const state = readFieldFeedbackState();
   state.submittedAt = Date.now();
   state.snoozedUntil = Date.now() + FIELD_FEEDBACK_AFTER_SUBMIT_MS;
-  state.lastFeedback = { text: text.slice(0, 500), rating, email, tester, at: new Date().toISOString() };
+  state.lastFeedback = { text: text.slice(0, 500), rating, email, tester, code, brand, photoType, at: new Date().toISOString() };
   writeFieldFeedbackState(state);
   trackSplashLensEvent('field_feedback_submitted', {
     feedback: text.slice(0, 900),
     rating,
     email,
+    code_or_part: code,
+    brand,
+    photo_type: photoType,
     field_tester_opt_in: tester,
     consent_to_follow_up: Boolean(email && tester),
     meaningful_actions: state.meaningfulActions || 0,
     opens: state.opens || 0,
     recent_signals: (state.signals || []).map(s => s.event).join(', '),
     current_tab: S.tab,
+    role: getSplashLensRole(),
   });
   const overlay = document.getElementById('field-feedback-overlay');
   if (overlay) {
@@ -2818,6 +2884,61 @@ function copyTextToClipboard(text, confirmation) {
   } else {
     alert(text);
   }
+}
+
+function copyCustomerSafeSummary() {
+  const summary = _rptVal('rpt-customer-summary') || buildServiceProofCustomerSummary();
+  const text = [
+    summary,
+    '',
+    'SplashLens note: this is a customer-safe field summary. Repair decisions, part fit, chemical safety, and code requirements still need labels, manuals, manufacturer guidance, and qualified service judgment.'
+  ].join('\n');
+  copyTextToClipboard(text, 'Customer-safe summary copied.');
+  trackSplashLensEvent('service_proof_customer_summary_copied', {
+    proof_ready: validateReportProof({ quiet: true }).complete,
+    role: getSplashLensRole(),
+  });
+}
+
+function downloadServiceProofJson() {
+  const payload = serviceProofSharePayload();
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement('a');
+  const customer = (payload.customer || 'customer').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'customer';
+  anchor.href = url;
+  anchor.download = `splashlens-service-proof-${customer}-${Date.now()}.json`;
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  trackSplashLensEvent('service_proof_json_exported', {
+    proof_ready: validateReportProof({ quiet: true }).complete,
+    risk: payload.callbackRisk?.level || 'unknown',
+    role: getSplashLensRole(),
+  });
+}
+
+function copyRouteNote() {
+  const passport = buildServicePassport();
+  const proof = validateReportProof({ quiet: true });
+  const flags = passport.callbackRisk?.flags || [];
+  const text = [
+    `Route note - ${passport.customer || 'Customer'} (${passport.visitType || 'Service visit'})`,
+    reportReadingSummary() ? `Readings: ${reportReadingSummary()}` : '',
+    passport.proof?.issueNote ? `Tech note: ${passport.proof.issueNote}` : '',
+    passport.proof?.photoProof ? `Proof: ${passport.proof.photoProof}` : '',
+    passport.proof?.customerSummary ? `Customer summary: ${passport.proof.customerSummary}` : '',
+    passport.recommendations ? `Next recommendation: ${passport.recommendations}` : '',
+    proof.complete ? 'Proof status: ready' : `Proof missing: ${proof.missing.join(', ')}`,
+    flags.length ? `Callback risk flags: ${flags.join(' | ')}` : '',
+  ].filter(Boolean).join('\n');
+  copyTextToClipboard(text, 'Route note copied.');
+  trackSplashLensEvent('service_proof_route_note_copied', {
+    proof_ready: proof.complete,
+    risk: passport.callbackRisk?.level || 'unknown',
+    role: getSplashLensRole(),
+  });
 }
 
 const SERVICE_PROOF_FAQ = [
@@ -5984,6 +6105,7 @@ function trackSplashLensEvent(name, props = {}) {
     attribution_referrer_host: attribution.referrer_host || '',
     attribution_landing_path: attribution.landing_path || '',
     attribution_article: attribution.article || '',
+    splashlens_role: getSplashLensRole(),
     ...props,
   };
   window.dataLayer = window.dataLayer || [];
