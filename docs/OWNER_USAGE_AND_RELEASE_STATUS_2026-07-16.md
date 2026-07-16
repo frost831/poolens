@@ -7,8 +7,6 @@ Live owner-surface checks on 2026-07-16:
 - `https://app.splashlens.com/api/events` returned `{"ok":true,"status":"SplashLens app event endpoint ready.","storageConfigured":true,"emailConfigured":true}` on direct `GET`.
 - `https://app.splashlens.com/api/events?digest=1` returned `401 Unauthorized`, which still matches the intended protected digest gate rather than a public outage.
 - `https://app.splashlens.com` returned HTTP `200`.
-- `https://app.splashlens.com/dashboard` returned HTTP `200`.
-- `https://app.splashlens.com/owner-dashboard` still resolved through `301 -> /dashboard`.
 
 Current interpretation:
 
@@ -23,13 +21,13 @@ Marketing, intake, and discovery surfaces checked live on 2026-07-16:
 - `https://splashlens.com` returned HTTP `200`.
 - `https://app.splashlens.com` returned HTTP `200`.
 - `https://splashlens.com/api/partner-intake` returned `{"ok":true,"endpoint":"splashlens_partner_intake","storageConfigured":true,"emailConfigured":true}` on direct `GET`.
-- The live homepage body still exposed supported `230+` language, with no visible `500+` claim found in this pass.
+- The live homepage body still exposed `230+` language, with no visible `500+` claim found in this pass.
 - `https://splashlens.com/robots.txt`, `https://splashlens.com/ai.txt`, `https://splashlens.com/llms.txt`, `https://splashlens.com/sitemap.xml`, `https://splashlens.com/pseo-sitemap.xml`, `https://splashlens.com/seo-hub-sitemap.xml`, `https://splashlens.com/category-hub-sitemap.xml`, and `https://splashlens.com/privacy` all returned HTTP `200`.
-- `https://app.splashlens.com/robots.txt`, `https://app.splashlens.com/ai.txt`, and `https://app.splashlens.com/llms.txt` all returned HTTP `200`.
+- `https://app.splashlens.com/ai.txt`, `https://app.splashlens.com/llms.txt`, and `https://app.splashlens.com/robots.txt` all returned HTTP `200`.
 
 Current interpretation:
 
-- Public site, partner intake, and AEO/discovery surfaces stayed healthy on both hosts.
+- Public site, intake, and AEO/discovery surfaces stayed healthy on both hosts.
 - Partner-intake remains live with both storage and email configuration present.
 - The discovery files continue to serve crawlable public content.
 
@@ -39,22 +37,21 @@ Public store surfaces checked live on 2026-07-16:
 
 - Public Google Play listing URL resolved at `https://play.google.com/store/apps/details?id=com.splashlens.fieldtools`.
 - The fetched Play listing body still exposed markers consistent with package `com.splashlens.fieldtools`, public version `1.0.5`, `InStock`, `SoftwareApplication`, `Jun 25, 2026`, and privacy policy `https://splashlens.com/privacy`.
-- Apple public lookup for `https://apps.apple.com/us/app/splashlens/id6763644905` returned the live `SplashLens` listing with bundle `com.splashlens.app`, version `1.0.6`, and `currentVersionReleaseDate` `2026-07-16T05:09:22Z`.
-- The public App Store page at `https://apps.apple.com/us/app/splashlens/id6763644905` returned HTTP `200`.
-- Repo-local Android wrapper drift still remains ahead of the public Play listing: [`android-twa/app/build.gradle`](C:\Users\sales\Dropbox\Projects\poolens\android-twa\app\build.gradle) declares `applicationId "com.splashlens.fieldtools"`, `versionCode 7`, and `versionName "1.0.6"`.
+- Apple public lookup for `https://apps.apple.com/us/app/splashlens/id6763644905` now returned the live `SplashLens` listing with bundle `com.splashlens.app`, version `1.0.6`, and `currentVersionReleaseDate` `2026-07-16T05:09:22Z`.
+- Repo-local Android wrapper still declares `applicationId "com.splashlens.fieldtools"`, `versionCode 7`, and `versionName "1.0.6"` in [`android-twa/app/build.gradle`](C:\Users\sales\Dropbox\Projects\poolens\android-twa\app\build.gradle).
 
 Current interpretation:
 
 - Public Play and App Store evidence still supports live-listing status.
-- Public iOS truth advanced today to `1.0.6`, which closes yesterday's public App Store lag.
-- Public Android truth remains the `1.0.5` Play release even though the local wrapper has advanced to `1.0.6`.
+- Public iOS truth advanced from `1.0.4` on 2026-07-15 to `1.0.6` on 2026-07-16.
+- Public Android truth remains the `1.0.5` release even though the local wrapper has advanced to `1.0.6`.
 
 ## Stripe
 
 Live checkout verification on 2026-07-16:
 
-- `https://app.splashlens.com/api/checkout?plan=monthly` returned direct `GET 302` with `X-SplashLens-Checkout-Mode: payment_link_direct`, and the full follow landed on the live Stripe Checkout page at `https://buy.stripe.com/7sY7sE2aIaq31cE5EF8AE0O` with final HTTP `200`.
-- `https://app.splashlens.com/api/checkout?plan=yearly` returned direct `GET 302` with `X-SplashLens-Checkout-Mode: payment_link_direct`, and the full follow landed on the live Stripe Checkout page at `https://buy.stripe.com/aFa28k9Da69NdZq3wx8AE0P` with final HTTP `200`.
+- `https://app.splashlens.com/api/checkout?plan=monthly` returned direct `GET 302` with `X-SplashLens-Checkout-Mode: payment_link_direct`.
+- `https://app.splashlens.com/api/checkout?plan=yearly` returned direct `GET 302` with `X-SplashLens-Checkout-Mode: payment_link_direct`.
 
 Current interpretation:
 
@@ -65,13 +62,11 @@ Current interpretation:
 
 Outreach state checked on 2026-07-16:
 
-- Gmail targeted stop-signal searches since the prior completed run found no new SplashLens unsubscribe/remove request, complaint, bounce, or delivery-failure message.
-- No new reply arrived from the five 2026-07-15 cold-send recipients.
-- The only new SplashLens mail activity since the previous run was on the warm AQUA Magazine thread: Jared Fish's 2026-07-15 inbound remained open, and Joshua sent a warm follow-up to Laura Carew on 2026-07-16 after completing the product submission.
-- Same-day Gmail sent-mail search returned no SplashLens cold emails on 2026-07-16.
-- The checked-in `tools/splashlens_outreach_day_lock.ps1` guard returned `BLOCKED` because recent hard-bounce/delivery-failure language still exists inside the last seven days of the run log.
+- Gmail targeted stop-signal and recent-recipient history checks found no new SplashLens-specific unsubscribe/remove request, complaint, or delivery-failure message after the prior completed run on 2026-07-15.
+- Same-day Gmail showed only warm AQUA editorial-thread sends on 2026-07-16 and no new cold SplashLens outreach.
+- The checked-in `tools/splashlens_outreach_day_lock.ps1` guard still returned `BLOCKED` because recent hard-bounce/delivery-failure language exists inside the last seven days of the run log.
 
 Current interpretation:
 
 - Cold outreach remains blocked until the earliest clean recheck on 2026-07-20 after a fresh same-day Gmail sweep.
-- The active stop signal is still the July 13 hard-bounce window, not a live site, checkout, or store failure.
+- The active stop signal is still the July 13 hard-bounce window, not a live site/store failure.
