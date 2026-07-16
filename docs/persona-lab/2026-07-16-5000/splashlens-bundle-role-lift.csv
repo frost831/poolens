@@ -1,0 +1,6 @@
+"role","role_label","baseline_expected_completion_rate","bundle_expected_completion_rate","baseline_expected_wow_rate","bundle_expected_wow_rate","baseline_love_score","bundle_love_score","baseline_time_to_value_seconds","bundle_time_to_value_seconds","evidence_type"
+"tech","Service Tech","67.1","82.4","46.8","71.8","72.7","88.4","76.1","52.1","synthetic_counterfactual_not_observed_product_performance"
+"facility","Facility / CPO","72.4","86.1","57.9","82.1","78.1","91.4","65.4","49.4","synthetic_counterfactual_not_observed_product_performance"
+"counter","Counter / Distributor","59.4","78.4","33.9","65.3","65.3","85.3","96.8","66.7","synthetic_counterfactual_not_observed_product_performance"
+"trainer","Trainer","51.4","71.1","21.4","53.5","57.1","78.9","114","82.3","synthetic_counterfactual_not_observed_product_performance"
+"homeowner","Homeowner","54.5","72.2","23.2","51.9","56.3","77","94.3","67.3","synthetic_counterfactual_not_observed_product_performance"

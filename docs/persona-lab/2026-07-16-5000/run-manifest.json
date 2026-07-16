@@ -1,0 +1,53 @@
+{
+  "run_label": "DEMO TEST SPLASHLENS 5000 LIFE PERSONA LAB",
+  "generated_at": "2026-07-16T22:44:09.829Z",
+  "deterministic_seed": "0x5000A11A",
+  "browser_anchor": "docs/persona-lab/2026-07-16/observed-workflows.json",
+  "roles": [
+    "tech",
+    "facility",
+    "counter",
+    "trainer",
+    "homeowner"
+  ],
+  "personas_per_role": 1000,
+  "batches_per_role": 10,
+  "batch_size": 100,
+  "total_personas": 5000,
+  "production_accounts_created": 0,
+  "production_writes": 0,
+  "validation_errors": [],
+  "protected_attributes_excluded": [
+    "race",
+    "religion",
+    "sexual_orientation",
+    "political_affiliation"
+  ],
+  "evidence_types": [
+    "browser_observed_anchor",
+    "synthetic_model_not_real_user_feedback",
+    "synthetic_counterfactual_not_observed_product_performance"
+  ],
+  "balance_design": "exact marginal quotas per 100-person batch; randomized combinations; pairwise balance not enforced",
+  "bundle_summary": {
+    "baseline_expected_completion_rate": 61,
+    "bundle_expected_completion_rate": 78,
+    "baseline_expected_wow_rate": 36.6,
+    "bundle_expected_wow_rate": 64.9,
+    "baseline_love_score": 65.9,
+    "bundle_love_score": 84.2,
+    "baseline_time_to_value_seconds": 89.3,
+    "bundle_time_to_value_seconds": 63.6,
+    "evidence_type": "synthetic_counterfactual_not_observed_product_performance"
+  },
+  "generator_sha256": "2e15ee2b89e961031cd83d00bd996b0d7d832c8fa6f11e01b94d5b908d6329d5",
+  "observed_input_sha256": "bebe3d1914ebfefb5b0c26c6e5a08da5ff178f0ddbec0886bb88dfdf203d665f",
+  "cohort_sha256": "feb9b2bf4167dd9984c739c28df785b46b9ba96d9d1dd6745b498f7dcce7ff33",
+  "output_sha256": {
+    "report": "abeb89322b866180bb4ab2f08fcc6f6fa3bf757d96f3c87f924e61b36af9b456",
+    "role_summary": "902434e2c25cabe85cc82a6ed6530a83555d85f1892dd03d6dc145077dc02afb",
+    "segment_summary": "1750c6a1c4b4a504438f36651f92839445bb2145577f9fe467c964ea1a5cbd2d",
+    "intervention_ranking": "583e8ff275df564476b5c1943db8fb940822bac5095e6d44d1e9fcc5b71a6ef1",
+    "persona_ranking": "0a57ba9c5dc28e6785fdb5bbcf61f5c0ac430a22d91d1607d71d09c66589323e"
+  }
+}
