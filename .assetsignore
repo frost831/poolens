@@ -1,9 +1,12 @@
 .git/
 .wrangler/
+.playwright-cli/
 .secrets.local/
 node_modules/
 dist/
 _deploy/
+output/
+app-review-evidence/
 release-evidence/
 SplashLens-ios-proof-*/
 play-store-artifacts/
