@@ -124,6 +124,8 @@ export async function onRequestGet({ request, env }) {
         error: 'checkout_not_configured',
         plan: plan.key,
         label: plan.displayName,
+        checkoutSessionReason: session.reason || 'unknown',
+        requiredFallbackEnv: plan.linkEnv || [],
         message: 'This SplashLens paid lane is configured in the app, but the Stripe price or payment link is not set yet.',
       });
     }
@@ -144,6 +146,8 @@ export async function onRequestGet({ request, env }) {
       error: 'checkout_not_configured',
       plan: plan.key,
       label: plan.displayName,
+      checkoutSessionReason: 'payment_link_direct_without_link',
+      requiredFallbackEnv: plan.linkEnv || [],
       message: 'This SplashLens paid lane is configured in the app, but the Stripe Payment Link is not set yet.',
     });
   }
