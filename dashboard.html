@@ -316,6 +316,10 @@
         <table id="user-languages"></table>
       </div>
       <div class="panel">
+        <h2>Requested Languages</h2>
+        <table id="requested-languages"></table>
+      </div>
+      <div class="panel">
         <h2>Markets</h2>
         <table id="user-markets"></table>
       </div>
@@ -532,6 +536,9 @@
         metricCard('Activation Completions 30d', m.activationCompletions30d, 'One-time activation_completed events.'),
         metricCard('Language Opens 30d', m.languageModeOpens30d, 'Explicit language-mode sessions.'),
         metricCard('Spanish Opens 30d', m.spanishModeOpens30d, 'Spanish Field Mode sessions.'),
+        metricCard('French Interest 30d', m.frenchInterestOpens30d, 'fr/fr-CA requested language sessions.'),
+        metricCard('Portuguese Interest 30d', m.portugueseInterestOpens30d, 'pt/pt-BR requested language sessions.'),
+        metricCard('Haitian Creole 30d', m.haitianCreoleInterestOpens30d, 'ht requested language sessions.'),
         metricCard('Market Opens 30d', m.marketInterestOpens30d, 'Country/market-tagged sessions.'),
         metricCard('Canada Opens 30d', m.canadaInterestOpens30d, 'Canada pilot sessions from market=ca.'),
         metricCard('Native First Opens', m.nativeFirstOpens30d, 'First iOS/Android app shell opens.'),
@@ -577,6 +584,7 @@
       renderCountTable('activation-campaigns', data.topActivationCampaigns, 'Campaign');
       renderCountTable('user-roles', data.topRoles, 'Role');
       renderCountTable('user-languages', data.topLanguages, 'Language');
+      renderCountTable('requested-languages', data.topRequestedLanguages, 'Requested');
       renderCountTable('user-markets', data.topMarkets, 'Market');
       renderCountTable('payment-plans', data.topPaymentPlans, 'Plan');
       renderCountTable('manual-queries', data.manualQueries, 'Query');

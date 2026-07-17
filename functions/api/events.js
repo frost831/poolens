@@ -264,6 +264,7 @@ async function eventSummary(request, env) {
   const roles = new Map();
   const languages = new Map();
   const locales = new Map();
+  const requestedLanguages = new Map();
   const markets = new Map();
   const sessionEvents = new Map();
   const meaningfulEvents = new Set([
@@ -353,6 +354,9 @@ async function eventSummary(request, env) {
   let activationCompletions30d = 0;
   let languageModeOpens30d = 0;
   let spanishModeOpens30d = 0;
+  let frenchInterestOpens30d = 0;
+  let portugueseInterestOpens30d = 0;
+  let haitianCreoleInterestOpens30d = 0;
   let marketInterestOpens30d = 0;
   let canadaInterestOpens30d = 0;
   const uniqueClients30d = new Set();
@@ -377,6 +381,7 @@ async function eventSummary(request, env) {
     const poolPro = isPoolProEvent(record, props);
     const preferredLanguage = clean(record.language?.preferredLanguage || props.preferred_language || props.source_language || 'en', 24).toLowerCase();
     const locale = clean(record.language?.locale || props.locale || preferredLanguage || 'en', 32).toLowerCase();
+    const requestedLanguage = clean(props.requested_language || record.language?.requestedLanguage || '', 32).toLowerCase();
     const market = clean(props.market || props.country || '', 32).toLowerCase();
     inc(eventsByName, record.event);
     inc(paths, record.path || props.path || 'unknown');
@@ -384,6 +389,7 @@ async function eventSummary(request, env) {
     if (props.splashlens_role || props.role) inc(roles, props.splashlens_role || props.role);
     if (preferredLanguage) inc(languages, preferredLanguage);
     if (locale) inc(locales, locale);
+    if (requestedLanguage) inc(requestedLanguages, requestedLanguage);
     if (market) inc(markets, market === 'canada' ? 'ca' : market);
     if (props.attribution_referrer_host || props.attribution_referrer) inc(referrers, props.attribution_referrer_host || props.attribution_referrer);
     if (props.attribution_campaign) inc(campaigns, props.attribution_campaign);
@@ -518,6 +524,9 @@ async function eventSummary(request, env) {
       if (record.event === 'language_mode_open') {
         languageModeOpens30d += 1;
         if (preferredLanguage === 'es' || props.spanish_field_mode === true || props.spanish_field_mode === 'true') spanishModeOpens30d += 1;
+        if (requestedLanguage === 'fr' || requestedLanguage === 'fr-ca') frenchInterestOpens30d += 1;
+        if (requestedLanguage === 'pt' || requestedLanguage === 'pt-br') portugueseInterestOpens30d += 1;
+        if (requestedLanguage === 'ht' || requestedLanguage === 'ht-ht') haitianCreoleInterestOpens30d += 1;
       }
       if (record.event === 'market_interest_open') {
         marketInterestOpens30d += 1;
@@ -579,6 +588,9 @@ async function eventSummary(request, env) {
       activationCompletions30d,
       languageModeOpens30d,
       spanishModeOpens30d,
+      frenchInterestOpens30d,
+      portugueseInterestOpens30d,
+      haitianCreoleInterestOpens30d,
       marketInterestOpens30d,
       canadaInterestOpens30d,
       installPrompts30d,
@@ -642,6 +654,7 @@ async function eventSummary(request, env) {
     topRoles: topList(roles),
     topLanguages: topList(languages),
     topLocales: topList(locales),
+    topRequestedLanguages: topList(requestedLanguages),
     topMarkets: topList(markets),
     topPaymentPlans: topList(paymentPlans),
     topDemandLanes: topList(laneDemand),
