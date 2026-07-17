@@ -1839,6 +1839,7 @@ function renderVerifiedProofNetwork() {
       <div style="padding-top:9px;">
         <p style="color:#334155;font-size:12px;line-height:1.45;"><strong>Includes:</strong> ${escHtml((plan.includes || []).join(', '))}</p>
         <p style="color:#0f766e;font-size:11px;line-height:1.45;font-weight:850;margin-top:6px;"><strong>Trust boundary:</strong> ${escHtml(plan.guardrail || network.trustBoundary || '')}</p>
+        ${plan.planKey && plan.planKey !== 'free_core' ? `<button type="button" class="brain-action green" style="width:100%;margin-top:8px;" onclick="openSplashLensPaidLane('${escHtml(plan.planKey)}','${escHtml(plan.name)}')">Start / check availability</button>` : ''}
       </div>
     </details>
   `).join('');
@@ -1848,6 +1849,24 @@ function renderVerifiedProofNetwork() {
     `<div style="margin-top:10px;">${cards}</div><div class="brain-grid" style="margin-top:10px;"><a class="brain-action green" href="mailto:hello@splashlens.com?subject=SplashLens%20Service%20Proof%20Pro%20pilot" onclick="trackSplashLensEvent('upgrade_interest_click',{plan:'service_proof_pro_network'})" style="text-align:center;text-decoration:none;">Proof Pro pilot</a><a class="brain-action secondary" href="mailto:hello@splashlens.com?subject=SplashLens%20Verified%20Proof%20Network" onclick="trackSplashLensEvent('partner_interest_click',{lane:'verified_proof_network'})" style="text-align:center;text-decoration:none;">Talk partner lane</a></div>`
   );
   trackSplashLensEvent('verified_proof_network_viewed', { plans: plans.length });
+}
+
+async function openSplashLensPaidLane(planKey, label) {
+  const safePlan = String(planKey || '').trim();
+  const safeLabel = String(label || 'SplashLens paid lane').trim();
+  trackSplashLensEvent('paid_lane_click', { plan_key: safePlan, label: safeLabel });
+  try {
+    const response = await fetch('/api/checkout?catalog=1', { cache: 'no-store' });
+    const payload = await response.json();
+    const plan = (payload.plans || []).find(item => item.key === safePlan);
+    if (plan && plan.checkoutConfigured) {
+      window.location.href = `/api/checkout?plan=${encodeURIComponent(safePlan)}`;
+      return;
+    }
+  } catch {}
+  const subject = encodeURIComponent(`SplashLens ${safeLabel} pilot`);
+  const body = encodeURIComponent(`Hi Joshua,\n\nI want to talk about ${safeLabel} for SplashLens.\n\nTalk Soon,`);
+  window.location.href = `mailto:hello@splashlens.com?subject=${subject}&body=${body}`;
 }
 
 let activeVoiceNote = null;
@@ -6165,6 +6184,7 @@ const SCAN_LIMIT_FREE = 10;
 const SCAN_USAGE_KEY = 'pl_scans_month';
 const SCAN_PRO_KEY = 'sl_partsnap_pro_local';
 const SCAN_ENTITLEMENT_TOKEN_KEY = 'sl_scan_entitlement_token';
+const SCAN_ENTITLEMENT_META_KEY = 'sl_scan_entitlement_meta';
 const PARTSNAP_MONTHLY_LINK = '/api/checkout?plan=monthly';
 const PARTSNAP_YEARLY_LINK = '/api/checkout?plan=yearly';
 const PARTSNAP_RESTORE_ENDPOINT = '/api/restore-entitlement';
@@ -6536,7 +6556,8 @@ function saveScanUsage(usage) {
 }
 
 function isPartSnapPro() {
-  return localStorage.getItem(SCAN_PRO_KEY) === '1' || Boolean(getScanEntitlementToken());
+  const entitlement = getScanEntitlementMeta();
+  return localStorage.getItem(SCAN_PRO_KEY) === '1' || entitlement.scopes.includes('scan') || Boolean(getScanEntitlementToken());
 }
 
 function getScanEntitlementToken() {
@@ -6544,16 +6565,68 @@ function getScanEntitlementToken() {
   return token.startsWith('sl_scan_v1.') ? token : '';
 }
 
+function decodeScanEntitlementToken(token) {
+  try {
+    const parts = String(token || '').split('.');
+    if (parts.length !== 3 || parts[0] !== 'sl_scan_v1') return null;
+    const normalized = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+    const padded = normalized + '='.repeat((4 - (normalized.length % 4)) % 4);
+    return JSON.parse(atob(padded));
+  } catch {
+    return null;
+  }
+}
+
+function getScanEntitlementMeta() {
+  try {
+    const token = getScanEntitlementToken();
+    const fromToken = decodeScanEntitlementToken(token);
+    const stored = JSON.parse(localStorage.getItem(SCAN_ENTITLEMENT_META_KEY) || '{}');
+    const meta = fromToken || stored || {};
+    const scopes = Array.isArray(meta.scopes) ? meta.scopes : String(meta.scopes || '').split(',');
+    return {
+      plan: String(meta.plan || stored.plan || 'SplashLens paid access').slice(0, 100),
+      planKey: String(meta.planKey || stored.planKey || '').slice(0, 100),
+      feature: String(meta.feature || stored.feature || '').slice(0, 100),
+      scopes: scopes.map(scope => String(scope || '').trim()).filter(Boolean),
+      expiresAt: meta.exp ? new Date(Number(meta.exp) * 1000).toISOString() : (stored.expiresAt || ''),
+    };
+  } catch {
+    return { plan: 'SplashLens paid access', planKey: '', feature: '', scopes: [], expiresAt: '' };
+  }
+}
+
 function captureScanEntitlementFromUrl() {
   try {
     const url = new URL(window.location.href);
     const token = url.searchParams.get('scan_token') || '';
     if (!token.startsWith('sl_scan_v1.')) return;
+    const meta = getScanEntitlementMetaFromToken(token);
     localStorage.setItem(SCAN_ENTITLEMENT_TOKEN_KEY, token);
+    if (meta) localStorage.setItem(SCAN_ENTITLEMENT_META_KEY, JSON.stringify(meta));
     localStorage.setItem(SCAN_PRO_KEY, '1');
     url.searchParams.delete('scan_token');
     window.history.replaceState({}, '', `${url.pathname}${url.search}${url.hash}`);
+    trackSplashLensEvent('paid_entitlement_activated', {
+      plan: meta?.plan || 'SplashLens paid access',
+      plan_key: meta?.planKey || '',
+      feature: meta?.feature || '',
+      scopes: (meta?.scopes || []).join(','),
+    });
   } catch {}
+}
+
+function getScanEntitlementMetaFromToken(token) {
+  const payload = decodeScanEntitlementToken(token);
+  if (!payload) return null;
+  const scopes = Array.isArray(payload.scopes) ? payload.scopes : String(payload.scopes || '').split(',');
+  return {
+    plan: String(payload.plan || 'SplashLens paid access').slice(0, 100),
+    planKey: String(payload.planKey || '').slice(0, 100),
+    feature: String(payload.feature || '').slice(0, 100),
+    scopes: scopes.map(scope => String(scope || '').trim()).filter(Boolean),
+    expiresAt: payload.exp ? new Date(Number(payload.exp) * 1000).toISOString() : '',
+  };
 }
 
 function getStoreShellMode() {
@@ -6784,13 +6857,15 @@ function recordAIScan(mode) {
 }
 
 function unlockPartSnapProLocal() {
+  const entitlement = getScanEntitlementMeta();
+  const plan = entitlement.plan || 'SplashLens paid access';
   if (!getScanEntitlementToken()) localStorage.setItem(SCAN_PRO_KEY, '1');
   updateAIStatusBar();
   const result = document.getElementById('scan-result');
   if (result) {
     result.innerHTML = `<div style="background:#052e16;border:1px solid #16a34a;border-radius:12px;padding:18px;text-align:center;">
-      <p style="color:#86efac;font-size:15px;font-weight:900;margin-bottom:6px;">PartSnap Pro enabled on this device</p>
-      <p style="color:#bbf7d0;font-size:12px;line-height:1.5;">Scanner access is enabled on this device. Signed entitlement links sync access without trusting caller-supplied identity.</p>
+      <p style="color:#86efac;font-size:15px;font-weight:900;margin-bottom:6px;">${escHtml(plan)} enabled on this device</p>
+      <p style="color:#bbf7d0;font-size:12px;line-height:1.5;">Paid SplashLens access is enabled on this device. Signed entitlement links sync access without trusting caller-supplied identity.</p>
     </div>`;
   }
 }

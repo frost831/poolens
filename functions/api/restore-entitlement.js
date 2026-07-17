@@ -57,6 +57,7 @@ function base64UrlEncode(bytes) {
 async function sendRestoreEmail(config, email, activateUrl, entitlement) {
   if (!config.apiKey || !config.from) return { sent: false, reason: 'missing_sendgrid_config' };
 
+  const plan = clean(entitlement.plan || 'SplashLens paid access', 100);
   const response = await fetch('https://api.sendgrid.com/v3/mail/send', {
     method: 'POST',
     headers: {
@@ -64,21 +65,21 @@ async function sendRestoreEmail(config, email, activateUrl, entitlement) {
       'content-type': 'application/json',
     },
     body: JSON.stringify({
-      personalizations: [{ to: [{ email }], subject: 'Restore your SplashLens PartSnap Pro access' }],
+      personalizations: [{ to: [{ email }], subject: `Restore your ${plan} access` }],
       from: { email: config.from, name: 'SplashLens' },
       categories: ['splashlens', 'entitlement-restore'],
       content: [{
         type: 'text/plain',
         value: [
-          'Here is your SplashLens PartSnap Pro restore link.',
+          `Here is your SplashLens ${plan} restore link.`,
           '',
-          'Open this on the device/browser where you use PartSnap:',
+          'Open this on the device/browser where you use SplashLens:',
           activateUrl,
           '',
-          `Plan: ${entitlement.plan || 'PartSnap Pro'}`,
+          `Plan: ${plan}`,
           `Expires: ${entitlement.expiresAt || 'active entitlement'}`,
           '',
-          'Manual lookup, dosing, reports, filters, and checklists remain free. PartSnap Pro extends scanner access.',
+          'Manual lookup, dosing, reports, filters, and checklists remain free. Paid SplashLens lanes restore the scanner, proof, team, facility, training, or partner workflow attached to your plan.',
           '',
           'Talk Soon,',
           'Joshua Frost',
@@ -113,7 +114,7 @@ export async function onRequestPost({ request, env }) {
   if (!raw) {
     return json(404, {
       ok: false,
-      error: 'No active SplashLens PartSnap Pro entitlement was found for that email.',
+      error: 'No active SplashLens paid entitlement was found for that email.',
     });
   }
 
@@ -170,6 +171,6 @@ export async function onRequestPost({ request, env }) {
 export async function onRequestGet() {
   return json(200, {
     ok: true,
-    status: 'SplashLens PartSnap Pro restore endpoint ready. POST the checkout email to send a restore link.',
+    status: 'SplashLens paid-entitlement restore endpoint ready. POST the checkout email to send a restore link.',
   });
 }

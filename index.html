@@ -1021,7 +1021,7 @@
         <p style="color:#64748b;font-size:12px;line-height:1.45;margin-bottom:10px;">Manual lookup, basic PartSnap, calculators, and Facility Assist stay useful. Paid layers add saved proof, team dashboards, facility pilots, training modules, distributor packets, and partner-reviewed manufacturer cards.</p>
         <div class="brain-grid" style="grid-template-columns:repeat(3,1fr);">
           <button type="button" class="brain-action green" onclick="renderVerifiedProofNetwork()">View offer lanes</button>
-          <a class="brain-action secondary" href="mailto:hello@splashlens.com?subject=SplashLens%20Service%20Proof%20Pro%20pilot" onclick="trackSplashLensEvent('upgrade_interest_click',{plan:'service_proof_pro_pilot'})" style="text-align:center;text-decoration:none;">Proof Pro pilot</a>
+          <button type="button" class="brain-action secondary" onclick="openSplashLensPaidLane('service_proof_pro_monthly','Service Proof Pro')">Proof Pro pilot</button>
           <a class="brain-action secondary" href="mailto:hello@splashlens.com?subject=SplashLens%20Verified%20Proof%20Network" onclick="trackSplashLensEvent('partner_interest_click',{lane:'verified_proof_network'})" style="text-align:center;text-decoration:none;">Partner lane</a>
         </div>
       </section>
@@ -1391,8 +1391,8 @@
   </nav>
 
   <script src="/js/errors.js"></script>
-  <script src="/js/data.js?v=20260717-verified-proof-network"></script>
-  <script src="/js/app.js?v=20260717-verified-proof-network"></script>
+  <script src="/js/data.js?v=20260717-payment-lanes"></script>
+  <script src="/js/app.js?v=20260717-payment-lanes"></script>
   <script src="/js/analytics.js"></script>
   <script>
     if ('serviceWorker' in navigator) {

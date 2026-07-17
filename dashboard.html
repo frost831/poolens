@@ -328,6 +328,14 @@
         <table id="payment-plans"></table>
       </div>
       <div class="panel">
+        <h2>Payment Features</h2>
+        <table id="payment-features"></table>
+      </div>
+      <div class="panel">
+        <h2>Payment Plan Keys</h2>
+        <table id="payment-plan-keys"></table>
+      </div>
+      <div class="panel">
         <h2>Recent Payments</h2>
         <table id="recent-payments"></table>
       </div>
@@ -455,8 +463,8 @@
 
     function renderPayments(rows) {
       const el = document.getElementById('recent-payments');
-      const body = (rows || []).map((row) => `<tr><td>${new Date(row.createdAt).toLocaleString()}</td><td><code>${escapeHtml(row.plan || 'PartSnap Pro')}</code></td><td>${escapeHtml(row.subject || '')}</td><td>${money(row.amountTotal, row.currency)}</td></tr>`).join('');
-      el.innerHTML = '<thead><tr><th>Time</th><th>Plan</th><th>Customer</th><th>Amount</th></tr></thead><tbody>' + (body || '<tr><td colspan="4">No payment events yet.</td></tr>') + '</tbody>';
+      const body = (rows || []).map((row) => `<tr><td>${new Date(row.createdAt).toLocaleString()}</td><td><code>${escapeHtml(row.plan || 'PartSnap Pro')}</code><br><span class="hint">${escapeHtml(row.planKey || '')} ${row.feature ? ' | ' + escapeHtml(row.feature) : ''}</span></td><td>${escapeHtml(row.subject || '')}</td><td>${money(row.amountTotal, row.currency)}</td></tr>`).join('');
+      el.innerHTML = '<thead><tr><th>Time</th><th>Plan / Feature</th><th>Customer</th><th>Amount</th></tr></thead><tbody>' + (body || '<tr><td colspan="4">No payment events yet.</td></tr>') + '</tbody>';
     }
 
     function renderReviewStatus(counts) {
@@ -587,6 +595,8 @@
       renderCountTable('requested-languages', data.topRequestedLanguages, 'Requested');
       renderCountTable('user-markets', data.topMarkets, 'Market');
       renderCountTable('payment-plans', data.topPaymentPlans, 'Plan');
+      renderCountTable('payment-features', data.topPaymentFeatures, 'Feature');
+      renderCountTable('payment-plan-keys', data.topPaymentPlanKeys, 'Plan Key');
       renderCountTable('manual-queries', data.manualQueries, 'Query');
       renderCountTable('demand-lanes', data.topDemandLanes, 'Lane');
       renderCountTable('partsnap-categories', data.topPartSnapCategories, 'Category');

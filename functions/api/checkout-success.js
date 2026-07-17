@@ -1,4 +1,8 @@
 import { recordVerifiedSplashLensPayment } from '../_shared/splashlens-payment.mjs';
+import {
+  splashLensActivationUrl,
+  splashLensPlanFromSession,
+} from '../_shared/splashlens-plans.mjs';
 
 const TOKEN_PREFIX = 'sl_scan_v1';
 const textEncoder = new TextEncoder();
@@ -55,8 +59,7 @@ function isPaid(session) {
 
 function isSplashLensSession(session) {
   const product = String(session?.metadata?.product || '').trim().toLowerCase();
-  const feature = String(session?.metadata?.feature || '').trim().toLowerCase();
-  return product === 'splashlens' && feature === 'scanner';
+  return product === 'splashlens';
 }
 
 function cleanSubject(session) {
@@ -66,9 +69,7 @@ function cleanSubject(session) {
 }
 
 function cleanPlan(session) {
-  const metadataPlan = String(session?.metadata?.plan || '').trim();
-  if (metadataPlan) return metadataPlan.slice(0, 80);
-  return 'PartSnap Pro';
+  return splashLensPlanFromSession(session).displayName;
 }
 
 async function signToken(secret, payload) {
@@ -98,16 +99,19 @@ function base64UrlEncode(bytes) {
 
 async function issueActivation(session, env) {
   const secret = tokenSecret(env);
-  if (!secret) return { error: 'Scanner entitlement signing is not configured.' };
+  if (!secret) return { error: 'SplashLens entitlement signing is not configured.' };
 
   const subject = cleanSubject(session);
   if (!subject) return { error: 'Checkout completed, but no customer email was returned.' };
 
+  const plan = splashLensPlanFromSession(session, env);
   const now = Math.floor(Date.now() / 1000);
   const payload = {
     sub: subject,
-    plan: cleanPlan(session),
-    scopes: ['scan'],
+    plan: plan.displayName,
+    planKey: plan.key,
+    feature: plan.feature,
+    scopes: plan.scopes,
     source: 'stripe_checkout',
     stripeSessionId: String(session.id || ''),
     stripeCustomerId: String(session.customer || ''),
@@ -115,12 +119,14 @@ async function issueActivation(session, env) {
     exp: now + 365 * 24 * 60 * 60,
   };
   const token = await signToken(secret, payload);
-  const activateUrl = `https://app.splashlens.com/?tab=scan&scan_token=${encodeURIComponent(token)}`;
+  const activateUrl = splashLensActivationUrl(token, plan);
 
   if (env.SCAN_USAGE_KV && typeof env.SCAN_USAGE_KV.put === 'function') {
     await env.SCAN_USAGE_KV.put(`entitlement:${subject}`, JSON.stringify({
       subject,
       plan: payload.plan,
+      planKey: payload.planKey,
+      feature: payload.feature,
       scopes: payload.scopes,
       source: payload.source,
       stripeSessionId: payload.stripeSessionId,
@@ -158,6 +164,9 @@ export async function onRequestGet({ request, env }) {
   await recordVerifiedSplashLensPayment(env, session, {
     subject: cleanSubject(session),
     plan: cleanPlan(session),
+    planKey: splashLensPlanFromSession(session, env).key,
+    feature: splashLensPlanFromSession(session, env).feature,
+    scopes: splashLensPlanFromSession(session, env).scopes,
     source: 'stripe_checkout_success_verification',
     path: '/api/checkout-success',
   });
@@ -182,9 +191,9 @@ export async function onRequestGet({ request, env }) {
 </head>
 <body>
   <main>
-    <h1>Scanner activated.</h1>
-    <p>Your paid scanner entitlement is ready for ${escapeHtml(activation.subject)}. Open SplashLens to attach it to this browser.</p>
-    <a href="${escapeHtml(activation.activateUrl)}">Open SplashLens scanner</a>
+    <h1>SplashLens activated.</h1>
+    <p>Your paid SplashLens entitlement is ready for ${escapeHtml(activation.subject)}. Open SplashLens to attach it to this browser.</p>
+    <a href="${escapeHtml(activation.activateUrl)}">Open SplashLens</a>
   </main>
 </body>
 </html>`);

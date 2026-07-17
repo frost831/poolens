@@ -1,4 +1,9 @@
 import { recordVerifiedSplashLensPayment } from '../_shared/splashlens-payment.mjs';
+import {
+  splashLensActivationUrl,
+  splashLensAllowedPaymentLinkIds,
+  splashLensPlanFromSession,
+} from '../_shared/splashlens-plans.mjs';
 
 const TOKEN_PREFIX = 'sl_scan_v1';
 const textEncoder = new TextEncoder();
@@ -38,11 +43,7 @@ function notifyConfig(env) {
 }
 
 function allowedPaymentLinkIds(env) {
-  return new Set([
-    clean(env.SPLASHLENS_STRIPE_PAYMENT_LINK_MONTHLY_ID, 120),
-    clean(env.SPLASHLENS_STRIPE_PAYMENT_LINK_YEARLY_ID, 120),
-    clean(env.SPLASHLENS_STRIPE_PAYMENT_LINK_ANNUAL_ID, 120),
-  ].filter(Boolean));
+  return new Set(splashLensAllowedPaymentLinkIds(env).keys());
 }
 
 function isRecognizedSplashLensCheckout(session, env) {
@@ -65,14 +66,6 @@ function paidEnough(session) {
 
 function subjectFromSession(session) {
   return clean(session?.customer_details?.email || session?.customer_email || session?.customer, 180).toLowerCase();
-}
-
-function planFromSession(session) {
-  const metadataPlan = clean(session?.metadata?.plan, 100);
-  if (metadataPlan) return metadataPlan;
-  const amount = Number(session?.amount_total || 0);
-  if (amount >= 3900) return 'PartSnap Pro Annual';
-  return 'PartSnap Pro Monthly';
 }
 
 async function verifyStripeSignature(rawBody, signatureHeader, secret) {
@@ -103,11 +96,14 @@ async function issueActivation(session, env) {
   const subject = subjectFromSession(session);
   if (!subject) return { ok: false, error: 'missing_customer_subject' };
 
+  const plan = splashLensPlanFromSession(session, env);
   const now = Math.floor(Date.now() / 1000);
   const payload = {
     sub: subject,
-    plan: planFromSession(session),
-    scopes: ['scan'],
+    plan: plan.displayName,
+    planKey: plan.key,
+    feature: plan.feature,
+    scopes: plan.scopes,
     source: 'stripe_webhook',
     stripeSessionId: clean(session.id, 120),
     stripeCustomerId: clean(session.customer, 120),
@@ -116,10 +112,12 @@ async function issueActivation(session, env) {
     exp: now + 365 * 24 * 60 * 60,
   };
   const token = await signToken(secret, payload);
-  const activateUrl = `https://app.splashlens.com/?tab=scan&scan_token=${encodeURIComponent(token)}`;
+  const activateUrl = splashLensActivationUrl(token, plan);
   const record = {
     subject,
     plan: payload.plan,
+    planKey: payload.planKey,
+    feature: payload.feature,
     scopes: payload.scopes,
     source: payload.source,
     stripeSessionId: payload.stripeSessionId,
@@ -140,6 +138,9 @@ async function issueActivation(session, env) {
   await recordVerifiedSplashLensPayment(env, session, {
     subject,
     plan: record.plan,
+    planKey: record.planKey,
+    feature: record.feature,
+    scopes: record.scopes,
     source: 'stripe_webhook',
     path: '/api/stripe-webhook',
   });
@@ -170,10 +171,12 @@ async function sendActivationEmails(env, session, activation) {
   const buyerText = [
     'Thanks for upgrading SplashLens.',
     '',
-    'Open this activation link on the device/browser where you use PartSnap:',
+    `Plan: ${activation.entitlement.plan}`,
+    '',
+    'Open this activation link on the device/browser where you use SplashLens:',
     activation.activateUrl,
     '',
-    'Manual lookup, dosing, reports, filters, and checklists remain free. PartSnap Pro extends scanner access.',
+    'Manual lookup, dosing, reports, filters, and checklists remain free. Paid SplashLens lanes add the proof, scanner, team, facility, training, or partner workflow listed on your plan.',
     '',
     'Talk Soon,',
     'Joshua Frost',
@@ -184,6 +187,8 @@ async function sendActivationEmails(env, session, activation) {
     '',
     `Customer: ${activation.subject}`,
     `Plan: ${activation.entitlement.plan}`,
+    `Feature: ${activation.entitlement.feature || ''}`,
+    `Scopes: ${(activation.entitlement.scopes || []).join(', ')}`,
     `Amount: ${session.amount_total || ''} ${session.currency || ''}`,
     `Stripe session: ${session.id || ''}`,
     `Payment link: ${session.payment_link || ''}`,
@@ -191,7 +196,7 @@ async function sendActivationEmails(env, session, activation) {
     `Activation link: ${activation.activateUrl}`,
   ].join('\n');
 
-  const buyer = await sendMail(config, activation.subject, 'Your SplashLens PartSnap Pro activation', buyerText, ['buyer-activation']);
+  const buyer = await sendMail(config, activation.subject, `Your SplashLens ${activation.entitlement.plan} activation`, buyerText, ['buyer-activation']);
   const owner = await sendMail(config, config.ownerTo, '[SplashLens Payment] Checkout completed', ownerText, ['owner-alert']);
   return { buyer, owner };
 }

@@ -253,6 +253,8 @@ async function eventSummary(request, env) {
   const manualQueries = new Map();
   const callbackRisks = new Map();
   const paymentPlans = new Map();
+  const paymentFeatures = new Map();
+  const paymentPlanKeys = new Map();
   const sources = new Map();
   const referrers = new Map();
   const campaigns = new Map();
@@ -545,10 +547,14 @@ async function eventSummary(request, env) {
         checkoutSuccess30d += 1;
         revenueCents30d += Math.max(0, Number(props.amount_total || props.amountTotal || 0) || 0);
         inc(paymentPlans, props.plan || props.product || 'PartSnap Pro');
+        inc(paymentFeatures, props.feature || 'unknown');
+        inc(paymentPlanKeys, props.plan_key || props.planKey || 'unknown');
         recentPayments.push({
           createdAt: record.createdAt,
           subject: clean(props.subject || props.customer_email || props.customerEmail || '', 160),
           plan: clean(props.plan || props.product || 'PartSnap Pro', 100),
+          planKey: clean(props.plan_key || props.planKey || '', 100),
+          feature: clean(props.feature || '', 100),
           amountTotal: Math.max(0, Number(props.amount_total || props.amountTotal || 0) || 0),
           currency: clean(props.currency || 'usd', 12),
           source: clean(props.payment_source || record.source || 'stripe', 60),
@@ -657,6 +663,8 @@ async function eventSummary(request, env) {
     topRequestedLanguages: topList(requestedLanguages),
     topMarkets: topList(markets),
     topPaymentPlans: topList(paymentPlans),
+    topPaymentFeatures: topList(paymentFeatures),
+    topPaymentPlanKeys: topList(paymentPlanKeys),
     topDemandLanes: topList(laneDemand),
     topFacilityEvents: topList(facilityEvents),
     topFacilityLanes: topList(facilityLanes),

@@ -1,3 +1,5 @@
+import { resolveSplashLensPlan } from '../_shared/splashlens-plans.mjs';
+
 const TOKEN_PREFIX = 'sl_scan_v1';
 const DEFAULT_TTL_DAYS = 365;
 const MAX_TTL_DAYS = 730;
@@ -33,6 +35,15 @@ function cleanSubject(value) {
 
 function cleanPlan(value) {
   return String(value || 'SplashLens Scanner Pro').trim().slice(0, 80) || 'SplashLens Scanner Pro';
+}
+
+function cleanScopes(value, fallback) {
+  const raw = Array.isArray(value) ? value : String(value || '').split(',');
+  const scopes = raw
+    .map((scope) => String(scope || '').trim().toLowerCase().replace(/[^a-z0-9_:-]/g, ''))
+    .filter(Boolean)
+    .slice(0, 12);
+  return scopes.length ? scopes : fallback;
 }
 
 function adminSecret(env) {
@@ -74,11 +85,15 @@ export async function onRequestPost({ request, env }) {
   if (!subject) return json(request, { ok: false, error: 'A valid subject, email, customerId, or deviceId is required.' }, 400);
 
   const ttlDays = Math.max(1, Math.min(Number(body.ttlDays || DEFAULT_TTL_DAYS), MAX_TTL_DAYS));
+  const spec = resolveSplashLensPlan(body.planKey || body.plan || 'monthly');
+  const scopes = cleanScopes(body.scopes, spec.scopes);
   const now = Math.floor(Date.now() / 1000);
   const payload = {
     sub: subject,
-    plan: cleanPlan(body.plan),
-    scopes: ['scan'],
+    plan: cleanPlan(body.plan || spec.displayName),
+    planKey: spec.key,
+    feature: spec.feature,
+    scopes,
     source: 'admin_grant',
     iat: now,
     exp: now + Math.floor(ttlDays * 24 * 60 * 60),
@@ -88,6 +103,8 @@ export async function onRequestPost({ request, env }) {
   const record = {
     subject,
     plan: payload.plan,
+    planKey: payload.planKey,
+    feature: payload.feature,
     scopes: payload.scopes,
     source: payload.source,
     issuedAt: new Date(payload.iat * 1000).toISOString(),

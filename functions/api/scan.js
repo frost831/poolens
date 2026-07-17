@@ -142,7 +142,7 @@ function corsHeaders(request, env) {
   return {
     'Access-Control-Allow-Origin': allowOrigin,
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, X-BZM-Language, X-BZM-Locale, X-BZM-Auto-Translate',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-SplashLens-Entitlement-Token, X-BZM-Language, X-BZM-Locale, X-BZM-Auto-Translate',
     'Access-Control-Max-Age': '86400',
     'Vary': 'Origin',
     'Content-Type': 'application/json',

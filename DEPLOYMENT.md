@@ -18,6 +18,7 @@ This repo is the PoolLens source tree for the SplashLens field app.
 - `STRIPE_WEBHOOK_SECRET`: required for `/api/stripe-webhook` to verify Stripe Payment Link / Checkout events before issuing scanner activation links.
 - `STRIPE_SECRET_KEY`: required only when `SPLASHLENS_CHECKOUT_MODE=stripe_checkout` for first-party Checkout Sessions and `/api/checkout-success`.
 - `SPLASHLENS_STRIPE_PAYMENT_LINK_MONTHLY_ID` and `SPLASHLENS_STRIPE_PAYMENT_LINK_YEARLY_ID`: recommended so webhook fulfillment only issues entitlements for the correct SplashLens Payment Links.
+- Optional paid-lane price IDs or Payment Links listed below activate the broader Verified Proof Network tiers. If a lane is not configured, `/api/checkout?plan=...` returns a clean `409 checkout_not_configured` instead of sending a buyer into a broken checkout.
 
 ## Required production metering
 
@@ -93,6 +94,34 @@ Current Stripe catalog IDs:
 
 - Monthly PartSnap Pro: `price_1TbAp725fqLun6cVz5lhOiiS`
 - Annual PartSnap Pro: `price_1TbAp825fqLun6cVoVG0wqQl`
+
+### Verified Proof Network payment lane env vars
+
+These plans are wired in code. Only attach public CTAs after Stripe products, pricing, fulfillment, and support are ready.
+
+| Plan key | Product label | Required to enable Checkout Sessions | Payment Link fallback | Payment Link ID for webhook allow-list |
+| --- | --- | --- | --- | --- |
+| `partsnap_pro_monthly` | PartSnap Pro Monthly | `SPLASHLENS_STRIPE_PRICE_PARTSNAP_PRO_MONTHLY` or existing monthly price env | `SPLASHLENS_STRIPE_LINK_PARTSNAP_PRO_MONTHLY` or built-in live link | `SPLASHLENS_STRIPE_PAYMENT_LINK_PARTSNAP_PRO_MONTHLY_ID` or `SPLASHLENS_STRIPE_PAYMENT_LINK_MONTHLY_ID` |
+| `partsnap_pro_annual` | PartSnap Pro Annual | `SPLASHLENS_STRIPE_PRICE_PARTSNAP_PRO_ANNUAL` or existing yearly price env | `SPLASHLENS_STRIPE_LINK_PARTSNAP_PRO_ANNUAL` or built-in live link | `SPLASHLENS_STRIPE_PAYMENT_LINK_PARTSNAP_PRO_ANNUAL_ID` or yearly/annual ID |
+| `service_proof_pro_monthly` | Service Proof Pro | `SPLASHLENS_STRIPE_PRICE_SERVICE_PROOF_PRO_MONTHLY` | `SPLASHLENS_STRIPE_LINK_SERVICE_PROOF_PRO_MONTHLY` | `SPLASHLENS_STRIPE_PAYMENT_LINK_SERVICE_PROOF_PRO_MONTHLY_ID` |
+| `team_proof_os_monthly` | Team Proof OS | `SPLASHLENS_STRIPE_PRICE_TEAM_PROOF_OS_MONTHLY` | `SPLASHLENS_STRIPE_LINK_TEAM_PROOF_OS_MONTHLY` | `SPLASHLENS_STRIPE_PAYMENT_LINK_TEAM_PROOF_OS_MONTHLY_ID` |
+| `facility_cpo_pilot_monthly` | Facility / CPO Pilot | `SPLASHLENS_STRIPE_PRICE_FACILITY_CPO_PILOT_MONTHLY` | `SPLASHLENS_STRIPE_LINK_FACILITY_CPO_PILOT_MONTHLY` | `SPLASHLENS_STRIPE_PAYMENT_LINK_FACILITY_CPO_PILOT_MONTHLY_ID` |
+| `verified_manufacturer_cards_monthly` | Verified Manufacturer Cards | `SPLASHLENS_STRIPE_PRICE_VERIFIED_MANUFACTURER_CARDS_MONTHLY` | `SPLASHLENS_STRIPE_LINK_VERIFIED_MANUFACTURER_CARDS_MONTHLY` | `SPLASHLENS_STRIPE_PAYMENT_LINK_VERIFIED_MANUFACTURER_CARDS_MONTHLY_ID` |
+| `distributor_counter_mode_monthly` | Distributor / Counter Mode | `SPLASHLENS_STRIPE_PRICE_DISTRIBUTOR_COUNTER_MODE_MONTHLY` | `SPLASHLENS_STRIPE_LINK_DISTRIBUTOR_COUNTER_MODE_MONTHLY` | `SPLASHLENS_STRIPE_PAYMENT_LINK_DISTRIBUTOR_COUNTER_MODE_MONTHLY_ID` |
+| `training_partner_layer_monthly` | Training Partner Layer | `SPLASHLENS_STRIPE_PRICE_TRAINING_PARTNER_LAYER_MONTHLY` | `SPLASHLENS_STRIPE_LINK_TRAINING_PARTNER_LAYER_MONTHLY` | `SPLASHLENS_STRIPE_PAYMENT_LINK_TRAINING_PARTNER_LAYER_MONTHLY_ID` |
+
+Plan catalog check:
+
+```powershell
+curl.exe -s "https://app.splashlens.com/api/checkout?catalog=1"
+```
+
+Admin pilot grant example:
+
+```powershell
+$body = @{ email = "pilot@example.com"; planKey = "service_proof_pro_monthly"; ttlDays = 90 } | ConvertTo-Json -Compress
+Invoke-RestMethod -Method POST -Uri "https://app.splashlens.com/api/scan-entitlement" -Headers @{ "X-SplashLens-Admin-Secret" = $env:SPLASHLENS_ENTITLEMENT_ADMIN_SECRET } -ContentType "application/json" -Body $body
+```
 
 Admin issuance shape:
 

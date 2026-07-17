@@ -199,6 +199,7 @@ window.SPLASHLENS_MONETIZATION_LANES = {
   plans: [
     {
       name: "Free Core",
+      planKey: "free_core",
       price: "$0",
       buyer: "Every tech",
       includes: ["Manual lookup", "Basic PartSnap", "Calculators", "Basic Facility Assist", "Offline manual tools"],
@@ -206,6 +207,7 @@ window.SPLASHLENS_MONETIZATION_LANES = {
     },
     {
       name: "Service Proof Pro",
+      planKey: "service_proof_pro_monthly",
       price: "$9-$19/mo",
       buyer: "Solo tech",
       includes: ["Saved Service Proof Passports", "Unlimited proof packets", "Customer-safe summaries", "Vendor packets", "Callback risk flags", "Export/share history"],
@@ -213,6 +215,7 @@ window.SPLASHLENS_MONETIZATION_LANES = {
     },
     {
       name: "Team Proof OS",
+      planKey: "team_proof_os_monthly",
       price: "$99-$299/mo",
       buyer: "Small service companies",
       includes: ["Owner dashboard", "Tech usage", "Saved pool history", "Company branding", "Weekly searched/missed report", "Team proof reports"],
@@ -220,6 +223,7 @@ window.SPLASHLENS_MONETIZATION_LANES = {
     },
     {
       name: "Facility / CPO Pilot",
+      planKey: "facility_cpo_pilot_monthly",
       price: "$49-$199/mo",
       buyer: "Facilities and training groups",
       includes: ["Daily checks", "Contamination event workflow", "Dose logs", "Escalation packets", "Staff handoff records"],
@@ -227,6 +231,7 @@ window.SPLASHLENS_MONETIZATION_LANES = {
     },
     {
       name: "Verified Manufacturer Cards",
+      planKey: "verified_manufacturer_cards_monthly",
       price: "$500-$2,500/mo + setup",
       buyer: "Manufacturers and expert vendors",
       includes: ["Model families", "Known failure points", "Required proof photos", "Warranty-safe wording", "Preferred escalation steps"],
@@ -234,6 +239,7 @@ window.SPLASHLENS_MONETIZATION_LANES = {
     },
     {
       name: "Distributor / Counter Mode",
+      planKey: "distributor_counter_mode_monthly",
       price: "Pilot priced",
       buyer: "Parts counters and distributors",
       includes: ["Model plate required", "Second photo prompt", "Symptom/code capture", "Serial and old-part marking", "Wrong-order prevention packet"],
@@ -241,6 +247,7 @@ window.SPLASHLENS_MONETIZATION_LANES = {
     },
     {
       name: "Training Partner Layer",
+      planKey: "training_partner_layer_monthly",
       price: "License / rev share",
       buyer: "Pool schools and instructors",
       includes: ["5-minute field lessons", "Proof-based quizzes", "CPO scenario workflows", "Senior-review practice packets"],

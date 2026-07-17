@@ -2,6 +2,13 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import { recordVerifiedSplashLensPayment } from '../functions/_shared/splashlens-payment.mjs';
+import {
+  resolveSplashLensPlan,
+  splashLensAllowedPaymentLinkIds,
+  splashLensCheckoutPrice,
+  splashLensPaymentLinkUrl,
+  splashLensPlanFromSession,
+} from '../functions/_shared/splashlens-plans.mjs';
 
 function fakeKv() {
   const records = new Map();
@@ -26,8 +33,14 @@ test('stores one deterministic conversion event per verified Stripe session', as
     metadata: { plan: 'PartSnap Pro Monthly' },
   };
 
-  const first = await recordVerifiedSplashLensPayment(env, session, { source: 'stripe_webhook' });
-  const second = await recordVerifiedSplashLensPayment(env, session, { source: 'stripe_webhook' });
+  const details = {
+    source: 'stripe_webhook',
+    planKey: 'partsnap_pro_monthly',
+    feature: 'partsnap_pro',
+    scopes: ['scan'],
+  };
+  const first = await recordVerifiedSplashLensPayment(env, session, details);
+  const second = await recordVerifiedSplashLensPayment(env, session, details);
 
   assert.equal(first.stored, true);
   assert.equal(second.eventKey, first.eventKey);
@@ -38,9 +51,42 @@ test('stores one deterministic conversion event per verified Stripe session', as
   assert.equal(event.event, 'checkout_success');
   assert.equal(props.amount_total, 499);
   assert.equal(props.payment_source, 'stripe_webhook');
+  assert.equal(props.plan_key, 'partsnap_pro_monthly');
+  assert.equal(props.feature, 'partsnap_pro');
+  assert.deepEqual(props.scopes, ['scan']);
 });
 
 test('does not claim storage without durable event storage', async () => {
   const result = await recordVerifiedSplashLensPayment({}, { id: 'cs_live_example123' });
   assert.deepEqual(result, { stored: false, reason: 'missing_event_storage' });
+});
+
+test('resolves live PartSnap plans and pilot proof plans from aliases', () => {
+  assert.equal(resolveSplashLensPlan('monthly').key, 'partsnap_pro_monthly');
+  assert.equal(resolveSplashLensPlan('annual').key, 'partsnap_pro_annual');
+  assert.equal(resolveSplashLensPlan('service-proof-pro').key, 'service_proof_pro_monthly');
+  assert.equal(resolveSplashLensPlan('team').displayName, 'Team Proof OS');
+});
+
+test('uses configured Stripe env vars for pilot checkout lanes', () => {
+  const plan = resolveSplashLensPlan('facility-cpo');
+  const env = {
+    SPLASHLENS_STRIPE_PRICE_FACILITY_CPO_PILOT_MONTHLY: 'price_facility_123',
+    SPLASHLENS_STRIPE_LINK_FACILITY_CPO_PILOT_MONTHLY: 'https://buy.stripe.com/facility',
+    SPLASHLENS_STRIPE_PAYMENT_LINK_FACILITY_CPO_PILOT_MONTHLY_ID: 'plink_facility_123',
+  };
+  assert.equal(splashLensCheckoutPrice(env, plan), 'price_facility_123');
+  assert.equal(splashLensPaymentLinkUrl(env, plan), 'https://buy.stripe.com/facility');
+  assert.equal(splashLensAllowedPaymentLinkIds(env).get('plink_facility_123').key, 'facility_cpo_pilot_monthly');
+});
+
+test('maps a Stripe Payment Link session back to the right SplashLens plan', () => {
+  const env = { SPLASHLENS_STRIPE_PAYMENT_LINK_SERVICE_PROOF_PRO_MONTHLY_ID: 'plink_service_proof_123' };
+  const session = {
+    id: 'cs_live_serviceproof',
+    payment_link: 'plink_service_proof_123',
+    amount_total: 1900,
+    metadata: {},
+  };
+  assert.equal(splashLensPlanFromSession(session, env).key, 'service_proof_pro_monthly');
 });

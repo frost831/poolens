@@ -21,6 +21,11 @@ export async function recordVerifiedSplashLensPayment(env, session, details = {}
   const createdAt = paymentTime(session);
   const subject = clean(details.subject || session?.customer_details?.email || session?.customer_email || session?.customer, 180).toLowerCase();
   const plan = clean(details.plan || session?.metadata?.plan || 'PartSnap Pro', 100);
+  const planKey = clean(details.planKey || session?.metadata?.plan_key || '', 100);
+  const feature = clean(details.feature || session?.metadata?.feature || '', 100);
+  const scopes = Array.isArray(details.scopes)
+    ? details.scopes.map((scope) => clean(scope, 60)).filter(Boolean).slice(0, 12)
+    : clean(details.scopes || session?.metadata?.scopes || '', 300).split(',').map((scope) => clean(scope, 60)).filter(Boolean).slice(0, 12);
   const source = clean(details.source || 'stripe_server_verification', 60);
   const amountTotal = Math.max(0, Number(session?.amount_total || 0) || 0);
   const currency = clean(session?.currency, 12).toLowerCase();
@@ -28,6 +33,9 @@ export async function recordVerifiedSplashLensPayment(env, session, details = {}
   const payment = {
     subject,
     plan,
+    planKey,
+    feature,
+    scopes,
     source,
     stripeSessionId: sessionId,
     stripeCustomerId: clean(session?.customer, 120),
@@ -45,6 +53,9 @@ export async function recordVerifiedSplashLensPayment(env, session, details = {}
     propsJson: JSON.stringify({
       subject,
       plan,
+      plan_key: planKey,
+      feature,
+      scopes,
       amount_total: amountTotal,
       currency,
       stripe_session_id: sessionId,
