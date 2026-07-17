@@ -262,6 +262,9 @@ async function eventSummary(request, env) {
   const laneDemand = new Map();
   const partSnapCategories = new Map();
   const roles = new Map();
+  const languages = new Map();
+  const locales = new Map();
+  const markets = new Map();
   const sessionEvents = new Map();
   const meaningfulEvents = new Set([
     'article_referral_open',
@@ -348,6 +351,10 @@ async function eventSummary(request, env) {
   let sourcePageViews30d = 0;
   let proofDrawerOpens30d = 0;
   let activationCompletions30d = 0;
+  let languageModeOpens30d = 0;
+  let spanishModeOpens30d = 0;
+  let marketInterestOpens30d = 0;
+  let canadaInterestOpens30d = 0;
   const uniqueClients30d = new Set();
   const meaningfulClients30d = new Set();
   const activatedClients30d = new Set();
@@ -368,10 +375,16 @@ async function eventSummary(request, env) {
     const sessionId = clean(props.session_id || props.sessionId || '', 160);
     const source = eventSource(record, props);
     const poolPro = isPoolProEvent(record, props);
+    const preferredLanguage = clean(record.language?.preferredLanguage || props.preferred_language || props.source_language || 'en', 24).toLowerCase();
+    const locale = clean(record.language?.locale || props.locale || preferredLanguage || 'en', 32).toLowerCase();
+    const market = clean(props.market || props.country || '', 32).toLowerCase();
     inc(eventsByName, record.event);
     inc(paths, record.path || props.path || 'unknown');
     inc(sources, source);
     if (props.splashlens_role || props.role) inc(roles, props.splashlens_role || props.role);
+    if (preferredLanguage) inc(languages, preferredLanguage);
+    if (locale) inc(locales, locale);
+    if (market) inc(markets, market === 'canada' ? 'ca' : market);
     if (props.attribution_referrer_host || props.attribution_referrer) inc(referrers, props.attribution_referrer_host || props.attribution_referrer);
     if (props.attribution_campaign) inc(campaigns, props.attribution_campaign);
 
@@ -502,6 +515,14 @@ async function eventSummary(request, env) {
         inc(activationSources, props.activation_source || source || 'direct');
         inc(activationCampaigns, props.activation_campaign || props.attribution_campaign || 'untagged');
       }
+      if (record.event === 'language_mode_open') {
+        languageModeOpens30d += 1;
+        if (preferredLanguage === 'es' || props.spanish_field_mode === true || props.spanish_field_mode === 'true') spanishModeOpens30d += 1;
+      }
+      if (record.event === 'market_interest_open') {
+        marketInterestOpens30d += 1;
+        if ((market === 'ca' || market === 'canada')) canadaInterestOpens30d += 1;
+      }
       if (props.facilityId || props.facility_id || ['wizard_open', 'lane_start', 'lane_complete', 'packet_created', 'call_placed', 'scan_used', 'daily_check_logged', 'facility_workflow_action_selected', 'facility_workflow_completed'].includes(record.event)) {
         facilityEvents30d += 1;
         inc(facilityEvents, record.event);
@@ -556,6 +577,10 @@ async function eventSummary(request, env) {
       meaningfulClients30d: meaningfulClients30d.size,
       activatedClients30d: activatedClients30d.size,
       activationCompletions30d,
+      languageModeOpens30d,
+      spanishModeOpens30d,
+      marketInterestOpens30d,
+      canadaInterestOpens30d,
       installPrompts30d,
       installs30d,
       standaloneOpens30d,
@@ -615,6 +640,9 @@ async function eventSummary(request, env) {
     topActivationSources: topList(activationSources),
     topActivationCampaigns: topList(activationCampaigns),
     topRoles: topList(roles),
+    topLanguages: topList(languages),
+    topLocales: topList(locales),
+    topMarkets: topList(markets),
     topPaymentPlans: topList(paymentPlans),
     topDemandLanes: topList(laneDemand),
     topFacilityEvents: topList(facilityEvents),

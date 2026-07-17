@@ -312,6 +312,14 @@
         <table id="user-roles"></table>
       </div>
       <div class="panel">
+        <h2>Languages</h2>
+        <table id="user-languages"></table>
+      </div>
+      <div class="panel">
+        <h2>Markets</h2>
+        <table id="user-markets"></table>
+      </div>
+      <div class="panel">
         <h2>Payment Plans</h2>
         <table id="payment-plans"></table>
       </div>
@@ -522,6 +530,10 @@
         metricCard('App Opens 30d', m.appOpens30d, 'Anonymous event count.'),
         metricCard('Activated Clients 30d', m.activatedClients30d, 'Distinct devices reaching a first-value completion.'),
         metricCard('Activation Completions 30d', m.activationCompletions30d, 'One-time activation_completed events.'),
+        metricCard('Language Opens 30d', m.languageModeOpens30d, 'Explicit language-mode sessions.'),
+        metricCard('Spanish Opens 30d', m.spanishModeOpens30d, 'Spanish Field Mode sessions.'),
+        metricCard('Market Opens 30d', m.marketInterestOpens30d, 'Country/market-tagged sessions.'),
+        metricCard('Canada Opens 30d', m.canadaInterestOpens30d, 'Canada pilot sessions from market=ca.'),
         metricCard('Native First Opens', m.nativeFirstOpens30d, 'First iOS/Android app shell opens.'),
         metricCard('iOS First Opens', m.iosFirstOpens30d, 'Apple app first-open signal.'),
         metricCard('Android First Opens', m.androidFirstOpens30d, 'Google Play first-open signal.'),
@@ -564,6 +576,8 @@
       renderCountTable('activation-sources', data.topActivationSources, 'Source');
       renderCountTable('activation-campaigns', data.topActivationCampaigns, 'Campaign');
       renderCountTable('user-roles', data.topRoles, 'Role');
+      renderCountTable('user-languages', data.topLanguages, 'Language');
+      renderCountTable('user-markets', data.topMarkets, 'Market');
       renderCountTable('payment-plans', data.topPaymentPlans, 'Plan');
       renderCountTable('manual-queries', data.manualQueries, 'Query');
       renderCountTable('demand-lanes', data.topDemandLanes, 'Lane');

@@ -17,6 +17,8 @@ const S = {
 };
 
 const LANGUAGE_STORAGE_KEY = 'splashlens_language_profile';
+const LANGUAGE_MODE_SESSION_KEY = 'splashlens-language-mode-tracked';
+const MARKET_INTEREST_SESSION_KEY = 'splashlens-market-interest-tracked';
 const LANGUAGE_OPTIONS = ['en', 'es'];
 const LANGUAGE_LABELS = { en: 'English', es: 'Español' };
 const LOCALIZED_HEAD = {
@@ -324,6 +326,41 @@ function initLanguageLayer() {
   refreshFirstUsePreferenceButtons();
   applySplashLensLocalization();
   initLocalizationObserver();
+  trackLanguageModeOpen(params);
+  trackMarketInterestOpen(params);
+}
+
+function trackLanguageModeOpen(params = new URLSearchParams(window.location.search)) {
+  const profile = getLanguageProfile();
+  const language = profile.preferredLanguage || 'en';
+  const key = `${language}:${params.get('lang') || ''}:${window.location.pathname}`;
+  try {
+    if (sessionStorage.getItem(LANGUAGE_MODE_SESSION_KEY) === key) return;
+    sessionStorage.setItem(LANGUAGE_MODE_SESSION_KEY, key);
+  } catch {}
+  trackSplashLensEvent('language_mode_open', {
+    preferred_language: language,
+    locale: profile.locale || language,
+    requested_language: params.get('lang') || '',
+    source: params.get('utm_source') || params.get('source') || 'app',
+    spanish_field_mode: language === 'es',
+  });
+}
+
+function trackMarketInterestOpen(params = new URLSearchParams(window.location.search)) {
+  const market = String(params.get('market') || params.get('country') || '').trim().toLowerCase();
+  if (!market) return;
+  const normalizedMarket = market === 'canada' ? 'ca' : market;
+  const key = `${normalizedMarket}:${window.location.pathname}`;
+  try {
+    if (sessionStorage.getItem(MARKET_INTEREST_SESSION_KEY) === key) return;
+    sessionStorage.setItem(MARKET_INTEREST_SESSION_KEY, key);
+  } catch {}
+  trackSplashLensEvent('market_interest_open', {
+    market: normalizedMarket.slice(0, 24),
+    requested_language: params.get('lang') || '',
+    source: params.get('utm_source') || params.get('source') || 'app',
+  });
 }
 
 function initLocalizationObserver() {
