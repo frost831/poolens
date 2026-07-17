@@ -218,7 +218,7 @@ window.SPLASHLENS_MONETIZATION_LANES = {
       planKey: "service_proof_pro_monthly",
       price: "$19/mo target",
       buyer: "Solo tech",
-      includes: ["Saved Service Proof Passports by pool/customer", "Customer-safe visit summaries", "Senior tech/vendor packets", "Callback risk flags and proof history"],
+      includes: ["Save each pool's photos, readings, notes, and repair history", "Plain-English summary you can send to the customer", "One-tap packet for a boss, senior tech, or vendor", "Spot repeat issues before they become callbacks"],
       guardrail: "Built for cleaner documentation without becoming a full CRM."
     },
     {
@@ -226,7 +226,7 @@ window.SPLASHLENS_MONETIZATION_LANES = {
       planKey: "team_proof_os_monthly",
       price: "$99+/mo pilot target",
       buyer: "Service companies, facilities, CPOs, training groups",
-      includes: ["Owner dashboard and tech usage signals", "Company-branded proof reports", "Facility/CPO workflows", "Team-level searched/missed reports"],
+      includes: ["See what your techs used, searched, and missed", "Reports with your company name on them", "Daily check and incident workflows for CPOs and facilities", "Team-level searched/missed reports"],
       guardrail: "Exports support existing CRMs; SplashLens is not a billing replacement."
     },
     {
