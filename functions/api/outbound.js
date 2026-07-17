@@ -17,6 +17,10 @@ const STORES = {
     envTemplate: 'SPLASHLENS_AFFILIATE_POOLSUPPLYWORLD_URL_TEMPLATE',
     fallback: 'https://www.google.com/search?q=site%3Apoolsupplyworld.com+{q}',
   },
+  distributor: {
+    label: 'Local Distributor',
+    fallback: 'https://www.google.com/search?q={q}+pool+part+local+distributor+SCP+branch',
+  },
   web: {
     label: 'Web',
     fallback: 'https://www.google.com/search?q={q}+pool+part',

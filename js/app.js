@@ -1828,16 +1828,19 @@ function renderVerifiedProofNetwork() {
   const network = window.SPLASHLENS_MONETIZATION_LANES || {};
   const plans = Array.isArray(network.plans) ? network.plans : [];
   const cards = plans.map((plan) => `
-    <details class="brain-card" style="margin-bottom:8px;" ${plan.name === 'Free Core' ? 'open' : ''}>
+    <details class="brain-card" style="margin-bottom:8px;" ${plan.planKey === 'free_core' ? 'open' : ''}>
       <summary style="cursor:pointer;list-style:none;display:flex;align-items:flex-start;justify-content:space-between;gap:10px;">
         <span>
           <strong style="display:block;color:#0f172a;font-size:14px;line-height:1.15;">${escHtml(plan.name)}</strong>
           <span style="display:block;color:#64748b;font-size:11px;font-weight:800;margin-top:3px;">${escHtml(plan.buyer || '')}</span>
         </span>
-        <span class="brain-pill ${plan.name === 'Free Core' ? 'ready' : 'warn'}">${escHtml(plan.price || '')}</span>
+        <span class="brain-pill ${plan.planKey === 'free_core' ? 'ready' : 'warn'}">${escHtml(plan.price || '')}</span>
       </summary>
       <div style="padding-top:9px;">
-        <p style="color:#334155;font-size:12px;line-height:1.45;"><strong>Includes:</strong> ${escHtml((plan.includes || []).join(', '))}</p>
+        <p style="color:#334155;font-size:12px;line-height:1.45;margin-bottom:7px;"><strong>Who it helps:</strong> ${escHtml(plan.buyer || '')}</p>
+        <ul style="margin:0 0 0 16px;color:#334155;font-size:12px;line-height:1.45;">
+          ${(plan.includes || []).map(item => `<li>${escHtml(item)}</li>`).join('')}
+        </ul>
         <p style="color:#0f766e;font-size:11px;line-height:1.45;font-weight:850;margin-top:6px;"><strong>Trust boundary:</strong> ${escHtml(plan.guardrail || network.trustBoundary || '')}</p>
         ${plan.planKey && plan.planKey !== 'free_core' ? `<button type="button" class="brain-action green" style="width:100%;margin-top:8px;" onclick="openSplashLensPaidLane('${escHtml(plan.planKey)}','${escHtml(plan.name)}')">Start / check availability</button>` : ''}
       </div>
@@ -1845,7 +1848,7 @@ function renderVerifiedProofNetwork() {
   `).join('');
   renderProofWorkflowOutput(
     'SplashLens Verified Proof Network',
-    network.promise || 'Free for techs. Paid for teams, facilities, trainers, distributors, and manufacturers who need cleaner proof before escalation.',
+    network.promise || 'Free lookup first. Paid when the work needs to be saved, shared, reported, or reviewed.',
     `<div style="margin-top:10px;">${cards}</div><div class="brain-grid" style="margin-top:10px;"><a class="brain-action green" href="mailto:hello@splashlens.com?subject=SplashLens%20Service%20Proof%20Pro%20pilot" onclick="trackSplashLensEvent('upgrade_interest_click',{plan:'service_proof_pro_network'})" style="text-align:center;text-decoration:none;">Proof Pro pilot</a><a class="brain-action secondary" href="mailto:hello@splashlens.com?subject=SplashLens%20Verified%20Proof%20Network" onclick="trackSplashLensEvent('partner_interest_click',{lane:'verified_proof_network'})" style="text-align:center;text-decoration:none;">Talk partner lane</a></div>`
   );
   trackSplashLensEvent('verified_proof_network_viewed', { plans: plans.length });
@@ -7841,13 +7844,15 @@ function renderPartBuyLinks(searchTerms, partNumber, manufacturer, component) {
   return `
     <div style="margin-top:12px;padding-top:12px;border-top:1px solid #334155;">
       <p style="color:#64748b;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">VERIFY FIT / PRICE CHECK</p>
+      <p style="color:#94a3b8;font-size:10px;line-height:1.4;margin-bottom:8px;">Best path: use the proof packet with your normal local distributor or SCP-style counter first, then compare online availability if needed.</p>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <a href="${outbound('distributor')}" target="_blank" rel="noopener" onclick="trackSplashLensEvent('part_search_click',{store:'local_distributor'})" style="background:#0f766e;color:#fff;text-decoration:none;text-align:center;border-radius:8px;padding:9px 6px;font-size:12px;font-weight:900;">Local Distributor</a>
         <a href="${outbound('leslies')}" target="_blank" rel="noopener" onclick="trackSplashLensEvent('affiliate_click',{store:'leslies'})" style="background:#0284c7;color:#fff;text-decoration:none;text-align:center;border-radius:8px;padding:9px 6px;font-size:12px;font-weight:900;">Leslie's</a>
         <a href="${outbound('intheswim')}" target="_blank" rel="noopener" onclick="trackSplashLensEvent('affiliate_click',{store:'intheswim'})" style="background:#0ea5e9;color:#fff;text-decoration:none;text-align:center;border-radius:8px;padding:9px 6px;font-size:12px;font-weight:900;">In The Swim</a>
         <a href="${outbound('poolsupplyworld')}" target="_blank" rel="noopener" onclick="trackSplashLensEvent('affiliate_click',{store:'poolsupplyworld'})" style="background:#334155;color:#e2e8f0;text-decoration:none;text-align:center;border-radius:8px;padding:9px 6px;font-size:12px;font-weight:900;">Pool Supply World</a>
         <a href="${outbound('web')}" target="_blank" rel="noopener" onclick="trackSplashLensEvent('part_search_click',{store:'web'})" style="background:#0f172a;color:#7dd3fc;text-decoration:none;text-align:center;border-radius:8px;padding:9px 6px;font-size:12px;font-weight:900;border:1px solid #334155;">Search Web</a>
       </div>
-      <p style="color:#64748b;font-size:10px;line-height:1.4;margin-top:8px;">Search links are for convenience only. Verify fit before ordering. If an affiliate tag is configured, SplashLens may earn a commission.</p>
+      <p style="color:#64748b;font-size:10px;line-height:1.4;margin-top:8px;">Search links are for convenience only. SplashLens has no live inventory, seller guarantee, SCP affiliation, or fitment guarantee. Verify fit before ordering. If an affiliate tag is configured, SplashLens may earn a commission.</p>
     </div>`;
 }
 

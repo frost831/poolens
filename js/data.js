@@ -194,14 +194,14 @@ window.SPLASHLENS_TECH_RADAR = {
 };
 
 window.SPLASHLENS_MONETIZATION_LANES = {
-  promise: "Free field app first. Optional pro tools package proof, team visibility, facility workflows, and partner-reviewed field cards.",
-  trustBoundary: "Manual lookup, basic PartSnap, calculators, Facility Assist, and cautious reference language stay useful without an account. Paid lanes add saved proof, heavier scanner use, team reports, and partner workflows.",
+  promise: "Free lookup first. Pay only when you need more scanner use, saved proof, team reporting, facility records, or real partner-reviewed cards.",
+  trustBoundary: "Manual lookup, basic PartSnap, calculators, Facility Assist, and cautious reference language stay useful without an account. Paid lanes add capacity or business workflows; they do not create diagnosis, fitment, warranty, or partner guarantees.",
   plans: [
     {
       name: "Free Field App",
       planKey: "free_core",
       price: "$0",
-      buyer: "Pool and spa techs",
+      buyer: "Pool and spa techs who need a field answer now",
       includes: ["Equipment code lookup", "Basic PartSnap", "Calculators", "Facility Assist", "Offline manual tools after first load"],
       guardrail: "No diagnosis, fitment, warranty, or official partner claim."
     },
@@ -209,15 +209,15 @@ window.SPLASHLENS_MONETIZATION_LANES = {
       name: "PartSnap Pro",
       planKey: "partsnap_pro_monthly",
       price: "$4.99/mo or $39/yr",
-      buyer: "Heavy scanner users",
-      includes: ["More online PartSnap and Error Scan usage", "Proof checklist before ordering or escalating", "Price-check search links with affiliate disclosure", "Scanner activation and restore flow"],
+      buyer: "Techs who use PartSnap or Error Scan a lot",
+      includes: ["More online PartSnap and Error Scan usage", "Proof checklist before ordering or escalating", "Local distributor/SCP-style verification first, online price-check links second", "Scanner activation and restore flow"],
       guardrail: "Search links are for price checking; verify model, dimensions, and current parts diagram before ordering."
     },
     {
       name: "Service Proof Pro",
       planKey: "service_proof_pro_monthly",
       price: "$19/mo target",
-      buyer: "Solo tech",
+      buyer: "Solo techs who want proof they can find later",
       includes: ["Save each pool's photos, readings, notes, and repair history", "Plain-English summary you can send to the customer", "One-tap packet for a boss, senior tech, or vendor", "Spot repeat issues before they become callbacks"],
       guardrail: "Built for cleaner documentation without becoming a full CRM."
     },
@@ -225,7 +225,7 @@ window.SPLASHLENS_MONETIZATION_LANES = {
       name: "Team / Facility Plans",
       planKey: "team_proof_os_monthly",
       price: "$99+/mo pilot target",
-      buyer: "Service companies, facilities, CPOs, training groups",
+      buyer: "Owners, facilities, CPOs, and training groups",
       includes: ["See what your techs used, searched, and missed", "Reports with your company name on them", "Daily check and incident workflows for CPOs and facilities", "Team-level searched/missed reports"],
       guardrail: "Exports support existing CRMs; SplashLens is not a billing replacement."
     },
@@ -241,7 +241,7 @@ window.SPLASHLENS_MONETIZATION_LANES = {
       name: "Verified Manufacturer Cards",
       planKey: "verified_manufacturer_cards_monthly",
       price: "By arrangement",
-      buyer: "Manufacturers and expert vendors",
+      buyer: "Manufacturers and expert vendors that want field language shown correctly",
       includes: ["Partner-reviewed field cards", "Required proof photos", "Warranty-safe wording", "Preferred escalation steps"],
       guardrail: "Only marked partner-verified after written partner review/approval."
     },
