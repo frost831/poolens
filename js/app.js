@@ -1155,20 +1155,76 @@ function saveFacilityPacket(packet) {
   } catch {}
 }
 
+function getSavedFacilityPackets() {
+  try { return JSON.parse(localStorage.getItem(FACILITY_PACKET_KEY) || '[]'); }
+  catch { return []; }
+}
+
+function seedReportFromFacilityPacket(packetId) {
+  const packet = getSavedFacilityPackets().find((item) => item.id === packetId);
+  if (!packet) {
+    alert('Facility packet was not found on this device.');
+    return;
+  }
+  document.body.classList.remove('facility-tools-hidden');
+  showTab('report');
+  setReportValueAndNotify('rpt-customer', packet.facility?.name || packet.facility?.id || 'Facility pool', { force: false });
+  setReportValueAndNotify('rpt-date', new Date(packet.timestamp || Date.now()).toISOString().split('T')[0], { force: true });
+  setReportValueAndNotify('rpt-type', packet.lane === 'daily' ? 'Inspection' : packet.lane === 'dose' ? 'Chemical Treatment' : 'Repair', { force: true });
+  setReportValueAndNotify('rpt-priority', packet.outcome === 'resolved' ? 'today' : 'senior-review', { force: true });
+  setReportValueAndNotify('rpt-review-to', packet.outcome === 'resolved' ? 'Facility log' : 'Senior tech / support route', { force: false });
+  setReportValueAndNotify('rpt-fc', packet.readings?.fc || '', { force: false });
+  setReportValueAndNotify('rpt-ph', packet.readings?.ph || '', { force: false });
+  setReportValueAndNotify('rpt-photo-proof', (packet.photoRefs || []).join(', '), { force: false });
+  setReportValueAndNotify('rpt-issue-note', [
+    `${packet.laneTitle || 'Facility lane'}: ${packet.next || packet.outcome || 'logged'}.`,
+    (packet.symptoms || []).length ? `Symptoms/code: ${(packet.symptoms || []).join(', ')}.` : '',
+    (packet.recentChanges || []).length ? `Recent changes: ${(packet.recentChanges || []).join(', ')}.` : '',
+  ].filter(Boolean).join(' '), { force: false });
+  setReportValueAndNotify('rpt-equip', [
+    packet.equipment?.label ? `Equipment: ${packet.equipment.label}.` : '',
+    packet.equipment?.brand || packet.equipment?.model ? `Brand/model: ${[packet.equipment?.brand, packet.equipment?.model].filter(Boolean).join(' / ')}.` : '',
+    `Facility packet ID: ${packet.id}.`,
+  ].filter(Boolean).join(' '), { force: false });
+  setReportValueAndNotify('rpt-work', `Facility Assist workflow completed: ${packet.laneTitle || packet.lane}. Outcome: ${packet.next || packet.outcome}.`, { force: false });
+  setReportValueAndNotify('rpt-rec', packet.outcome === 'resolved'
+    ? 'Keep this in the facility log and verify against local code, policy, and CPO guidance.'
+    : 'Escalate with the packet before repair, part order, or reopening decision.', { force: false });
+  setReportValueAndNotify('rpt-customer-summary', `A facility workflow was documented for ${packet.laneTitle || 'this pool'}. The record includes readings, visible proof, symptoms, recent changes, and next action. Local code, facility policy, and qualified judgment still control reopening or repair decisions.`, { force: false });
+  setReportCheck('rpt-proof-water', Boolean(packet.readings?.fc || packet.readings?.ph));
+  setReportCheck('rpt-proof-equipment', Boolean((packet.photoRefs || []).length || packet.equipment?.label || packet.equipment?.model));
+  setReportCheck('rpt-proof-summary', true);
+  validateReportProof({ quiet: true });
+  saveReportDraft();
+  renderProofWorkflowOutput(
+    'Facility packet moved into Service Proof Passport',
+    'This packet is now a local draft passport. Review the proof, add any missing readings/photos, then save it to pool history or share a senior-tech packet.',
+    '<div class="brain-grid"><button type="button" class="brain-action green" onclick="saveReportToPoolHistory()">Save Passport</button><button type="button" class="brain-action secondary" onclick="createServiceProofShareLink()">Share packet</button></div>'
+  );
+  trackSplashLensEvent('facility_packet_seeded_service_passport', {
+    packet_id: packet.id,
+    lane: packet.lane,
+    outcome: packet.outcome,
+    proof_ready: validateReportProof({ quiet: true }).complete,
+  });
+}
+
 function renderFacilityPacket(packet) {
   const result = document.getElementById('facility-result');
   if (!result) return;
   const text = formatFacilityPacket(packet);
   const call = packet.support.phone ? `<button type="button" class="facility-action-btn" onclick="callFacilitySupport('${escAttr(packet.support.phone)}','${escAttr(packet.id)}')">Call support</button>` : '';
+  const columns = call ? 4 : 3;
   result.style.display = 'block';
   result.innerHTML = `
     <div class="facility-packet">
       <p style="color:#0284c7;font-size:10px;font-weight:950;text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">${escHtml(packet.next)}</p>
       <h2 style="color:#0f172a;font-size:20px;font-weight:950;line-height:1.1;margin-bottom:8px;">${escHtml(packet.laneTitle)} packet</h2>
       <pre id="facility-packet-text">${escHtml(text)}</pre>
-      <div style="display:grid;grid-template-columns:repeat(${call ? 3 : 2},1fr);gap:8px;">
+      <div style="display:grid;grid-template-columns:repeat(${columns},1fr);gap:8px;">
         <button type="button" class="facility-action-btn secondary" onclick="copyFacilityPacket()">Copy</button>
         <button type="button" class="facility-action-btn secondary" onclick="shareFacilityPacket()">Share</button>
+        <button type="button" class="facility-action-btn secondary" onclick="seedReportFromFacilityPacket('${escAttr(packet.id)}')">Save Passport</button>
         ${call}
       </div>
     </div>`;
@@ -1660,6 +1716,113 @@ function quickServiceNote() {
 // ═══════════════════════════════════════════
 // ERROR CODES
 // ═══════════════════════════════════════════
+function setReportValueAndNotify(id, value, opts = {}) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const next = String(value || '');
+  if (opts.append && el.value.trim()) {
+    if (!el.value.includes(next)) el.value = `${el.value.trim()}\n${next}`;
+  } else if (opts.force || !el.value.trim()) {
+    el.value = next;
+  }
+  el.dispatchEvent(new Event('input', { bubbles: true }));
+  el.dispatchEvent(new Event('change', { bubbles: true }));
+}
+
+function setReportCheck(id, checked = true) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.checked = !!checked;
+  el.dispatchEvent(new Event('change', { bubbles: true }));
+}
+
+function focusReportField(id) {
+  setTimeout(() => {
+    const el = document.getElementById(id);
+    el?.focus();
+    el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, 90);
+}
+
+function renderProofWorkflowOutput(title, body, actions = '') {
+  const output = document.getElementById('rpt-proof-os-output');
+  if (!output) return;
+  output.innerHTML = `
+    <section class="brain-card" aria-label="Service Proof workflow prompt">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:9px;">
+        <div>
+          <p style="color:#0f766e;font-size:10px;font-weight:950;letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px;">Proof workflow</p>
+          <h3 style="font-size:18px;line-height:1.1;font-weight:950;color:#0f172a;margin:0;">${escHtml(title)}</h3>
+        </div>
+        <span class="brain-pill warn">Field safe</span>
+      </div>
+      <p style="color:#475569;font-size:12px;line-height:1.5;margin-bottom:10px;">${escHtml(body)}</p>
+      ${actions}
+    </section>`;
+}
+
+function startServiceProofWorkflow(kind = 'visit') {
+  showTab('report');
+  setReportValueAndNotify('rpt-date', new Date().toISOString().split('T')[0], { force: false });
+  if (kind === 'facility') {
+    setSplashLensRole('facility', { persist: false, forced: true, source: 'service_proof_command' });
+    trackSplashLensEvent('service_proof_workflow_started', { workflow: 'facility' });
+    return;
+  }
+  document.body.classList.remove('facility-tools-hidden');
+  if (kind === 'part') {
+    setReportValueAndNotify('rpt-type', 'Repair', { force: true });
+    setReportValueAndNotify('rpt-priority', 'senior-review', { force: true });
+    setReportValueAndNotify('rpt-review-to', 'Senior tech / vendor', { force: false });
+    setReportValueAndNotify('rpt-photo-proof', 'Needs: wide equipment photo, model plate, code display, close-up part marking, second proof photo.', { force: false });
+    setReportValueAndNotify('rpt-issue-note', 'Part/code needs verification before ordering. Capture label, model, serial, and symptom proof.', { force: false });
+    setReportValueAndNotify('rpt-equip', 'PartSnap / scanner workflow started. Verify possible match against model plate, manual, and qualified tech judgment.', { force: false });
+    setReportCheck('rpt-proof-equipment', false);
+    renderProofWorkflowOutput(
+      'PartSnap to Passport',
+      'Start with the part or code, then save the proof into a customer record before ordering. The packet should show what is known, what is missing, and who needs to verify it.',
+      `<div class="brain-grid"><button type="button" class="brain-action green" onclick="showTab('scan');setTimeout(()=>setScanMode('parts'),80)">Open PartSnap</button><button type="button" class="brain-action secondary" onclick="createServiceProofShareLink()">Build packet</button></div>`
+    );
+    focusReportField('rpt-photo-proof');
+  } else {
+    setReportValueAndNotify('rpt-type', 'Regular Service', { force: false });
+    setReportValueAndNotify('rpt-priority', 'today', { force: false });
+    setReportValueAndNotify('rpt-work', 'Tested water, checked visible equipment, and documented the stop.', { force: false });
+    setReportValueAndNotify('rpt-customer-summary', 'Water was tested and the visit was documented. Any repair or part decisions still need label, manual, and qualified service verification.', { force: false });
+    setReportCheck('rpt-proof-summary', true);
+    renderProofWorkflowOutput(
+      'Regular visit passport',
+      'Capture readings first, dictate the work note, generate the customer-safe summary, then save the passport to the pool history.',
+      '<div class="brain-grid"><button type="button" class="brain-action green" onclick="generateServiceProofSummary()">Generate summary</button><button type="button" class="brain-action secondary" onclick="saveReportDraft()">Save draft</button></div>'
+    );
+    focusReportField('rpt-fc');
+  }
+  validateReportProof({ quiet: true });
+  trackSplashLensEvent('service_proof_workflow_started', { workflow: kind });
+}
+
+function startSpanishFieldWorkflow(kind) {
+  showTab('report');
+  setReportValueAndNotify('rpt-date', new Date().toISOString().split('T')[0], { force: false });
+  if (kind === 'readings') {
+    setReportValueAndNotify('rpt-reading-source', 'manual', { force: true });
+    renderProofWorkflowOutput('Lecturas primero', 'Anota FC, pH y cualquier lectura requerida. Despues guarda el pasaporte o genera un resumen para el cliente.', `<div class="brain-grid"><button type="button" class="brain-action green" onclick="focusReportField('rpt-fc')">Ir a FC</button><button type="button" class="brain-action secondary" onclick="showTab('dosing')">Calcular dosis</button></div>`);
+    focusReportField('rpt-fc');
+  } else if (kind === 'proof_note') {
+    setReportValueAndNotify('rpt-priority', 'today', { force: false });
+    setReportValueAndNotify('rpt-issue-note', 'Nota de campo: documentar codigo, sintomas, fotos y cambios recientes antes de cerrar la visita.', { force: false });
+    renderProofWorkflowOutput('Nota de prueba', 'Dicta o escribe la nota corta: que paso, que se verifico, que falta, y si se necesita tecnico senior o proveedor.', `<div class="brain-grid"><button type="button" class="brain-action green" onclick="focusReportField('rpt-issue-note')">Escribir nota</button><button type="button" class="brain-action secondary" onclick="generateServiceProofSummary()">Resumen</button></div>`);
+    focusReportField('rpt-issue-note');
+  } else {
+    setReportValueAndNotify('rpt-priority', 'senior-review', { force: false });
+    setReportValueAndNotify('rpt-review-to', 'Tecnico senior / proveedor', { force: false });
+    renderProofWorkflowOutput('Paquete listo para revisar', 'Antes de pedir piezas: foto amplia, placa/modelo, codigo, marca de la pieza, lecturas y resumen seguro para el cliente.', '<div class="brain-grid"><button type="button" class="brain-action green" onclick="createServiceProofShareLink()">Crear paquete</button><button type="button" class="brain-action secondary" onclick="saveReportDraft()">Guardar borrador</button></div>');
+    focusReportField('rpt-photo-proof');
+  }
+  validateReportProof({ quiet: true });
+  trackSplashLensEvent('spanish_quick_chip', { chip: kind, workflow: 'service_proof_passport' });
+}
+
 let activeVoiceNote = null;
 
 function speechRecognitionCtor() {

@@ -142,6 +142,23 @@
     .spanish-field-strip .chips { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:6px; }
     .spanish-field-strip button { min-height:42px; border:1px solid #5eead4; background:#fff; color:#134e4a; border-radius:9px; font-size:11px; font-weight:950; cursor:pointer; padding:6px 5px; }
     @media (max-width:560px){ .spanish-field-strip .chips{grid-template-columns:repeat(2,minmax(0,1fr));} }
+    .proof-command { background:linear-gradient(145deg,#082f49 0%,#0f172a 54%,#134e4a 100%); border:1px solid rgba(94,234,212,.32); border-radius:14px; padding:14px; margin-bottom:14px; box-shadow:var(--field-shadow); }
+    .proof-command-kicker { color:#7dd3fc; font-size:10px; font-weight:950; letter-spacing:.12em; text-transform:uppercase; margin-bottom:5px; }
+    .proof-command h2 { color:#fff; font-size:22px; line-height:1.05; font-weight:950; margin-bottom:7px; }
+    .proof-command p { color:#cbd5e1; font-size:12px; line-height:1.45; margin-bottom:11px; }
+    .proof-command-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+    .proof-command button { min-height:82px; background:#ffffff; border:1px solid #bae6fd; border-radius:10px; color:#0f172a; padding:10px; text-align:left; cursor:pointer; box-shadow:var(--field-shadow-tight); }
+    .proof-command button.primary { background:#0f766e; color:#ffffff; border-color:#5eead4; }
+    .proof-command button.facility { background:#0369a1; color:#ffffff; border-color:#7dd3fc; }
+    .proof-command button b { display:grid; place-items:center; width:25px; height:25px; border-radius:999px; background:#e0f2fe; color:#0369a1; font-size:12px; margin-bottom:8px; }
+    .proof-command button.primary b, .proof-command button.facility b { background:rgba(255,255,255,.2); color:#ffffff; }
+    .proof-command button strong { display:block; font-size:13px; line-height:1.12; font-weight:950; margin-bottom:4px; }
+    .proof-command button span { display:block; color:#64748b; font-size:10px; line-height:1.25; font-weight:800; }
+    .proof-command button.primary span, .proof-command button.facility span { color:#e0f2fe; }
+    .proof-status-row { display:grid; grid-template-columns:repeat(4,1fr); gap:6px; margin-top:10px; }
+    .proof-status-chip { background:rgba(255,255,255,.1); border:1px solid rgba(226,232,240,.18); border-radius:9px; padding:8px; color:#e2e8f0; font-size:10px; font-weight:900; line-height:1.25; text-align:center; }
+    .proof-status-chip.ready { background:rgba(20,184,166,.18); border-color:rgba(94,234,212,.38); color:#ccfbf1; }
+    @media (max-width:560px){ .proof-command-grid,.proof-status-row{grid-template-columns:1fr 1fr;} }
 
     /* Buttons */
     .btn-calc { background: linear-gradient(135deg, var(--field-blue-bright) 0%, var(--field-blue) 100%); color: white; border: none; border-radius: var(--field-radius); padding: 14px; font-weight: 800; font-size: 15px; width: 100%; cursor: pointer; letter-spacing: 0.03em; transition: all 0.15s; -webkit-tap-highlight-color: transparent; }
@@ -545,9 +562,9 @@
     <div class="chips">
       <button type="button" onclick="setScanMode('parts');trackSplashLensEvent('spanish_quick_chip',{chip:'photo_part'})">1 Foto pieza</button>
       <button type="button" onclick="setScanMode('lookup');trackSplashLensEvent('spanish_quick_chip',{chip:'code_label'})">2 Codigo/placa</button>
-      <button type="button" onclick="showTab('dosing');trackSplashLensEvent('spanish_quick_chip',{chip:'readings'})">3 Lecturas</button>
-      <button type="button" onclick="showTab('report');trackSplashLensEvent('spanish_quick_chip',{chip:'proof_note'})">4 Nota prueba</button>
-      <button type="button" onclick="showTab('report');trackSplashLensEvent('spanish_quick_chip',{chip:'packet'})">5 Paquete</button>
+      <button type="button" onclick="startSpanishFieldWorkflow('readings')">3 Lecturas</button>
+      <button type="button" onclick="startSpanishFieldWorkflow('proof_note')">4 Nota prueba</button>
+      <button type="button" onclick="startSpanishFieldWorkflow('packet')">5 Paquete</button>
     </div>
   </section>
 
@@ -982,6 +999,22 @@
       <div class="info-box" style="margin-bottom:14px;">
         Built for the tech at the stop: fewer taps, faster notes, cleaner proof, and less after-hours paperwork.
       </div>
+      <section class="proof-command" aria-label="Service Proof workflow">
+        <p class="proof-command-kicker">Service Proof Passport</p>
+        <h2>Capture it once. Finish clean. Hand it off without retyping.</h2>
+        <p>Start with the field situation, then SplashLens preps the right proof checklist, voice-note fields, summary, packet, and save path.</p>
+        <div class="proof-command-grid">
+          <button type="button" class="primary" onclick="startServiceProofWorkflow('part')"><b>1</b><strong>Part or code</strong><span>Photos, labels, issue note, senior/vendor packet.</span></button>
+          <button type="button" class="facility" onclick="startServiceProofWorkflow('facility')"><b>2</b><strong>Facility / CPO</strong><span>Daily check, contamination, dose, or escalation flow.</span></button>
+          <button type="button" onclick="startServiceProofWorkflow('visit')"><b>3</b><strong>Regular visit</strong><span>Readings, work note, customer-safe summary, passport save.</span></button>
+        </div>
+        <div class="proof-status-row">
+          <div class="proof-status-chip ready">Voice notes ready</div>
+          <div class="proof-status-chip ready">Proof checklist</div>
+          <div class="proof-status-chip">Risk flags</div>
+          <div class="proof-status-chip">Export / share</div>
+        </div>
+      </section>
       <section class="brain-card" style="margin-bottom:14px;" aria-label="Field Proof Queue">
         <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:9px;">
           <div><p style="color:#0f766e;font-size:10px;font-weight:950;letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px;">Field Proof Queue</p><h2 style="color:#0f172a;font-size:18px;line-height:1.1;font-weight:950;">Pause the stop. Finish it cleanly later.</h2></div>
@@ -1349,7 +1382,7 @@
 
   <script src="/js/errors.js"></script>
   <script src="/js/data.js"></script>
-  <script src="/js/app.js?v=20260717-spanish-field-mode"></script>
+  <script src="/js/app.js?v=20260717-service-proof-bridge"></script>
   <script src="/js/analytics.js"></script>
   <script>
     if ('serviceWorker' in navigator) {

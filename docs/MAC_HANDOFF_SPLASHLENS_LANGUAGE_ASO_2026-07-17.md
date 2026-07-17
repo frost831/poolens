@@ -15,6 +15,19 @@ Refresh iOS/App Store Connect and Google Play metadata to match the live web/app
 - Canada pages: `https://splashlens.com/ca/`, `https://splashlens.com/fr-ca/`
 - Portuguese/Haitian Creole pages are demand-capture pilots only: `https://splashlens.com/pt-br/`, `https://splashlens.com/ht/`
 
+## 2026-07-17 PC Build Additions Before Mac Submission
+
+- Service Proof Passport now has a command layer at the top of Visit Report:
+  - Part/code workflow
+  - Facility/CPO workflow
+  - Regular visit workflow
+- Spanish Field Mode chips now route into Service Proof workflows instead of only jumping tabs.
+- Facility Assist packets can now be saved into a Service Proof Passport draft with facility readings, symptoms, photos, outcome, and customer-safe text.
+- Browser workflow smoke passed locally for:
+  - Regular visit to Passport
+  - Spanish proof-note flow
+  - Facility daily-check packet to Passport draft
+
 ## ASO Copy Direction
 
 Primary one-line value:
