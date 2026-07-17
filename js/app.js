@@ -17,7 +17,183 @@ const S = {
 };
 
 const LANGUAGE_STORAGE_KEY = 'splashlens_language_profile';
-const LANGUAGE_OPTIONS = ['en', 'es', 'pt-BR', 'fr'];
+const LANGUAGE_OPTIONS = ['en', 'es'];
+const LANGUAGE_LABELS = { en: 'English', es: 'Español' };
+const LOCALIZED_HEAD = {
+  en: {
+    title: 'SplashLens - Pool Service Field Reference and PartSnap',
+    description: 'SplashLens is a free no-account field reference app for pool, spa, hot tub, and swim spa service techs with PartSnap part identification assistance, Connected Pool Network troubleshooting, robot cleaner references, Balboa, Gecko, Waterway NEO, swim current, GFCI, sanitizer, pool equipment codes, dosing calculators, voice notes, checklists, and route tools.',
+  },
+  es: {
+    title: 'SplashLens - Referencia de campo para piscinas y PartSnap',
+    description: 'SplashLens es una app gratuita, sin cuenta, para técnicos de piscinas, spas y swim spas con PartSnap, asistencia para identificar piezas, rutas de prueba, códigos de equipo, calculadoras de dosis, notas de voz, Facility Assist y Service Proof Passport.',
+  },
+};
+const LOCALIZED_TEXT = {
+  es: {
+    'Preferred language': 'Idioma preferido',
+    'Choose your front door': 'Elige tu entrada',
+    'Who are you today?': '¿Qué rol tienes hoy?',
+    'SplashLens keeps every tool available. This just chooses the first workflow you see.': 'SplashLens mantiene todas las herramientas disponibles. Esto solo decide el primer flujo que ves.',
+    'Language': 'Idioma',
+    'First result style': 'Estilo del primer resultado',
+    'Numbered steps': 'Pasos numerados',
+    'Visual proof': 'Prueba visual',
+    'Compact': 'Compacto',
+    'Service Tech': 'Técnico de servicio',
+    'PartSnap, codes, route notes, dosing, and proof packets first.': 'PartSnap, códigos, notas de ruta, dosis y paquetes de prueba primero.',
+    'Facility / CPO': 'Instalación / CPO',
+    'Daily checks, contamination response, basic proof, and support packets.': 'Revisiones diarias, respuesta a contaminación, prueba básica y paquetes de soporte.',
+    'Counter / Distributor': 'Mostrador / Distribuidor',
+    'Part, model, and vendor packet workflows without CRM clutter.': 'Flujos para pieza, modelo y proveedor sin ruido de CRM.',
+    'Trainer': 'Instructor',
+    'Apprentice prompts, CPO scenarios, and proof-first field lessons.': 'Guías para aprendices, escenarios CPO y lecciones de campo con prueba primero.',
+    'Homeowner': 'Propietario',
+    'Plain-language notes, volume, dosing basics, and when to call a pro.': 'Notas simples, volumen, dosis básicas y cuándo llamar a un profesional.',
+    'Facility Assist': 'Asistente de instalaciones',
+    'What is going on?': '¿Qué está pasando?',
+    'Pick the situation, gather proof, and end with either Resolved - logged or Escalate - send packet.': 'Elige la situación, junta la prueba y termina con Resuelto - registrado o Escalar - enviar paquete.',
+    'All tools': 'Todas las herramientas',
+    'Switch mode': 'Cambiar modo',
+    'QR stickers': 'Etiquetas QR',
+    'Daily pool check': 'Revisión diaria de piscina',
+    'Readings, clarity, equipment sound, and required log proof.': 'Lecturas, claridad, sonido del equipo y prueba del registro requerido.',
+    'Dose the pool': 'Dosificar la piscina',
+    'Volume, current reading, target, product label, and retest note.': 'Volumen, lectura actual, objetivo, etiqueta del producto y nota de nueva prueba.',
+    'Contamination event': 'Evento de contaminación',
+    'Close access, document time/type, follow approved standard, reopen checklist.': 'Cerrar acceso, documentar hora/tipo, seguir el estándar aprobado y lista para reabrir.',
+    'Equipment acting up': 'Equipo con problema',
+    'Safe visible checks only: water level, baskets, breaker state, alarms, labels.': 'Solo revisiones visibles y seguras: nivel de agua, canastas, breaker/GFCI, alarmas y etiquetas.',
+    'Find manual / what is this?': 'Buscar manual / ¿qué es esto?',
+    'Capture brand, model, code, label, and equipment proof before calling.': 'Captura marca, modelo, código, etiqueta y prueba del equipo antes de llamar.',
+    'I need help now': 'Necesito ayuda ahora',
+    'Build the support packet, then call/share using the configured route.': 'Crea el paquete de soporte y luego llama o comparte por la ruta configurada.',
+    'Proof-first pool work.': 'Trabajo de piscina con prueba primero.',
+    'Identify the part, capture the stop, build the packet, and get back to the next job without rewriting everything after dinner.': 'Identifica la pieza, documenta la visita, crea el paquete y vuelve al siguiente trabajo sin reescribir todo al final del día.',
+    'Try PartSnap': 'Probar PartSnap',
+    'Open Field Tools': 'Abrir herramientas',
+    'Look Up Codes': 'Buscar códigos',
+    'ID part': 'ID pieza',
+    'Save proof': 'Guardar prueba',
+    'Smart pad': 'Sistema inteligente',
+    'Voice note': 'Nota de voz',
+    'photo + proof': 'foto + prueba',
+    'photo + label': 'foto + etiqueta',
+    'passport': 'pasaporte',
+    'CPO path': 'ruta CPO',
+    'robots + controls': 'robots + controles',
+    'talk + save': 'hablar + guardar',
+    'display / plate': 'pantalla / placa',
+    'brand / symptom': 'marca / síntoma',
+    'pool math': 'cálculo piscina',
+    'Possible part families, missing proof, callback risk, and clean escalation.': 'Familias posibles de pieza, prueba faltante, riesgo de regreso y escalación limpia.',
+    'Photos, readings, notes, summaries, and saved stop history.': 'Fotos, lecturas, notas, resúmenes e historial guardado de la visita.',
+    'Bigger taps, shorter paths, voice notes, and fewer after-hours rewrites.': 'Botones grandes, rutas cortas, notas de voz y menos reescritura fuera de horario.',
+    'PartSnap result packet': 'Paquete de resultado PartSnap',
+    'Review ready': 'Listo para revisar',
+    'Possible part family': 'Familia posible de pieza',
+    'Pump lid / basket / O-ring path. Needs model plate and molded number before ordering.': 'Ruta de tapa / canasta / O-ring de bomba. Necesita placa de modelo y número moldeado antes de ordenar.',
+    'Visible proof': 'Prueba visible',
+    'Part photo, housing shape, label close-up.': 'Foto de pieza, forma de carcasa y acercamiento de etiqueta.',
+    'Missing proof': 'Prueba faltante',
+    'Model plate, size, vendor cross-check.': 'Placa de modelo, tamaño y verificación con proveedor.',
+    'Senior-tech packet': 'Paquete para técnico senior',
+    'Copy one clean handoff with symptoms, proof, missing evidence, and what to verify before selling or replacing.': 'Copia un traspaso limpio con síntomas, prueba, evidencia faltante y qué verificar antes de vender o reemplazar.',
+    'Service Proof Passport': 'Pasaporte de prueba de servicio',
+    'Save the stop so next visit has the equipment context, not a mystery photo buried in texts.': 'Guarda la visita para que la próxima tenga contexto del equipo, no una foto perdida en mensajes.',
+    'Identify the part.': 'Identifica la pieza.',
+    'Use PartSnap for seals, lids, grids, cells, valves, robot parts, lights, boards, sensors, and the stuff nobody wants to guess at.': 'Usa PartSnap para sellos, tapas, grids, celdas, válvulas, piezas de robot, luces, tarjetas, sensores y lo que nadie quiere adivinar.',
+    'Verify the proof.': 'Verifica la prueba.',
+    'SplashLens keeps the language cautious: possible matches, missing proof, and manual/vendor/manufacturer verification before ordering.': 'SplashLens mantiene lenguaje cuidadoso: coincidencias posibles, prueba faltante y verificación con manual, proveedor o fabricante antes de ordenar.',
+    'Finish the stop.': 'Termina la visita.',
+    'Use dosing math, notes, Route Brain, training cards, and customer-safe summaries to leave cleaner and faster.': 'Usa cálculo de dosis, notas, ruta, tarjetas de entrenamiento y resúmenes seguros para el cliente para salir más limpio y más rápido.',
+    'PartSnap first - proof before ordering': 'PartSnap primero - prueba antes de ordenar',
+    'Find the part. Prove the path.': 'Encuentra la pieza. Prueba el camino.',
+    'Photo it, verify it, packet it, then move.': 'Fotografía, verifica, crea el paquete y sigue.',
+    'ID Part': 'ID pieza',
+    'Scan Code': 'Escanear código',
+    'Search': 'Buscar',
+    'Dose': 'Dosis',
+    'Note': 'Nota',
+    'Manual lookup': 'Búsqueda manual',
+    'Save Packet': 'Guardar paquete',
+    'Report': 'Reporte',
+    'Offline:': 'Sin señal:',
+    'Online:': 'Con conexión:',
+    'manual lookup, calculators, guides.': 'búsqueda manual, calculadoras y guías.',
+    'AI scan, PartSnap, voice.': 'escaneo IA, PartSnap y voz.',
+    'PartSnap flow': 'Flujo PartSnap',
+    '1. Part': '1. Pieza',
+    '2. Label': '2. Etiqueta',
+    '3. Proof': '3. Prueba',
+    '4. Risk': '4. Riesgo',
+    '5. Packet': '5. Paquete',
+    'close + lit': 'cerca + luz',
+    'model plate': 'placa modelo',
+    'marking / size': 'marca / tamaño',
+    'callback flag': 'riesgo regreso',
+    'senior / vendor': 'senior / proveedor',
+    'PartSnap + Connected Pool Network': 'PartSnap + Red de piscina conectada',
+    'Photo, label, proof checklist, senior/vendor packet.': 'Foto, etiqueta, lista de prueba y paquete para senior/proveedor.',
+    'Service Proof OS': 'Sistema de prueba de servicio',
+    'Turn this stop into a Service Proof Passport.': 'Convierte esta visita en un Pasaporte de prueba de servicio.',
+    'ERRORS': 'CODIGOS',
+    'STRIP': 'TIRA',
+    'LOOKUP': 'BUSCAR',
+    'CHEM': 'QUIM',
+    'AI SCANNER READY': 'ESCANER IA LISTO',
+    'AIM AT ERROR CODE DISPLAY - TAP CAPTURE': 'APUNTA AL CODIGO - TOCA CAPTURAR',
+    'LIGHT': 'LUZ',
+    'Type error code (e.g. E05, ERR 3, LO, FLO)': 'Escribe codigo (ej. E05, ERR 3, LO, FLO)',
+    'Search chemical (e.g. baking soda, cal-hypo, pH up...)': 'Buscar quimico (ej. bicarbonato, cal-hypo, subir pH...)',
+    'Codes': 'Códigos',
+    'Dosing': 'Dosis',
+    'Volume': 'Volumen',
+    'Filters': 'Filtros',
+    'Guide': 'Guía',
+    'Pools': 'Piscinas',
+    'Route': 'Ruta',
+    'Scan': 'Escanear',
+    'Did this help?': '¿Te ayudó?',
+    'Yes': 'Sí',
+    'Close': 'Cerrar',
+    'Wrong': 'Incorrecto',
+    'Missing info': 'Falta info',
+    'Share Packet': 'Compartir paquete',
+    'Save Proof': 'Guardar prueba',
+    'Apprentice Mode': 'Modo aprendiz',
+    'Copy Text': 'Copiar texto',
+    'Second Proof Photo': 'Segunda foto de prueba',
+    'Scan Another Part or Label': 'Escanear otra pieza o etiqueta',
+    'Use Now': 'Usar ahora',
+    'Save Proof Passport': 'Guardar pasaporte de prueba',
+    'Show Answer Key': 'Mostrar respuestas',
+    'Add Proof': 'Agregar prueba',
+    'Your email': 'Tu email',
+    'What do you know?': '¿Qué sabes?',
+    'Submit Review Ticket': 'Enviar ticket de revisión',
+    'Calculate Doses →': 'Calcular dosis →',
+    'Scan Again': 'Escanear otra vez',
+    'Open App': 'Abrir app',
+  },
+};
+const LOCALIZED_ATTRS = {
+  es: {
+    'Preferred language': 'Idioma preferido',
+    'Choose SplashLens mode': 'Elige modo de SplashLens',
+    'SplashLens introduction': 'Introducción a SplashLens',
+    'Choose a SplashLens workflow': 'Elige un flujo de SplashLens',
+    'SplashLens product preview': 'Vista del producto SplashLens',
+    'Fast field workflow': 'Flujo rápido de campo',
+    'PartSnap parts identification': 'Identificación de piezas PartSnap',
+    'New Tech Radar and Connected Pool Network': 'Radar de tecnología nueva y red de piscina conectada',
+    'Type error code (e.g. E05, ERR 3, LO, FLO)': 'Escribe codigo (ej. E05, ERR 3, LO, FLO)',
+    'Search chemical (e.g. baking soda, cal-hypo, pH up...)': 'Buscar quimico (ej. bicarbonato, cal-hypo, subir pH...)',
+  },
+};
+let localizationObserver = null;
+let localizationApplying = false;
+const localizationTextSources = new WeakMap();
 const FIELD_FEEDBACK_KEY = 'splashlens-field-feedback-state';
 const FIELD_FEEDBACK_COOLDOWN_MS = 7 * 24 * 60 * 60 * 1000;
 const FIELD_FEEDBACK_AFTER_SUBMIT_MS = 30 * 24 * 60 * 60 * 1000;
@@ -134,14 +310,109 @@ function getLanguageHeaders() {
 }
 
 function initLanguageLayer() {
+  const params = new URLSearchParams(window.location.search);
+  if (params.has('lang')) setPreferredLanguage(params.get('lang'));
   const select = document.getElementById('language-select');
-  if (!select) return;
-  select.value = getLanguageProfile().preferredLanguage;
-  select.addEventListener('change', () => {
-    const profile = setPreferredLanguage(select.value);
-    trackSplashLensEvent('language_preference_set', { preferred_language: profile.preferredLanguage, locale: profile.locale });
-  });
+  if (select) {
+    select.value = getLanguageProfile().preferredLanguage;
+    select.addEventListener('change', () => {
+      const profile = setPreferredLanguage(select.value);
+      applySplashLensLocalization();
+      trackSplashLensEvent('language_preference_set', { preferred_language: profile.preferredLanguage, locale: profile.locale });
+    });
+  }
   refreshFirstUsePreferenceButtons();
+  applySplashLensLocalization();
+  initLocalizationObserver();
+}
+
+function initLocalizationObserver() {
+  if (localizationObserver || !document.body) return;
+  let timer = 0;
+  localizationObserver = new MutationObserver((mutations) => {
+    if (localizationApplying) return;
+    if (!mutations.some((m) => m.addedNodes && m.addedNodes.length)) return;
+    clearTimeout(timer);
+    timer = setTimeout(() => applySplashLensLocalization(), 40);
+  });
+  localizationObserver.observe(document.body, { childList: true, subtree: true });
+}
+
+function translateUiText(value, language = getLanguageProfile().preferredLanguage) {
+  if (!value || language === 'en') return value || '';
+  const dictionary = LOCALIZED_TEXT[language] || {};
+  const compact = String(value).replace(/\s+/g, ' ').trim();
+  return dictionary[compact] || value;
+}
+
+function translateUiAttr(value, language = getLanguageProfile().preferredLanguage) {
+  if (!value || language === 'en') return value || '';
+  const dictionary = LOCALIZED_ATTRS[language] || {};
+  const compact = String(value).replace(/\s+/g, ' ').trim();
+  return dictionary[compact] || translateUiText(compact, language) || value;
+}
+
+function walkTextNodes(root, callback) {
+  if (!root) return;
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+    acceptNode(node) {
+      if (!node.nodeValue || !node.nodeValue.trim()) return NodeFilter.FILTER_REJECT;
+      const parent = node.parentElement;
+      if (!parent || ['SCRIPT', 'STYLE', 'TEXTAREA', 'OPTION'].includes(parent.tagName)) return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;
+    }
+  });
+  const nodes = [];
+  while (walker.nextNode()) nodes.push(walker.currentNode);
+  nodes.forEach(callback);
+}
+
+function applySplashLensLocalization() {
+  const profile = getLanguageProfile();
+  const language = profile.preferredLanguage || 'en';
+  localizationApplying = true;
+  try {
+    document.documentElement.lang = language === 'es' ? 'es' : 'en';
+    const head = LOCALIZED_HEAD[language] || LOCALIZED_HEAD.en;
+    if (head?.title) document.title = head.title;
+    const description = document.querySelector('meta[name="description"]');
+    if (description && head?.description) description.setAttribute('content', head.description);
+    walkTextNodes(document.body, (node) => {
+      if (!localizationTextSources.has(node)) localizationTextSources.set(node, node.nodeValue);
+      const sourceValue = localizationTextSources.get(node);
+      if (language === 'en') {
+        node.nodeValue = sourceValue;
+        return;
+      }
+      const original = sourceValue.replace(/\s+/g, ' ').trim();
+      const translated = translateUiText(original, language);
+      if (translated && translated !== original) node.nodeValue = sourceValue.replace(original, translated);
+    });
+    document.querySelectorAll('[placeholder]').forEach((el) => {
+      if (!el.dataset.slI18nPlaceholder) el.dataset.slI18nPlaceholder = el.getAttribute('placeholder') || '';
+      const sourceValue = el.dataset.slI18nPlaceholder;
+      const translated = language === 'en' ? sourceValue : translateUiAttr(sourceValue, language);
+      if (translated) el.setAttribute('placeholder', translated);
+    });
+    document.querySelectorAll('[aria-label]').forEach((el) => {
+      if (!el.dataset.slI18nAriaLabel) el.dataset.slI18nAriaLabel = el.getAttribute('aria-label') || '';
+      const sourceValue = el.dataset.slI18nAriaLabel;
+      const translated = language === 'en' ? sourceValue : translateUiAttr(sourceValue, language);
+      if (translated) el.setAttribute('aria-label', translated);
+    });
+    document.querySelectorAll('[title]').forEach((el) => {
+      if (!el.dataset.slI18nTitle) el.dataset.slI18nTitle = el.getAttribute('title') || '';
+      const sourceValue = el.dataset.slI18nTitle;
+      const translated = language === 'en' ? sourceValue : translateUiAttr(sourceValue, language);
+      if (translated) el.setAttribute('title', translated);
+    });
+    document.querySelectorAll('[data-pref-language]').forEach((btn) => {
+      const label = LANGUAGE_LABELS[btn.dataset.prefLanguage];
+      if (label) btn.textContent = label;
+    });
+  } finally {
+    localizationApplying = false;
+  }
 }
 
 function getWorkflowStyle() {
@@ -161,6 +432,7 @@ function chooseRoleLanguage(language) {
   const select = document.getElementById('language-select');
   if (select) select.value = profile.preferredLanguage;
   refreshFirstUsePreferenceButtons();
+  applySplashLensLocalization();
   trackSplashLensEvent('language_preference_set', { preferred_language: profile.preferredLanguage, locale: profile.locale, source: 'first_use_role_picker' });
 }
 
