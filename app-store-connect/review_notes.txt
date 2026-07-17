@@ -5,5 +5,6 @@ No account is required for core use. Manual lookup, Route Brain planning, calcul
 Store wrapper mode is intended to stay free-core and must not show direct Stripe checkout or web-subscription CTAs. AI scan output is assistance only and should be verified against equipment manuals, calibrated tests, label directions, and professional field judgment.
 
 Current web release also includes PartSnap Callback Risk Score, Service Proof Passport save flow, Facility Assist/CPO light mode, Mystery Part ticket IDs, local review queue, and Apprentice Mode. These are reference and documentation workflows only. They do not confirm part fit, diagnose equipment, replace official pool/spa standards, or replace manufacturer documentation.
+The 1.0.6 wrapper loads the same web runtime and includes a quick feedback prompt after PartSnap or scan results. “Yes” dismisses the prompt; “Wrong / missing” opens a short detail form so the field reference can be reviewed. This feedback loop is optional and does not change the verification requirements above.
 
 This build does not include native paid entitlements, unlimited AI scanning, completed training certificates, manufacturer endorsement, sponsored manufacturer placements, vendor stock/pricing integration, or guaranteed diagnosis/part-fit claims.

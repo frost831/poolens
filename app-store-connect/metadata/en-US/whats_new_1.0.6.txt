@@ -1,0 +1,1 @@
+Adds quick in-app feedback after PartSnap and scan results, so technicians can flag whether the field reference helped or what was wrong or missing. Keeps PartSnap, Service Proof Passport, Facility Assist, scan/code lookup, and verification-first language current.

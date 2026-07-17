@@ -1,4 +1,4 @@
-﻿# Mac Handoff - SplashLens iOS/Android Parity + Feedback Loop
+# Mac Handoff - SplashLens iOS/Android Parity + Feedback Loop
 
 Date: 2026-07-15
 Repo: C:\Users\sales\Dropbox\Projects\poolens

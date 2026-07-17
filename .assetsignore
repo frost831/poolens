@@ -15,4 +15,5 @@ ios/
 android-twa/
 SplashLens.xcodeproj/
 docs/
+tests/
 *.log

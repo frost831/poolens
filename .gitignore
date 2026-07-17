@@ -10,3 +10,5 @@ _deploy/
 # Local release proof/evidence folders stay in Dropbox, not Git.
 SplashLens-ios-proof-*/
 release-evidence/
+app-review-evidence/
+.playwright-cli/

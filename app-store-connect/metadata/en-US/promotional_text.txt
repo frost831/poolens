@@ -1,1 +1,1 @@
-New proof-first workflows: PartSnap, Service Proof Passport, Facility Assist, callback risk, voice notes, and senior-tech/vendor packets.
+New proof-first workflows: PartSnap, quick scan feedback, Service Proof Passport, Facility Assist, callback risk, voice notes, and senior-tech/vendor packets.

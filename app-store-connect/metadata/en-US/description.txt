@@ -4,6 +4,7 @@ Use SplashLens to:
 
 - Search 230+ pool equipment, automation, lighting, robot, cover, sanitizer, and controller troubleshooting entries
 - Use PartSnap to photograph unknown pool parts and receive possible manufacturer/model/part-number clues with verification prompts
+- Send quick in-app feedback after PartSnap or scan results so wrong or missing references can be reviewed
 - Review PartSnap Callback Risk Score, missing proof, Service Proof Passport saves, Mystery Part ticket IDs, and Apprentice Mode prompts
 - Build cleaner field packets for senior tech review, vendor support, or CRM notes
 - Capture Service Proof Passport history with readings, photos, voice notes, customer-safe summaries, and next-visit context
