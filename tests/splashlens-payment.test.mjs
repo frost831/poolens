@@ -8,6 +8,7 @@ import {
   splashLensCheckoutPrice,
   splashLensCheckoutPriceData,
   splashLensPaymentLinkUrl,
+  splashLensPlanPublicPayload,
   splashLensPlanFromSession,
 } from '../functions/_shared/splashlens-plans.mjs';
 
@@ -97,6 +98,17 @@ test('has built-in recurring checkout price data for broader paid lanes', () => 
     assert.equal(data.currency, 'usd');
     assert.equal(data.interval, 'month');
   }
+});
+
+test('does not publicly mark inline checkout lanes ready until explicitly enabled', () => {
+  const defaultPayload = splashLensPlanPublicPayload({ STRIPE_SECRET_KEY: 'sk_live_fake' });
+  assert.equal(defaultPayload.find((plan) => plan.key === 'service_proof_pro_monthly').checkoutConfigured, false);
+
+  const enabledPayload = splashLensPlanPublicPayload({
+    STRIPE_SECRET_KEY: 'sk_live_fake',
+    SPLASHLENS_STRIPE_INLINE_CHECKOUT_PUBLIC: 'true',
+  });
+  assert.equal(enabledPayload.find((plan) => plan.key === 'service_proof_pro_monthly').checkoutConfigured, true);
 });
 
 test('maps a Stripe Payment Link session back to the right SplashLens plan', () => {

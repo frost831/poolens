@@ -214,13 +214,14 @@ export function splashLensActivationUrl(token, plan) {
 }
 
 export function splashLensPlanPublicPayload(env = {}) {
+  const inlineCheckoutPublic = String(env.SPLASHLENS_STRIPE_INLINE_CHECKOUT_PUBLIC || '').toLowerCase() === 'true';
   return splashLensPlans().map((plan) => ({
     key: plan.key,
     displayName: plan.displayName,
     feature: plan.feature,
     publicStatus: plan.publicStatus,
     scopes: plan.scopes,
-    checkoutConfigured: Boolean(splashLensCheckoutPrice(env, plan) || splashLensPaymentLinkUrl(env, plan) || (env.STRIPE_SECRET_KEY && splashLensCheckoutPriceData(plan))),
+    checkoutConfigured: Boolean(splashLensCheckoutPrice(env, plan) || splashLensPaymentLinkUrl(env, plan) || (inlineCheckoutPublic && env.STRIPE_SECRET_KEY && splashLensCheckoutPriceData(plan))),
     hasDefaultLiveCheckout: Boolean(plan.defaultPriceId || plan.defaultPaymentLinkUrl || plan.defaultAmountCents),
   }));
 }
