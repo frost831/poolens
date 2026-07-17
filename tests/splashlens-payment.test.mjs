@@ -6,6 +6,7 @@ import {
   resolveSplashLensPlan,
   splashLensAllowedPaymentLinkIds,
   splashLensCheckoutPrice,
+  splashLensCheckoutPriceData,
   splashLensPaymentLinkUrl,
   splashLensPlanFromSession,
 } from '../functions/_shared/splashlens-plans.mjs';
@@ -78,6 +79,24 @@ test('uses configured Stripe env vars for pilot checkout lanes', () => {
   assert.equal(splashLensCheckoutPrice(env, plan), 'price_facility_123');
   assert.equal(splashLensPaymentLinkUrl(env, plan), 'https://buy.stripe.com/facility');
   assert.equal(splashLensAllowedPaymentLinkIds(env).get('plink_facility_123').key, 'facility_cpo_pilot_monthly');
+});
+
+test('has built-in recurring checkout price data for broader paid lanes', () => {
+  const expected = [
+    ['service_proof_pro_monthly', 1900],
+    ['team_proof_os_monthly', 19900],
+    ['facility_cpo_pilot_monthly', 9900],
+    ['verified_manufacturer_cards_monthly', 50000],
+    ['distributor_counter_mode_monthly', 19900],
+    ['training_partner_layer_monthly', 19900],
+  ];
+
+  for (const [key, unitAmount] of expected) {
+    const data = splashLensCheckoutPriceData(resolveSplashLensPlan(key));
+    assert.equal(data.unitAmount, unitAmount);
+    assert.equal(data.currency, 'usd');
+    assert.equal(data.interval, 'month');
+  }
 });
 
 test('maps a Stripe Payment Link session back to the right SplashLens plan', () => {

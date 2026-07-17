@@ -35,6 +35,9 @@ const PLAN_CATALOG = {
     displayName: 'Service Proof Pro',
     feature: 'service_proof_pro',
     publicStatus: 'pilot',
+    defaultAmountCents: 1900,
+    defaultCurrency: 'usd',
+    defaultInterval: 'month',
     priceEnv: ['SPLASHLENS_STRIPE_PRICE_SERVICE_PROOF_PRO_MONTHLY'],
     linkEnv: ['SPLASHLENS_STRIPE_LINK_SERVICE_PROOF_PRO_MONTHLY'],
     paymentLinkIdEnv: ['SPLASHLENS_STRIPE_PAYMENT_LINK_SERVICE_PROOF_PRO_MONTHLY_ID'],
@@ -48,6 +51,9 @@ const PLAN_CATALOG = {
     displayName: 'Team Proof OS',
     feature: 'team_proof_os',
     publicStatus: 'pilot',
+    defaultAmountCents: 19900,
+    defaultCurrency: 'usd',
+    defaultInterval: 'month',
     priceEnv: ['SPLASHLENS_STRIPE_PRICE_TEAM_PROOF_OS_MONTHLY'],
     linkEnv: ['SPLASHLENS_STRIPE_LINK_TEAM_PROOF_OS_MONTHLY'],
     paymentLinkIdEnv: ['SPLASHLENS_STRIPE_PAYMENT_LINK_TEAM_PROOF_OS_MONTHLY_ID'],
@@ -61,6 +67,9 @@ const PLAN_CATALOG = {
     displayName: 'Facility / CPO Pilot',
     feature: 'facility_cpo_pilot',
     publicStatus: 'pilot',
+    defaultAmountCents: 9900,
+    defaultCurrency: 'usd',
+    defaultInterval: 'month',
     priceEnv: ['SPLASHLENS_STRIPE_PRICE_FACILITY_CPO_PILOT_MONTHLY'],
     linkEnv: ['SPLASHLENS_STRIPE_LINK_FACILITY_CPO_PILOT_MONTHLY'],
     paymentLinkIdEnv: ['SPLASHLENS_STRIPE_PAYMENT_LINK_FACILITY_CPO_PILOT_MONTHLY_ID'],
@@ -74,6 +83,9 @@ const PLAN_CATALOG = {
     displayName: 'Verified Manufacturer Cards',
     feature: 'verified_manufacturer_cards',
     publicStatus: 'partner',
+    defaultAmountCents: 50000,
+    defaultCurrency: 'usd',
+    defaultInterval: 'month',
     priceEnv: ['SPLASHLENS_STRIPE_PRICE_VERIFIED_MANUFACTURER_CARDS_MONTHLY'],
     linkEnv: ['SPLASHLENS_STRIPE_LINK_VERIFIED_MANUFACTURER_CARDS_MONTHLY'],
     paymentLinkIdEnv: ['SPLASHLENS_STRIPE_PAYMENT_LINK_VERIFIED_MANUFACTURER_CARDS_MONTHLY_ID'],
@@ -87,6 +99,9 @@ const PLAN_CATALOG = {
     displayName: 'Distributor / Counter Mode',
     feature: 'distributor_counter_mode',
     publicStatus: 'pilot',
+    defaultAmountCents: 19900,
+    defaultCurrency: 'usd',
+    defaultInterval: 'month',
     priceEnv: ['SPLASHLENS_STRIPE_PRICE_DISTRIBUTOR_COUNTER_MODE_MONTHLY'],
     linkEnv: ['SPLASHLENS_STRIPE_LINK_DISTRIBUTOR_COUNTER_MODE_MONTHLY'],
     paymentLinkIdEnv: ['SPLASHLENS_STRIPE_PAYMENT_LINK_DISTRIBUTOR_COUNTER_MODE_MONTHLY_ID'],
@@ -100,6 +115,9 @@ const PLAN_CATALOG = {
     displayName: 'Training Partner Layer',
     feature: 'training_partner_layer',
     publicStatus: 'partner',
+    defaultAmountCents: 19900,
+    defaultCurrency: 'usd',
+    defaultInterval: 'month',
     priceEnv: ['SPLASHLENS_STRIPE_PRICE_TRAINING_PARTNER_LAYER_MONTHLY'],
     linkEnv: ['SPLASHLENS_STRIPE_LINK_TRAINING_PARTNER_LAYER_MONTHLY'],
     paymentLinkIdEnv: ['SPLASHLENS_STRIPE_PAYMENT_LINK_TRAINING_PARTNER_LAYER_MONTHLY_ID'],
@@ -151,6 +169,17 @@ export function splashLensPaymentLinkUrl(env, plan) {
   return envValue(env, plan.linkEnv) || plan.defaultPaymentLinkUrl || '';
 }
 
+export function splashLensCheckoutPriceData(plan) {
+  const amount = Math.max(0, Number(plan?.defaultAmountCents || 0) || 0);
+  if (!amount) return null;
+  return {
+    currency: clean(plan.defaultCurrency || 'usd', 12).toLowerCase() || 'usd',
+    unitAmount: amount,
+    interval: clean(plan.defaultInterval || 'month', 24).toLowerCase() || 'month',
+    productName: clean(plan.displayName || 'SplashLens paid lane', 120),
+  };
+}
+
 export function splashLensAllowedPaymentLinkIds(env) {
   const entries = [];
   for (const plan of Object.values(PLAN_CATALOG)) {
@@ -191,8 +220,7 @@ export function splashLensPlanPublicPayload(env = {}) {
     feature: plan.feature,
     publicStatus: plan.publicStatus,
     scopes: plan.scopes,
-    checkoutConfigured: Boolean(splashLensCheckoutPrice(env, plan) || splashLensPaymentLinkUrl(env, plan)),
-    hasDefaultLiveCheckout: Boolean(plan.defaultPriceId || plan.defaultPaymentLinkUrl),
+    checkoutConfigured: Boolean(splashLensCheckoutPrice(env, plan) || splashLensPaymentLinkUrl(env, plan) || (env.STRIPE_SECRET_KEY && splashLensCheckoutPriceData(plan))),
+    hasDefaultLiveCheckout: Boolean(plan.defaultPriceId || plan.defaultPaymentLinkUrl || plan.defaultAmountCents),
   }));
 }
-

@@ -1,6 +1,7 @@
 import {
   resolveSplashLensPlan,
   splashLensCheckoutPrice,
+  splashLensCheckoutPriceData,
   splashLensPaymentLinkUrl,
   splashLensPlanPublicPayload,
 } from '../_shared/splashlens-plans.mjs';
@@ -28,12 +29,23 @@ async function createCheckoutSession(request, env, plan) {
   const secret = stripeSecret(env);
   if (!secret) return { url: null, reason: 'missing_secret' };
   const price = splashLensCheckoutPrice(env, plan);
-  if (!price) return { url: null, reason: 'missing_price' };
+  const priceData = splashLensCheckoutPriceData(plan);
+  if (!price && !priceData) return { url: null, reason: 'missing_price' };
 
   const origin = appOrigin(request, env);
   const params = new URLSearchParams();
   params.set('mode', 'subscription');
-  params.set('line_items[0][price]', price);
+  if (price) {
+    params.set('line_items[0][price]', price);
+  } else {
+    params.set('line_items[0][price_data][currency]', priceData.currency);
+    params.set('line_items[0][price_data][unit_amount]', String(priceData.unitAmount));
+    params.set('line_items[0][price_data][recurring][interval]', priceData.interval);
+    params.set('line_items[0][price_data][product_data][name]', `SplashLens ${priceData.productName}`);
+    params.set('line_items[0][price_data][product_data][metadata][product]', 'splashlens');
+    params.set('line_items[0][price_data][product_data][metadata][feature]', plan.feature);
+    params.set('line_items[0][price_data][product_data][metadata][plan_key]', plan.key);
+  }
   params.set('line_items[0][quantity]', '1');
   params.set('success_url', `${origin}/api/checkout-success?session_id={CHECKOUT_SESSION_ID}`);
   params.set('cancel_url', `${origin}/?checkout=cancelled&plan=${encodeURIComponent(plan.key)}`);
@@ -82,7 +94,18 @@ export async function onRequestGet({ request, env }) {
 
   const plan = resolveSplashLensPlan(url.searchParams.get('plan') || 'monthly');
 
-  if (useStripeCheckout(env)) {
+  const paymentLink = splashLensPaymentLinkUrl(env, plan);
+  if (!useStripeCheckout(env) && paymentLink) {
+    return new Response(null, {
+      status: 302,
+      headers: {
+        Location: paymentLink,
+        'X-SplashLens-Checkout-Mode': 'payment_link_direct',
+      },
+    });
+  }
+
+  if (useStripeCheckout(env) || !paymentLink) {
     const session = await createCheckoutSession(request, env, plan);
     if (session.url) {
       return new Response(null, {
@@ -94,7 +117,7 @@ export async function onRequestGet({ request, env }) {
       });
     }
 
-    const target = splashLensPaymentLinkUrl(env, plan);
+    const target = paymentLink;
     if (!target) {
       return json(409, {
         ok: false,
@@ -114,7 +137,7 @@ export async function onRequestGet({ request, env }) {
     });
   }
 
-  const target = splashLensPaymentLinkUrl(env, plan);
+  const target = paymentLink;
   if (!target) {
     return json(409, {
       ok: false,
