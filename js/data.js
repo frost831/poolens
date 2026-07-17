@@ -210,7 +210,7 @@ window.SPLASHLENS_MONETIZATION_LANES = {
       planKey: "partsnap_pro_monthly",
       price: "$4.99/mo or $39/yr",
       buyer: "Heavy scanner users",
-      includes: ["Extended online scanner access", "Mystery part/code/photo workflows", "Proof checklist before ordering", "Search links with affiliate disclosure"],
+      includes: ["More online PartSnap and Error Scan usage", "Proof checklist before ordering or escalating", "Price-check search links with affiliate disclosure", "Scanner activation and restore flow"],
       guardrail: "Search links are for price checking; verify model, dimensions, and current parts diagram before ordering."
     },
     {
@@ -218,7 +218,7 @@ window.SPLASHLENS_MONETIZATION_LANES = {
       planKey: "service_proof_pro_monthly",
       price: "$19/mo target",
       buyer: "Solo tech",
-      includes: ["Saved Service Proof Passports", "Customer-safe summaries", "Senior/vendor packets", "Callback risk flags", "Proof history"],
+      includes: ["Saved Service Proof Passports by pool/customer", "Customer-safe visit summaries", "Senior tech/vendor packets", "Callback risk flags and proof history"],
       guardrail: "Built for cleaner documentation without becoming a full CRM."
     },
     {
@@ -226,7 +226,7 @@ window.SPLASHLENS_MONETIZATION_LANES = {
       planKey: "team_proof_os_monthly",
       price: "$99+/mo pilot target",
       buyer: "Service companies, facilities, CPOs, training groups",
-      includes: ["Owner dashboard", "Tech usage", "Saved pool/facility history", "Facility workflows", "Weekly searched/missed report"],
+      includes: ["Owner dashboard and tech usage signals", "Company-branded proof reports", "Facility/CPO workflows", "Team-level searched/missed reports"],
       guardrail: "Exports support existing CRMs; SplashLens is not a billing replacement."
     },
     {
@@ -242,7 +242,7 @@ window.SPLASHLENS_MONETIZATION_LANES = {
       planKey: "verified_manufacturer_cards_monthly",
       price: "By arrangement",
       buyer: "Manufacturers and expert vendors",
-      includes: ["Model families", "Known failure points", "Required proof photos", "Warranty-safe wording", "Preferred escalation steps"],
+      includes: ["Partner-reviewed field cards", "Required proof photos", "Warranty-safe wording", "Preferred escalation steps"],
       guardrail: "Only marked partner-verified after written partner review/approval."
     },
     {
@@ -250,7 +250,7 @@ window.SPLASHLENS_MONETIZATION_LANES = {
       planKey: "distributor_counter_mode_monthly",
       price: "By arrangement",
       buyer: "Parts counters and distributors",
-      includes: ["Model plate required", "Second photo prompt", "Symptom/code capture", "Serial and old-part marking", "Wrong-order prevention packet"],
+      includes: ["Required model plate prompts", "Second photo workflow", "Symptom/code capture", "Wrong-order prevention packet"],
       guardrail: "Possible match and missing proof, never guaranteed fit."
     },
     {
