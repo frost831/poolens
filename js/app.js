@@ -1823,6 +1823,33 @@ function startSpanishFieldWorkflow(kind) {
   trackSplashLensEvent('spanish_quick_chip', { chip: kind, workflow: 'service_proof_passport' });
 }
 
+function renderVerifiedProofNetwork() {
+  showTab('report');
+  const network = window.SPLASHLENS_MONETIZATION_LANES || {};
+  const plans = Array.isArray(network.plans) ? network.plans : [];
+  const cards = plans.map((plan) => `
+    <details class="brain-card" style="margin-bottom:8px;" ${plan.name === 'Free Core' ? 'open' : ''}>
+      <summary style="cursor:pointer;list-style:none;display:flex;align-items:flex-start;justify-content:space-between;gap:10px;">
+        <span>
+          <strong style="display:block;color:#0f172a;font-size:14px;line-height:1.15;">${escHtml(plan.name)}</strong>
+          <span style="display:block;color:#64748b;font-size:11px;font-weight:800;margin-top:3px;">${escHtml(plan.buyer || '')}</span>
+        </span>
+        <span class="brain-pill ${plan.name === 'Free Core' ? 'ready' : 'warn'}">${escHtml(plan.price || '')}</span>
+      </summary>
+      <div style="padding-top:9px;">
+        <p style="color:#334155;font-size:12px;line-height:1.45;"><strong>Includes:</strong> ${escHtml((plan.includes || []).join(', '))}</p>
+        <p style="color:#0f766e;font-size:11px;line-height:1.45;font-weight:850;margin-top:6px;"><strong>Trust boundary:</strong> ${escHtml(plan.guardrail || network.trustBoundary || '')}</p>
+      </div>
+    </details>
+  `).join('');
+  renderProofWorkflowOutput(
+    'SplashLens Verified Proof Network',
+    network.promise || 'Free for techs. Paid for teams, facilities, trainers, distributors, and manufacturers who need cleaner proof before escalation.',
+    `<div style="margin-top:10px;">${cards}</div><div class="brain-grid" style="margin-top:10px;"><a class="brain-action green" href="mailto:hello@splashlens.com?subject=SplashLens%20Service%20Proof%20Pro%20pilot" onclick="trackSplashLensEvent('upgrade_interest_click',{plan:'service_proof_pro_network'})" style="text-align:center;text-decoration:none;">Proof Pro pilot</a><a class="brain-action secondary" href="mailto:hello@splashlens.com?subject=SplashLens%20Verified%20Proof%20Network" onclick="trackSplashLensEvent('partner_interest_click',{lane:'verified_proof_network'})" style="text-align:center;text-decoration:none;">Talk partner lane</a></div>`
+  );
+  trackSplashLensEvent('verified_proof_network_viewed', { plans: plans.length });
+}
+
 let activeVoiceNote = null;
 
 function speechRecognitionCtor() {
@@ -3629,7 +3656,7 @@ const SERVICE_PROOF_FAQ = [
   },
   {
     keys: ['price', 'paid', 'subscription'],
-    answer: 'The free app stays useful. Paid Service Proof OS should be the team layer: proof history, branded reports, customer links, owner dashboard, trend flags, and advanced AI summaries.'
+    answer: 'The free app stays useful: lookup, basic PartSnap, calculators, and Facility Assist stay open. Paid lanes should be Service Proof Pro for solo techs, Team Proof OS for service companies, Facility/CPO pilots, distributor counter mode, training partner modules, and partner-verified manufacturer cards.'
   },
   {
     keys: ['trend', 'callback', 'risk', 'repeat'],
@@ -5373,6 +5400,7 @@ function renderTechRadarPanel() {
         <p style="color:#334155;font-size:12px;line-height:1.5;"><strong>Models / systems:</strong> ${escHtml((cat.examples || []).join(', '))}</p>
         <p style="color:#334155;font-size:12px;line-height:1.5;margin-top:5px;"><strong>Proof to capture:</strong> ${escHtml((cat.proof || []).join(', '))}</p>
         <p style="color:#334155;font-size:12px;line-height:1.5;margin-top:5px;"><strong>Field flags:</strong> ${escHtml((cat.fieldFlags || []).join(', '))}</p>
+        ${Array.isArray(cat.sourceNotes) && cat.sourceNotes.length ? `<p style="color:#0f766e;font-size:11px;line-height:1.45;margin-top:7px;font-weight:800;"><strong>Radar note:</strong> ${escHtml(cat.sourceNotes.join(' '))}</p>` : ''}
       </div>
     </details>
   `).join('');

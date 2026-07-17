@@ -110,7 +110,7 @@ window.CHEM_DATA = {
 };
 
 window.SPLASHLENS_TECH_RADAR = {
-  updated: "2026-07-16",
+  updated: "2026-07-17",
   cadence: {
     daily: "Add 3-5 codes, model clues, part families, or proof prompts when new field patterns show up.",
     weekly: "Publish one field card, training scenario, or SEO/AEO hub update for pool tech search.",
@@ -120,16 +120,18 @@ window.SPLASHLENS_TECH_RADAR = {
     {
       name: "Robots",
       status: "High priority",
-      examples: ["Beatbot AquaSense", "Aiper Scuba X1 / X1 Pro Max", "Aiper Scuba V3", "Aiper Scuba S1", "Aiper Scuba 800 / L1 / N1 / N3 AI Vision", "Aiper EcoSurfer / Surfer", "Maytronics Dolphin", "Polaris Alpha iQ", "WYBOT", "Ecovacs", "iGarden", "Betta", "Water Tech Volt"],
-      proof: ["power supply or dock", "charging contacts", "tracks and brushes", "filter basket", "cord or battery housing", "app pairing screen", "firmware/status screen", "demo-unit accessory check", "fine-filter or ultra-fine-filter proof"],
-      fieldFlags: ["no power", "will not climb", "Wi-Fi pairing failure", "HydroComm/app offline", "water intrusion", "short runtime", "navigation/mapping miss", "AI vision miss", "demo unit missing dock/accessory"]
+      examples: ["Beatbot AquaSense X", "Beatbot AquaSense 2 Ultra", "Beatbot Sora 30", "Aiper Scuba X1 / X1 Pro Max", "Aiper Scuba V3", "Aiper Scuba S1", "Aiper Scuba 800 / L1 / N1 / N3 AI Vision", "Aiper EcoSurfer / Surfer", "Maytronics Dolphin", "Polaris Alpha iQ", "WYBOT", "Ecovacs", "iGarden", "Betta", "Water Tech Volt"],
+      proof: ["power supply or dock", "charging contacts", "self-cleaning station/dock", "tracks and brushes", "filter basket", "cord or battery housing", "app pairing screen", "firmware/status screen", "demo-unit accessory check", "fine-filter or ultra-fine-filter proof"],
+      fieldFlags: ["no power", "will not climb", "Wi-Fi pairing failure", "HydroComm/app offline", "water intrusion", "short runtime", "navigation/mapping miss", "AI vision miss", "self-cleaning dock not rinsing fully", "demo unit missing dock/accessory"],
+      sourceNotes: ["Beatbot is pushing AI mapping, debris recognition, cordless workflows, and self-cleaning/charging stations; SplashLens should capture dock, filter, charging, sensor, and app proof before warranty/support escalation."]
     },
     {
       name: "Connected Pool Network",
       status: "Live reference layer",
-      examples: ["Pentair IntelliCenter", "Hayward Omni", "Jandy iAquaLink", "CCEI Vigipool", "CCEI Tild VP", "CCEI Antea VS", "RS-485 pumps", "valve actuators", "smart heaters", "lighting relays", "automatic covers"],
-      proof: ["controller model", "firmware/app screen", "alert timestamp", "manual chemistry check", "local panel state", "relay label", "RS-485 wiring photo", "device assignment screen", "breaker/GFCI behavior"],
-      fieldFlags: ["offline app", "stale remote alert", "chemistry mismatch", "lost communication", "wrong relay", "actuator wrong direction", "pump not seen by automation", "light schedule mismatch"]
+      examples: ["Pentair IntelliCenter", "Hayward Omni", "Jandy AquaLink RS", "Jandy AquaLink TCX", "Jandy AquaLink EDGE", "Jandy iAquaLink", "CCEI Vigipool", "CCEI Tild VP", "CCEI Antea VS", "RS-485 pumps", "valve actuators", "smart heaters", "lighting relays", "automatic covers"],
+      proof: ["controller model", "firmware/app screen", "alert timestamp", "manual chemistry check", "local panel state", "relay label", "RS-485 wiring photo", "device assignment screen", "breaker/GFCI behavior", "wireless remote/handheld proof"],
+      fieldFlags: ["offline app", "stale remote alert", "chemistry mismatch", "lost communication", "wrong relay", "actuator wrong direction", "pump not seen by automation", "light schedule mismatch", "remote controls app but local panel differs"],
+      sourceNotes: ["Jandy automation controls lights, water features, spa settings, valves, filtration, cleaning, pumps, heaters, and remote app workflows; SplashLens should capture both app state and local panel proof."]
     },
     {
       name: "Heat / Cool",
@@ -183,9 +185,66 @@ window.SPLASHLENS_TECH_RADAR = {
     {
       name: "Hot Tubs / Spas",
       status: "Live spa lane",
-      examples: ["Balboa BP/VS/GS/GL and TP/spaTouch systems", "Gecko Y/XE/YT/in.touch", "Waterway NEO 1100 / 1500 / 2100", "Watkins / Hot Spring / Caldera controls", "Jacuzzi / Sundance controls", "Master Spas H2X", "Endless Pools fitness systems", "Hydropool swim spas", "PDC TruSwim / Summit", "Artesian TidalFit", "Bullfrog", "Marquis", "Coast", "Arctic", "Wellis", "FROG hot tub systems", "spa jet plumbing", "swim current pumps", "ozone / UV spa systems", "pipe and jet cleanser", "spa covers and lifters"],
-      proof: ["spa pack label", "topside display code", "filter condition", "flow or pressure-switch context", "heater tube or sensor proof", "pump wet-end and motor label", "jet body or manifold proof", "suction cover marking", "sanitizer cartridge", "ozone/UV module and check valve", "manual water test", "drain/purge history", "cover/lifter condition", "GFCI trip timing"],
-      fieldFlags: ["no power", "flow/pressure error", "dry heater", "high limit", "sensor sync", "GFCI trips immediately", "GFCI trips on heat call", "one pump or jet bank dead", "weak swim current", "app offline", "aux keypad dead", "biofilm flush", "no heat", "heat loss overnight", "rapid pH drift", "foaming", "sanitizer depletion", "cover waterlogged", "audio/light accessory dead"]
+      examples: ["Balboa BP/VS/GS/GL and TP/spaTouch systems", "Balboa TP400/TP500/TP600/TP800/TP900", "Balboa spaTouch Mini / spaTouch 2 / 3 / 4", "Gecko Y/XE/YT/in.touch", "Waterway NEO 1100 / 1500 / 2100", "Watkins / Hot Spring / Caldera controls", "Jacuzzi / Sundance controls", "Cal Spas 2026 Patio / Escape / Swim Pro", "Master Spas H2X", "Endless Pools fitness systems", "Hydropool swim spas", "PDC TruSwim / Summit", "Artesian TidalFit", "Bullfrog", "Marquis", "Coast", "Arctic", "Wellis", "FROG hot tub systems", "spa jet plumbing", "swim current pumps", "ozone / UV spa systems", "pipe and jet cleanser", "spa covers and lifters"],
+      proof: ["spa pack label", "topside display code", "control panel family", "filter condition", "flow or pressure-switch context", "heater tube or sensor proof", "pump wet-end and motor label", "jet body or manifold proof", "suction cover marking", "sanitizer cartridge", "ozone/UV module and check valve", "manual water test", "drain/purge history", "cover/lifter condition", "GFCI trip timing", "swim-current pump label", "auxiliary keypad proof"],
+      fieldFlags: ["no power", "flow/pressure error", "dry heater", "high limit", "sensor sync", "GFCI trips immediately", "GFCI trips on heat call", "one pump or jet bank dead", "weak swim current", "app offline", "aux keypad dead", "biofilm flush", "no heat", "heat loss overnight", "rapid pH drift", "foaming", "sanitizer depletion", "cover waterlogged", "audio/light accessory dead"],
+      sourceNotes: ["Balboa publishes user guides for TP and spaTouch panels; Cal Spas publishes 2026 hot tub and swim-spa manuals; Coast and Master Spas publish owner manual lanes. SplashLens cards should stay proof-first and manual-verified."]
+    }
+  ]
+};
+
+window.SPLASHLENS_MONETIZATION_LANES = {
+  promise: "Free for techs. Paid for teams, facilities, trainers, distributors, and manufacturers who want cleaner proof before callbacks, part orders, warranty calls, or escalation.",
+  trustBoundary: "Manual lookup, basic PartSnap, calculators, Facility Assist, and cautious reference language stay useful without an account. Paid layers add saved proof, team visibility, partner workflows, and convenience.",
+  plans: [
+    {
+      name: "Free Core",
+      price: "$0",
+      buyer: "Every tech",
+      includes: ["Manual lookup", "Basic PartSnap", "Calculators", "Basic Facility Assist", "Offline manual tools"],
+      guardrail: "No diagnosis, fitment, warranty, or official partner claim."
+    },
+    {
+      name: "Service Proof Pro",
+      price: "$9-$19/mo",
+      buyer: "Solo tech",
+      includes: ["Saved Service Proof Passports", "Unlimited proof packets", "Customer-safe summaries", "Vendor packets", "Callback risk flags", "Export/share history"],
+      guardrail: "Free field reference stays free; Pro saves and packages the proof."
+    },
+    {
+      name: "Team Proof OS",
+      price: "$99-$299/mo",
+      buyer: "Small service companies",
+      includes: ["Owner dashboard", "Tech usage", "Saved pool history", "Company branding", "Weekly searched/missed report", "Team proof reports"],
+      guardrail: "CRM-adjacent proof layer, not a scheduling/billing replacement."
+    },
+    {
+      name: "Facility / CPO Pilot",
+      price: "$49-$199/mo",
+      buyer: "Facilities and training groups",
+      includes: ["Daily checks", "Contamination event workflow", "Dose logs", "Escalation packets", "Staff handoff records"],
+      guardrail: "Local code, facility policy, and CPO/trainer guidance still control."
+    },
+    {
+      name: "Verified Manufacturer Cards",
+      price: "$500-$2,500/mo + setup",
+      buyer: "Manufacturers and expert vendors",
+      includes: ["Model families", "Known failure points", "Required proof photos", "Warranty-safe wording", "Preferred escalation steps"],
+      guardrail: "Only marked partner-verified after written partner review/approval."
+    },
+    {
+      name: "Distributor / Counter Mode",
+      price: "Pilot priced",
+      buyer: "Parts counters and distributors",
+      includes: ["Model plate required", "Second photo prompt", "Symptom/code capture", "Serial and old-part marking", "Wrong-order prevention packet"],
+      guardrail: "Possible match and missing proof, never guaranteed fit."
+    },
+    {
+      name: "Training Partner Layer",
+      price: "License / rev share",
+      buyer: "Pool schools and instructors",
+      includes: ["5-minute field lessons", "Proof-based quizzes", "CPO scenario workflows", "Senior-review practice packets"],
+      guardrail: "No official training alignment unless agreed in writing."
     }
   ]
 };
