@@ -136,6 +136,12 @@
     .language-bar { background:#e0f2fe; border-bottom:1px solid #bae6fd; padding:8px 14px; display:flex; align-items:center; justify-content:space-between; gap:10px; }
     .language-bar span { color:#075985; font-size:12px; font-weight:800; }
     .language-bar select { width:auto; min-width:138px; padding:8px 32px 8px 10px; font-size:13px; border-color:#7dd3fc; color:#075985; font-weight:800; }
+    .spanish-field-strip { display:none; background:#f0fdfa; border-bottom:1px solid #99f6e4; padding:10px 12px; }
+    .spanish-field-strip.active { display:block; }
+    .spanish-field-strip strong { display:block; color:#115e59; font-size:12px; font-weight:950; margin-bottom:7px; }
+    .spanish-field-strip .chips { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:6px; }
+    .spanish-field-strip button { min-height:42px; border:1px solid #5eead4; background:#fff; color:#134e4a; border-radius:9px; font-size:11px; font-weight:950; cursor:pointer; padding:6px 5px; }
+    @media (max-width:560px){ .spanish-field-strip .chips{grid-template-columns:repeat(2,minmax(0,1fr));} }
 
     /* Buttons */
     .btn-calc { background: linear-gradient(135deg, var(--field-blue-bright) 0%, var(--field-blue) 100%); color: white; border: none; border-radius: var(--field-radius); padding: 14px; font-weight: 800; font-size: 15px; width: 100%; cursor: pointer; letter-spacing: 0.03em; transition: all 0.15s; -webkit-tap-highlight-color: transparent; }
@@ -534,6 +540,16 @@
       <option value="es">Español</option>
     </select>
   </div>
+  <section id="spanish-field-strip" class="spanish-field-strip" aria-label="Spanish field quick start">
+    <strong>Modo campo en espanol: prueba primero, orden despues.</strong>
+    <div class="chips">
+      <button type="button" onclick="setScanMode('parts');trackSplashLensEvent('spanish_quick_chip',{chip:'photo_part'})">1 Foto pieza</button>
+      <button type="button" onclick="setScanMode('lookup');trackSplashLensEvent('spanish_quick_chip',{chip:'code_label'})">2 Codigo/placa</button>
+      <button type="button" onclick="showTab('dosing');trackSplashLensEvent('spanish_quick_chip',{chip:'readings'})">3 Lecturas</button>
+      <button type="button" onclick="showTab('report');trackSplashLensEvent('spanish_quick_chip',{chip:'proof_note'})">4 Nota prueba</button>
+      <button type="button" onclick="showTab('report');trackSplashLensEvent('spanish_quick_chip',{chip:'packet'})">5 Paquete</button>
+    </div>
+  </section>
 
   <section id="role-picker" class="role-picker" aria-label="Choose SplashLens mode">
     <div class="role-card">

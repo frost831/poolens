@@ -410,6 +410,12 @@ function applySplashLensLocalization() {
   localizationApplying = true;
   try {
     document.documentElement.lang = language === 'es' ? 'es' : 'en';
+    const spanishStrip = document.getElementById('spanish-field-strip');
+    if (spanishStrip) {
+      const active = language === 'es';
+      spanishStrip.classList.toggle('active', active);
+      spanishStrip.setAttribute('aria-hidden', active ? 'false' : 'true');
+    }
     const head = LOCALIZED_HEAD[language] || LOCALIZED_HEAD.en;
     if (head?.title) document.title = head.title;
     const description = document.querySelector('meta[name="description"]');
