@@ -5,6 +5,8 @@
 // Optional bindings/env: SCAN_RATE_LIMITER, SCAN_USAGE_KV, SPLASHLENS_ENTITLEMENT_SECRET.
 // Production scanner traffic must have SCAN_USAGE_KV so free and entitled monthly limits are server-enforced.
 
+import { attachPartSnapCorpusCandidates } from '../_shared/partsnap-corpus.mjs';
+
 const CLAUDE_API = 'https://api.anthropic.com/v1/messages';
 const DEFAULT_ORIGIN = 'https://app.splashlens.com';
 const FREE_SCAN_LIMIT = 10;
@@ -485,6 +487,10 @@ export async function onRequestPost({ request, env }) {
       parsed = jsonMatch ? JSON.parse(jsonMatch[0]) : JSON.parse(text);
     } catch {
       return json({ error: 'AI response parse failed', raw: text.slice(0, 200) }, 502, headers);
+    }
+
+    if (mode === 'parts_snap') {
+      parsed = attachPartSnapCorpusCandidates(parsed);
     }
 
     return json({ ok: true, mode, result: parsed, usage: meter.usage, preferred_language: preferredLanguage }, 200, headers);

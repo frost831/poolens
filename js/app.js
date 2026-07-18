@@ -7146,6 +7146,8 @@ function renderPartsSnapResult(ai, result, status) {
   const visibleEvidence = Array.isArray(_lastPartSnapResult.visibleEvidence) ? _lastPartSnapResult.visibleEvidence.filter(Boolean).slice(0, 4) : [];
   const missingProof = Array.isArray(_lastPartSnapResult.missingProof) ? _lastPartSnapResult.missingProof.filter(Boolean).slice(0, 4) : [];
   const alternates = Array.isArray(_lastPartSnapResult.alternates) ? _lastPartSnapResult.alternates.filter(Boolean).slice(0, 3) : [];
+  const corpusCandidates = Array.isArray(_lastPartSnapResult.corpusCandidates) ? _lastPartSnapResult.corpusCandidates.filter(Boolean).slice(0, 4) : [];
+  const corpusStatus = _lastPartSnapResult.corpusStatus || {};
   const { manufacturer, category, component, model, partNumber, description, condition, replacementNotes, verificationNotes, searchTerms, confidence } = ai;
   const low = confidence === 'low';
   const notes = verificationNotes || replacementNotes;
@@ -7172,6 +7174,10 @@ function renderPartsSnapResult(ai, result, status) {
     condition: condition || 'unknown',
     proof_visible_count: visibleEvidence.length,
     proof_missing_count: missingProof.length || (ladder.missing || []).length,
+    corpus_status: corpusStatus.label || (corpusCandidates.length ? 'source-backed candidates' : 'ai-only'),
+    corpus_candidate_count: corpusCandidates.length,
+    corpus_top_source_tier: corpusCandidates[0]?.sourceTier || '',
+    corpus_top_match_level: corpusCandidates[0]?.matchLevel || '',
     proof_visible: compactPartSnapList(visibleEvidence),
     proof_missing: compactPartSnapList(missingProof.length ? missingProof : ladder.missing),
     result_summary: [manufacturer, component, model || partNumber].filter(Boolean).join(' / ') || 'Unknown PartSnap result',
@@ -7209,6 +7215,7 @@ function renderPartsSnapResult(ai, result, status) {
       ${renderPartSnapProofSnapshot(ladder, risk, visibleEvidence, missingProof)}
       ${renderPartConfidenceLadder(ladder)}
       ${renderPartEvidencePanel(visibleEvidence, missingProof)}
+      ${renderPartSnapCorpusPanel(corpusCandidates, corpusStatus)}
       ${renderPartSnapCallbackRisk(risk)}
       ${renderPartSnapNextProofNudge(_lastPartSnapResult, ladder, risk, visibleEvidence, missingProof)}
       ${renderPartAlternates(alternates)}
@@ -7298,6 +7305,58 @@ function renderPartEvidencePanel(visibleEvidence, missingProof) {
       <div style="background:#431407;border:1px solid #b45309;border-radius:8px;padding:10px;">
         <p style="color:#fdba74;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;">Next proof</p>
         <div style="display:flex;flex-wrap:wrap;gap:6px;">${missingProof.length ? chips(missingProof, '#fed7aa', '#7c2d12', '#b45309') : '<span style="color:#94a3b8;font-size:11px;">No extra proof listed</span>'}</div>
+      </div>
+    </div>`;
+}
+
+function renderPartSnapCorpusPanel(candidates = [], status = {}) {
+  const count = candidates.length;
+  const label = status.label || (count ? 'source-backed candidates' : 'ai-only');
+  if (!count) {
+    return `
+      <div style="background:#111827;border:1px solid #475569;border-radius:10px;padding:11px;margin:10px 0;">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px;">
+          <p style="color:#e2e8f0;font-size:10px;font-weight:950;text-transform:uppercase;letter-spacing:.06em;">AI-only result</p>
+          <span style="background:#475569;color:#fff;border-radius:999px;padding:2px 8px;font-size:9px;font-weight:950;">NO CORPUS MATCH</span>
+        </div>
+        <p style="color:#94a3b8;font-size:11px;line-height:1.45;">${escHtml(status.note || 'No source-backed family matched this scan yet. Capture the model plate, molded number, second angle, or label before ordering.')}</p>
+      </div>`;
+  }
+
+  const top = candidates[0];
+  const compact = (items, color = '#cffafe', bg = '#164e63', border = '#0e7490') => (Array.isArray(items) ? items : [])
+    .filter(Boolean)
+    .slice(0, 5)
+    .map((item) => `<span style="display:inline-flex;align-items:center;background:${bg};border:1px solid ${border};color:${color};border-radius:999px;padding:5px 8px;font-size:10px;font-weight:900;line-height:1.2;">${escHtml(item)}</span>`)
+    .join('');
+  const sourceLinks = (candidate) => (Array.isArray(candidate.sourceUrls) ? candidate.sourceUrls : [])
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((url, index) => `<a href="${escAttr(url)}" target="_blank" rel="noopener" onclick="trackSplashLensEvent('partsnap_corpus_source_clicked',{candidate_id:'${escAttr(candidate.id)}',source_tier:'${escAttr(candidate.sourceTier)}'})" style="color:#7dd3fc;font-size:10px;font-weight:900;text-decoration:none;">Source ${index + 1}</a>`)
+    .join(' ');
+
+  return `
+    <div style="background:#042f2e;border:1px solid #14b8a6;border-radius:10px;padding:11px;margin:10px 0;">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:7px;flex-wrap:wrap;">
+        <p style="color:#ccfbf1;font-size:10px;font-weight:950;text-transform:uppercase;letter-spacing:.06em;">Source-backed candidates</p>
+        <span style="background:#0f766e;color:#fff;border-radius:999px;padding:2px 8px;font-size:9px;font-weight:950;">${count} MATCH${count === 1 ? '' : 'ES'} - TIER ${escHtml(top.sourceTier)}</span>
+      </div>
+      <p style="color:#99f6e4;font-size:11px;line-height:1.45;margin-bottom:9px;">${escHtml(status.note || 'PartSnap compared the AI result to the seed evidence corpus. This narrows the family; it is still not final fitment.')}</p>
+      <div style="display:grid;gap:8px;">
+        ${candidates.map((candidate, index) => `
+          <div style="background:#0f172a;border:1px solid ${index === 0 ? '#2dd4bf' : '#334155'};border-radius:8px;padding:10px;">
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:6px;">
+              <div>
+                <p style="color:#f8fafc;font-size:12px;font-weight:950;line-height:1.2;">${escHtml(candidate.component || 'Source-backed family')}</p>
+                <p style="color:#94a3b8;font-size:10px;line-height:1.35;margin-top:3px;">${escHtml([candidate.manufacturer, candidate.category, ...(candidate.modelFamilies || []).slice(0, 2)].filter(Boolean).join(' / '))}</p>
+              </div>
+              <span style="background:${index === 0 ? '#0f766e' : '#334155'};color:#fff;border-radius:999px;padding:2px 7px;font-size:9px;font-weight:950;white-space:nowrap;">${escHtml(candidate.matchLevel || label)}</span>
+            </div>
+            ${(candidate.sourceLabels || []).length ? `<p style="color:#7dd3fc;font-size:10px;font-weight:900;line-height:1.35;margin-bottom:6px;">${escHtml((candidate.sourceLabels || []).slice(0, 2).join(' + '))}</p>` : ''}
+            ${(candidate.requiredProof || []).length ? `<div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:6px;">${compact(candidate.requiredProof, '#fed7aa', '#7c2d12', '#b45309')}</div>` : ''}
+            ${(candidate.lookalikeWarnings || []).length ? `<p style="color:#fbbf24;font-size:10px;line-height:1.35;margin-bottom:5px;">${escHtml(candidate.lookalikeWarnings[0])}</p>` : ''}
+            ${sourceLinks(candidate)}
+          </div>`).join('')}
       </div>
     </div>`;
 }
