@@ -104,6 +104,8 @@ node --test tests\partsnap-corpus.test.mjs tests\splashlens-intelligence.test.mj
 Raw PartSnap feedback must not be auto-promoted. The safe loop is:
 
 1. Export `/api/partsnap-review` JSON into `data/partsnap/generated/partsnap-review-export.json`.
+   - The owner dashboard now has a `Download Review JSON` button in the Senior Tech Review Queue.
+   - Save that download as `data/partsnap/generated/partsnap-review-export.json`.
 2. Run:
 
 ```powershell

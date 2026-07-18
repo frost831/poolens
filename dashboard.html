@@ -223,6 +223,28 @@
       font-size: 11px;
       background: #0f766e;
     }
+    .review-actions {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 14px;
+      border-bottom: 1px solid #e2e8f0;
+      background: #f8fafc;
+    }
+    .review-actions button {
+      min-height: 34px;
+      font-size: 12px;
+    }
+    .review-actions button:disabled {
+      cursor: not-allowed;
+      opacity: .5;
+    }
+    .review-actions span {
+      color: #64748b;
+      font-size: 12px;
+      line-height: 1.35;
+    }
     .status-pill {
       display: inline-flex;
       border-radius: 999px;
@@ -389,6 +411,11 @@
       </div>
       <div class="panel" style="grid-column:1/-1;">
         <h2>Senior Tech Review Queue</h2>
+        <div class="review-actions" id="review-actions">
+          <button type="button" id="download-review-json" disabled>Download Review JSON</button>
+          <button type="button" id="copy-promotion-command" disabled>Copy Promotion Command</button>
+          <span id="review-export-hint">Load the dashboard to export PartSnap review tickets.</span>
+        </div>
         <table class="events" id="partsnap-review"></table>
       </div>
       <div class="panel" style="grid-column:1/-1;">
@@ -402,6 +429,7 @@
     const STORAGE_KEY = 'splashlens-dashboard-secret';
     const statusEl = document.getElementById('status');
     const secretEl = document.getElementById('secret');
+    let latestPartSnapReview = null;
     const saved = localStorage.getItem(STORAGE_KEY) || '';
     if (saved) secretEl.value = saved;
 
@@ -501,6 +529,7 @@
 
     function renderReviewTickets(rows) {
       const el = document.getElementById('partsnap-review');
+      updateReviewExportActions(rows || []);
       const body = (rows || []).map((row, index) => {
         const summary = [row.manufacturer, row.component, row.model || row.partNumber].filter(Boolean).join(' / ') || row.note || 'Mystery part';
         const missing = (row.missingProof || []).join(', ');
@@ -523,6 +552,49 @@
             alert(ticket.packet || 'No packet available.');
           });
         });
+      });
+    }
+
+    function updateReviewExportActions(rows) {
+      const download = document.getElementById('download-review-json');
+      const copy = document.getElementById('copy-promotion-command');
+      const hint = document.getElementById('review-export-hint');
+      if (!download || !copy || !hint) return;
+      const count = rows.length;
+      download.disabled = count === 0;
+      copy.disabled = count === 0;
+      const gapCount = rows.filter((row) => ['corpus-gap', 'senior-review', 'needs-triage'].includes(row.status)).length;
+      hint.textContent = count
+        ? `${count} tickets loaded. ${gapCount} can become promotion drafts after human review.`
+        : 'No PartSnap review tickets loaded.';
+    }
+
+    function downloadReviewJson() {
+      if (!latestPartSnapReview) return;
+      const blob = new Blob([JSON.stringify(latestPartSnapReview, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      const stamp = new Date().toISOString().replace(/[:.]/g, '-');
+      a.href = url;
+      a.download = `partsnap-review-export-${stamp}.json`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      setStatus('Downloaded review export. Put it at data\\partsnap\\generated\\partsnap-review-export.json before running the draft tool.', false);
+    }
+
+    function copyPromotionCommand() {
+      const command = [
+        'node tools\\draft-partsnap-promotions.mjs data\\partsnap\\generated\\partsnap-review-export.json',
+        'node tools\\build-partsnap-corpus.mjs',
+        'node tools\\export-partsnap-corpus-snapshot.mjs',
+        'node tools\\run-partsnap-benchmark.mjs',
+      ].join('\n');
+      navigator.clipboard?.writeText(command).then(() => {
+        setStatus('Copied PartSnap review promotion commands.', false);
+      }).catch(() => {
+        alert(command);
       });
     }
 
@@ -661,10 +733,12 @@
       });
       const data = await response.json().catch(() => ({}));
       if (!response.ok || !data.ok) {
+        latestPartSnapReview = null;
         renderReviewStatus({});
         renderReviewTickets([]);
         return;
       }
+      latestPartSnapReview = data;
       renderReviewStatus(data.counts);
       renderReviewTickets(data.tickets);
     }
@@ -678,6 +752,8 @@
       secretEl.value = '';
       setStatus('Secret removed from this browser.', false);
     });
+    document.getElementById('download-review-json').addEventListener('click', downloadReviewJson);
+    document.getElementById('copy-promotion-command').addEventListener('click', copyPromotionCommand);
     if (saved) loadDashboard().catch(() => {});
   </script>
 </body>
