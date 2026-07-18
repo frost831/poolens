@@ -1,0 +1,171 @@
+{
+  "name": "PartSnap Evidence Graph source registry",
+  "version": "2026-07-17",
+  "purpose": "Make PartSnap less gimmicky by grounding AI photo results in source-ranked part families, diagrams, model aliases, proof requirements, and human-reviewed corrections.",
+  "source_tiers": [
+    {
+      "tier": 1,
+      "label": "official_manufacturer",
+      "use_for": [
+        "model families",
+        "replacement part numbers",
+        "exploded diagram references",
+        "manual links",
+        "warranty-safe verification language"
+      ],
+      "confidence_rule": "Can support likely family or visible-marking confidence only when the scan also sees matching proof such as brand, model plate, molded number, or matching diagram clue."
+    },
+    {
+      "tier": 2,
+      "label": "authorized_distributor_catalog",
+      "use_for": [
+        "part-number aliases",
+        "search terms",
+        "current/obsolete replacement language",
+        "vendor packet routing"
+      ],
+      "confidence_rule": "Use as cross-check and search help. Do not claim stock, price, availability, or official fitment unless the partner feed explicitly allows it."
+    },
+    {
+      "tier": 3,
+      "label": "public_parts_diagram_vendor",
+      "use_for": [
+        "diagram item names",
+        "lookalike part warnings",
+        "retail search terms",
+        "photo examples for human review"
+      ],
+      "confidence_rule": "Helpful for aliases and diagrams, but not a source of manufacturer verification unless the page cites the OEM document."
+    },
+    {
+      "tier": 4,
+      "label": "field_feedback",
+      "use_for": [
+        "wrong/missing patterns",
+        "real mystery parts",
+        "photos that AI struggles with",
+        "partner review queue"
+      ],
+      "confidence_rule": "Never raises confidence by itself. It creates review tickets that can become verified corpus entries after human or partner review."
+    }
+  ],
+  "sources": [
+    {
+      "id": "pentair-replacement-parts",
+      "tier": 1,
+      "brand_scope": ["Pentair", "Sta-Rite", "IntelliFlo", "MasterTemp", "Clean & Clear"],
+      "url": "https://www.pentair.com/en-us/pool-spa/products/replacement-parts.html",
+      "source_type": "official replacement parts catalog by category",
+      "priority_categories": ["pumps", "filters", "heaters", "heat pumps", "automation", "lighting", "sanitizer", "valves", "white goods"],
+      "ingestion_status": "source_identified",
+      "notes": "Official category PDFs and part catalogs. Use for model family, part number, category, diagram/source link, and proof requirements."
+    },
+    {
+      "id": "pentair-2025-2026-catalog",
+      "tier": 1,
+      "brand_scope": ["Pentair"],
+      "url": "https://www.pentair.com/en-us/pool-spa/products/catalog.html",
+      "source_type": "official current product catalog",
+      "priority_categories": ["new products", "current SKU changes", "whole goods", "replacement parts"],
+      "ingestion_status": "source_identified",
+      "notes": "Pentair says catalog updates are made quarterly. Use as new-tech radar and current SKU update lane."
+    },
+    {
+      "id": "hayward-manuals",
+      "tier": 1,
+      "brand_scope": ["Hayward", "AquaRite", "OmniLogic", "TriStar", "Super Pump", "ColorLogic"],
+      "url": "https://www.hayward.com/guide-manuals",
+      "source_type": "official manuals and guides",
+      "priority_categories": ["automation", "pumps", "heaters", "cleaners", "sanitization", "lighting", "water features", "blowers"],
+      "ingestion_status": "source_identified",
+      "notes": "Use for model/manual links, safety language, and part-proof prompts. Parts lists may be in individual manuals."
+    },
+    {
+      "id": "hayward-buyers-guide",
+      "tier": 1,
+      "brand_scope": ["Hayward"],
+      "url": "https://www.hayward.com/tools/buyers-guide",
+      "source_type": "official buyer guide and parts list",
+      "priority_categories": ["residential", "commercial", "replacement parts"],
+      "ingestion_status": "source_identified",
+      "notes": "Use where accessible for current product and parts-list indexing."
+    },
+    {
+      "id": "jandy-replacement-parts",
+      "tier": 1,
+      "brand_scope": ["Jandy", "Zodiac", "Polaris", "Fluidra", "iAquaLink"],
+      "url": "https://www.jandy.com/en/products",
+      "source_type": "official replacement-parts and dealer route",
+      "priority_categories": ["pumps", "filters", "heaters", "valves", "automation", "lighting"],
+      "ingestion_status": "source_identified",
+      "notes": "Official page points to genuine Jandy replacement parts. Use for partner/outreach ask and verified cards."
+    },
+    {
+      "id": "zodiac-genuine-parts",
+      "tier": 1,
+      "brand_scope": ["Zodiac", "Polaris", "Baracuda", "Nature2", "Fluidra"],
+      "url": "https://www.zodiacpoolsystems.com/en/parts",
+      "source_type": "official product catalog and genuine parts route",
+      "priority_categories": ["cleaners", "accessories", "sanitizer", "replacement parts"],
+      "ingestion_status": "source_identified",
+      "notes": "Use for official catalog link and Fluidra partner card ask. Do not imply Fluidra approval without written agreement."
+    },
+    {
+      "id": "maytronics-genuine-parts",
+      "tier": 1,
+      "brand_scope": ["Maytronics", "Dolphin", "Niya"],
+      "url": "https://www.maytronics.com/en-us/parts-and-accessories.html",
+      "source_type": "official genuine robot parts store",
+      "priority_categories": ["robot cleaners", "filters", "cables", "covers", "brushes", "tracks", "power supplies"],
+      "ingestion_status": "source_identified",
+      "notes": "Use for robot part categories and genuine-part language. Pair with diagrams only when source terms allow."
+    },
+    {
+      "id": "pool360-print-catalogs",
+      "tier": 2,
+      "brand_scope": ["multi-brand", "SCP", "PoolCorp", "POOL360"],
+      "url": "https://www.pool360.com/PrintCatalogs",
+      "source_type": "distributor sourcebooks and parts guide",
+      "priority_categories": ["multi-brand parts", "Canada", "commercial pool", "SCP product sourcebook"],
+      "ingestion_status": "source_identified",
+      "notes": "Use as a distributor search/index lane where allowed. Do not scrape logged-in pricing or account-only content."
+    },
+    {
+      "id": "inyo-public-diagrams",
+      "tier": 3,
+      "brand_scope": ["multi-brand", "Hayward", "Pentair", "Jandy", "Zodiac", "Maytronics"],
+      "url": "https://www.inyopools.com/",
+      "source_type": "public parts diagrams and retail part pages",
+      "priority_categories": ["diagram item names", "retail part aliases", "lookalikes", "search terms"],
+      "ingestion_status": "source_identified",
+      "notes": "Use for public page links and affiliate/part-search discussions. Prefer partnership or permitted exports before bulk ingestion."
+    },
+    {
+      "id": "mypool-parts-diagrams",
+      "tier": 3,
+      "brand_scope": ["multi-brand", "Hayward", "Pentair", "Zodiac"],
+      "url": "https://www.mypool.com/Parts-Diagrams/",
+      "source_type": "public parts diagram index",
+      "priority_categories": ["diagram names", "legacy models", "replacement clues"],
+      "ingestion_status": "source_identified",
+      "notes": "Use as a secondary diagram reference, not a primary verification authority."
+    },
+    {
+      "id": "partsnap-field-feedback",
+      "tier": 4,
+      "brand_scope": ["user-submitted"],
+      "url": "internal://SCAN_USAGE_KV/partsnap-feedback",
+      "source_type": "user-submitted mystery part and wrong/missing feedback",
+      "priority_categories": ["real misses", "photo quality issues", "uncovered models", "proof prompts"],
+      "ingestion_status": "already_wired",
+      "notes": "Stored by functions/api/partsnap-feedback.js and reviewed by functions/api/partsnap-review.js."
+    }
+  ],
+  "non_negotiables": [
+    "Never mark partner-verified without written partner approval.",
+    "Never claim exact fit from AI alone.",
+    "Every result should show source tier, visible evidence, missing proof, and verification path.",
+    "Retail/distributor links are convenience paths, not endorsement or guaranteed availability.",
+    "Manufacturer manuals and safety instructions outrank distributor and public diagram pages."
+  ]
+}
