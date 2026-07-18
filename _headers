@@ -9,6 +9,9 @@
 /sw.js
   Cache-Control: no-cache
 
+/sw-partsnap-corpus.js
+  Cache-Control: no-cache
+
 /favicon.svg
   Cache-Control: public, max-age=2592000
 
