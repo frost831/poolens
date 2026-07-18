@@ -79,3 +79,22 @@ Generated: 2026-07-18
    - source IDs
 3. Promote reviewed wrong/missing PartSnap tickets into seed candidates only after human review.
 4. Keep exact fitment language out unless model/part markings and source data align.
+
+## Follow-On Shipped
+
+- Added structured import source: `data/partsnap/imports/seed-expansion.json`.
+- Added builder: `node tools/build-partsnap-corpus.mjs`.
+- Added runtime generated module: `functions/_shared/partsnap-generated-families.mjs`.
+- Added benchmark seed: `data/partsnap/benchmarks/seed-benchmark.json`.
+- Added benchmark runner: `node tools/run-partsnap-benchmark.mjs`.
+- Current corpus count after generated import: 41 family rows.
+- Current seed benchmark: 6/6 passing. This is regression proof only, not a public accuracy claim.
+
+Recommended expansion command before each deploy:
+
+```powershell
+node tools\build-partsnap-corpus.mjs
+node tools\export-partsnap-corpus-snapshot.mjs
+node tools\run-partsnap-benchmark.mjs
+node --test tests\partsnap-corpus.test.mjs tests\splashlens-intelligence.test.mjs tests\splashlens-payment.test.mjs
+```

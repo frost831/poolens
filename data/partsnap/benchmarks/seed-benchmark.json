@@ -1,0 +1,83 @@
+{
+  "version": "2026-07-18",
+  "purpose": "Small labeled PartSnap corpus benchmark. Expand to 500 reviewed photos before publishing any accuracy claim.",
+  "cases": [
+    {
+      "id": "bench-hayward-aquarite-flow",
+      "aiResult": {
+        "manufacturer": "Hayward",
+        "category": "salt",
+        "component": "AquaRite TurboCell flow switch",
+        "model": "AquaRite",
+        "visibleEvidence": ["flow switch tee", "cell cord"],
+        "missingProof": ["cell label"],
+        "searchTerms": ["Hayward AquaRite T-CELL flow switch"]
+      },
+      "expectedTopFamily": "hayward-aquarite-turbocell-flow"
+    },
+    {
+      "id": "bench-pentair-intellichlor",
+      "aiResult": {
+        "manufacturer": "Pentair",
+        "category": "salt",
+        "component": "IntelliChlor salt cell with flow light",
+        "model": "IC40",
+        "visibleEvidence": ["black Pentair cell body", "cell cable"],
+        "missingProof": ["cell model label"],
+        "searchTerms": ["Pentair IntelliChlor IC40 cell"]
+      },
+      "expectedTopFamily": "pentair-intellichlor-cell-flow"
+    },
+    {
+      "id": "bench-jandy-truclear",
+      "aiResult": {
+        "manufacturer": "Jandy",
+        "category": "salt",
+        "component": "TruClear chlorinator cell cartridge",
+        "model": "TruClear",
+        "visibleEvidence": ["TruClear cell vessel"],
+        "missingProof": ["unit label", "salt reading"],
+        "searchTerms": ["Jandy TruClear cell cartridge"]
+      },
+      "expectedTopFamily": "jandy-truclear-cell-flow"
+    },
+    {
+      "id": "bench-dolphin-drive",
+      "aiResult": {
+        "manufacturer": "Maytronics",
+        "category": "robot",
+        "component": "Dolphin robot drive motor cable and track",
+        "model": "Dolphin Nautilus",
+        "visibleEvidence": ["Dolphin robot body", "floating cable"],
+        "missingProof": ["robot serial label"],
+        "searchTerms": ["Dolphin Nautilus drive motor cable"]
+      },
+      "expectedTopFamily": "maytronics-dolphin-drive-motor-cable"
+    },
+    {
+      "id": "bench-balboa-spatouch",
+      "aiResult": {
+        "manufacturer": "Balboa",
+        "category": "spa",
+        "component": "spaTouch topside keypad communication cable",
+        "model": "BP",
+        "visibleEvidence": ["spaTouch screen", "Balboa keypad"],
+        "missingProof": ["pack model", "connector photo"],
+        "searchTerms": ["Balboa spaTouch topside BP"]
+      },
+      "expectedTopFamily": "balboa-spatouch-topside"
+    },
+    {
+      "id": "bench-ai-only-unknown",
+      "aiResult": {
+        "manufacturer": null,
+        "category": "other",
+        "component": "unknown",
+        "visibleEvidence": [],
+        "missingProof": ["clear pool-part photo"],
+        "searchTerms": []
+      },
+      "expectedTopFamily": null
+    }
+  ]
+}

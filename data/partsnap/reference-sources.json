@@ -151,6 +151,66 @@
       "notes": "Use as a secondary diagram reference, not a primary verification authority."
     },
     {
+      "id": "balboa-user-guides",
+      "tier": 1,
+      "brand_scope": ["Balboa", "BP", "VS", "GS", "spaTouch", "TP"],
+      "url": "https://www.balboawater.com/support/pdf-user-guides/",
+      "source_type": "official spa control PDF guides",
+      "priority_categories": ["spa packs", "topsides", "keypads", "heater tubes", "sensors", "flow and pressure switches"],
+      "ingestion_status": "source_identified",
+      "notes": "Use for spa-pack family names, display/keypad language, and safe proof prompts. Do not infer electrical repair instructions."
+    },
+    {
+      "id": "gecko-docs",
+      "tier": 1,
+      "brand_scope": ["Gecko", "Y series", "XE", "YT", "in.touch", "in.k1000"],
+      "url": "https://geckoalliance.com/support/",
+      "source_type": "official spa control documentation",
+      "priority_categories": ["spa packs", "keypads", "Wi-Fi modules", "sensors", "startup docs"],
+      "ingestion_status": "source_identified",
+      "notes": "Use for Gecko control-family names, app-pairing proof, and configuration-aware proof prompts."
+    },
+    {
+      "id": "waterway-support",
+      "tier": 1,
+      "brand_scope": ["Waterway", "NEO", "Executive", "Viper", "Iron Might"],
+      "url": "https://waterwayplastics.com/support/",
+      "source_type": "official Waterway product support route",
+      "priority_categories": ["spa packs", "pumps", "wet ends", "unions", "filters", "jets"],
+      "ingestion_status": "source_identified",
+      "notes": "Use for pump/wet-end family language and proof prompts around orientation, unions, labels, and role."
+    },
+    {
+      "id": "master-spas-manuals",
+      "tier": 1,
+      "brand_scope": ["Master Spas", "H2X", "Michael Phelps Swim Spas"],
+      "url": "https://www.masterspas.com/hot-tub-owners-manuals/",
+      "source_type": "official hot tub and swim spa owner manuals",
+      "priority_categories": ["swim spas", "spa operation", "current systems", "covers", "chemical care"],
+      "ingestion_status": "source_identified",
+      "notes": "Use for swim-spa proof prompts and operator workflows, not internal electrical diagnosis."
+    },
+    {
+      "id": "cal-spas-manuals",
+      "tier": 1,
+      "brand_scope": ["Cal Spas", "swim spas", "hot tubs"],
+      "url": "https://calspas.com/owners-manuals",
+      "source_type": "official owner manuals",
+      "priority_categories": ["spas", "swim spas", "topsides", "covers", "operation"],
+      "ingestion_status": "source_identified",
+      "notes": "Use for brand/model proof prompts and owner/operator workflows."
+    },
+    {
+      "id": "coast-spas-manuals",
+      "tier": 1,
+      "brand_scope": ["Coast Spas", "swim spas", "hot tubs"],
+      "url": "https://www.coastspas.com/manuals.php",
+      "source_type": "official owner manuals",
+      "priority_categories": ["spas", "swim spas", "topsides", "covers", "operation"],
+      "ingestion_status": "source_identified",
+      "notes": "Use for swim-spa and hot-tub family proof prompts."
+    },
+    {
       "id": "partsnap-field-feedback",
       "tier": 4,
       "brand_scope": ["user-submitted"],

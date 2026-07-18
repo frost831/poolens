@@ -1,0 +1,86 @@
+{
+  "ok": true,
+  "generatedAt": "2026-07-18T01:36:40.396Z",
+  "importPath": "C:\\Users\\sales\\Dropbox\\Projects\\poolens\\data\\partsnap\\imports\\seed-expansion.json",
+  "runtimePath": "C:\\Users\\sales\\Dropbox\\Projects\\poolens\\functions\\_shared\\partsnap-generated-families.mjs",
+  "importedFamilyCount": 19,
+  "coverage": {
+    "byCategory": [
+      {
+        "name": "spa",
+        "count": 5
+      },
+      {
+        "name": "lighting",
+        "count": 3
+      },
+      {
+        "name": "salt",
+        "count": 3
+      },
+      {
+        "name": "cleaner",
+        "count": 2
+      },
+      {
+        "name": "heater",
+        "count": 2
+      },
+      {
+        "name": "automation",
+        "count": 1
+      },
+      {
+        "name": "filter",
+        "count": 1
+      },
+      {
+        "name": "pump",
+        "count": 1
+      },
+      {
+        "name": "robot",
+        "count": 1
+      }
+    ],
+    "byManufacturer": [
+      {
+        "name": "Hayward",
+        "count": 4
+      },
+      {
+        "name": "Jandy",
+        "count": 4
+      },
+      {
+        "name": "Pentair",
+        "count": 4
+      },
+      {
+        "name": "multi-brand",
+        "count": 2
+      },
+      {
+        "name": "Balboa",
+        "count": 1
+      },
+      {
+        "name": "Gecko",
+        "count": 1
+      },
+      {
+        "name": "Maytronics",
+        "count": 1
+      },
+      {
+        "name": "Waterway",
+        "count": 1
+      },
+      {
+        "name": "Zodiac",
+        "count": 1
+      }
+    ]
+  },
+  "guardrail": "Generated rows are source-backed family candidates only. They are not exact-fit or partner-verified claims."
+}

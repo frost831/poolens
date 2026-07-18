@@ -1,0 +1,66 @@
+{
+  "ok": true,
+  "generatedAt": "2026-07-18T01:37:24.321Z",
+  "benchmarkPath": "C:\\Users\\sales\\Dropbox\\Projects\\poolens\\data\\partsnap\\benchmarks\\seed-benchmark.json",
+  "caseCount": 6,
+  "passed": 6,
+  "failed": 0,
+  "familyTop1Percent": 100,
+  "caveat": "This is a tiny engineering benchmark for regression protection. Do not publish as product accuracy.",
+  "results": [
+    {
+      "id": "bench-hayward-aquarite-flow",
+      "expectedTopFamily": "hayward-aquarite-turbocell-flow",
+      "actualTopFamily": "hayward-aquarite-turbocell-flow",
+      "pass": true,
+      "corpusStatus": "source-backed candidates",
+      "candidateCount": 4,
+      "topMatchLevel": "source-backed family"
+    },
+    {
+      "id": "bench-pentair-intellichlor",
+      "expectedTopFamily": "pentair-intellichlor-cell-flow",
+      "actualTopFamily": "pentair-intellichlor-cell-flow",
+      "pass": true,
+      "corpusStatus": "source-backed candidates",
+      "candidateCount": 4,
+      "topMatchLevel": "source-backed family"
+    },
+    {
+      "id": "bench-jandy-truclear",
+      "expectedTopFamily": "jandy-truclear-cell-flow",
+      "actualTopFamily": "jandy-truclear-cell-flow",
+      "pass": true,
+      "corpusStatus": "source-backed candidates",
+      "candidateCount": 4,
+      "topMatchLevel": "source-backed family"
+    },
+    {
+      "id": "bench-dolphin-drive",
+      "expectedTopFamily": "maytronics-dolphin-drive-motor-cable",
+      "actualTopFamily": "maytronics-dolphin-drive-motor-cable",
+      "pass": true,
+      "corpusStatus": "source-backed candidates",
+      "candidateCount": 3,
+      "topMatchLevel": "source-backed family"
+    },
+    {
+      "id": "bench-balboa-spatouch",
+      "expectedTopFamily": "balboa-spatouch-topside",
+      "actualTopFamily": "balboa-spatouch-topside",
+      "pass": true,
+      "corpusStatus": "source-backed candidates",
+      "candidateCount": 4,
+      "topMatchLevel": "source-backed family"
+    },
+    {
+      "id": "bench-ai-only-unknown",
+      "expectedTopFamily": null,
+      "actualTopFamily": null,
+      "pass": true,
+      "corpusStatus": "ai-only",
+      "candidateCount": 0,
+      "topMatchLevel": ""
+    }
+  ]
+}

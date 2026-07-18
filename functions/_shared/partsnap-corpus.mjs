@@ -1,3 +1,5 @@
+import { GENERATED_FAMILY_IMPORTS } from './partsnap-generated-families.mjs';
+
 const SOURCE_LOOKUP = {
   'pentair-replacement-parts': {
     tier: 1,
@@ -76,7 +78,7 @@ const SOURCE_LOOKUP = {
   },
 };
 
-const SEED_FAMILIES = [
+const BASE_FAMILIES = [
   family('pentair-pump-lids-baskets-orings', ['pentair-replacement-parts'], 'Pentair', 'pump', 'pump lid, basket, and O-ring family', ['SuperFlo', 'SuperMax', 'WhisperFlo', 'IntelliFlo'], ['pump lid', 'strainer lid', 'basket', 'o-ring', 'oring', 'pot lid'], ['clear lid', 'round strainer basket', 'lid clamp', 'molded lid number'], ['pump model plate', 'lid molded number', 'basket diameter', 'O-ring cross-section'], ['Pentair pump lids can look similar across wet-end generations.']),
   family('pentair-wet-end-seal-impeller', ['pentair-replacement-parts'], 'Pentair', 'pump', 'wet-end seal, diffuser, impeller, and seal plate family', ['WhisperFlo', 'SuperFlo', 'SuperMax', 'IntelliFlo'], ['impeller', 'diffuser', 'seal plate', 'shaft seal', 'mechanical seal', 'wet end'], ['vane pattern', 'ceramic seal', 'seal plate ribs', 'diffuser ring'], ['pump model plate', 'HP/THP and motor frame', 'impeller molded number', 'diffuser face photo'], ['Do not match impellers from horsepower alone.']),
   family('pentair-filter-lid-orings-air-relief', ['pentair-replacement-parts'], 'Pentair', 'filter', 'filter lid O-ring, clamp, gauge, and air relief family', ['Clean & Clear', 'FNS Plus', 'Quad DE', 'Tagelus', 'Sand Dollar'], ['filter o-ring', 'air relief', 'pressure gauge', 'filter clamp', 'cartridge lid'], ['tank band clamp', 'air bleed assembly', 'pressure gauge on lid'], ['filter model label', 'tank size', 'clamp style', 'air relief thread style'], ['Filter pressure parts require exact model and safety procedure.']),
@@ -99,6 +101,22 @@ const SEED_FAMILIES = [
   family('waterway-neo-spa-pack', ['waterway-support'], 'Waterway', 'spa', 'Waterway NEO pack, topside, heater, and pump wet-end family', ['NEO', 'Executive', 'Viper', 'Iron Might'], ['waterway', 'neo', 'spa pack', 'topside', 'wet end', 'circ pump', 'jet pump'], ['Waterway pump wet end', 'NEO topside', 'heater manifold', 'pump union'], ['pack label', 'pump label', 'topside code', 'jet/circ pump role'], ['Pump wet ends and motors are not interchangeable by appearance alone.']),
   family('swim-spa-current-pump', ['master-spas-manuals', 'cal-spas-manuals', 'coast-spas-manuals'], 'multi-brand', 'spa', 'swim spa current pump, diverter, suction, and jet-bank family', ['H2X', 'Endless Pools', 'Hydropool', 'TidalFit', 'SwimLife', 'Coast Swim Spa'], ['swim spa', 'current pump', 'river jet', 'diverter valve', 'suction cover', 'jet bank', 'manifold'], ['large current jet', 'multiple jet pumps', 'diverter handle', 'VGB suction cover'], ['brand/model plate', 'pump labels', 'suction cover marking', 'which jet bank is weak'], ['Current systems can involve multiple pumps and diverters; isolate the lane first.']),
   family('spa-ozone-uv-check-valve', ['balboa-user-guides', 'gecko-docs', 'waterway-support'], 'multi-brand', 'spa', 'spa ozone, UV, mineral/salt, bromine, and check-valve family', ['Balboa', 'Gecko', 'Waterway', 'Hot Spring', 'Jacuzzi', 'Sundance'], ['ozone', 'uv', 'check valve', 'mineral cartridge', 'bromine feeder', 'salt system', 'biofilm'], ['small clear tubing', 'ozone injector', 'UV lamp module', 'mineral cartridge'], ['sanitizer model', 'tubing direction', 'water intrusion proof', 'manual water test'], ['Ozone/UV clues help routing but do not replace water testing.']),
+];
+
+const SEED_FAMILIES = [
+  ...BASE_FAMILIES,
+  ...GENERATED_FAMILY_IMPORTS.map((row) => family(
+    row.id,
+    row.sourceIds,
+    row.manufacturer,
+    row.category,
+    row.component,
+    row.modelFamilies,
+    row.aliases,
+    row.visualClues,
+    row.requiredProof,
+    row.lookalikeWarnings,
+  )),
 ];
 
 function family(id, sourceIds, manufacturer, category, component, modelFamilies, aliases, visualClues, requiredProof, lookalikeWarnings) {
@@ -242,7 +260,7 @@ export function attachPartSnapCorpusCandidates(result = {}) {
       label: top ? 'source-backed candidates' : 'ai-only',
       candidateCount: candidates.length,
       topSourceTier: top ? top.sourceTier : null,
-      corpusVersion: 'seed-2026-07-17',
+      corpusVersion: 'seed-plus-imports-2026-07-18',
       note: top
         ? 'AI result was compared against the SplashLens seed evidence corpus. Verify proof before ordering.'
         : 'No source-backed family matched this scan yet. Treat this as AI-only and capture more proof.',
@@ -252,7 +270,7 @@ export function attachPartSnapCorpusCandidates(result = {}) {
 }
 
 export const partsnapCorpusStats = {
-  version: 'seed-2026-07-17',
+  version: 'seed-plus-imports-2026-07-18',
   seedFamilyCount: SEED_FAMILIES.length,
   targetFamilyCount: 500000,
   categories: [...new Set(SEED_FAMILIES.map((row) => row.category))].sort(),

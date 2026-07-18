@@ -1,9 +1,9 @@
 {
   "ok": true,
-  "generatedAt": "2026-07-18T01:23:51.968Z",
+  "generatedAt": "2026-07-18T01:37:23.433Z",
   "stats": {
-    "version": "seed-2026-07-17",
-    "seedFamilyCount": 22,
+    "version": "seed-plus-imports-2026-07-18",
+    "seedFamilyCount": 41,
     "targetFamilyCount": 500000,
     "categories": [
       "automation",
@@ -21,83 +21,87 @@
     "byCategory": [
       {
         "name": "spa",
+        "count": 10
+      },
+      {
+        "name": "heater",
         "count": 5
       },
       {
         "name": "pump",
-        "count": 4
+        "count": 5
+      },
+      {
+        "name": "salt",
+        "count": 5
       },
       {
         "name": "automation",
-        "count": 3
+        "count": 4
       },
       {
-        "name": "heater",
+        "name": "lighting",
+        "count": 4
+      },
+      {
+        "name": "cleaner",
         "count": 3
       },
       {
         "name": "robot",
-        "count": 2
-      },
-      {
-        "name": "salt",
-        "count": 2
-      },
-      {
-        "name": "cleaner",
-        "count": 1
+        "count": 3
       },
       {
         "name": "filter",
-        "count": 1
-      },
-      {
-        "name": "lighting",
-        "count": 1
+        "count": 2
       }
     ],
     "byManufacturer": [
       {
-        "name": "multi-brand",
-        "count": 6
+        "name": "Hayward",
+        "count": 9
       },
       {
-        "name": "Hayward",
-        "count": 5
+        "name": "multi-brand",
+        "count": 8
       },
       {
         "name": "Pentair",
-        "count": 4
+        "count": 8
       },
       {
         "name": "Jandy",
-        "count": 2
+        "count": 6
       },
       {
         "name": "Balboa",
-        "count": 1
+        "count": 2
       },
       {
         "name": "Gecko",
-        "count": 1
+        "count": 2
       },
       {
         "name": "Maytronics",
-        "count": 1
+        "count": 2
+      },
+      {
+        "name": "Waterway",
+        "count": 2
       },
       {
         "name": "Polaris",
         "count": 1
       },
       {
-        "name": "Waterway",
+        "name": "Zodiac",
         "count": 1
       }
     ],
     "bySourceTier": [
       {
         "name": "tier_1",
-        "count": 22
+        "count": 41
       }
     ]
   },
