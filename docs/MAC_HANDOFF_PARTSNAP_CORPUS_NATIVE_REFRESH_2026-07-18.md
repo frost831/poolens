@@ -8,7 +8,7 @@ Refresh iOS TestFlight/App Store and Google Play builds so native users get the 
 
 - Repo: `https://github.com/throttleshare/poolens.git`
 - Branch: `feature/splashlens-usage-alerts-dashboard`
-- Required commit or newer: `2e1a6d9`
+- Required commit or newer: `ab30406`
 
 ## What Changed
 
@@ -22,6 +22,9 @@ Refresh iOS TestFlight/App Store and Google Play builds so native users get the 
   - lookalike warnings
   - 1-2-3 field path
 - App dashboard includes corpus metrics.
+- Owner dashboard includes PartSnap review JSON export controls and a copyable review-promotion command.
+- Corpus ingestion now supports all JSON imports under `data/partsnap/imports/`, with a safe reviewed-promotion lane.
+- Current corpus snapshot has 41 family rows and the seed benchmark passes 6/6.
 
 ## Store Copy Guardrails
 
@@ -54,6 +57,7 @@ Do not use:
    - AI-only fallback language
 7. Confirm dashboard and checkout links still open externally as expected.
 8. Build iOS and Android with updated store screenshots if screenshots show PartSnap.
+9. If testing dashboard/admin from the wrapper, confirm the Senior Tech Review Queue shows `Download Review JSON` and `Copy Promotion Command`.
 
 ## Suggested ASO Note
 
