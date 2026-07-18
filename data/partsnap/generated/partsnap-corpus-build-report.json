@@ -1,12 +1,12 @@
 {
   "ok": true,
-  "generatedAt": "2026-07-18T01:58:52.021Z",
-  "importDir": "C:\\Users\\sales\\Dropbox\\Projects\\poolens\\data\\partsnap\\imports",
+  "generatedAt": "2026-07-18T17:23:56.112Z",
+  "importDir": "data/partsnap/imports",
   "importFiles": [
-    "data\\partsnap\\imports\\approved-field-promotions.json",
-    "data\\partsnap\\imports\\seed-expansion.json"
+    "data/partsnap/imports/approved-field-promotions.json",
+    "data/partsnap/imports/seed-expansion.json"
   ],
-  "runtimePath": "C:\\Users\\sales\\Dropbox\\Projects\\poolens\\functions\\_shared\\partsnap-generated-families.mjs",
+  "runtimePath": "functions/_shared/partsnap-generated-families.mjs",
   "importFileCount": 2,
   "importedFamilyCount": 19,
   "coverage": {

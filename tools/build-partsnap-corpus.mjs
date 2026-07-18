@@ -6,6 +6,10 @@ const generatedDir = path.resolve('data/partsnap/generated');
 const runtimePath = path.resolve('functions/_shared/partsnap-generated-families.mjs');
 const manifestPath = path.join(generatedDir, 'partsnap-corpus-build-report.json');
 
+function repoPath(file) {
+  return path.relative(process.cwd(), file).split(path.sep).join('/');
+}
+
 const sourceRegistry = JSON.parse(await readFile('data/partsnap/reference-sources.json', 'utf8'));
 const sourceIds = new Set((sourceRegistry.sources || []).map((source) => source.id));
 const importFiles = (await readdir(importDir))
@@ -19,7 +23,7 @@ const importPayloads = await Promise.all(importFiles.map(async (file) => ({
 const families = importPayloads.flatMap(({ file, payload }) =>
   (Array.isArray(payload.families) ? payload.families : []).map((family) => ({
     ...family,
-    __importFile: path.relative(process.cwd(), file),
+    __importFile: repoPath(file),
     __importStatus: payload.status || '',
   })),
 );
@@ -96,9 +100,9 @@ const toRows = (map) => Array.from(map.entries())
 const report = {
   ok: true,
   generatedAt: new Date().toISOString(),
-  importDir,
-  importFiles: importFiles.map((file) => path.relative(process.cwd(), file)),
-  runtimePath,
+  importDir: repoPath(importDir),
+  importFiles: importFiles.map(repoPath),
+  runtimePath: repoPath(runtimePath),
   importFileCount: importFiles.length,
   importedFamilyCount: normalized.length,
   coverage: {

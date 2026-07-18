@@ -9,6 +9,10 @@ const outPath = path.join(outDir, 'partsnap-benchmark-report.json');
 const benchmark = JSON.parse(await readFile(benchmarkPath, 'utf8'));
 const cases = Array.isArray(benchmark.cases) ? benchmark.cases : [];
 
+function repoPath(file) {
+  return path.relative(process.cwd(), file).split(path.sep).join('/');
+}
+
 const results = cases.map((testCase) => {
   const enriched = attachPartSnapCorpusCandidates(testCase.aiResult || {});
   const top = enriched.corpusCandidates?.[0]?.id || null;
@@ -28,7 +32,7 @@ const passed = results.filter((row) => row.pass).length;
 const report = {
   ok: passed === results.length,
   generatedAt: new Date().toISOString(),
-  benchmarkPath,
+  benchmarkPath: repoPath(benchmarkPath),
   caseCount: results.length,
   passed,
   failed: results.length - passed,

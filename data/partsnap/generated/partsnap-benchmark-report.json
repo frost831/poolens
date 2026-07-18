@@ -1,7 +1,7 @@
 {
   "ok": true,
-  "generatedAt": "2026-07-18T01:58:52.592Z",
-  "benchmarkPath": "C:\\Users\\sales\\Dropbox\\Projects\\poolens\\data\\partsnap\\benchmarks\\seed-benchmark.json",
+  "generatedAt": "2026-07-18T17:23:56.233Z",
+  "benchmarkPath": "data/partsnap/benchmarks/seed-benchmark.json",
   "caseCount": 6,
   "passed": 6,
   "failed": 0,

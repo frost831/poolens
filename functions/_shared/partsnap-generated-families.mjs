@@ -41,7 +41,7 @@ export const GENERATED_FAMILY_IMPORTS = [
     "lookalikeWarnings": [
       "Cell model, cell type, and control/power-center family must match before replacement."
     ],
-    "importFile": "data\\partsnap\\imports\\seed-expansion.json",
+    "importFile": "data/partsnap/imports/seed-expansion.json",
     "importStatus": "reviewed_seed_family_import"
   },
   {
@@ -86,7 +86,7 @@ export const GENERATED_FAMILY_IMPORTS = [
     "lookalikeWarnings": [
       "App, network, relay, transformer, and RS-485 faults can present the same to a customer."
     ],
-    "importFile": "data\\partsnap\\imports\\seed-expansion.json",
+    "importFile": "data/partsnap/imports/seed-expansion.json",
     "importStatus": "reviewed_seed_family_import"
   },
   {
@@ -128,7 +128,7 @@ export const GENERATED_FAMILY_IMPORTS = [
     "lookalikeWarnings": [
       "Voltage and fixture/niche family must be proven before ordering light parts."
     ],
-    "importFile": "data\\partsnap\\imports\\seed-expansion.json",
+    "importFile": "data/partsnap/imports/seed-expansion.json",
     "importStatus": "reviewed_seed_family_import"
   },
   {
@@ -172,7 +172,7 @@ export const GENERATED_FAMILY_IMPORTS = [
     "lookalikeWarnings": [
       "Heat pump faults can involve flow, sensor, refrigerant, fan, board, or line-voltage conditions."
     ],
-    "importFile": "data\\partsnap\\imports\\seed-expansion.json",
+    "importFile": "data/partsnap/imports/seed-expansion.json",
     "importStatus": "reviewed_seed_family_import"
   },
   {
@@ -213,7 +213,7 @@ export const GENERATED_FAMILY_IMPORTS = [
     "lookalikeWarnings": [
       "Color modes, automation programming, transformer load, and fixture failure can look alike."
     ],
-    "importFile": "data\\partsnap\\imports\\seed-expansion.json",
+    "importFile": "data/partsnap/imports/seed-expansion.json",
     "importStatus": "reviewed_seed_family_import"
   },
   {
@@ -256,7 +256,7 @@ export const GENERATED_FAMILY_IMPORTS = [
     "lookalikeWarnings": [
       "Cartridge dimensions and filter model matter more than brand alone."
     ],
-    "importFile": "data\\partsnap\\imports\\seed-expansion.json",
+    "importFile": "data/partsnap/imports/seed-expansion.json",
     "importStatus": "reviewed_seed_family_import"
   },
   {
@@ -297,7 +297,7 @@ export const GENERATED_FAMILY_IMPORTS = [
     "lookalikeWarnings": [
       "Do not call refrigerant or electrical failure from one displayed symptom."
     ],
-    "importFile": "data\\partsnap\\imports\\seed-expansion.json",
+    "importFile": "data/partsnap/imports/seed-expansion.json",
     "importStatus": "reviewed_seed_family_import"
   },
   {
@@ -340,7 +340,7 @@ export const GENERATED_FAMILY_IMPORTS = [
     "lookalikeWarnings": [
       "Cleaner movement problems can be hydraulic setup, not just cleaner parts."
     ],
-    "importFile": "data\\partsnap\\imports\\seed-expansion.json",
+    "importFile": "data/partsnap/imports/seed-expansion.json",
     "importStatus": "reviewed_seed_family_import"
   },
   {
@@ -383,7 +383,7 @@ export const GENERATED_FAMILY_IMPORTS = [
     "lookalikeWarnings": [
       "Sensor, cell, board, salinity, and flow issues can overlap."
     ],
-    "importFile": "data\\partsnap\\imports\\seed-expansion.json",
+    "importFile": "data/partsnap/imports/seed-expansion.json",
     "importStatus": "reviewed_seed_family_import"
   },
   {
@@ -423,7 +423,7 @@ export const GENERATED_FAMILY_IMPORTS = [
     "lookalikeWarnings": [
       "Flow, salt, scale, and cartridge condition should be separated before replacement."
     ],
-    "importFile": "data\\partsnap\\imports\\seed-expansion.json",
+    "importFile": "data/partsnap/imports/seed-expansion.json",
     "importStatus": "reviewed_seed_family_import"
   },
   {
@@ -463,7 +463,7 @@ export const GENERATED_FAMILY_IMPORTS = [
     "lookalikeWarnings": [
       "Lighting parts need fixture family and voltage proof before ordering."
     ],
-    "importFile": "data\\partsnap\\imports\\seed-expansion.json",
+    "importFile": "data/partsnap/imports/seed-expansion.json",
     "importStatus": "reviewed_seed_family_import"
   },
   {
@@ -505,7 +505,7 @@ export const GENERATED_FAMILY_IMPORTS = [
     "lookalikeWarnings": [
       "Jandy pump wet-end parts vary by family and horsepower."
     ],
-    "importFile": "data\\partsnap\\imports\\seed-expansion.json",
+    "importFile": "data/partsnap/imports/seed-expansion.json",
     "importStatus": "reviewed_seed_family_import"
   },
   {
@@ -548,7 +548,7 @@ export const GENERATED_FAMILY_IMPORTS = [
     "lookalikeWarnings": [
       "Track wear, turbine debris, flow setup, and engine parts can create similar movement symptoms."
     ],
-    "importFile": "data\\partsnap\\imports\\seed-expansion.json",
+    "importFile": "data/partsnap/imports/seed-expansion.json",
     "importStatus": "reviewed_seed_family_import"
   },
   {
@@ -594,7 +594,7 @@ export const GENERATED_FAMILY_IMPORTS = [
     "lookalikeWarnings": [
       "Retailer-specific Dolphin models can share bodies but use different parts."
     ],
-    "importFile": "data\\partsnap\\imports\\seed-expansion.json",
+    "importFile": "data/partsnap/imports/seed-expansion.json",
     "importStatus": "reviewed_seed_family_import"
   },
   {
@@ -636,7 +636,7 @@ export const GENERATED_FAMILY_IMPORTS = [
     "lookalikeWarnings": [
       "Topside shape does not prove compatibility with the spa pack."
     ],
-    "importFile": "data\\partsnap\\imports\\seed-expansion.json",
+    "importFile": "data/partsnap/imports/seed-expansion.json",
     "importStatus": "reviewed_seed_family_import"
   },
   {
@@ -680,7 +680,7 @@ export const GENERATED_FAMILY_IMPORTS = [
     "lookalikeWarnings": [
       "App offline can be module, router, account, firmware, or pack communication."
     ],
-    "importFile": "data\\partsnap\\imports\\seed-expansion.json",
+    "importFile": "data/partsnap/imports/seed-expansion.json",
     "importStatus": "reviewed_seed_family_import"
   },
   {
@@ -724,7 +724,7 @@ export const GENERATED_FAMILY_IMPORTS = [
     "lookalikeWarnings": [
       "Wet-end orientation, union size, and motor frame matter before ordering."
     ],
-    "importFile": "data\\partsnap\\imports\\seed-expansion.json",
+    "importFile": "data/partsnap/imports/seed-expansion.json",
     "importStatus": "reviewed_seed_family_import"
   },
   {
@@ -769,7 +769,7 @@ export const GENERATED_FAMILY_IMPORTS = [
     "lookalikeWarnings": [
       "Swim spa support often mixes cover, current-pump, diverter, water chemistry, and facility handoff problems."
     ],
-    "importFile": "data\\partsnap\\imports\\seed-expansion.json",
+    "importFile": "data/partsnap/imports/seed-expansion.json",
     "importStatus": "reviewed_seed_family_import"
   },
   {
@@ -816,7 +816,7 @@ export const GENERATED_FAMILY_IMPORTS = [
     "lookalikeWarnings": [
       "Weak jets can be water level, filter, airlock, pump, diverter, manifold, or jet insert."
     ],
-    "importFile": "data\\partsnap\\imports\\seed-expansion.json",
+    "importFile": "data/partsnap/imports/seed-expansion.json",
     "importStatus": "reviewed_seed_family_import"
   }
 ];

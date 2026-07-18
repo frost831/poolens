@@ -71,13 +71,13 @@ struct SplashLensWebView: UIViewRepresentable {
                 return
             }
 
-            if url.scheme == "mailto" || url.scheme == "tel" {
-                UIApplication.shared.open(url)
+            if shouldOpenExternally(url) {
+                openExternally(url)
                 decisionHandler(.cancel)
                 return
             }
 
-            if url.host == "app.splashlens.com", url.query?.contains("store=ios") != true {
+            if url.host == "app.splashlens.com", !hasStoreFlag(url) {
                 var components = URLComponents(url: url, resolvingAgainstBaseURL: false)
                 var items = components?.queryItems ?? []
                 items.append(URLQueryItem(name: "store", value: "ios"))
@@ -92,8 +92,44 @@ struct SplashLensWebView: UIViewRepresentable {
             decisionHandler(allowedHosts.contains(url.host ?? "") ? .allow : .cancel)
         }
 
+        func webView(_ webView: WKWebView, createWebViewWith configuration: WKWebViewConfiguration, for navigationAction: WKNavigationAction, windowFeatures: WKWindowFeatures) -> WKWebView? {
+            guard navigationAction.targetFrame == nil, let url = navigationAction.request.url else {
+                return nil
+            }
+            if shouldOpenExternally(url) {
+                openExternally(url)
+            } else {
+                webView.load(URLRequest(url: url))
+            }
+            return nil
+        }
+
         func webViewWebContentProcessDidTerminate(_ webView: WKWebView) {
             webView.load(URLRequest(url: storeURL, cachePolicy: .reloadIgnoringLocalCacheData, timeoutInterval: 30))
+        }
+
+        private func hasStoreFlag(_ url: URL) -> Bool {
+            URLComponents(url: url, resolvingAgainstBaseURL: false)?
+                .queryItems?
+                .contains { $0.name == "store" && $0.value == "ios" } == true
+        }
+
+        private func shouldOpenExternally(_ url: URL) -> Bool {
+            let scheme = (url.scheme ?? "").lowercased()
+            if scheme == "mailto" || scheme == "tel" {
+                return true
+            }
+            guard scheme == "http" || scheme == "https" else {
+                return false
+            }
+            if url.host == "app.splashlens.com" {
+                return url.path == "/dashboard" || url.path == "/dashboard.html" || url.path.hasPrefix("/api/checkout")
+            }
+            return !allowedHosts.contains(url.host ?? "")
+        }
+
+        private func openExternally(_ url: URL) {
+            UIApplication.shared.open(url)
         }
 
         @MainActor

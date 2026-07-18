@@ -4412,14 +4412,14 @@ function checkOfflineStatus() {
   const setDot = (color, title) => { dot.style.background = color; dot.title = title; };
   if (!('serviceWorker' in navigator)) return;
   if (navigator.serviceWorker.controller) {
-    setDot('#4ade80', 'Offline ready — all data cached');
+    setDot('#4ade80', 'Offline ready - core tools cached');
   } else {
     navigator.serviceWorker.ready.then(() => {
-      setDot('#4ade80', 'Offline ready — all data cached');
-    }).catch(() => setDot('#fbbf24', 'Caching in progress…'));
+      setDot('#4ade80', 'Offline ready - core tools cached');
+    }).catch(() => setDot('#fbbf24', 'Caching in progress'));
   }
   navigator.serviceWorker.addEventListener('controllerchange', () => {
-    setDot('#4ade80', 'Offline ready — all data cached');
+    setDot('#4ade80', 'Offline ready - core tools cached');
   });
 }
 
