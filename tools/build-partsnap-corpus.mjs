@@ -1,15 +1,28 @@
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, readdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
-const importPath = path.resolve('data/partsnap/imports/seed-expansion.json');
+const importDir = path.resolve('data/partsnap/imports');
 const generatedDir = path.resolve('data/partsnap/generated');
 const runtimePath = path.resolve('functions/_shared/partsnap-generated-families.mjs');
 const manifestPath = path.join(generatedDir, 'partsnap-corpus-build-report.json');
 
 const sourceRegistry = JSON.parse(await readFile('data/partsnap/reference-sources.json', 'utf8'));
 const sourceIds = new Set((sourceRegistry.sources || []).map((source) => source.id));
-const imported = JSON.parse(await readFile(importPath, 'utf8'));
-const families = Array.isArray(imported.families) ? imported.families : [];
+const importFiles = (await readdir(importDir))
+  .filter((file) => file.endsWith('.json'))
+  .sort()
+  .map((file) => path.join(importDir, file));
+const importPayloads = await Promise.all(importFiles.map(async (file) => ({
+  file,
+  payload: JSON.parse(await readFile(file, 'utf8')),
+})));
+const families = importPayloads.flatMap(({ file, payload }) =>
+  (Array.isArray(payload.families) ? payload.families : []).map((family) => ({
+    ...family,
+    __importFile: path.relative(process.cwd(), file),
+    __importStatus: payload.status || '',
+  })),
+);
 
 const required = ['id', 'sourceIds', 'manufacturer', 'category', 'component', 'modelFamilies', 'aliases', 'visualClues', 'requiredProof', 'lookalikeWarnings'];
 const errors = [];
@@ -51,6 +64,8 @@ const normalized = families.map((row, index) => {
     visualClues: cleanList(row.visualClues, 12, 140),
     requiredProof: cleanList(row.requiredProof, 12, 140),
     lookalikeWarnings: cleanList(row.lookalikeWarnings, 6, 220),
+    importFile: cleanString(row.__importFile, 220),
+    importStatus: cleanString(row.__importStatus, 80),
   };
 });
 
@@ -81,8 +96,10 @@ const toRows = (map) => Array.from(map.entries())
 const report = {
   ok: true,
   generatedAt: new Date().toISOString(),
-  importPath,
+  importDir,
+  importFiles: importFiles.map((file) => path.relative(process.cwd(), file)),
   runtimePath,
+  importFileCount: importFiles.length,
   importedFamilyCount: normalized.length,
   coverage: {
     byCategory: toRows(byCategory),

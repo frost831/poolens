@@ -1,0 +1,16 @@
+{
+  "ok": true,
+  "tickets": [
+    {
+      "id": "example-corpus-gap-001",
+      "status": "corpus-gap",
+      "manufacturer": "Example Brand",
+      "category": "pump",
+      "component": "example lid basket",
+      "model": "Example 2000",
+      "partNumber": "",
+      "visibleEvidence": ["round clear lid", "basket handle visible"],
+      "missingProof": ["model plate", "lid molded number"]
+    }
+  ]
+}

@@ -1,0 +1,45 @@
+{
+  "version": "2026-07-18",
+  "status": "draft_from_review_export_not_approved",
+  "notes": "Do not import this file directly. Human review must copy approved rows into data/partsnap/imports/approved-field-promotions.json.",
+  "sourceReviewExport": "C:\\Users\\sales\\Dropbox\\Projects\\poolens\\data\\partsnap\\generated\\partsnap-review-export.example.json",
+  "families": [
+    {
+      "id": "draft-example-brand-example-2000-example-lid-basket",
+      "sourceIds": [
+        "partsnap-field-feedback"
+      ],
+      "manufacturer": "Example Brand",
+      "category": "pump",
+      "component": "example lid basket family",
+      "modelFamilies": [
+        "Example 2000"
+      ],
+      "aliases": [
+        "example lid basket",
+        "Example 2000"
+      ],
+      "visualClues": [
+        "round clear lid",
+        "basket handle visible"
+      ],
+      "requiredProof": [
+        "model plate",
+        "lid molded number"
+      ],
+      "lookalikeWarnings": [
+        "TODO: add reviewed lookalike warning before promotion"
+      ],
+      "promotionReview": {
+        "ticketId": "example-corpus-gap-001",
+        "originalStatus": "corpus-gap",
+        "reviewerTodo": [
+          "Replace sourceIds with official or permitted source IDs when available.",
+          "Rewrite component as a family, not an exact part.",
+          "Add required proof before ordering.",
+          "Keep partner-verified language out unless written approval exists."
+        ]
+      }
+    }
+  ]
+}

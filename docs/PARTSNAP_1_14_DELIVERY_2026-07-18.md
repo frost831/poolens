@@ -98,3 +98,22 @@ node tools\export-partsnap-corpus-snapshot.mjs
 node tools\run-partsnap-benchmark.mjs
 node --test tests\partsnap-corpus.test.mjs tests\splashlens-intelligence.test.mjs tests\splashlens-payment.test.mjs
 ```
+
+## Self-Healing Review Loop
+
+Raw PartSnap feedback must not be auto-promoted. The safe loop is:
+
+1. Export `/api/partsnap-review` JSON into `data/partsnap/generated/partsnap-review-export.json`.
+2. Run:
+
+```powershell
+node tools\draft-partsnap-promotions.mjs data\partsnap\generated\partsnap-review-export.json
+```
+
+3. Review `data/partsnap/generated/partsnap-promotion-draft.json`.
+4. Replace `partsnap-field-feedback` with official/permitted `sourceIds` when available.
+5. Rewrite the row as a conservative family candidate.
+6. Copy only approved rows into `data/partsnap/imports/approved-field-promotions.json`.
+7. Run the builder, snapshot export, benchmark, and tests before deploy.
+
+This keeps the app learning from field misses without letting unreviewed AI or user-submitted guesses become source-backed claims.

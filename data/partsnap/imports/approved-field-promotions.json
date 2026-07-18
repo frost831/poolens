@@ -1,0 +1,6 @@
+{
+  "version": "2026-07-18",
+  "status": "human_reviewed_field_promotions",
+  "notes": "Only add rows here after a human reviews a PartSnap ticket, verifies the source lane, and rewrites the family row as conservative source-backed language.",
+  "families": []
+}
