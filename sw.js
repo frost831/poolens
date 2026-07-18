@@ -1,5 +1,5 @@
-const CACHE = 'splashlens-v25-spanish-field-mode';
-const ASSETS = ['/', '/index.html', '/js/errors.js', '/js/data.js', '/js/app.js?v=20260717-spanish-field-mode', '/favicon.svg', '/favicon.ico', '/apple-touch-icon.png', '/icon-192.png', '/icon-512.png', '/manifest.json'];
+const CACHE = 'splashlens-v26-partsnap-corpus';
+const ASSETS = ['/', '/index.html', '/js/errors.js', '/js/data.js?v=20260717-partsnap-corpus', '/js/app.js?v=20260717-partsnap-corpus', '/favicon.svg', '/favicon.ico', '/apple-touch-icon.png', '/icon-192.png', '/icon-512.png', '/manifest.json'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)));
