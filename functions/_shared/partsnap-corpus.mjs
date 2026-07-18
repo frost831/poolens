@@ -257,3 +257,47 @@ export const partsnapCorpusStats = {
   targetFamilyCount: 500000,
   categories: [...new Set(SEED_FAMILIES.map((row) => row.category))].sort(),
 };
+
+export function getPartSnapCorpusSnapshot() {
+  const byCategory = new Map();
+  const byManufacturer = new Map();
+  const bySourceTier = new Map();
+  for (const row of SEED_FAMILIES) {
+    byCategory.set(row.category, (byCategory.get(row.category) || 0) + 1);
+    byManufacturer.set(row.manufacturer, (byManufacturer.get(row.manufacturer) || 0) + 1);
+    bySourceTier.set(`tier_${row.sourceTier}`, (bySourceTier.get(`tier_${row.sourceTier}`) || 0) + 1);
+  }
+  const toRows = (map) => Array.from(map.entries())
+    .map(([name, count]) => ({ name, count }))
+    .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
+
+  return {
+    ok: true,
+    generatedAt: new Date().toISOString(),
+    stats: partsnapCorpusStats,
+    coverage: {
+      byCategory: toRows(byCategory),
+      byManufacturer: toRows(byManufacturer),
+      bySourceTier: toRows(bySourceTier),
+    },
+    sourceCount: Object.keys(SOURCE_LOOKUP).length,
+    sources: Object.entries(SOURCE_LOOKUP).map(([id, source]) => ({ id, ...source }))
+      .sort((a, b) => a.tier - b.tier || a.id.localeCompare(b.id)),
+    nextIngestionLanes: [
+      'Pentair replacement-parts PDFs by category',
+      'Hayward manual and buyer-guide part tables',
+      'Jandy/Zodiac/Fluidra official catalog routes',
+      'Maytronics robot parts and accessory families',
+      'POOL360/SCP public sourcebook aliases where allowed',
+      'Balboa/Gecko/Waterway spa-pack manuals',
+      'Master Spas, Cal Spas, and Coast swim-spa manuals',
+      'Human-reviewed PartSnap wrong/missing tickets',
+    ],
+    trustRules: [
+      'AI-only results never become exact-fit claims.',
+      'Source-backed means the family has supporting source language, not final ordering approval.',
+      'Partner-verified is reserved for written partner-approved cards.',
+      'Every ordering path needs model plate, markings, dimensions, or manual diagram verification.',
+    ],
+  };
+}

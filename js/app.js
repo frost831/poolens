@@ -7212,6 +7212,7 @@ function renderPartsSnapResult(ai, result, status) {
       ` : ''}
       ${replacementNotes ? `<p style="color:#fbbf24;font-size:12px;font-weight:600;margin-bottom:10px;">⚠ ${replacementNotes}</p>` : ''}
       ${verificationNotes ? `<p style="color:#fbbf24;font-size:12px;font-weight:600;margin-bottom:10px;">Check: ${verificationNotes}</p>` : ''}
+      ${renderPartSnapFastWorkflow(_lastPartSnapResult, corpusCandidates, ladder, missingProof)}
       ${renderPartSnapProofSnapshot(ladder, risk, visibleEvidence, missingProof)}
       ${renderPartConfidenceLadder(ladder)}
       ${renderPartEvidencePanel(visibleEvidence, missingProof)}
@@ -7271,6 +7272,35 @@ function renderPartSnapProofSnapshot(ladder = {}, risk = {}, visibleEvidence = [
         <p style="color:#166534;font-size:9px;font-weight:950;text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px;">Packet</p>
         <p style="color:#0f172a;font-size:13px;font-weight:950;line-height:1.05;">${packetState}</p>
         <p style="color:#166534;font-size:10px;font-weight:800;margin-top:3px;">senior/vendor</p>
+      </div>
+    </div>`;
+}
+
+function renderPartSnapFastWorkflow(ai = {}, candidates = [], ladder = {}, missingProof = []) {
+  const top = candidates[0] || null;
+  const family = top?.component || ai.component || 'part family';
+  const proof = (top?.requiredProof || missingProof || ladder.missing || []).filter(Boolean).slice(0, 2);
+  const status = top ? 'Source-backed family' : 'AI-only until proof improves';
+  const next = proof[0] || 'model plate or visible marking';
+  return `
+    <div style="background:#f8fafc;border:1px solid #cbd5e1;border-radius:10px;padding:10px;margin:10px 0;">
+      <p style="color:#0f172a;font-size:10px;font-weight:950;text-transform:uppercase;letter-spacing:.06em;margin-bottom:7px;">Fast field path</p>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr));gap:7px;">
+        <div style="background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:9px;">
+          <b style="display:inline-grid;place-items:center;width:20px;height:20px;border-radius:999px;background:#0f766e;color:#fff;font-size:11px;margin-bottom:6px;">1</b>
+          <p style="color:#0f172a;font-size:12px;font-weight:950;line-height:1.2;">${escHtml(status)}</p>
+          <p style="color:#64748b;font-size:10px;line-height:1.3;margin-top:4px;">${escHtml(family)}</p>
+        </div>
+        <div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;padding:9px;">
+          <b style="display:inline-grid;place-items:center;width:20px;height:20px;border-radius:999px;background:#d97706;color:#fff;font-size:11px;margin-bottom:6px;">2</b>
+          <p style="color:#7c2d12;font-size:12px;font-weight:950;line-height:1.2;">Get proof</p>
+          <p style="color:#92400e;font-size:10px;line-height:1.3;margin-top:4px;">${escHtml(next)}</p>
+        </div>
+        <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:9px;">
+          <b style="display:inline-grid;place-items:center;width:20px;height:20px;border-radius:999px;background:#0284c7;color:#fff;font-size:11px;margin-bottom:6px;">3</b>
+          <p style="color:#0f172a;font-size:12px;font-weight:950;line-height:1.2;">Escalate clean</p>
+          <p style="color:#475569;font-size:10px;line-height:1.3;margin-top:4px;">Save, share, or send vendor packet.</p>
+        </div>
       </div>
     </div>`;
 }

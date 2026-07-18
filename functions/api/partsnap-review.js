@@ -36,6 +36,8 @@ function reviewStatus(record, result = {}) {
   const confidence = clean(result.confidence || '', 40).toLowerCase();
   const hasPartNumber = Boolean(clean(result.partNumber || result.part_number || '', 80));
   const missingProof = Array.isArray(result.missingProof) ? result.missingProof : [];
+  const corpusStatus = clean(result.corpusStatus?.label || '', 80).toLowerCase();
+  if (corpusStatus === 'ai-only') return 'corpus-gap';
   if (confidence === 'high' && hasPartNumber && missingProof.length === 0) return 'proof-ready';
   if (confidence === 'low' || missingProof.length >= 3) return 'senior-review';
   if (record.email) return 'reply-possible';
@@ -102,6 +104,17 @@ export async function onRequestGet({ request, env }) {
         component: clean(result.component, 140),
         model: clean(result.model, 140),
         partNumber: clean(result.partNumber, 140),
+        corpusStatus: clean(result.corpusStatus?.label || 'unknown', 80),
+        corpusVersion: clean(result.corpusStatus?.corpusVersion || '', 80),
+        corpusCandidateCount: Array.isArray(result.corpusCandidates) ? result.corpusCandidates.length : 0,
+        corpusTop: Array.isArray(result.corpusCandidates) && result.corpusCandidates[0] ? {
+          id: clean(result.corpusCandidates[0].id, 120),
+          sourceTier: clean(result.corpusCandidates[0].sourceTier, 40),
+          matchLevel: clean(result.corpusCandidates[0].matchLevel, 100),
+          component: clean(result.corpusCandidates[0].component, 180),
+          sourceLabels: Array.isArray(result.corpusCandidates[0].sourceLabels) ? result.corpusCandidates[0].sourceLabels.map((item) => clean(item, 160)).slice(0, 3) : [],
+          requiredProof: Array.isArray(result.corpusCandidates[0].requiredProof) ? result.corpusCandidates[0].requiredProof.map((item) => clean(item, 160)).slice(0, 5) : [],
+        } : null,
         missingProof: Array.isArray(result.missingProof) ? result.missingProof.filter(Boolean) : [],
         visibleEvidence: Array.isArray(result.visibleEvidence) ? result.visibleEvidence.filter(Boolean) : [],
         packet: packetFromRecord(record, result),

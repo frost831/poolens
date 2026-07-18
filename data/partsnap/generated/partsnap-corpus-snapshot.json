@@ -1,0 +1,213 @@
+{
+  "ok": true,
+  "generatedAt": "2026-07-18T01:23:51.968Z",
+  "stats": {
+    "version": "seed-2026-07-17",
+    "seedFamilyCount": 22,
+    "targetFamilyCount": 500000,
+    "categories": [
+      "automation",
+      "cleaner",
+      "filter",
+      "heater",
+      "lighting",
+      "pump",
+      "robot",
+      "salt",
+      "spa"
+    ]
+  },
+  "coverage": {
+    "byCategory": [
+      {
+        "name": "spa",
+        "count": 5
+      },
+      {
+        "name": "pump",
+        "count": 4
+      },
+      {
+        "name": "automation",
+        "count": 3
+      },
+      {
+        "name": "heater",
+        "count": 3
+      },
+      {
+        "name": "robot",
+        "count": 2
+      },
+      {
+        "name": "salt",
+        "count": 2
+      },
+      {
+        "name": "cleaner",
+        "count": 1
+      },
+      {
+        "name": "filter",
+        "count": 1
+      },
+      {
+        "name": "lighting",
+        "count": 1
+      }
+    ],
+    "byManufacturer": [
+      {
+        "name": "multi-brand",
+        "count": 6
+      },
+      {
+        "name": "Hayward",
+        "count": 5
+      },
+      {
+        "name": "Pentair",
+        "count": 4
+      },
+      {
+        "name": "Jandy",
+        "count": 2
+      },
+      {
+        "name": "Balboa",
+        "count": 1
+      },
+      {
+        "name": "Gecko",
+        "count": 1
+      },
+      {
+        "name": "Maytronics",
+        "count": 1
+      },
+      {
+        "name": "Polaris",
+        "count": 1
+      },
+      {
+        "name": "Waterway",
+        "count": 1
+      }
+    ],
+    "bySourceTier": [
+      {
+        "name": "tier_1",
+        "count": 22
+      }
+    ]
+  },
+  "sourceCount": 15,
+  "sources": [
+    {
+      "id": "balboa-user-guides",
+      "tier": 1,
+      "label": "Balboa official PDF user guides",
+      "url": "https://www.balboawater.com/support/pdf-user-guides/"
+    },
+    {
+      "id": "cal-spas-manuals",
+      "tier": 1,
+      "label": "Cal Spas owner manuals",
+      "url": "https://calspas.com/owners-manuals"
+    },
+    {
+      "id": "coast-spas-manuals",
+      "tier": 1,
+      "label": "Coast Spas manuals",
+      "url": "https://www.coastspas.com/manuals.php"
+    },
+    {
+      "id": "gecko-docs",
+      "tier": 1,
+      "label": "Gecko Alliance documentation",
+      "url": "https://geckoalliance.com/support/"
+    },
+    {
+      "id": "hayward-buyers-guide",
+      "tier": 1,
+      "label": "Hayward buyer guide and parts list lane",
+      "url": "https://www.hayward.com/tools/buyers-guide"
+    },
+    {
+      "id": "hayward-manuals",
+      "tier": 1,
+      "label": "Hayward official manuals and guides",
+      "url": "https://www.hayward.com/guide-manuals"
+    },
+    {
+      "id": "jandy-replacement-parts",
+      "tier": 1,
+      "label": "Jandy official products and replacement parts route",
+      "url": "https://www.jandy.com/en/products"
+    },
+    {
+      "id": "master-spas-manuals",
+      "tier": 1,
+      "label": "Master Spas hot tub and swim spa manuals",
+      "url": "https://www.masterspas.com/hot-tub-owners-manuals/"
+    },
+    {
+      "id": "maytronics-genuine-parts",
+      "tier": 1,
+      "label": "Maytronics official genuine robot parts",
+      "url": "https://www.maytronics.com/en-us/parts-and-accessories.html"
+    },
+    {
+      "id": "pentair-2025-2026-catalog",
+      "tier": 1,
+      "label": "Pentair 2025-2026 product catalog",
+      "url": "https://www.pentair.com/en-us/pool-spa/products/catalog.html"
+    },
+    {
+      "id": "pentair-replacement-parts",
+      "tier": 1,
+      "label": "Pentair official replacement parts catalog",
+      "url": "https://www.pentair.com/en-us/pool-spa/products/replacement-parts.html"
+    },
+    {
+      "id": "waterway-support",
+      "tier": 1,
+      "label": "Waterway product support",
+      "url": "https://waterwayplastics.com/support/"
+    },
+    {
+      "id": "zodiac-genuine-parts",
+      "tier": 1,
+      "label": "Zodiac/Fluidra genuine parts route",
+      "url": "https://www.zodiacpoolsystems.com/en/parts"
+    },
+    {
+      "id": "pool360-print-catalogs",
+      "tier": 2,
+      "label": "POOL360/SCP public print catalogs",
+      "url": "https://www.pool360.com/PrintCatalogs"
+    },
+    {
+      "id": "inyo-public-diagrams",
+      "tier": 3,
+      "label": "INYO public parts diagrams",
+      "url": "https://www.inyopools.com/"
+    }
+  ],
+  "nextIngestionLanes": [
+    "Pentair replacement-parts PDFs by category",
+    "Hayward manual and buyer-guide part tables",
+    "Jandy/Zodiac/Fluidra official catalog routes",
+    "Maytronics robot parts and accessory families",
+    "POOL360/SCP public sourcebook aliases where allowed",
+    "Balboa/Gecko/Waterway spa-pack manuals",
+    "Master Spas, Cal Spas, and Coast swim-spa manuals",
+    "Human-reviewed PartSnap wrong/missing tickets"
+  ],
+  "trustRules": [
+    "AI-only results never become exact-fit claims.",
+    "Source-backed means the family has supporting source language, not final ordering approval.",
+    "Partner-verified is reserved for written partner-approved cards.",
+    "Every ordering path needs model plate, markings, dimensions, or manual diagram verification."
+  ]
+}

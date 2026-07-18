@@ -255,6 +255,9 @@ async function eventSummary(request, env) {
   const paymentPlans = new Map();
   const paymentFeatures = new Map();
   const paymentPlanKeys = new Map();
+  const corpusStatuses = new Map();
+  const corpusSourceTiers = new Map();
+  const corpusMatchLevels = new Map();
   const sources = new Map();
   const referrers = new Map();
   const campaigns = new Map();
@@ -323,6 +326,9 @@ async function eventSummary(request, env) {
   let partSnapLowConfidence30d = 0;
   let partSnapMediumRisk30d = 0;
   let partSnapHighRisk30d = 0;
+  let partSnapSourceBacked30d = 0;
+  let partSnapAiOnly30d = 0;
+  let partSnapCorpusCandidates30d = 0;
   let proofSaved30d = 0;
   let fieldFeedback30d = 0;
   let fieldTesterOptIns30d = 0;
@@ -481,6 +487,16 @@ async function eventSummary(request, env) {
       if (record.event === 'partsnap_result') {
         partsnapResults30d += 1;
         inc(partSnapCategories, props.category || props.component || 'unknown');
+        const corpusStatus = clean(props.corpus_status || 'unknown', 80).toLowerCase();
+        const corpusTier = clean(props.corpus_top_source_tier || '', 40);
+        const corpusMatch = clean(props.corpus_top_match_level || '', 120);
+        const corpusCandidateCount = Number(props.corpus_candidate_count || 0) || 0;
+        if (corpusStatus) inc(corpusStatuses, corpusStatus);
+        if (corpusTier) inc(corpusSourceTiers, `tier_${corpusTier}`);
+        if (corpusMatch) inc(corpusMatchLevels, corpusMatch);
+        partSnapCorpusCandidates30d += corpusCandidateCount;
+        if (corpusStatus.includes('source-backed')) partSnapSourceBacked30d += 1;
+        if (corpusStatus.includes('ai-only') || corpusCandidateCount === 0) partSnapAiOnly30d += 1;
         const risk = clean(props.risk || props.callbackRisk || 'unknown', 40).toLowerCase();
         const confidence = clean(props.confidence || 'unknown', 40).toLowerCase();
         const missingCount = Number(props.proof_missing_count || 0) || 0;
@@ -619,6 +635,9 @@ async function eventSummary(request, env) {
       partSnapLowConfidence30d,
       partSnapMediumRisk30d,
       partSnapHighRisk30d,
+      partSnapSourceBacked30d,
+      partSnapAiOnly30d,
+      partSnapCorpusCandidates30d,
       proofSaved30d,
       fieldFeedback30d,
       fieldTesterOptIns30d,
@@ -665,6 +684,9 @@ async function eventSummary(request, env) {
     topPaymentPlans: topList(paymentPlans),
     topPaymentFeatures: topList(paymentFeatures),
     topPaymentPlanKeys: topList(paymentPlanKeys),
+    topCorpusStatuses: topList(corpusStatuses),
+    topCorpusSourceTiers: topList(corpusSourceTiers),
+    topCorpusMatchLevels: topList(corpusMatchLevels),
     topDemandLanes: topList(laneDemand),
     topFacilityEvents: topList(facilityEvents),
     topFacilityLanes: topList(facilityLanes),
@@ -758,6 +780,10 @@ async function sendEventAlert(env, record) {
     `- Condition: ${clean(props.condition || 'unknown', 40)}`,
     `- Visible proof count: ${clean(props.proof_visible_count ?? '', 20)}`,
     `- Missing proof count: ${clean(props.proof_missing_count ?? '', 20)}`,
+    `- Corpus status: ${clean(props.corpus_status || 'unknown', 80)}`,
+    `- Corpus candidates: ${clean(props.corpus_candidate_count ?? '', 20)}`,
+    `- Corpus top source tier: ${clean(props.corpus_top_source_tier || '', 40)}`,
+    `- Corpus top match: ${clean(props.corpus_top_match_level || '', 120)}`,
     `- Visible proof: ${Array.isArray(props.proof_visible) ? props.proof_visible.map((item) => clean(item, 80)).join('; ') : ''}`,
     `- Missing proof: ${Array.isArray(props.proof_missing) ? props.proof_missing.map((item) => clean(item, 80)).join('; ') : ''}`,
   ] : [];
@@ -794,8 +820,8 @@ async function sendEventAlert(env, record) {
           `Facility ID: ${props.facilityId || props.facility_id || ''}`,
           `Facility lane: ${props.lane || ''}`,
           `Outcome: ${props.outcome || ''}`,
-          `Preferred language: ${record.language.preferredLanguage}`,
-          `Locale: ${record.language.locale}`,
+          `Preferred language: ${record.language?.preferredLanguage || props.preferred_language || ''}`,
+          `Locale: ${record.language?.locale || props.locale || ''}`,
           `Created: ${record.createdAt}`,
           ...partSnapLines,
           '',
@@ -837,6 +863,9 @@ async function sendDigestEmail(env, summary) {
     `- Second proof requests 30d: ${m.partSnapSecondProof30d || 0}`,
     `- Low-confidence PartSnap 30d: ${m.partSnapLowConfidence30d || 0}`,
     `- High-risk PartSnap 30d: ${m.partSnapHighRisk30d || 0}`,
+    `- Source-backed PartSnap 30d: ${m.partSnapSourceBacked30d || 0}`,
+    `- AI-only PartSnap 30d: ${m.partSnapAiOnly30d || 0}`,
+    `- Corpus candidate total 30d: ${m.partSnapCorpusCandidates30d || 0}`,
     `- PartSnap packets 30d: ${m.partSnapPackets30d || 0}`,
     `- Proof saves 30d: ${m.proofSaved30d || 0}`,
     `- Field feedback 30d: ${m.fieldFeedback30d || 0}`,

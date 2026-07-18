@@ -336,6 +336,22 @@
         <table id="payment-plan-keys"></table>
       </div>
       <div class="panel">
+        <h2>PartSnap Corpus Status</h2>
+        <table id="corpus-statuses"></table>
+      </div>
+      <div class="panel">
+        <h2>Corpus Source Tiers</h2>
+        <table id="corpus-source-tiers"></table>
+      </div>
+      <div class="panel">
+        <h2>Corpus Match Levels</h2>
+        <table id="corpus-match-levels"></table>
+      </div>
+      <div class="panel">
+        <h2>Corpus Health</h2>
+        <table id="corpus-health"></table>
+      </div>
+      <div class="panel">
         <h2>Recent Payments</h2>
         <table id="recent-payments"></table>
       </div>
@@ -472,15 +488,27 @@
       renderCountTable('review-status', rows, 'Status');
     }
 
+    function renderCorpusHealth(data) {
+      const stats = data?.stats || {};
+      const rows = [
+        { name: 'Seed families', count: stats.seedFamilyCount || 0 },
+        { name: 'Target families', count: stats.targetFamilyCount || 0 },
+        { name: 'Source registry', count: data?.sourceCount || 0 },
+        { name: 'Categories covered', count: (stats.categories || []).length }
+      ];
+      renderCountTable('corpus-health', rows, 'Corpus');
+    }
+
     function renderReviewTickets(rows) {
       const el = document.getElementById('partsnap-review');
       const body = (rows || []).map((row, index) => {
         const summary = [row.manufacturer, row.component, row.model || row.partNumber].filter(Boolean).join(' / ') || row.note || 'Mystery part';
         const missing = (row.missingProof || []).join(', ');
+        const corpus = row.corpusStatus && row.corpusStatus !== 'unknown' ? `${row.corpusStatus}${row.corpusTop ? ' | ' + row.corpusTop.matchLevel + ' | tier ' + row.corpusTop.sourceTier : ''}` : '';
         return `<tr>
           <td>${new Date(row.createdAt).toLocaleString()}</td>
           <td><code>${escapeHtml(row.id || '')}</code><br><span class="status-pill">${escapeHtml(row.status || '')}</span></td>
-          <td>${escapeHtml(summary)}<br><span class="hint">Confidence: ${escapeHtml(row.confidence || 'unknown')}${missing ? ' | Missing: ' + escapeHtml(missing) : ''}</span></td>
+          <td>${escapeHtml(summary)}<br><span class="hint">Confidence: ${escapeHtml(row.confidence || 'unknown')}${missing ? ' | Missing: ' + escapeHtml(missing) : ''}${corpus ? ' | Corpus: ' + escapeHtml(corpus) : ''}</span></td>
           <td>${escapeHtml(row.email || '')}</td>
           <td class="ticket-actions"><button type="button" data-ticket-index="${index}">Copy Packet</button></td>
         </tr>`;
@@ -557,6 +585,9 @@
         metricCard('AI Scans 30d', m.scans30d, 'Scanner starts.'),
         metricCard('Manual Searches 30d', m.searches30d, 'Error/code lookup searches.'),
         metricCard('PartSnap Results 30d', m.partsnapResults30d, 'Possible part-result screens.'),
+        metricCard('Source-backed 30d', m.partSnapSourceBacked30d, 'PartSnap results with corpus candidates.'),
+        metricCard('AI-only 30d', m.partSnapAiOnly30d, 'Scans that did not match the source corpus.'),
+        metricCard('Corpus Candidates 30d', m.partSnapCorpusCandidates30d, 'Total source-backed candidates attached to results.'),
         metricCard('Stuck PartSnap 30d', m.partSnapStuck30d, 'Low confidence, high risk, or 2+ missing proof items.'),
         metricCard('Second Proof 30d', m.partSnapSecondProof30d, 'Techs who tapped the proof-photo recovery flow.'),
         metricCard('Low Confidence 30d', m.partSnapLowConfidence30d, 'PartSnap results that likely need review.'),
@@ -597,6 +628,9 @@
       renderCountTable('payment-plans', data.topPaymentPlans, 'Plan');
       renderCountTable('payment-features', data.topPaymentFeatures, 'Feature');
       renderCountTable('payment-plan-keys', data.topPaymentPlanKeys, 'Plan Key');
+      renderCountTable('corpus-statuses', data.topCorpusStatuses, 'Status');
+      renderCountTable('corpus-source-tiers', data.topCorpusSourceTiers, 'Tier');
+      renderCountTable('corpus-match-levels', data.topCorpusMatchLevels, 'Match');
       renderCountTable('manual-queries', data.manualQueries, 'Query');
       renderCountTable('demand-lanes', data.topDemandLanes, 'Lane');
       renderCountTable('partsnap-categories', data.topPartSnapCategories, 'Category');
@@ -606,8 +640,18 @@
       renderPayments(data.recentPayments);
       renderSessions(data.recentSessions);
       renderRecent(data.recentEvents);
+      await loadCorpusHealth(secret);
       await loadPartSnapReviewQueue(secret);
       setStatus(`Loaded ${Number(m.storedEvents || 0).toLocaleString()} stored events. Generated ${new Date(data.generatedAt).toLocaleString()}.`, false);
+    }
+
+    async function loadCorpusHealth(secret) {
+      const response = await fetch('/api/partsnap-corpus', {
+        headers: { Authorization: `Bearer ${secret}` },
+        cache: 'no-store'
+      });
+      const data = await response.json().catch(() => ({}));
+      renderCorpusHealth(response.ok && data.ok ? data : {});
     }
 
     async function loadPartSnapReviewQueue(secret) {
