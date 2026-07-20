@@ -65,7 +65,15 @@ async function sendRestoreEmail(config, email, activateUrl, entitlement) {
       'content-type': 'application/json',
     },
     body: JSON.stringify({
-      personalizations: [{ to: [{ email }], subject: `Restore your ${plan} access` }],
+      personalizations: [{
+        to: [{ email }],
+        subject: `Restore your ${plan} access`,
+        custom_args: {
+          product: 'splashlens',
+          template_id: 'entitlement_restore',
+          correlation_id: clean(entitlement.stripeSessionId || crypto.randomUUID(), 120),
+        },
+      }],
       from: { email: config.from, name: 'SplashLens' },
       categories: ['splashlens', 'entitlement-restore'],
       content: [{

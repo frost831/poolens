@@ -1,6 +1,8 @@
 // GET /api/outbound - safe outbound search redirect for PartSnap.
 // Affiliate IDs/templates are optional. If unset, redirects use plain search URLs.
 
+import { outboundStoreKey } from '../_shared/checkout-safety.mjs';
+
 const STORES = {
   leslies: {
     label: "Leslie's",
@@ -49,7 +51,9 @@ function buildUrl(template, q) {
 
 export async function onRequestGet({ request, env }) {
   const url = new URL(request.url);
-  const storeKey = String(url.searchParams.get('store') || '').toLowerCase();
+  // `vendor` was used by older callers. Keep it as a compatibility alias so
+  // stale app or indexed links do not turn into customer-facing 400s.
+  const storeKey = outboundStoreKey(url);
   const q = cleanQuery(url.searchParams.get('q'));
   const store = STORES[storeKey];
 

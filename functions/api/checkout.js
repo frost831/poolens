@@ -5,6 +5,7 @@ import {
   splashLensPaymentLinkUrl,
   splashLensPlanPublicPayload,
 } from '../_shared/splashlens-plans.mjs';
+import { paidFulfillmentGaps } from '../_shared/checkout-safety.mjs';
 
 function json(status, payload) {
   return new Response(JSON.stringify(payload), {
@@ -86,6 +87,16 @@ function useStripeCheckout(env) {
   return true;
 }
 
+function paidCheckoutUnavailable(plan, gaps) {
+  return json(503, {
+    ok: false,
+    error: 'paid_checkout_temporarily_unavailable',
+    plan: plan.key,
+    missingConfiguration: gaps,
+    message: 'Paid checkout is temporarily unavailable while secure activation delivery is being verified.',
+  });
+}
+
 export async function onRequestGet({ request, env }) {
   const url = new URL(request.url);
   if (url.searchParams.get('catalog') === '1') {
@@ -93,6 +104,8 @@ export async function onRequestGet({ request, env }) {
   }
 
   const plan = resolveSplashLensPlan(url.searchParams.get('plan') || 'monthly');
+  const fulfillmentGaps = paidFulfillmentGaps(env);
+  if (fulfillmentGaps.length) return paidCheckoutUnavailable(plan, fulfillmentGaps);
 
   const paymentLink = splashLensPaymentLinkUrl(env, plan);
   if (!useStripeCheckout(env) && paymentLink) {

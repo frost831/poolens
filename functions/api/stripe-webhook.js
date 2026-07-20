@@ -148,7 +148,7 @@ async function issueActivation(session, env) {
   return { ok: true, subject, activateUrl, entitlement: record };
 }
 
-async function sendMail(config, to, subject, text, categories = []) {
+async function sendMail(config, to, subject, text, categories = [], customArgs = {}) {
   if (!config.apiKey || !config.from || !to) return { sent: false, reason: 'missing_sendgrid_config' };
   const response = await fetch('https://api.sendgrid.com/v3/mail/send', {
     method: 'POST',
@@ -157,7 +157,11 @@ async function sendMail(config, to, subject, text, categories = []) {
       'content-type': 'application/json',
     },
     body: JSON.stringify({
-      personalizations: [{ to: [{ email: to }], subject }],
+      personalizations: [{
+        to: [{ email: to }],
+        subject,
+        custom_args: { product: 'splashlens', template_id: categories[0] || 'transactional', ...customArgs },
+      }],
       from: { email: config.from, name: 'SplashLens' },
       categories: ['splashlens', 'payment', ...categories],
       content: [{ type: 'text/plain', value: text }],
@@ -196,8 +200,9 @@ async function sendActivationEmails(env, session, activation) {
     `Activation link: ${activation.activateUrl}`,
   ].join('\n');
 
-  const buyer = await sendMail(config, activation.subject, `Your SplashLens ${activation.entitlement.plan} activation`, buyerText, ['buyer-activation']);
-  const owner = await sendMail(config, config.ownerTo, '[SplashLens Payment] Checkout completed', ownerText, ['owner-alert']);
+  const correlation = { correlation_id: clean(session.id || crypto.randomUUID(), 120) };
+  const buyer = await sendMail(config, activation.subject, `Your SplashLens ${activation.entitlement.plan} activation`, buyerText, ['buyer-activation'], correlation);
+  const owner = await sendMail(config, config.ownerTo, '[SplashLens Payment] Checkout completed', ownerText, ['owner-alert'], correlation);
   return { buyer, owner };
 }
 

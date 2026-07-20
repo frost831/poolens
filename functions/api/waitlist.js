@@ -57,6 +57,7 @@ async function sendWaitlistAlert(env, record) {
       personalizations: [{
         to: [{ email: config.to }],
         subject: `[SplashLens] New app waitlist signup: ${record.email}`,
+        custom_args: { product: 'splashlens', template_id: 'app_waitlist', correlation_id: record.correlationId },
       }],
       from: { email: config.from, name: 'SplashLens Alerts' },
       reply_to: { email: record.email },
@@ -96,6 +97,7 @@ export async function onRequestPost({ request, env }) {
   }
 
   const record = {
+    correlationId: crypto.randomUUID(),
     email,
     preferredLanguage: clean(body.preferred_language || request.headers.get('X-BZM-Language') || body.language_profile?.preferredLanguage || 'en', 16),
     locale: clean(body.locale || request.headers.get('X-BZM-Locale') || body.language_profile?.locale || body.preferred_language || 'en', 32),

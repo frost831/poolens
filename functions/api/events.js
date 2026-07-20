@@ -798,6 +798,7 @@ async function sendEventAlert(env, record) {
       personalizations: [{
         to: [{ email: config.to }],
         subject: `[SplashLens App] ${sourcePrefix}${labels[record.event] || record.event}`,
+        custom_args: { product: 'splashlens', template_id: 'app_event_alert', correlation_id: record.correlationId },
       }],
       from: { email: config.from, name: 'SplashLens Alerts' },
       categories: ['splashlens', 'app-event', record.event],
@@ -907,6 +908,7 @@ async function sendDigestEmail(env, summary) {
       personalizations: [{
         to: [{ email: config.to }],
         subject: `[SplashLens Digest] ${new Date().toISOString().slice(0, 10)}`,
+        custom_args: { product: 'splashlens', template_id: 'app_event_digest', correlation_id: crypto.randomUUID() },
       }],
       from: { email: config.from, name: 'SplashLens Alerts' },
       categories: ['splashlens', 'owner-digest'],
@@ -944,6 +946,7 @@ export async function onRequestPost({ request, env }) {
 
   const props = body.props && typeof body.props === 'object' ? body.props : {};
   const record = {
+    correlationId: crypto.randomUUID(),
     event,
     source: clean(body.source || props.attribution_source || props.source || 'app', 60),
     path: clean(body.path || props.path || '', 300),

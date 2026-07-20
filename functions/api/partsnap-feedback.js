@@ -53,6 +53,7 @@ async function sendFeedbackAlert(env, record) {
       personalizations: [{
         to: [{ email: config.to }],
         subject: `[SplashLens PartSnap] Mystery part submitted`,
+        custom_args: { product: 'splashlens', template_id: 'partsnap_feedback', correlation_id: record.id },
       }],
       from: { email: config.from, name: 'SplashLens Alerts' },
       reply_to: record.email ? { email: record.email } : undefined,
