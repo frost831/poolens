@@ -785,10 +785,9 @@ function setSplashLensRole(role, options = {}) {
     showFacilityTools();
     renderRoleNextAction(cleanRole);
     if (cleanRole === 'trainer') {
-      showTab('scan');
+      showTab('report');
       setTimeout(() => {
-        setScanMode('parts');
-        renderTrainerSampleLesson();
+        renderFieldLearningOS('partsnap');
       }, 120);
       trackSplashLensEvent('partsnap_apprentice_started', { source: 'role_picker', role: cleanRole });
     } else if (cleanRole === 'counter') {
@@ -843,15 +842,15 @@ const ROLE_NEXT_ACTIONS = {
     ],
   },
   trainer: {
-    kicker: 'Trainer mode',
-    title: 'Turn a weird part into a five-minute lesson.',
-    body: 'Show observe, prove, order, and safety language before asking a student to trust a result.',
-    payoff: 'Goal: teach proof-before-ordering fast.',
+    kicker: 'Field Learning OS',
+    title: 'Turn real stops into five-minute lessons.',
+    body: 'Use PartSnap misses, proof packets, facility incidents, and support questions to teach what to observe, prove, decide, and explain.',
+    payoff: 'Goal: coach from the field without pretending to certify or diagnose.',
     actions: [
-      ['Open sample lesson', 'primary', "showTab('scan');setTimeout(()=>{setScanMode('parts');renderTrainerSampleLesson();},80)"],
+      ['PartSnap lesson', 'primary', "renderFieldLearningOS('partsnap')"],
       ['Use real part', '', "openLivePartSnap()"],
-      ['Facility scenario', '', "setSplashLensRole('facility',{persist:false,forced:true,source:'trainer_facility'})"],
-      ['Training notes', '', "showTab('guide')"],
+      ['Facility scenario', '', "renderFieldLearningOS('facility')"],
+      ['Proof review', '', "renderFieldLearningOS('proof')"],
     ],
   },
   homeowner: {
@@ -1821,6 +1820,80 @@ function startSpanishFieldWorkflow(kind) {
   }
   validateReportProof({ quiet: true });
   trackSplashLensEvent('spanish_quick_chip', { chip: kind, workflow: 'service_proof_passport' });
+}
+
+function renderFieldLearningOS(kind = 'partsnap') {
+  showTab('report');
+  const lessons = {
+    partsnap: {
+      title: 'PartSnap miss to five-minute lesson',
+      body: 'Use the weird part as the lesson. Student names visible proof, missing proof, order risk, and the safe customer explanation before anyone buys.',
+      task: 'A tech has a possible part family but no model plate. What proof must be captured before ordering?',
+      answer: 'Wide equipment photo, model/serial plate, close-up molded or printed marking, symptom/code, and current parts diagram or vendor/senior review.',
+      fields: {
+        type: 'Training / PartSnap Review',
+        priority: 'senior-review',
+        reviewTo: 'Trainer / senior tech',
+        issue: 'Training prompt: PartSnap result needs proof-before-ordering review. Student must list visible proof, missing proof, and order decision.',
+        proof: 'Needs: part photo, label/model plate, second proof photo, symptom/code, and manual/vendor verification.'
+      }
+    },
+    facility: {
+      title: 'Facility incident to CPO scenario',
+      body: 'Use a real operator call as a conservative scenario: first safe action, what to document, when to close access, and when to escalate.',
+      task: 'A facility manager reports cloudy water and a recent high bather load. What should be documented before reopening or calling support?',
+      answer: 'Time, FC/sanitizer, pH, clarity, bather load/recent event, equipment status, facility policy followed, and supervisor/CPO signoff.',
+      fields: {
+        type: 'Training / Facility Scenario',
+        priority: 'today',
+        reviewTo: 'CPO / facility lead',
+        issue: 'Training prompt: Facility scenario. Document first safe action, readings, visible proof, policy boundary, and escalation route.',
+        proof: 'Needs: readings, clarity note, time, facility lane, equipment status, recent changes, and support packet if unresolved.'
+      }
+    },
+    proof: {
+      title: 'Service Proof review lesson',
+      body: 'Turn a saved visit into coaching material: what was captured, what was missing, what should be customer-safe, and what would prevent a callback.',
+      task: 'A visit note says “heater acting up” but has no code photo or model plate. Is the note ready for customer or vendor use?',
+      answer: 'No. Add code/display photo, model plate, symptom timing, water-flow context, readings if relevant, and human-reviewed summary before sending.',
+      fields: {
+        type: 'Training / Service Proof Review',
+        priority: 'senior-review',
+        reviewTo: 'Owner / trainer',
+        issue: 'Training prompt: Review whether this saved visit has enough proof for customer, vendor, or senior-tech handoff.',
+        proof: 'Needs: readings if relevant, equipment photo, issue note, customer-safe summary, and explicit missing-proof list.'
+      }
+    }
+  };
+  const lesson = lessons[kind] || lessons.partsnap;
+  setReportValueAndNotify('rpt-type', lesson.fields.type, { force: true });
+  setReportValueAndNotify('rpt-priority', lesson.fields.priority, { force: true });
+  setReportValueAndNotify('rpt-review-to', lesson.fields.reviewTo, { force: false });
+  setReportValueAndNotify('rpt-issue-note', lesson.fields.issue, { force: false });
+  setReportValueAndNotify('rpt-photo-proof', lesson.fields.proof, { force: false });
+  setReportValueAndNotify('rpt-customer-summary', 'Training use only: this lesson teaches proof habits and should be reviewed by a qualified person before customer-facing use.', { force: false });
+  setReportCheck('rpt-proof-summary', true);
+  renderProofWorkflowOutput(
+    lesson.title,
+    lesson.body,
+    `<div style="display:grid;gap:8px;margin-top:10px;">
+      <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px;">
+        <p style="color:#0369a1;font-size:10px;font-weight:950;letter-spacing:.08em;text-transform:uppercase;margin-bottom:4px;">Student task</p>
+        <p style="color:#334155;font-size:12px;line-height:1.45;">${escHtml(lesson.task)}</p>
+      </div>
+      <details style="background:#ffffff;border:1px solid #dbe8ef;border-radius:8px;padding:10px;">
+        <summary style="cursor:pointer;color:#0f172a;font-size:12px;font-weight:950;">Show answer key</summary>
+        <p style="color:#334155;font-size:12px;line-height:1.45;margin-top:7px;">${escHtml(lesson.answer)}</p>
+      </details>
+      <div class="brain-grid">
+        <button type="button" class="brain-action green" onclick="createServiceProofShareLink()">Create lesson packet</button>
+        <button type="button" class="brain-action secondary" onclick="saveReportDraft()">Save for review</button>
+        <a class="brain-action secondary" href="https://splashlens.com/field-learning-os.html" target="_blank" rel="noopener" onclick="trackSplashLensEvent('learning_os_public_page_click',{source:'app_lesson'})" style="text-align:center;text-decoration:none;">Public Learning OS</a>
+      </div>
+    </div>`
+  );
+  validateReportProof({ quiet: true });
+  trackSplashLensEvent('field_learning_os_lesson_generated', { lesson_kind: kind });
 }
 
 function renderVerifiedProofNetwork() {

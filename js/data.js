@@ -260,12 +260,12 @@ window.SPLASHLENS_MONETIZATION_LANES = {
       guardrail: "Possible match and missing proof, never guaranteed fit."
     },
     {
-      name: "Training Partner Layer",
+      name: "Field Learning OS",
       planKey: "training_partner_layer_monthly",
       availability: "partner",
       price: "Not self-serve — partner discussion",
       buyer: "Pool schools and instructors",
-      includes: ["5-minute field lessons", "Proof-based quizzes", "CPO scenario workflows", "Senior-review practice packets"],
+      includes: ["5-minute field lessons from PartSnap misses", "Proof-based quizzes", "CPO scenario workflows", "Senior-review practice packets", "Partner-reviewed lesson cards"],
       guardrail: "No official training alignment unless agreed in writing."
     }
   ]
