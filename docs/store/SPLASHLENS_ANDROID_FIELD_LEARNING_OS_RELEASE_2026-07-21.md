@@ -3,6 +3,7 @@
 ## Build
 
 - Package: `com.splashlens.fieldtools`
+- Play developer account: `ThrottleShare` organization account, ID `7017771963942604688`
 - Version name: `1.0.7`
 - Version code: `8`
 - Source commit before release edit: `b46331222929d141e865328a9288d0cad8e2e2be`
@@ -46,6 +47,7 @@
 - Build and functional web target: GO.
 - Signed AAB: GO.
 - Play upload: GO only in the public app record for package `com.splashlens.fieldtools`; confirm the console package before upload.
+- Do not use the obsolete `com.splashlens.app` closed-testing record under developer account `warmsnowman831`.
 
 ## Blocked Proof
 
