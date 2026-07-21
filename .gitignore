@@ -4,6 +4,7 @@ Thumbs.db
 node_modules/
 .wrangler/
 dist/
+build/
 _deploy/
 .secrets.local/
 
