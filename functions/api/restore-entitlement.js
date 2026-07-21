@@ -88,7 +88,8 @@ async function sendRestoreEmail(config, email, activateUrl, entitlement) {
         custom_args: {
           product: 'splashlens',
           template_id: 'entitlement_restore',
-          correlation_id: clean(entitlement.stripeSessionId || crypto.randomUUID(), 120),
+          correlation_id: crypto.randomUUID(),
+          stripe_session_id: clean(entitlement.stripeSessionId || '', 120),
         },
       }],
       from: { email: config.from, name: 'SplashLens' },

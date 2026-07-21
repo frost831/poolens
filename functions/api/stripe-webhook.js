@@ -174,7 +174,7 @@ async function issueActivation(session, env) {
   return { ok: true, subject, activateUrl, entitlement: record };
 }
 
-async function sendMail(config, to, subject, text, categories = [], customArgs = {}) {
+async function sendMail(config, to, subject, text, templateId, categories = [], customArgs = {}) {
   if (!config.apiKey || !config.from || !to) return { sent: false, reason: 'missing_sendgrid_config' };
   const response = await fetch('https://api.sendgrid.com/v3/mail/send', {
     method: 'POST',
@@ -186,7 +186,12 @@ async function sendMail(config, to, subject, text, categories = [], customArgs =
       personalizations: [{
         to: [{ email: to }],
         subject,
-        custom_args: { product: 'splashlens', template_id: categories[0] || 'transactional', ...customArgs },
+        custom_args: {
+          ...customArgs,
+          product: 'splashlens',
+          template_id: templateId,
+          correlation_id: crypto.randomUUID(),
+        },
       }],
       from: { email: config.from, name: 'SplashLens' },
       reply_to: { email: config.replyTo, name: 'SplashLens Support' },
@@ -230,9 +235,9 @@ async function sendActivationEmails(env, session, activation) {
     `Activation link: ${activation.activateUrl}`,
   ].join('\n');
 
-  const correlationId = clean(session.id || crypto.randomUUID(), 120);
-  const correlation = { correlation_id: correlationId };
-  const dedupeKey = `email:checkout-activation:${correlationId}`;
+  const sessionId = clean(session.id || crypto.randomUUID(), 120);
+  const metadata = { stripe_session_id: sessionId };
+  const dedupeKey = `email:checkout-activation:${sessionId}`;
   if (env.SCAN_USAGE_KV && typeof env.SCAN_USAGE_KV.get === 'function') {
     const prior = await env.SCAN_USAGE_KV.get(dedupeKey);
     if (prior) return {
@@ -241,8 +246,8 @@ async function sendActivationEmails(env, session, activation) {
     };
     await env.SCAN_USAGE_KV.put(dedupeKey, 'pending', { expirationTtl: 7 * 24 * 60 * 60 });
   }
-  const buyer = await sendMail(config, activation.subject, `Your SplashLens ${activation.entitlement.plan} activation`, buyerText, ['buyer-activation'], correlation);
-  const owner = await sendMail(config, config.ownerTo, '[SplashLens Payment] Checkout completed', ownerText, ['owner-alert'], correlation);
+  const buyer = await sendMail(config, activation.subject, `Your SplashLens ${activation.entitlement.plan} activation`, buyerText, 'paid_activation', ['buyer-activation'], metadata);
+  const owner = await sendMail(config, config.ownerTo, '[SplashLens Payment] Checkout completed', ownerText, 'paid_activation_owner_alert', ['owner-alert'], metadata);
   if (env.SCAN_USAGE_KV && typeof env.SCAN_USAGE_KV.put === 'function') {
     if (buyer.sent && owner.sent) {
       await env.SCAN_USAGE_KV.put(dedupeKey, 'sent', { expirationTtl: 365 * 24 * 60 * 60 });
@@ -306,7 +311,10 @@ export async function handleRefundedCharge(event, env) {
   await env.SCAN_USAGE_KV.delete(key);
 
   const config = notifyConfig(env);
-  const correlation = { correlation_id: clean(charge.id || event.id || crypto.randomUUID(), 120) };
+  const metadata = {
+    charge_id: clean(charge.id || '', 120),
+    stripe_event_id: clean(event.id || '', 120),
+  };
   const buyerText = [
     'Your SplashLens payment was fully refunded.',
     '',
@@ -326,8 +334,8 @@ export async function handleRefundedCharge(event, env) {
     '',
     'The matching paid entitlement was removed.',
   ].join('\n');
-  const buyer = await sendMail(config, subject, 'Your SplashLens refund is complete', buyerText, ['buyer-refund'], correlation);
-  const owner = await sendMail(config, config.ownerTo, '[SplashLens Payment] Refund completed', ownerText, ['owner-refund'], correlation);
+  const buyer = await sendMail(config, subject, 'Your SplashLens refund is complete', buyerText, 'paid_refund', ['buyer-refund'], metadata);
+  const owner = await sendMail(config, config.ownerTo, '[SplashLens Payment] Refund completed', ownerText, 'paid_refund_owner_alert', ['owner-refund'], metadata);
   return {
     ok: true,
     action: 'entitlement_revoked_after_full_refund',

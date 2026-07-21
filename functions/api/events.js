@@ -798,7 +798,7 @@ async function sendEventAlert(env, record) {
       personalizations: [{
         to: [{ email: config.to }],
         subject: `[SplashLens App] ${sourcePrefix}${labels[record.event] || record.event}`,
-        custom_args: { product: 'splashlens', template_id: 'app_event_alert', correlation_id: record.correlationId },
+        custom_args: { product: 'splashlens', template_id: 'event_owner_alert', correlation_id: crypto.randomUUID(), event_id: record.correlationId, event_type: record.event },
       }],
       from: { email: config.from, name: 'SplashLens Alerts' },
       categories: ['splashlens', 'app-event', record.event],
@@ -908,7 +908,7 @@ async function sendDigestEmail(env, summary) {
       personalizations: [{
         to: [{ email: config.to }],
         subject: `[SplashLens Digest] ${new Date().toISOString().slice(0, 10)}`,
-        custom_args: { product: 'splashlens', template_id: 'app_event_digest', correlation_id: crypto.randomUUID() },
+        custom_args: { product: 'splashlens', template_id: 'event_digest', correlation_id: crypto.randomUUID() },
       }],
       from: { email: config.from, name: 'SplashLens Alerts' },
       categories: ['splashlens', 'owner-digest'],

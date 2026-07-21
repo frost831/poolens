@@ -58,7 +58,7 @@ async function sendWaitlistAlert(env, record) {
       personalizations: [{
         to: [{ email: config.to }],
         subject: `[SplashLens] New app waitlist signup: ${record.email}`,
-        custom_args: { product: 'splashlens', template_id: 'app_waitlist', correlation_id: record.correlationId },
+        custom_args: { product: 'splashlens', template_id: 'waitlist_owner_alert', correlation_id: crypto.randomUUID(), signup_id: record.correlationId },
       }],
       from: { email: config.from, name: 'SplashLens Alerts' },
       reply_to: { email: record.email },
@@ -109,7 +109,7 @@ async function sendWaitlistConfirmation(env, record) {
       personalizations: [{
         to: [{ email: record.email }],
         subject,
-        custom_args: { product: 'splashlens', template_id: 'paid_lane_request_confirmation', correlation_id: record.correlationId },
+        custom_args: { product: 'splashlens', template_id: 'paid_lane_request_confirmation', correlation_id: crypto.randomUUID(), signup_id: record.correlationId },
       }],
       from: { email: config.from, name: 'SplashLens' },
       reply_to: { email: config.replyTo, name: 'SplashLens Support' },

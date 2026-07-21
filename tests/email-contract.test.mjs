@@ -23,3 +23,34 @@ test('checkout activation mail is suppressed on webhook retries', async () => {
   assert.match(source, /deduplicated: true/);
   assert.match(source, /expirationTtl: 365 \* 24 \* 60 \* 60/);
 });
+
+test('app-owned email sends use stable template ids and per-send correlation ids', async () => {
+  const sources = await Promise.all([
+    '../functions/api/stripe-webhook.js',
+    '../functions/api/restore-entitlement.js',
+    '../functions/api/waitlist.js',
+    '../functions/api/events.js',
+    '../functions/api/partsnap-feedback.js',
+  ].map((path) => readFile(new URL(path, import.meta.url), 'utf8')));
+  const source = sources.join('\n');
+  for (const templateId of [
+    'paid_activation',
+    'paid_activation_owner_alert',
+    'paid_refund',
+    'paid_refund_owner_alert',
+    'entitlement_restore',
+    'waitlist_owner_alert',
+    'paid_lane_request_confirmation',
+    'event_owner_alert',
+    'event_digest',
+    'partsnap_feedback',
+  ]) {
+    assert.match(source, new RegExp(`template_id: ['"]${templateId}['"]|['"]${templateId}['"]`));
+  }
+  assert.doesNotMatch(source, /template_id:\s*categories\[0\]/);
+  assert.doesNotMatch(source, /correlation_id:\s*record\.correlationId/);
+  assert.doesNotMatch(source, /correlation_id:\s*record\.id/);
+  assert.match(source, /stripe_session_id:/);
+  assert.match(source, /event_type:/);
+  assert.match(source, /feedback_id:/);
+});
