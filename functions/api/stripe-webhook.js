@@ -4,6 +4,7 @@ import {
   splashLensAllowedPaymentLinkIds,
   splashLensPlanFromSession,
 } from '../_shared/splashlens-plans.mjs';
+import { refundedEntitlementDecision } from '../_shared/splashlens-refund.mjs';
 
 const TOKEN_PREFIX = 'sl_scan_v1';
 const textEncoder = new TextEncoder();
@@ -12,6 +13,7 @@ const CHECKOUT_EVENTS = new Set([
   'checkout.session.completed',
   'checkout.session.async_payment_succeeded',
 ]);
+const REFUND_EVENTS = new Set(['charge.refunded']);
 
 function json(status, payload) {
   return new Response(JSON.stringify(payload), {
@@ -130,6 +132,7 @@ async function issueActivation(session, env) {
     stripeSessionId: clean(session.id, 120),
     stripeCustomerId: clean(session.customer, 120),
     stripePaymentLinkId: clean(session.payment_link, 120),
+    stripePaymentIntentId: clean(session.payment_intent, 120),
     iat: now,
     exp: now + 365 * 24 * 60 * 60,
   };
@@ -145,6 +148,7 @@ async function issueActivation(session, env) {
     stripeSessionId: payload.stripeSessionId,
     stripeCustomerId: payload.stripeCustomerId,
     stripePaymentLinkId: payload.stripePaymentLinkId,
+    stripePaymentIntentId: payload.stripePaymentIntentId,
     amountTotal: Number(session.amount_total || 0),
     currency: clean(session.currency, 12),
     issuedAt: new Date(payload.iat * 1000).toISOString(),
@@ -268,6 +272,71 @@ async function handleCheckoutSession(event, env) {
   };
 }
 
+export async function handleRefundedCharge(event, env) {
+  const charge = event.data?.object || {};
+  const initial = refundedEntitlementDecision(charge);
+  if (initial.action === 'ignored_partial_or_incomplete_refund') {
+    return { ok: true, action: 'ignored_partial_or_incomplete_refund' };
+  }
+  const subject = clean(initial.subject, 180).toLowerCase();
+  const paymentIntentId = clean(initial.paymentIntentId, 120);
+  if (!subject || !paymentIntentId) {
+    return { ok: true, action: 'refund_missing_entitlement_identity' };
+  }
+  if (!env.SCAN_USAGE_KV || typeof env.SCAN_USAGE_KV.get !== 'function') {
+    return { ok: false, error: 'missing_entitlement_storage' };
+  }
+  const key = `entitlement:${subject}`;
+  const raw = await env.SCAN_USAGE_KV.get(key);
+  if (!raw) return { ok: true, action: 'refund_entitlement_not_found', subject };
+
+  let entitlement;
+  try {
+    entitlement = JSON.parse(raw);
+  } catch {
+    return { ok: false, error: 'stored_entitlement_unreadable' };
+  }
+  const decision = refundedEntitlementDecision(charge, entitlement);
+  if (!decision.shouldRevoke) {
+    return { ok: true, action: 'refund_did_not_match_current_entitlement', subject };
+  }
+  if (typeof env.SCAN_USAGE_KV.delete !== 'function') {
+    return { ok: false, error: 'entitlement_delete_unavailable' };
+  }
+  await env.SCAN_USAGE_KV.delete(key);
+
+  const config = notifyConfig(env);
+  const correlation = { correlation_id: clean(charge.id || event.id || crypto.randomUUID(), 120) };
+  const buyerText = [
+    'Your SplashLens payment was fully refunded.',
+    '',
+    `Plan: ${entitlement.plan || 'SplashLens paid access'}`,
+    '',
+    'The paid entitlement tied to that payment has been removed. Free SplashLens tools remain available.',
+    '',
+    'Questions? Reply to this email.',
+  ].join('\n');
+  const ownerText = [
+    'SplashLens full refund processed.',
+    '',
+    `Customer: ${subject}`,
+    `Plan: ${entitlement.plan || ''}`,
+    `PaymentIntent: ${paymentIntentId}`,
+    `Charge: ${charge.id || ''}`,
+    '',
+    'The matching paid entitlement was removed.',
+  ].join('\n');
+  const buyer = await sendMail(config, subject, 'Your SplashLens refund is complete', buyerText, ['buyer-refund'], correlation);
+  const owner = await sendMail(config, config.ownerTo, '[SplashLens Payment] Refund completed', ownerText, ['owner-refund'], correlation);
+  return {
+    ok: true,
+    action: 'entitlement_revoked_after_full_refund',
+    subject,
+    emailSent: Boolean(buyer.sent),
+    ownerAlertSent: Boolean(owner.sent),
+  };
+}
+
 export async function onRequestPost({ request, env }) {
   const rawBody = await request.text();
   const signature = request.headers.get('Stripe-Signature') || '';
@@ -281,9 +350,14 @@ export async function onRequestPost({ request, env }) {
     return json(400, { ok: false, error: 'invalid_json' });
   }
 
-  if (!CHECKOUT_EVENTS.has(event.type)) return json(200, { ok: true, action: 'ignored_event_type' });
-
-  const result = await handleCheckoutSession(event, env);
+  let result;
+  if (CHECKOUT_EVENTS.has(event.type)) {
+    result = await handleCheckoutSession(event, env);
+  } else if (REFUND_EVENTS.has(event.type)) {
+    result = await handleRefundedCharge(event, env);
+  } else {
+    return json(200, { ok: true, action: 'ignored_event_type' });
+  }
   console.log('SplashLens Stripe webhook:', JSON.stringify({ type: event.type, result }));
   return json(result.ok ? 200 : 500, result);
 }
