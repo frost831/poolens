@@ -208,6 +208,7 @@ window.SPLASHLENS_MONETIZATION_LANES = {
     {
       name: "PartSnap Pro",
       planKey: "partsnap_pro_monthly",
+      availability: "self_serve",
       price: "$4.99/mo or $39/yr",
       buyer: "Techs who use PartSnap or Error Scan a lot",
       includes: ["More online PartSnap and Error Scan usage", "Proof checklist before ordering or escalating", "Local distributor/SCP-style verification first, online price-check links second", "Scanner activation and restore flow"],
@@ -216,7 +217,8 @@ window.SPLASHLENS_MONETIZATION_LANES = {
     {
       name: "Service Proof Pro",
       planKey: "service_proof_pro_monthly",
-      price: "$19/mo target",
+      availability: "pilot",
+      price: "$19/mo pilot target — request access",
       buyer: "Solo techs who want proof they can find later",
       includes: ["Save each pool's photos, readings, notes, and repair history", "Plain-English summary you can send to the customer", "One-tap packet for a boss, senior tech, or vendor", "Spot repeat issues before they become callbacks"],
       guardrail: "Built for cleaner documentation without becoming a full CRM."
@@ -224,7 +226,8 @@ window.SPLASHLENS_MONETIZATION_LANES = {
     {
       name: "Team / Facility Plans",
       planKey: "team_proof_os_monthly",
-      price: "$99+/mo pilot target",
+      availability: "pilot",
+      price: "$99+/mo pilot target — request access",
       buyer: "Owners, facilities, CPOs, and training groups",
       includes: ["See what your techs used, searched, and missed", "Reports with your company name on them", "Daily check and incident workflows for CPOs and facilities", "Team-level searched/missed reports"],
       guardrail: "Exports support existing CRMs; SplashLens is not a billing replacement."
@@ -232,7 +235,8 @@ window.SPLASHLENS_MONETIZATION_LANES = {
     {
       name: "Facility / CPO Pilot",
       planKey: "facility_cpo_pilot_monthly",
-      price: "Included in team/facility pilots",
+      availability: "pilot",
+      price: "Included in pilots — request access",
       buyer: "Facilities and training groups",
       includes: ["Daily checks", "Contamination event workflow", "Dose logs", "Escalation packets", "Staff handoff records"],
       guardrail: "Local code, facility policy, and CPO/trainer guidance still control."
@@ -240,7 +244,8 @@ window.SPLASHLENS_MONETIZATION_LANES = {
     {
       name: "Verified Manufacturer Cards",
       planKey: "verified_manufacturer_cards_monthly",
-      price: "By arrangement",
+      availability: "partner",
+      price: "Not self-serve — partner discussion",
       buyer: "Manufacturers and expert vendors that want field language shown correctly",
       includes: ["Partner-reviewed field cards", "Required proof photos", "Warranty-safe wording", "Preferred escalation steps"],
       guardrail: "Only marked partner-verified after written partner review/approval."
@@ -248,7 +253,8 @@ window.SPLASHLENS_MONETIZATION_LANES = {
     {
       name: "Distributor / Counter Mode",
       planKey: "distributor_counter_mode_monthly",
-      price: "By arrangement",
+      availability: "partner",
+      price: "Not self-serve — partner discussion",
       buyer: "Parts counters and distributors",
       includes: ["Required model plate prompts", "Second photo workflow", "Symptom/code capture", "Wrong-order prevention packet"],
       guardrail: "Possible match and missing proof, never guaranteed fit."
@@ -256,7 +262,8 @@ window.SPLASHLENS_MONETIZATION_LANES = {
     {
       name: "Training Partner Layer",
       planKey: "training_partner_layer_monthly",
-      price: "License, affiliate, or rev share",
+      availability: "partner",
+      price: "Not self-serve — partner discussion",
       buyer: "Pool schools and instructors",
       includes: ["5-minute field lessons", "Proof-based quizzes", "CPO scenario workflows", "Senior-review practice packets"],
       guardrail: "No official training alignment unless agreed in writing."

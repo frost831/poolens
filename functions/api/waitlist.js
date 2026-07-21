@@ -37,6 +37,7 @@ function notifyConfig(env) {
   return {
     apiKey: (env.SENDGRID_API_KEY || '').trim(),
     from: (env.SENDGRID_FROM || env.FLAGSHIP_NOTIFY_FROM || 'hello@splashlens.com').trim(),
+    replyTo: (env.SPLASHLENS_REPLY_TO || env.SENDGRID_REPLY_TO || 'hello@splashlens.com').trim(),
     to: (env.SPLASHLENS_NOTIFY_TO || env.FLAGSHIP_NOTIFY_TO || env.LEAD_NOTIFY_TO || env.ADMIN_EMAIL || '').trim(),
   };
 }
@@ -71,6 +72,7 @@ async function sendWaitlistAlert(env, record) {
           `Preferred language: ${record.preferredLanguage}`,
           `Locale: ${record.locale}`,
           `Source: ${record.source}`,
+          `Interest: ${record.interestLabel || record.interest || 'general waitlist'}`,
           `Path: ${record.path}`,
           `Referrer: ${record.referrer}`,
           `Country: ${record.country}`,
@@ -80,6 +82,41 @@ async function sendWaitlistAlert(env, record) {
     }),
   });
 
+  return { sent: response.ok, status: response.status };
+}
+
+async function sendWaitlistConfirmation(env, record) {
+  const config = notifyConfig(env);
+  if (!config.apiKey || !config.from) return { sent: false, reason: 'missing_sendgrid_config' };
+  const label = record.interestLabel || 'SplashLens updates';
+  const subject = `We received your SplashLens ${label} request`;
+  const text = [
+    `Thanks — we received your request for ${label}.`,
+    '',
+    'This lane is not self-serve yet. We will review the request and reply with availability, scope, and next steps. No payment was taken.',
+    '',
+    'Questions? Reply to this email.',
+    '',
+    'Talk Soon,',
+    'Joshua Frost',
+    'SplashLens',
+  ].join('\n');
+  const html = `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head><body style="font-family:Arial,sans-serif;color:#15312d"><div style="max-width:600px;margin:auto;padding:24px"><h1 style="font-size:24px">Request received</h1><p>Thanks — we received your request for <strong>${label.replace(/[<>&"']/g, '')}</strong>.</p><p>This lane is not self-serve yet. We will review availability, scope, and next steps. <strong>No payment was taken.</strong></p><p>Questions? Reply to this email.</p><p>Talk Soon,<br>Joshua Frost<br>SplashLens</p></div></body></html>`;
+  const response = await fetch('https://api.sendgrid.com/v3/mail/send', {
+    method: 'POST',
+    headers: { authorization: `Bearer ${config.apiKey}`, 'content-type': 'application/json' },
+    body: JSON.stringify({
+      personalizations: [{
+        to: [{ email: record.email }],
+        subject,
+        custom_args: { product: 'splashlens', template_id: 'paid_lane_request_confirmation', correlation_id: record.correlationId },
+      }],
+      from: { email: config.from, name: 'SplashLens' },
+      reply_to: { email: config.replyTo, name: 'SplashLens Support' },
+      categories: ['splashlens', 'paid-lane-request'],
+      content: [{ type: 'text/plain', value: text }, { type: 'text/html', value: html }],
+    }),
+  });
   return { sent: response.ok, status: response.status };
 }
 
@@ -103,21 +140,44 @@ export async function onRequestPost({ request, env }) {
     locale: clean(body.locale || request.headers.get('X-BZM-Locale') || body.language_profile?.locale || body.preferred_language || 'en', 32),
     languageProfile: body.language_profile && typeof body.language_profile === 'object' ? body.language_profile : {},
     source: clean(body.source || 'app-landing', 60),
+    interest: clean(body.interest || '', 100),
+    interestLabel: clean(body.interest_label || '', 120),
     path: clean(body.path || '', 300),
     referrer: clean(request.headers.get('Referer') || body.referrer, 500),
     country: clean(request.cf?.country || request.headers.get('CF-IPCountry'), 10),
     createdAt: new Date().toISOString(),
   };
 
+  const dedupeKey = `waitlist:${email}:${record.interest || 'general'}`;
+  if (env.SCAN_USAGE_KV && typeof env.SCAN_USAGE_KV.get === 'function') {
+    const prior = await env.SCAN_USAGE_KV.get(dedupeKey);
+    if (prior) return json(request, env, 200, {
+      ok: true,
+      message: "You're already on the list.",
+      deduplicated: true,
+      alertQueued: true,
+      confirmationQueued: record.source === 'paid-lane-request',
+      emailConfigured: true,
+    });
+    await env.SCAN_USAGE_KV.put(dedupeKey, record.createdAt, { expirationTtl: 24 * 60 * 60 });
+  }
+
   console.log('SplashLens waitlist signup:', JSON.stringify(record));
 
   const alert = await sendWaitlistAlert(env, record);
+  const confirmation = record.source === 'paid-lane-request'
+    ? await sendWaitlistConfirmation(env, record)
+    : { sent: false, reason: 'not_paid_lane_request' };
+  if (!alert.sent && !confirmation.sent && env.SCAN_USAGE_KV && typeof env.SCAN_USAGE_KV.delete === 'function') {
+    await env.SCAN_USAGE_KV.delete(dedupeKey);
+  }
   console.log('SplashLens waitlist alert:', JSON.stringify({ email, alert }));
 
   return json(request, env, 200, {
     ok: true,
     message: "You're on the list.",
     alertQueued: Boolean(alert.sent),
+    confirmationQueued: Boolean(confirmation.sent),
     emailConfigured: alert.reason !== 'missing_sendgrid_config',
   });
 }

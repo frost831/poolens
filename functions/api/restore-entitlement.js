@@ -26,7 +26,24 @@ function notifyConfig(env) {
   return {
     apiKey: clean(env.SENDGRID_API_KEY, 300),
     from: clean(env.SENDGRID_FROM || env.FLAGSHIP_NOTIFY_FROM || 'hello@splashlens.com', 180),
+    replyTo: clean(env.SPLASHLENS_REPLY_TO || env.SENDGRID_REPLY_TO || 'hello@splashlens.com', 180),
   };
+}
+
+function escapeHtml(value) {
+  return String(value || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function restoreHtml(plan, activateUrl, expiresAt) {
+  const safePlan = escapeHtml(plan);
+  const safeUrl = escapeHtml(activateUrl);
+  const safeExpiry = escapeHtml(expiresAt || 'active entitlement');
+  return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head><body style="margin:0;background:#f4f7f6;font-family:Arial,sans-serif;color:#15312d"><div style="max-width:600px;margin:0 auto;padding:24px 16px"><div style="background:#fff;border-radius:12px;padding:28px"><h1 style="font-size:24px">Restore ${safePlan}</h1><p style="line-height:1.5">Here is your SplashLens restore link. Open it on the device or browser where you use SplashLens.</p><p><a href="${safeUrl}" style="display:inline-block;background:#0f766e;color:#fff;padding:12px 18px;border-radius:8px;text-decoration:none;font-weight:700">Restore SplashLens access</a></p><p><strong>Plan:</strong> ${safePlan}<br><strong>Expires:</strong> ${safeExpiry}</p><p style="line-height:1.5">Manual lookup, dosing, reports, filters, and checklists remain free. Paid SplashLens lanes restore the workflow attached to your plan.</p><p>Talk Soon,<br>Joshua Frost<br>SplashLens</p></div></div></body></html>`;
 }
 
 async function signToken(secret, payload) {
@@ -75,10 +92,12 @@ async function sendRestoreEmail(config, email, activateUrl, entitlement) {
         },
       }],
       from: { email: config.from, name: 'SplashLens' },
+      reply_to: { email: config.replyTo, name: 'SplashLens Support' },
       categories: ['splashlens', 'entitlement-restore'],
-      content: [{
-        type: 'text/plain',
-        value: [
+      content: [
+        {
+          type: 'text/plain',
+          value: [
           `Here is your SplashLens ${plan} restore link.`,
           '',
           'Open this on the device/browser where you use SplashLens:',
@@ -92,8 +111,10 @@ async function sendRestoreEmail(config, email, activateUrl, entitlement) {
           'Talk Soon,',
           'Joshua Frost',
           'SplashLens',
-        ].join('\n'),
-      }],
+          ].join('\n'),
+        },
+        { type: 'text/html', value: restoreHtml(plan, activateUrl, entitlement.expiresAt) },
+      ],
     }),
   });
 

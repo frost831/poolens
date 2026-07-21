@@ -38,8 +38,30 @@ function notifyConfig(env) {
   return {
     apiKey: clean(env.SENDGRID_API_KEY, 300),
     from: clean(env.SENDGRID_FROM || env.FLAGSHIP_NOTIFY_FROM || 'hello@splashlens.com', 180),
+    replyTo: clean(env.SPLASHLENS_REPLY_TO || env.SENDGRID_REPLY_TO || 'hello@splashlens.com', 180),
     ownerTo: clean(env.SPLASHLENS_NOTIFY_TO || env.FLAGSHIP_NOTIFY_TO || env.LEAD_NOTIFY_TO || env.ADMIN_EMAIL, 180),
   };
+}
+
+function escapeHtml(value) {
+  return String(value || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function mailHtml(text) {
+  const rows = String(text || '').split('\n').map((line) => {
+    if (!line) return '<div style="height:12px"></div>';
+    if (/^https:\/\//i.test(line)) {
+      const url = escapeHtml(line);
+      return `<p style="margin:0 0 16px"><a href="${url}" style="display:inline-block;background:#0f766e;color:#fff;padding:12px 18px;border-radius:8px;text-decoration:none;font-weight:700">Open SplashLens</a></p>`;
+    }
+    return `<p style="margin:0 0 10px;line-height:1.5">${escapeHtml(line)}</p>`;
+  }).join('');
+  return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head><body style="margin:0;background:#f4f7f6;font-family:Arial,sans-serif;color:#15312d"><div style="max-width:600px;margin:0 auto;padding:24px 16px"><div style="background:#fff;border-radius:12px;padding:28px">${rows}</div></div></body></html>`;
 }
 
 function allowedPaymentLinkIds(env) {
@@ -163,8 +185,12 @@ async function sendMail(config, to, subject, text, categories = [], customArgs =
         custom_args: { product: 'splashlens', template_id: categories[0] || 'transactional', ...customArgs },
       }],
       from: { email: config.from, name: 'SplashLens' },
+      reply_to: { email: config.replyTo, name: 'SplashLens Support' },
       categories: ['splashlens', 'payment', ...categories],
-      content: [{ type: 'text/plain', value: text }],
+      content: [
+        { type: 'text/plain', value: text },
+        { type: 'text/html', value: mailHtml(text) },
+      ],
     }),
   });
   return { sent: response.ok, status: response.status };
@@ -200,9 +226,26 @@ async function sendActivationEmails(env, session, activation) {
     `Activation link: ${activation.activateUrl}`,
   ].join('\n');
 
-  const correlation = { correlation_id: clean(session.id || crypto.randomUUID(), 120) };
+  const correlationId = clean(session.id || crypto.randomUUID(), 120);
+  const correlation = { correlation_id: correlationId };
+  const dedupeKey = `email:checkout-activation:${correlationId}`;
+  if (env.SCAN_USAGE_KV && typeof env.SCAN_USAGE_KV.get === 'function') {
+    const prior = await env.SCAN_USAGE_KV.get(dedupeKey);
+    if (prior) return {
+      buyer: { sent: true, deduplicated: true },
+      owner: { sent: true, deduplicated: true },
+    };
+    await env.SCAN_USAGE_KV.put(dedupeKey, 'pending', { expirationTtl: 7 * 24 * 60 * 60 });
+  }
   const buyer = await sendMail(config, activation.subject, `Your SplashLens ${activation.entitlement.plan} activation`, buyerText, ['buyer-activation'], correlation);
   const owner = await sendMail(config, config.ownerTo, '[SplashLens Payment] Checkout completed', ownerText, ['owner-alert'], correlation);
+  if (env.SCAN_USAGE_KV && typeof env.SCAN_USAGE_KV.put === 'function') {
+    if (buyer.sent && owner.sent) {
+      await env.SCAN_USAGE_KV.put(dedupeKey, 'sent', { expirationTtl: 365 * 24 * 60 * 60 });
+    } else if (typeof env.SCAN_USAGE_KV.delete === 'function') {
+      await env.SCAN_USAGE_KV.delete(dedupeKey);
+    }
+  }
   return { buyer, owner };
 }
 

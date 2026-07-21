@@ -1842,7 +1842,7 @@ function renderVerifiedProofNetwork() {
           ${(plan.includes || []).map(item => `<li>${escHtml(item)}</li>`).join('')}
         </ul>
         <p style="color:#0f766e;font-size:11px;line-height:1.45;font-weight:850;margin-top:6px;"><strong>Trust boundary:</strong> ${escHtml(plan.guardrail || network.trustBoundary || '')}</p>
-        ${plan.planKey && plan.planKey !== 'free_core' ? `<button type="button" class="brain-action green" style="width:100%;margin-top:8px;" onclick="openSplashLensPaidLane('${escHtml(plan.planKey)}','${escHtml(plan.name)}')">Start / check availability</button>` : ''}
+        ${plan.planKey && plan.planKey !== 'free_core' ? `<button type="button" class="brain-action green" style="width:100%;margin-top:8px;" onclick="openSplashLensPaidLane('${escHtml(plan.planKey)}','${escHtml(plan.name)}')">${plan.availability === 'self_serve' ? 'Start paid plan' : plan.availability === 'partner' ? 'Request partner discussion' : 'Request pilot access'}</button>` : ''}
       </div>
     </details>
   `).join('');
@@ -1867,9 +1867,33 @@ async function openSplashLensPaidLane(planKey, label) {
       return;
     }
   } catch {}
-  const subject = encodeURIComponent(`SplashLens ${safeLabel} pilot`);
-  const body = encodeURIComponent(`Hi Joshua,\n\nI want to talk about ${safeLabel} for SplashLens.\n\nTalk Soon,`);
-  window.location.href = `mailto:hello@splashlens.com?subject=${subject}&body=${body}`;
+  const email = String(window.prompt(`Enter your email to request ${safeLabel} access:`) || '').trim().toLowerCase();
+  if (!email) return;
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    window.alert('Enter a valid email address.');
+    return;
+  }
+  try {
+    const response = await fetch('/api/waitlist', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email,
+        source: 'paid-lane-request',
+        interest: safePlan,
+        interest_label: safeLabel,
+        path: window.location.pathname,
+      }),
+    });
+    const result = await response.json();
+    if (!response.ok || !result.ok) throw new Error(result.error || 'request_failed');
+    trackSplashLensEvent('paid_lane_lead_captured', { plan_key: safePlan, label: safeLabel });
+    window.alert(`Request received for ${safeLabel}. Check your email for confirmation.`);
+  } catch {
+    const subject = encodeURIComponent(`SplashLens ${safeLabel} access request`);
+    const body = encodeURIComponent(`Hi Joshua,\n\nI want to talk about ${safeLabel} for SplashLens.\n\nEmail: ${email}\n\nTalk Soon,`);
+    window.location.href = `mailto:hello@splashlens.com?subject=${subject}&body=${body}`;
+  }
 }
 
 let activeVoiceNote = null;
