@@ -287,6 +287,8 @@ async function eventSummary(request, env) {
     'partsnap_share_used',
     'partsnap_saved_to_pool',
     'partsnap_field_stop_saved',
+    'partsnap_field_stop_reopened',
+    'partsnap_field_stop_assign_started',
     'partsnap_mystery_submitted',
     'partsnap_apprentice_started',
     'partsnap_second_proof_requested',
@@ -362,6 +364,10 @@ async function eventSummary(request, env) {
   let chemicalControllerSearches30d = 0;
   let sourcePageViews30d = 0;
   let proofDrawerOpens30d = 0;
+  let partSnapFieldStopsSaved30d = 0;
+  let partSnapFieldStopLibraryOpens30d = 0;
+  let partSnapFieldStopsReopened30d = 0;
+  let partSnapFieldStopAssignments30d = 0;
   let activationCompletions30d = 0;
   let languageModeOpens30d = 0;
   let spanishModeOpens30d = 0;
@@ -548,6 +554,10 @@ async function eventSummary(request, env) {
         fieldFeedback30d += 1;
         if (props.field_tester_opt_in === true || props.field_tester_opt_in === 'true') fieldTesterOptIns30d += 1;
       }
+      if (record.event === 'partsnap_field_stop_saved') partSnapFieldStopsSaved30d += 1;
+      if (record.event === 'partsnap_field_stop_library_opened') partSnapFieldStopLibraryOpens30d += 1;
+      if (record.event === 'partsnap_field_stop_reopened') partSnapFieldStopsReopened30d += 1;
+      if (record.event === 'partsnap_field_stop_assign_started') partSnapFieldStopAssignments30d += 1;
       if (record.event === 'field_feedback_quick_answered') {
         if (props.answer === 'helped') quickFeedbackHelpful30d += 1;
         if (['missed', 'wrong', 'missing'].includes(props.answer)) quickFeedbackMissed30d += 1;
@@ -695,6 +705,10 @@ async function eventSummary(request, env) {
       chemicalControllerSearches30d,
       sourcePageViews30d,
       proofDrawerOpens30d,
+      partSnapFieldStopsSaved30d,
+      partSnapFieldStopLibraryOpens30d,
+      partSnapFieldStopsReopened30d,
+      partSnapFieldStopAssignments30d,
       poolProEvents30d,
       poolProReferralOpens30d,
       poolProAppOpens30d,

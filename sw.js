@@ -1,5 +1,5 @@
-const CACHE = 'splashlens-v31-save-field-stop';
-const ASSETS = ['/', '/index.html', '/js/errors.js', '/js/data.js?v=20260718-partsnap-cache-safe', '/js/app.js?v=20260721-save-field-stop', '/favicon.svg', '/favicon.ico', '/apple-touch-icon.png', '/icon-192.png', '/icon-512.png', '/manifest.json'];
+const CACHE = 'splashlens-v32-field-stop-library';
+const ASSETS = ['/', '/index.html', '/js/errors.js', '/js/data.js?v=20260718-partsnap-cache-safe', '/js/app.js?v=20260721-field-stop-library', '/favicon.svg', '/favicon.ico', '/apple-touch-icon.png', '/icon-192.png', '/icon-512.png', '/manifest.json'];
 
 function cacheKey(url) {
   return `${url.pathname}${url.search}`;

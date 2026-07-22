@@ -6469,8 +6469,88 @@ function renderPartSnapPrimer() {
         <div style="background:#431407;border:1px solid #b45309;border-radius:9px;padding:9px;min-height:66px;"><b style="display:block;color:#fed7aa;font-size:12px;">3. Verify</b><span style="display:block;color:#fdba74;font-size:10px;font-weight:800;margin-top:6px;">before buy</span></div>
         <div style="background:#082f49;border:1px solid #0369a1;border-radius:9px;padding:9px;min-height:66px;"><b style="display:block;color:#bae6fd;font-size:12px;">4. Packet</b><span style="display:block;color:#7dd3fc;font-size:10px;font-weight:800;margin-top:6px;">send / save</span></div>
       </div>
+      ${renderPartSnapFieldStopSummary()}
       ${renderPartSnapReviewTicketSummary()}
     </div>`;
+}
+
+function renderPartSnapFieldStopSummary() {
+  const stops = getPartSnapFieldStops();
+  if (!stops.length) return '';
+  const latest = stops[0];
+  return `
+    <div style="margin-top:10px;background:#ecfeff;border:1px solid #22d3ee;border-radius:10px;padding:10px;">
+      <div style="display:flex;justify-content:space-between;gap:8px;align-items:center;">
+        <div style="min-width:0;">
+          <p style="color:#0e7490;font-size:10px;font-weight:950;letter-spacing:.08em;text-transform:uppercase;margin-bottom:3px;">Saved field stops</p>
+          <p style="color:#0f172a;font-size:12px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${stops.length} saved - ${escHtml(latest.title || 'latest PartSnap result')}</p>
+        </div>
+        <button onclick="renderPartSnapFieldStops()" style="background:#0891b2;color:#fff;border:0;border-radius:8px;padding:9px 11px;font-size:10px;font-weight:950;cursor:pointer;white-space:nowrap;">Open</button>
+      </div>
+    </div>`;
+}
+
+function renderPartSnapFieldStops() {
+  const result = document.getElementById('scan-result');
+  if (!result) return;
+  const stops = getPartSnapFieldStops();
+  trackSplashLensEvent('partsnap_field_stop_library_opened', { saved_count: stops.length });
+  result.innerHTML = `
+    <div style="background:#f8fafc;border:1px solid #cbd5e1;border-radius:12px;padding:14px;margin:8px 0;">
+      <p style="color:#0e7490;font-size:10px;font-weight:950;letter-spacing:.1em;text-transform:uppercase;margin-bottom:5px;">Saved on this device</p>
+      <h3 style="color:#0f172a;font-size:18px;font-weight:950;margin-bottom:5px;">Recent PartSnap field stops</h3>
+      <p style="color:#64748b;font-size:11px;line-height:1.45;margin-bottom:12px;">Reopen the evidence, assign it to a customer, or send the handoff without scanning again.</p>
+      ${stops.length ? stops.map((stop) => `
+        <div style="background:#fff;border:1px solid #dbeafe;border-radius:10px;padding:10px;margin-bottom:8px;">
+          <div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start;">
+            <div style="min-width:0;"><strong style="display:block;color:#0f172a;font-size:12px;">${escHtml(stop.title || 'PartSnap field stop')}</strong><span style="display:block;color:#64748b;font-size:10px;margin-top:3px;">${escHtml(stop.model || 'Model proof still needed')} - ${new Date(stop.savedAt).toLocaleString()}</span></div>
+            <span style="background:${stop.risk === 'high' ? '#dc2626' : stop.risk === 'medium' ? '#d97706' : '#16a34a'};color:#fff;border-radius:999px;padding:3px 7px;font-size:9px;font-weight:950;white-space:nowrap;">${escHtml((stop.risk || 'unknown').toUpperCase())}</span>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:6px;margin-top:9px;">
+            <button onclick="openPartSnapFieldStop('${escAttr(stop.id)}')" style="background:#0369a1;color:#fff;border:0;border-radius:8px;padding:9px;font-size:10px;font-weight:900;cursor:pointer;">Open stop</button>
+            <button onclick="assignPartSnapFieldStop('${escAttr(stop.id)}')" style="background:#0f766e;color:#fff;border:0;border-radius:8px;padding:9px;font-size:10px;font-weight:900;cursor:pointer;">Assign</button>
+            <button onclick="deletePartSnapFieldStop('${escAttr(stop.id)}')" aria-label="Delete saved stop" title="Delete saved stop" style="background:#fff;color:#991b1b;border:1px solid #fecaca;border-radius:8px;padding:9px 11px;font-size:11px;font-weight:900;cursor:pointer;">X</button>
+          </div>
+        </div>`).join('') : '<p style="color:#64748b;font-size:12px;">No saved field stops yet.</p>'}
+      <button onclick="document.getElementById('scan-result').innerHTML='';renderPartSnapPrimer()" style="width:100%;background:#0f172a;color:#fff;border:0;border-radius:9px;padding:10px;font-size:11px;font-weight:900;cursor:pointer;">Back to PartSnap</button>
+    </div><div id="partsnap-feedback-panel"></div>`;
+}
+
+function openPartSnapFieldStop(id) {
+  const stop = getPartSnapFieldStops().find((item) => item.id === id);
+  const result = document.getElementById('scan-result');
+  if (!stop || !result) return;
+  _lastPartSnapResult = stop.partSnap || {};
+  trackSplashLensEvent('partsnap_field_stop_reopened', { age_days: Math.max(0, Math.floor((Date.now() - Date.parse(stop.savedAt)) / 86400000)), risk: stop.risk || 'unknown' });
+  result.innerHTML = `
+    <div style="background:#f8fafc;border:1px solid #67e8f9;border-left:4px solid #0891b2;border-radius:12px;padding:14px;margin:8px 0;">
+      <p style="color:#0e7490;font-size:10px;font-weight:950;text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Saved field stop</p>
+      <h3 style="color:#0f172a;font-size:19px;font-weight:950;margin-bottom:4px;">${escHtml(stop.title)}</h3>
+      <p style="color:#475569;font-size:12px;margin-bottom:10px;">${escHtml(stop.model || 'Model proof still needed')} - saved ${new Date(stop.savedAt).toLocaleString()}</p>
+      ${renderPartEvidencePanel(stop.visibleEvidence || [], stop.missingProof || [])}
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;">
+        <button onclick="savePartSnapToPool()" style="background:#0f766e;color:#fff;border:0;border-radius:9px;padding:11px;font-size:11px;font-weight:900;cursor:pointer;">Assign customer</button>
+        <button onclick="sharePartSnapPacket()" style="background:#0369a1;color:#fff;border:0;border-radius:9px;padding:11px;font-size:11px;font-weight:900;cursor:pointer;">Share packet</button>
+        <button onclick="requestPartSnapSecondProof()" style="background:#fff;color:#075985;border:1px solid #bae6fd;border-radius:9px;padding:10px;font-size:11px;font-weight:900;cursor:pointer;">Add proof photo</button>
+        <button onclick="renderPartSnapFieldStops()" style="background:#fff;color:#334155;border:1px solid #cbd5e1;border-radius:9px;padding:10px;font-size:11px;font-weight:900;cursor:pointer;">All saved stops</button>
+      </div>
+    </div><div id="partsnap-feedback-panel"></div>`;
+}
+
+function assignPartSnapFieldStop(id) {
+  const stop = getPartSnapFieldStops().find((item) => item.id === id);
+  if (!stop) return;
+  _lastPartSnapResult = stop.partSnap || {};
+  trackSplashLensEvent('partsnap_field_stop_assign_started', { risk: stop.risk || 'unknown' });
+  savePartSnapToPool();
+}
+
+function deletePartSnapFieldStop(id) {
+  if (!window.confirm('Delete this saved field stop from this device?')) return;
+  const stops = getPartSnapFieldStops().filter((item) => item.id !== id);
+  localStorage.setItem('splashlens-partsnap-field-stops', JSON.stringify(stops));
+  trackSplashLensEvent('partsnap_field_stop_deleted', { remaining_count: stops.length });
+  renderPartSnapFieldStops();
 }
 
 // ── Camera ──────────────────────────────────
