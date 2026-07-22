@@ -368,6 +368,8 @@ async function eventSummary(request, env) {
   let partSnapFieldStopLibraryOpens30d = 0;
   let partSnapFieldStopsReopened30d = 0;
   let partSnapFieldStopAssignments30d = 0;
+  let postValueUpgradeShown30d = 0;
+  let postValueUpgradeClicked30d = 0;
   let activationCompletions30d = 0;
   let languageModeOpens30d = 0;
   let spanishModeOpens30d = 0;
@@ -558,6 +560,8 @@ async function eventSummary(request, env) {
       if (record.event === 'partsnap_field_stop_library_opened') partSnapFieldStopLibraryOpens30d += 1;
       if (record.event === 'partsnap_field_stop_reopened') partSnapFieldStopsReopened30d += 1;
       if (record.event === 'partsnap_field_stop_assign_started') partSnapFieldStopAssignments30d += 1;
+      if (record.event === 'post_value_upgrade_shown') postValueUpgradeShown30d += 1;
+      if (record.event === 'post_value_upgrade_clicked') postValueUpgradeClicked30d += 1;
       if (record.event === 'field_feedback_quick_answered') {
         if (props.answer === 'helped') quickFeedbackHelpful30d += 1;
         if (['missed', 'wrong', 'missing'].includes(props.answer)) quickFeedbackMissed30d += 1;
@@ -709,6 +713,9 @@ async function eventSummary(request, env) {
       partSnapFieldStopLibraryOpens30d,
       partSnapFieldStopsReopened30d,
       partSnapFieldStopAssignments30d,
+      postValueUpgradeShown30d,
+      postValueUpgradeClicked30d,
+      postValueUpgradeClickRate30d: pct(postValueUpgradeClicked30d, postValueUpgradeShown30d),
       poolProEvents30d,
       poolProReferralOpens30d,
       poolProAppOpens30d,

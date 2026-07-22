@@ -7585,7 +7585,31 @@ function savePartSnapFieldStop() {
         <button onclick="savePartSnapToPool()" style="background:#0f766e;color:#fff;border:0;border-radius:8px;padding:10px;font-size:11px;font-weight:900;cursor:pointer;">Assign customer</button>
         <button onclick="sharePartSnapPacket()" style="background:#fff;color:#0f766e;border:1px solid #0f766e;border-radius:8px;padding:10px;font-size:11px;font-weight:900;cursor:pointer;">Share packet</button>
       </div>
+    </div>${renderPostValueUpgradeOffer()}`;
+}
+
+function renderPostValueUpgradeOffer() {
+  if (isPartSnapPro()) return '';
+  const key = 'splashlens-post-value-upgrade-shown-at';
+  const lastShownAt = Date.parse(localStorage.getItem(key) || '');
+  if (Number.isFinite(lastShownAt) && Date.now() - lastShownAt < 7 * 86400000) return '';
+  localStorage.setItem(key, new Date().toISOString());
+  trackSplashLensEvent('post_value_upgrade_shown', { feature: 'unlimited_partsnap', placement: 'field_stop_saved' });
+  return `
+    <div style="background:#0f172a;border:1px solid #334155;border-radius:10px;padding:12px;margin:0 0 16px;">
+      <p style="color:#7dd3fc;font-size:10px;font-weight:950;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;">PartSnap Pro</p>
+      <p style="color:#f8fafc;font-size:13px;font-weight:950;margin-bottom:4px;">Need PartSnap throughout the route?</p>
+      <p style="color:#94a3b8;font-size:11px;line-height:1.4;margin-bottom:9px;">The free app includes 10 AI scans each month. Pro unlocks unlimited web scanner access. Code lookup, dosing, notes, and core field tools stay free.</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;">
+        <a href="${PARTSNAP_MONTHLY_LINK}" target="_blank" rel="noopener" onclick="trackPostValueUpgrade('monthly')" style="background:#0284c7;color:#fff;text-decoration:none;text-align:center;border-radius:8px;padding:10px 7px;font-size:11px;font-weight:950;">$4.99 monthly</a>
+        <a href="${PARTSNAP_YEARLY_LINK}" target="_blank" rel="noopener" onclick="trackPostValueUpgrade('yearly')" style="background:#16a34a;color:#fff;text-decoration:none;text-align:center;border-radius:8px;padding:10px 7px;font-size:11px;font-weight:950;">$39 yearly</a>
+      </div>
     </div>`;
+}
+
+function trackPostValueUpgrade(plan) {
+  trackSplashLensEvent('post_value_upgrade_clicked', { plan, feature: 'unlimited_partsnap', placement: 'field_stop_saved' });
+  trackSplashLensEvent('upgrade_click', { plan, feature: 'unlimited_partsnap', placement: 'field_stop_saved' });
 }
 
 function renderPartSnapProofSnapshot(ladder = {}, risk = {}, visibleEvidence = [], missingProof = []) {
