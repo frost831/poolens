@@ -223,6 +223,14 @@
       font-size: 11px;
       background: #0f766e;
     }
+    .intelligence-panel { margin-bottom: 16px; padding-bottom: 12px; }
+    .intelligence-panel > .grid, .intelligence-panel > .panels { padding: 0 12px; }
+    .intelligence-panels .panel { box-shadow: none; }
+    .recommendations { padding: 10px 12px; display: grid; gap: 8px; }
+    .recommendation { border-left: 4px solid #0e7490; background: #f8fafc; padding: 10px 12px; }
+    .recommendation b { color: #0e7490; font-size: 10px; text-transform: uppercase; }
+    .recommendation strong, .recommendation span, .recommendation small { display: block; margin-top: 4px; }
+    .recommendation span, .recommendation small { color: #475569; line-height: 1.4; }
     .review-actions {
       display: flex;
       flex-wrap: wrap;
@@ -299,6 +307,15 @@
     <section class="grid" id="metrics"></section>
 
     <section class="attention-grid" id="attention"></section>
+
+    <section class="panel intelligence-panel">
+      <h2>Product Intelligence</h2>
+      <div class="grid" id="intelligence-metrics"></div>
+      <div class="panels intelligence-panels">
+        <div class="panel"><h2>Where Time Goes</h2><table id="tab-dwell"></table></div>
+        <div class="panel"><h2>What To Improve Next</h2><div id="intelligence-recommendations" class="recommendations"></div></div>
+      </div>
+    </section>
 
     <section class="panels">
       <div class="panel">
@@ -444,6 +461,32 @@
 
     function attentionCard(label, value, note) {
       return `<div class="attention-card"><b>${escapeHtml(label)}</b><strong>${escapeHtml(value)}</strong><span>${escapeHtml(note)}</span></div>`;
+    }
+
+    function intelligenceMetric(label, value, hint) {
+      return `<div class="metric"><div class="label">${escapeHtml(label)}</div><div class="value">${escapeHtml(value)}</div><div class="hint">${escapeHtml(hint)}</div></div>`;
+    }
+
+    function renderProductIntelligence(data, aggregate) {
+      const m = data.metrics || {};
+      const signals = aggregate?.productSignals || {};
+      const signal = (name, fallback) => signals[name] == null ? fallback : signals[name];
+      const formatSeconds = (seconds) => seconds == null ? 'Collecting' : seconds < 60 ? `${seconds}s` : `${Math.round(seconds / 6) / 10}m`;
+      document.getElementById('intelligence-metrics').innerHTML = [
+        intelligenceMetric('Useful sessions', signal('meaningfulSessionRate', m.meaningfulSessionRate30d) == null ? 'Collecting' : `${signal('meaningfulSessionRate', m.meaningfulSessionRate30d)}%`, 'Sessions reaching a lookup, scan, proof, facility, or paid outcome.'),
+        intelligenceMetric('Returned another day', signal('returnClientRate', m.returnClientRate30d) == null ? 'Collecting' : `${signal('returnClientRate', m.returnClientRate30d)}%`, 'Anonymous clients active on at least two calendar days in the sample.'),
+        intelligenceMetric('Time to first value', formatSeconds(signal('medianTimeToValueSeconds', m.medianTimeToValueSeconds30d)), 'Median observed time from session start to a useful result.'),
+        intelligenceMetric('Engaged time', formatSeconds(signal('engagedSeconds', m.totalEngagedSeconds30d)), 'Visible, active app time reported in bounded intervals.'),
+        intelligenceMetric('Started but stopped', signal('abandonmentRate', m.abandonmentRate30d) == null ? 'Collecting' : `${signal('abandonmentRate', m.abandonmentRate30d)}%`, 'Sessions beginning an action without reaching first value.'),
+        intelligenceMetric('Proof follow-through', signal('proofFollowThroughRate', m.proofFollowThroughRate30d) == null ? 'Collecting' : `${signal('proofFollowThroughRate', m.proofFollowThroughRate30d)}%`, 'Saved proof events divided by PartSnap results; directional only.'),
+        intelligenceMetric('Checkout completion', signal('checkoutCompletionRate', m.checkoutCompletionRate30d) == null ? 'Collecting' : `${signal('checkoutCompletionRate', m.checkoutCompletionRate30d)}%`, 'Verified paid checkouts divided by observed upgrade starts.'),
+        intelligenceMetric('Observed sessions', signals.sessions || m.sessionCount30d || 0, 'Based on the loaded first-party event sample.')
+      ].join('');
+      renderCountTable('tab-dwell', data.topTabDwell, 'Tool / Tab');
+      const recommendations = aggregate?.recommendations || [];
+      document.getElementById('intelligence-recommendations').innerHTML = recommendations.length
+        ? recommendations.slice(0, 6).map((item) => `<div class="recommendation"><b>${escapeHtml(item.priority || 'medium')}</b><strong>${escapeHtml(item.title)}</strong><span>${escapeHtml(item.rationale)}</span><small>${escapeHtml(item.action)}</small></div>`).join('')
+        : '<div class="hint">No recommendation has enough observed evidence yet.</div>';
     }
 
     function renderAttention(data) {
@@ -629,7 +672,12 @@
       }
 
       const m = data.metrics || {};
+      const aggregateResponse = await fetch(`/api/events?aggregate=1&limit=3000&days=${encodeURIComponent(days)}`, {
+        headers: { Authorization: `Bearer ${secret}` }, cache: 'no-store'
+      });
+      const aggregate = await aggregateResponse.json().catch(() => ({}));
       renderAttention(data);
+      renderProductIntelligence(data, aggregateResponse.ok ? aggregate : {});
       document.getElementById('metrics').innerHTML = [
         metricCard('App Opens 7d', m.appOpens7d, 'Real app usage, not email opens.'),
         metricCard('PoolPro Clients 30d', m.poolProClients30d, 'Anonymous devices from PoolPro attribution.'),

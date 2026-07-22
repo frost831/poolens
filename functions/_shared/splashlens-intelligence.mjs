@@ -108,6 +108,56 @@ export function buildSplashLensAggregate(summary, options = {}) {
       { lane: summary.topDemandLanes[0].name, actions: count(summary.topDemandLanes[0].count) },
     ));
   }
+  if (count(m.sessionCount30d) >= 5 && Number(m.meaningfulSessionRate30d || 0) < 35) {
+    recommendations.push(recommendation(
+      'shorten-path-to-field-value',
+      'high',
+      'Shorten the path to a useful field result',
+      'Fewer than 35% of observed sessions reached a meaningful lookup, scan, proof, facility, or payment action.',
+      'Route each role directly to its primary job and remove choices before the first result.',
+      { meaningfulSessionRate: Number(m.meaningfulSessionRate30d || 0), sessions: count(m.sessionCount30d) },
+    ));
+  }
+  if (Number(m.medianTimeToValueSeconds30d || 0) > 90) {
+    recommendations.push(recommendation(
+      'reduce-time-to-value',
+      'high',
+      'Reduce median time to first value',
+      'The observed median first-value path is longer than 90 seconds.',
+      'Open returning users on their last useful tool and make the first role choice skip directly to that workflow.',
+      { medianTimeToValueSeconds: count(m.medianTimeToValueSeconds30d) },
+    ));
+  }
+  if (count(m.partsnapResults30d) >= 3 && Number(m.proofFollowThroughRate30d || 0) < 20) {
+    recommendations.push(recommendation(
+      'centralize-proof-next-step',
+      'medium',
+      'Make the proof next step unmistakable',
+      'Few observed PartSnap result sessions continued into saved service proof.',
+      'Place one primary Save visit proof action directly below the cautious identification result.',
+      { proofFollowThroughRate: Number(m.proofFollowThroughRate30d || 0) },
+    ));
+  }
+  if (count(m.checkoutStarts30d) >= 2 && count(m.checkoutSuccess30d) === 0 && options.revenueConfigured) {
+    recommendations.push(recommendation(
+      'inspect-checkout-dropoff',
+      'high',
+      'Inspect checkout drop-off',
+      'Observed upgrade starts did not produce a server-verified checkout success.',
+      'Test the full purchase and entitlement path on mobile, then compare plan copy with the feature unlocked.',
+      { checkoutStarts: count(m.checkoutStarts30d) },
+    ));
+  }
+  if (count(m.uniqueClients30d) >= 5 && Number(m.returnClientRate30d || 0) < 20) {
+    recommendations.push(recommendation(
+      'build-useful-return-loop',
+      'medium',
+      'Give users a practical reason to return',
+      'Fewer than 20% of observed anonymous clients returned on a second calendar day.',
+      'Prioritize Continue last job, saved pool history, next-visit prompts, and newly added equipment relevant to prior work.',
+      { returnClientRate: Number(m.returnClientRate30d || 0) },
+    ));
+  }
 
   return {
     ok: true,
@@ -161,6 +211,15 @@ export function buildSplashLensAggregate(summary, options = {}) {
       topSearches: summary?.manualQueries || [],
       topDemandLanes: summary?.topDemandLanes || [],
       topPartSnapCategories: summary?.topPartSnapCategories || [],
+      sessions: count(m.sessionCount30d),
+      meaningfulSessionRate: Number(m.meaningfulSessionRate30d || 0),
+      returnClientRate: Number(m.returnClientRate30d || 0),
+      abandonmentRate: Number(m.abandonmentRate30d || 0),
+      proofFollowThroughRate: Number(m.proofFollowThroughRate30d || 0),
+      checkoutCompletionRate: m.checkoutCompletionRate30d == null ? null : Number(m.checkoutCompletionRate30d),
+      medianTimeToValueSeconds: m.medianTimeToValueSeconds30d == null ? null : count(m.medianTimeToValueSeconds30d),
+      engagedSeconds: count(m.totalEngagedSeconds30d),
+      topTabDwell: summary?.topTabDwell || [],
     },
     recommendations,
     caveats: [

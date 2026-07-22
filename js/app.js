@@ -599,6 +599,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initRoute();
   checkOfflineStatus();
   initDeepLink();
+  initProductIntelligenceTracking();
   trackReferralLandingOpen();
   trackSplashLensAppOpen();
 });
@@ -607,6 +608,11 @@ document.addEventListener('DOMContentLoaded', () => {
 // TABS
 // ═══════════════════════════════════════════
 function showTab(name) {
+  trackProductTabChange(name);
+  if (PRODUCT_INTELLIGENCE.startedAt) {
+    localStorage.setItem('splashlens-last-field-tab', name);
+    localStorage.setItem('splashlens-last-field-tab-at', new Date().toISOString());
+  }
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
   const panel = document.getElementById(`tab-${name}`);
@@ -7090,6 +7096,101 @@ function trackSplashLensEvent(name, props = {}) {
       keepalive: true,
     }).catch(() => {});
   } catch {}
+}
+
+const PRODUCT_INTELLIGENCE = {
+  startedAt: 0,
+  activeStartedAt: 0,
+  engagedSeconds: 0,
+  currentTab: '',
+  tabStartedAt: 0,
+  ended: false,
+};
+
+function accrueProductEngagement() {
+  if (!PRODUCT_INTELLIGENCE.activeStartedAt) return;
+  const now = Date.now();
+  PRODUCT_INTELLIGENCE.engagedSeconds += Math.max(0, Math.round((now - PRODUCT_INTELLIGENCE.activeStartedAt) / 1000));
+  PRODUCT_INTELLIGENCE.activeStartedAt = document.visibilityState === 'visible' ? now : 0;
+}
+
+function flushProductEngagement(reason) {
+  accrueProductEngagement();
+  const seconds = PRODUCT_INTELLIGENCE.engagedSeconds;
+  if (seconds < 1) return;
+  PRODUCT_INTELLIGENCE.engagedSeconds = 0;
+  trackSplashLensEvent('session_heartbeat', {
+    engaged_delta_seconds: Math.min(seconds, 300),
+    active_tab: PRODUCT_INTELLIGENCE.currentTab || S.tab || '',
+    reason,
+  });
+}
+
+function trackProductTabChange(nextTab) {
+  if (!PRODUCT_INTELLIGENCE.startedAt) return;
+  const now = Date.now();
+  const previousTab = PRODUCT_INTELLIGENCE.currentTab || S.tab || '';
+  if (previousTab && previousTab !== nextTab && PRODUCT_INTELLIGENCE.tabStartedAt) {
+    trackSplashLensEvent('tab_dwell', {
+      tab: previousTab,
+      dwell_seconds: Math.min(1800, Math.max(0, Math.round((now - PRODUCT_INTELLIGENCE.tabStartedAt) / 1000))),
+      next_tab: nextTab,
+    });
+  }
+  if (previousTab !== nextTab) {
+    PRODUCT_INTELLIGENCE.currentTab = nextTab;
+    PRODUCT_INTELLIGENCE.tabStartedAt = now;
+    trackSplashLensEvent('app_tab_view', { tab: nextTab, previous_tab: previousTab });
+  }
+}
+
+function endProductIntelligenceSession(reason) {
+  if (!PRODUCT_INTELLIGENCE.startedAt || PRODUCT_INTELLIGENCE.ended) return;
+  flushProductEngagement(reason);
+  PRODUCT_INTELLIGENCE.ended = true;
+  trackSplashLensEvent('session_ended', {
+    session_duration_seconds: Math.min(7200, Math.max(0, Math.round((Date.now() - PRODUCT_INTELLIGENCE.startedAt) / 1000))),
+    active_tab: PRODUCT_INTELLIGENCE.currentTab || S.tab || '',
+    reason,
+  });
+}
+
+function initProductIntelligenceTracking() {
+  const now = Date.now();
+  PRODUCT_INTELLIGENCE.startedAt = now;
+  PRODUCT_INTELLIGENCE.activeStartedAt = document.visibilityState === 'visible' ? now : 0;
+  PRODUCT_INTELLIGENCE.currentTab = S.tab || 'errors';
+  PRODUCT_INTELLIGENCE.tabStartedAt = now;
+  initReturnFieldTask();
+  trackSplashLensEvent('session_started', { entry_tab: PRODUCT_INTELLIGENCE.currentTab });
+  trackSplashLensEvent('app_tab_view', { tab: PRODUCT_INTELLIGENCE.currentTab, previous_tab: '' });
+  window.setInterval(() => {
+    if (document.visibilityState === 'visible') flushProductEngagement('interval');
+  }, 30000);
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') flushProductEngagement('hidden');
+    else PRODUCT_INTELLIGENCE.activeStartedAt = Date.now();
+  });
+  window.addEventListener('pagehide', () => endProductIntelligenceSession('pagehide'), { once: true });
+}
+
+function initReturnFieldTask() {
+  const button = document.getElementById('continue-field-task');
+  const tab = localStorage.getItem('splashlens-last-field-tab') || '';
+  const lastAt = Date.parse(localStorage.getItem('splashlens-last-field-tab-at') || '');
+  const allowed = new Set(['errors', 'dosing', 'report', 'guide', 'pools', 'scan', 'volume', 'sand', 'route']);
+  if (!button || !allowed.has(tab) || !Number.isFinite(lastAt) || Date.now() - lastAt > 30 * 86400000) return;
+  const labels = { errors: 'code lookup', dosing: 'dose math', report: 'service note', guide: 'checklist', pools: 'saved pool', scan: 'PartSnap', volume: 'volume math', sand: 'filter math', route: 'smart pad' };
+  button.textContent = `Continue ${labels[tab] || 'last field task'}`;
+  button.dataset.tab = tab;
+  button.style.display = '';
+}
+
+function continueLastFieldTask() {
+  const button = document.getElementById('continue-field-task');
+  const tab = button?.dataset.tab || 'errors';
+  trackSplashLensEvent('return_task_continued', { target_tab: tab });
+  enterSplashLensApp(tab, tab === 'scan' ? 'parts' : undefined);
 }
 
 function compactPartSnapList(items, limit = 3) {

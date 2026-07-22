@@ -478,6 +478,7 @@
         <h1>Proof-first pool work.</h1>
         <p>Identify the part, capture the stop, build the packet, and get back to the next job without rewriting everything after dinner.</p>
         <div class="marketing-actions">
+          <button id="continue-field-task" type="button" class="marketing-primary" style="display:none" onclick="continueLastFieldTask()">Continue last field task</button>
           <button type="button" class="marketing-primary" onclick="enterSplashLensApp('scan','parts')">Try PartSnap</button>
           <button type="button" class="marketing-secondary" onclick="enterSplashLensApp('errors')">Open Field Tools</button>
         <button type="button" class="marketing-secondary" onclick="enterSplashLensApp('errors','search')">Look Up Codes</button>
@@ -1406,7 +1407,7 @@
 
   <script src="/js/errors.js"></script>
   <script src="/js/data.js?v=20260718-partsnap-cache-safe"></script>
-  <script src="/js/app.js?v=20260718-partsnap-cache-safe"></script>
+  <script src="/js/app.js?v=20260721-intelligence-return-loop"></script>
   <script src="/js/analytics.js"></script>
   <script>
     if ('serviceWorker' in navigator) {

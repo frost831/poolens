@@ -69,3 +69,25 @@ test('marks counts partial when the event read is truncated', () => {
   assert.equal(aggregate.metrics.searches.status, 'partial');
   assert.ok(aggregate.recommendations.some((item) => item.id === 'increase-event-coverage'));
 });
+
+test('turns observed session friction into deterministic product recommendations', () => {
+  const aggregate = buildSplashLensAggregate(summary({
+    sessionCount30d: 20,
+    meaningfulSessionRate30d: 25,
+    medianTimeToValueSeconds30d: 125,
+    returnClientRate30d: 10,
+    checkoutStarts30d: 4,
+    checkoutSuccess30d: 0,
+    partsnapResults30d: 10,
+    proofFollowThroughRate30d: 10,
+  }), { revenueConfigured: true });
+
+  const ids = new Set(aggregate.recommendations.map((item) => item.id));
+  assert.ok(ids.has('shorten-path-to-field-value'));
+  assert.ok(ids.has('reduce-time-to-value'));
+  assert.ok(ids.has('centralize-proof-next-step'));
+  assert.ok(ids.has('inspect-checkout-dropoff'));
+  assert.ok(ids.has('build-useful-return-loop'));
+  assert.equal(aggregate.productSignals.sessions, 20);
+  assert.equal(aggregate.productSignals.medianTimeToValueSeconds, 125);
+});

@@ -112,9 +112,9 @@ function shouldSendImmediateAlert(record) {
   return true;
 }
 
-function inc(map, key) {
+function inc(map, key, amount = 1) {
   const safeKey = clean(key || 'unknown', 80) || 'unknown';
-  map.set(safeKey, (map.get(safeKey) || 0) + 1);
+  map.set(safeKey, (map.get(safeKey) || 0) + amount);
 }
 
 function topList(map, limit = 12) {
@@ -272,6 +272,8 @@ async function eventSummary(request, env) {
   const requestedLanguages = new Map();
   const markets = new Map();
   const sessionEvents = new Map();
+  const clientActiveDays = new Map();
+  const tabDwellSeconds = new Map();
   const meaningfulEvents = new Set([
     'article_referral_open',
     'pwa_installed',
@@ -421,6 +423,12 @@ async function eventSummary(request, env) {
           partSnapResults: 0,
           stuckSignals: 0,
           checkoutSuccess: 0,
+          checkoutStarts: 0,
+          meaningful: false,
+          firstActionAt: null,
+          firstValueAt: null,
+          engagedSeconds: 0,
+          durationSeconds: 0,
           latestPath: record.path || props.path || '',
           events: [],
         };
@@ -432,6 +440,13 @@ async function eventSummary(request, env) {
         if (record.event === 'ai_scan_started') existing.scanCount += 1;
         if (record.event === 'partsnap_result') existing.partSnapResults += 1;
         if (record.event === 'checkout_success') existing.checkoutSuccess += 1;
+        if (record.event === 'upgrade_click') existing.checkoutStarts += 1;
+        if (meaningfulEvents.has(record.event)) existing.meaningful = true;
+        if (record.event === 'first_action_started' && (!existing.firstActionAt || eventTime(record) < eventTime({ createdAt: existing.firstActionAt }))) existing.firstActionAt = record.createdAt;
+        if (['first_value_completed', 'activation_completed'].includes(record.event) && (!existing.firstValueAt || eventTime(record) < eventTime({ createdAt: existing.firstValueAt }))) existing.firstValueAt = record.createdAt;
+        if (record.event === 'session_heartbeat') existing.engagedSeconds += Math.max(0, Math.min(300, Number(props.engaged_delta_seconds || 0) || 0));
+        if (record.event === 'session_ended') existing.durationSeconds = Math.max(existing.durationSeconds, Math.min(7200, Number(props.session_duration_seconds || 0) || 0));
+        if (record.event === 'tab_dwell') inc(tabDwellSeconds, clean(props.tab || 'unknown', 60), Math.max(0, Math.min(1800, Number(props.dwell_seconds || 0) || 0)));
         existing.events.push({
           event: record.event,
           at: record.createdAt,
@@ -445,6 +460,11 @@ async function eventSummary(request, env) {
         sessionEvents.set(sessionKey, existing);
       }
       if (meaningfulEvents.has(record.event) && clientId) meaningfulClients30d.add(clientId);
+      if (clientId) {
+        const activeDays = clientActiveDays.get(clientId) || new Set();
+        activeDays.add(new Date(ts).toISOString().slice(0, 10));
+        clientActiveDays.set(clientId, activeDays);
+      }
       if (poolPro) {
         poolProEvents30d += 1;
         if (clientId) poolProClients30d.add(clientId);
@@ -585,6 +605,22 @@ async function eventSummary(request, env) {
     if (ts >= since7d && record.event === 'app_open') appOpens7d += 1;
   }
 
+  const sessions = Array.from(sessionEvents.values());
+  const sessionDurations = sessions.map((item) => item.durationSeconds).filter((value) => value > 0).sort((a, b) => a - b);
+  const timeToValueSeconds = sessions
+    .filter((item) => item.firstValueAt)
+    .map((item) => Math.max(0, Math.round((eventTime({ createdAt: item.firstValueAt }) - eventTime({ createdAt: item.firstAt })) / 1000)))
+    .sort((a, b) => a - b);
+  const median = (values) => values.length ? values[Math.floor((values.length - 1) / 2)] : null;
+  const sessionCount30d = sessions.length;
+  const meaningfulSessions30d = sessions.filter((item) => item.meaningful).length;
+  const abandonedSessions30d = sessions.filter((item) => item.firstActionAt && !item.firstValueAt).length;
+  const oneEventSessions30d = sessions.filter((item) => item.eventCount <= 1).length;
+  const returningClients30d = Array.from(clientActiveDays.values()).filter((daysSet) => daysSet.size >= 2).length;
+  const checkoutStarts30d = sessions.reduce((sum, item) => sum + item.checkoutStarts, 0);
+  const totalEngagedSeconds30d = sessions.reduce((sum, item) => sum + item.engagedSeconds, 0);
+  const pct = (value, total) => total ? Math.round((value / total) * 1000) / 10 : null;
+
   return json(200, {
     ok: true,
     generatedAt: new Date().toISOString(),
@@ -668,6 +704,20 @@ async function eventSummary(request, env) {
       poolProStoreShellOpens30d,
       poolProMeaningfulActions30d,
       poolProClients30d: poolProClients30d.size,
+      sessionCount30d,
+      meaningfulSessions30d,
+      abandonedSessions30d,
+      oneEventSessions30d,
+      returningClients30d,
+      checkoutStarts30d,
+      totalEngagedSeconds30d,
+      medianSessionDurationSeconds30d: median(sessionDurations),
+      medianTimeToValueSeconds30d: median(timeToValueSeconds),
+      meaningfulSessionRate30d: pct(meaningfulSessions30d, sessionCount30d),
+      abandonmentRate30d: pct(abandonedSessions30d, sessionCount30d),
+      returnClientRate30d: pct(returningClients30d, uniqueClients30d.size),
+      proofFollowThroughRate30d: pct(proofSaved30d, partsnapResults30d),
+      checkoutCompletionRate30d: pct(checkoutSuccess30d, checkoutStarts30d),
     },
     topEvents: topList(eventsByName),
     topSources: topList(sources),
@@ -695,6 +745,7 @@ async function eventSummary(request, env) {
     topPaths: topList(paths),
     scanModes: topList(scanModes),
     callbackRisks: topList(callbackRisks),
+    topTabDwell: topList(tabDwellSeconds, 12),
     manualQueries: topList(manualQueries, 20),
     recentPayments: recentPayments.slice(0, 20),
     recentSessions: Array.from(sessionEvents.values())
