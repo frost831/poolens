@@ -286,6 +286,7 @@ async function eventSummary(request, env) {
     'partsnap_packet_copied',
     'partsnap_share_used',
     'partsnap_saved_to_pool',
+    'partsnap_field_stop_saved',
     'partsnap_mystery_submitted',
     'partsnap_apprentice_started',
     'partsnap_second_proof_requested',
@@ -538,11 +539,11 @@ async function eventSummary(request, env) {
       if (lane === 'Source Pages' || String(record.path || props.path || props.attribution_landing_path || '').includes('source-pages')) sourcePageViews30d += 1;
       if (meaningfulEvents.has(record.event)) meaningfulActions30d += 1;
       if (record.event === 'partsnap_packet_copied' || record.event === 'partsnap_share_used') partSnapPackets30d += 1;
-      if (record.event === 'partsnap_saved_to_pool') partSnapSaved30d += 1;
+      if (record.event === 'partsnap_saved_to_pool' || record.event === 'partsnap_field_stop_saved') partSnapSaved30d += 1;
       if (record.event === 'partsnap_mystery_submitted') partSnapMystery30d += 1;
       if (record.event === 'partsnap_apprentice_started') partSnapApprentice30d += 1;
       if (record.event === 'partsnap_second_proof_requested') partSnapSecondProof30d += 1;
-      if (record.event === 'partsnap_saved_to_pool' || record.event === 'route_brain_saved_to_pool' || record.event === 'service_report_saved' || record.event === 'proof_ready_report_saved') proofSaved30d += 1;
+      if (record.event === 'partsnap_saved_to_pool' || record.event === 'partsnap_field_stop_saved' || record.event === 'route_brain_saved_to_pool' || record.event === 'service_report_saved' || record.event === 'proof_ready_report_saved') proofSaved30d += 1;
       if (record.event === 'field_feedback_submitted') {
         fieldFeedback30d += 1;
         if (props.field_tester_opt_in === true || props.field_tester_opt_in === 'true') fieldTesterOptIns30d += 1;

@@ -7411,6 +7411,7 @@ function renderPartsSnapResult(ai, result, status) {
       ${replacementNotes ? `<p style="color:#fbbf24;font-size:12px;font-weight:600;margin-bottom:10px;">⚠ ${replacementNotes}</p>` : ''}
       ${verificationNotes ? `<p style="color:#fbbf24;font-size:12px;font-weight:600;margin-bottom:10px;">Check: ${verificationNotes}</p>` : ''}
       ${renderPartSnapFastWorkflow(_lastPartSnapResult, corpusCandidates, ladder, missingProof)}
+      ${renderPartSnapPrimaryAction(risk, missingProof.length ? missingProof : ladder.missing)}
       ${renderPartSnapProofSnapshot(ladder, risk, visibleEvidence, missingProof)}
       ${renderPartConfidenceLadder(ladder)}
       ${renderPartEvidencePanel(visibleEvidence, missingProof)}
@@ -7443,6 +7444,68 @@ function renderPartsSnapResult(ai, result, status) {
     </div>
     <div id="partsnap-feedback-panel"></div>
   `;
+}
+
+function renderPartSnapPrimaryAction(risk = {}, missingProof = []) {
+  const needsProof = risk.level !== 'low' || missingProof.length > 0;
+  return `
+    <div style="background:#ecfeff;border:2px solid #0891b2;border-radius:10px;padding:11px;margin:10px 0;">
+      <p style="color:#0f172a;font-size:13px;font-weight:950;margin-bottom:4px;">Keep this result with the job</p>
+      <p style="color:#475569;font-size:11px;line-height:1.4;margin-bottom:9px;">Save what PartSnap found now. Add the customer or pool when you have time.</p>
+      <div style="display:grid;grid-template-columns:${needsProof ? '1fr 1fr' : '1fr'};gap:7px;">
+        <button onclick="savePartSnapFieldStop()" style="background:#0369a1;color:#fff;border:0;border-radius:9px;padding:12px 10px;font-size:13px;font-weight:950;cursor:pointer;">Save this stop</button>
+        ${needsProof ? '<button onclick="requestPartSnapSecondProof()" style="background:#fff;color:#075985;border:1px solid #0ea5e9;border-radius:9px;padding:12px 10px;font-size:12px;font-weight:950;cursor:pointer;">Add proof photo</button>' : ''}
+      </div>
+    </div>`;
+}
+
+function getPartSnapFieldStops() {
+  try {
+    const value = JSON.parse(localStorage.getItem('splashlens-partsnap-field-stops') || '[]');
+    return Array.isArray(value) ? value : [];
+  } catch {
+    return [];
+  }
+}
+
+function savePartSnapFieldStop() {
+  const ai = _lastPartSnapResult || {};
+  const visibleEvidence = Array.isArray(ai.visibleEvidence) ? ai.visibleEvidence.filter(Boolean).slice(0, 4) : [];
+  const missingProof = Array.isArray(ai.missingProof) ? ai.missingProof.filter(Boolean).slice(0, 4) : [];
+  const ladder = partConfidenceLadder(ai.confidence, ai.partNumber, ai.manufacturer, ai.model, ai.component);
+  const risk = partSnapCallbackRisk(ai, ladder, visibleEvidence, missingProof);
+  const stops = getPartSnapFieldStops();
+  const stop = {
+    id: `field-stop-${Date.now()}`,
+    savedAt: new Date().toISOString(),
+    title: [ai.manufacturer, ai.component].filter(Boolean).join(' ') || 'Unidentified field part',
+    model: ai.model || ai.partNumber || '',
+    confidence: ai.confidence || 'unknown',
+    risk: risk.level,
+    visibleEvidence,
+    missingProof: risk.missing,
+    partSnap: ai,
+  };
+  localStorage.setItem('splashlens-partsnap-field-stops', JSON.stringify([stop, ...stops].slice(0, 25)));
+  localStorage.setItem('splashlens-last-field-tab', 'scan');
+  localStorage.setItem('splashlens-last-field-tab-at', stop.savedAt);
+  trackSplashLensEvent('partsnap_field_stop_saved', {
+    confidence: stop.confidence,
+    risk: stop.risk,
+    category: ai.category || ai.component || 'unknown',
+    proof_visible_count: visibleEvidence.length,
+    proof_missing_count: risk.missing.length,
+  });
+  const panel = document.getElementById('partsnap-feedback-panel');
+  if (panel) panel.innerHTML = `
+    <div style="background:#ecfdf5;border:1px solid #6ee7b7;border-radius:10px;padding:12px;margin:4px 0 16px;">
+      <p style="color:#065f46;font-size:13px;font-weight:950;margin-bottom:4px;">Field stop saved on this device</p>
+      <p style="color:#047857;font-size:11px;line-height:1.4;margin-bottom:9px;">You can leave the result here, assign it to a saved customer, or share the packet.</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;">
+        <button onclick="savePartSnapToPool()" style="background:#0f766e;color:#fff;border:0;border-radius:8px;padding:10px;font-size:11px;font-weight:900;cursor:pointer;">Assign customer</button>
+        <button onclick="sharePartSnapPacket()" style="background:#fff;color:#0f766e;border:1px solid #0f766e;border-radius:8px;padding:10px;font-size:11px;font-weight:900;cursor:pointer;">Share packet</button>
+      </div>
+    </div>`;
 }
 
 function renderPartSnapProofSnapshot(ladder = {}, risk = {}, visibleEvidence = [], missingProof = []) {
