@@ -31,6 +31,48 @@ const HIGH_VALUE_PARTSNAP_SIGNALS = new Set([
   'high risk',
 ]);
 
+const FUNNEL_CAMPAIGN_EVENTS = new Set([
+  'article_referral_open',
+  'campaign_landing_view',
+  'campaign_view',
+  'field_challenge_page_view',
+  'field_challenge_started',
+]);
+const FUNNEL_OPEN_EVENTS = new Set([
+  'first_app_open',
+  'app_open',
+  'native_shell_first_open',
+  'native_shell_open',
+  'pwa_standalone_open',
+  'app_store_click',
+  'play_store_click',
+  'app_store_download_click',
+  'google_play_download_click',
+  'play_store_download_click',
+  'open_app_click',
+  'partsnap_click',
+]);
+const FUNNEL_WORKFLOW_EVENTS = new Set([
+  'manual_code_search',
+  'partsnap_result',
+  'facility_workflow_completed',
+  'service_report_saved',
+  'proof_ready_report_saved',
+]);
+const FUNNEL_PROOF_EVENTS = new Set([
+  'partsnap_saved_to_pool',
+  'partsnap_field_stop_saved',
+  'route_brain_saved_to_pool',
+  'service_report_saved',
+  'proof_ready_report_saved',
+  'service_proof_share_link_created',
+]);
+const FUNNEL_FEEDBACK_EVENTS = new Set([
+  'field_feedback_submitted',
+  'field_feedback_quick_answered',
+  'field_challenge_feedback',
+]);
+
 function chunks(items, size) {
   const groups = [];
   for (let i = 0; i < items.length; i += size) groups.push(items.slice(i, i + size));
@@ -126,6 +168,31 @@ function topList(map, limit = 12) {
 
 function eventSource(record, props = {}) {
   return clean(record.source || props.attribution_source || props.source || 'app', 80) || 'app';
+}
+
+function eventIdentity(record, props = {}) {
+  return clean(
+    props.challenge_id || props.client_id || props.clientId || props.session_id || props.sessionId ||
+    record.correlationId || record.id || `${record.event}:${record.createdAt}`,
+    180,
+  );
+}
+
+function isSyntheticEvent(record, props = {}) {
+  const text = [
+    props.test,
+    props.demo,
+    props.synthetic,
+    props.environment,
+    props.pilot_id,
+    props.pilot,
+    props.participant_id,
+    props.participant,
+    props.attribution_campaign,
+    record.source,
+  ].filter((value) => value !== undefined && value !== null).join(' ').toLowerCase();
+  return props.test === true || props.demo === true || props.synthetic === true ||
+    /(^|[^a-z])(test|demo|synthetic|playwright|benchmark)([^a-z]|$)/.test(text);
 }
 
 function isPoolProEvent(record, props = {}) {
@@ -382,6 +449,18 @@ async function eventSummary(request, env) {
   const meaningfulClients30d = new Set();
   const activatedClients30d = new Set();
   const poolProClients30d = new Set();
+  const clientActivityWindow = new Map();
+  const funnelCampaignVisitors = new Set();
+  const funnelAppStoreOpens = new Set();
+  const funnelWorkflowCompleters = new Set();
+  const funnelProofSavers = new Set();
+  const funnelFeedbackSubmitters = new Set();
+  const funnelCheckoutStarters = new Set();
+  const funnelPaidClients = new Set();
+  const funnelFieldStories = new Set();
+  const funnelChallengeStarts = new Set();
+  const funnelChallengeCompletions = new Set();
+  const funnelReferralShares = new Set();
 
   const facilityEvents = new Map();
   const facilityLanes = new Map();
@@ -473,6 +552,28 @@ async function eventSummary(request, env) {
         const activeDays = clientActiveDays.get(clientId) || new Set();
         activeDays.add(new Date(ts).toISOString().slice(0, 10));
         clientActiveDays.set(clientId, activeDays);
+        const activity = clientActivityWindow.get(clientId) || { first: ts, last: ts };
+        activity.first = Math.min(activity.first, ts);
+        activity.last = Math.max(activity.last, ts);
+        clientActivityWindow.set(clientId, activity);
+      }
+      if (!isSyntheticEvent(record, props)) {
+        const identity = eventIdentity(record, props);
+        if (FUNNEL_CAMPAIGN_EVENTS.has(record.event)) funnelCampaignVisitors.add(identity);
+        if (FUNNEL_OPEN_EVENTS.has(record.event)) funnelAppStoreOpens.add(identity);
+        if (FUNNEL_WORKFLOW_EVENTS.has(record.event)) funnelWorkflowCompleters.add(identity);
+        if (FUNNEL_PROOF_EVENTS.has(record.event)) funnelProofSavers.add(identity);
+        if (FUNNEL_FEEDBACK_EVENTS.has(record.event)) funnelFeedbackSubmitters.add(identity);
+        if (record.event === 'upgrade_click' || record.event === 'checkout_started') funnelCheckoutStarters.add(identity);
+        if (record.event === 'checkout_success') funnelPaidClients.add(identity);
+        if (record.event === 'field_challenge_started') funnelChallengeStarts.add(identity);
+        if (record.event === 'field_challenge_completed') funnelChallengeCompletions.add(identity);
+        if (record.event === 'referral_share') funnelReferralShares.add(identity);
+        const rating = Number(props.rating || 0);
+        const feedback = clean(props.feedback || props.story || props.note || '', 900);
+        if (record.event === 'field_story_submitted' || (record.event === 'field_feedback_submitted' && rating >= 4 && feedback.length >= 12)) {
+          funnelFieldStories.add(identity);
+        }
       }
       if (poolPro) {
         poolProEvents30d += 1;
@@ -632,6 +733,8 @@ async function eventSummary(request, env) {
   const abandonedSessions30d = sessions.filter((item) => item.firstActionAt && !item.firstValueAt).length;
   const oneEventSessions30d = sessions.filter((item) => item.eventCount <= 1).length;
   const returningClients30d = Array.from(clientActiveDays.values()).filter((daysSet) => daysSet.size >= 2).length;
+  const sevenDayReturningClients30d = Array.from(clientActivityWindow.values())
+    .filter((activity) => activity.last - activity.first >= 7 * dayMs).length;
   const checkoutStarts30d = sessions.reduce((sum, item) => sum + item.checkoutStarts, 0);
   const totalEngagedSeconds30d = sessions.reduce((sum, item) => sum + item.engagedSeconds, 0);
   const pct = (value, total) => total ? Math.round((value / total) * 1000) / 10 : null;
@@ -731,6 +834,18 @@ async function eventSummary(request, env) {
       abandonedSessions30d,
       oneEventSessions30d,
       returningClients30d,
+      sevenDayReturningClients30d,
+      funnelCampaignVisitors: funnelCampaignVisitors.size,
+      funnelAppStoreOpens: funnelAppStoreOpens.size,
+      funnelWorkflowCompleters: funnelWorkflowCompleters.size,
+      funnelProofSavers: funnelProofSavers.size,
+      funnelFeedbackSubmitters: funnelFeedbackSubmitters.size,
+      funnelCheckoutStarters: funnelCheckoutStarters.size,
+      funnelPaidClients: funnelPaidClients.size,
+      funnelFieldStories: funnelFieldStories.size,
+      funnelChallengeStarts: funnelChallengeStarts.size,
+      funnelChallengeCompletions: funnelChallengeCompletions.size,
+      funnelReferralShares: funnelReferralShares.size,
       checkoutStarts30d,
       totalEngagedSeconds30d,
       medianSessionDurationSeconds30d: median(sessionDurations),
@@ -741,6 +856,18 @@ async function eventSummary(request, env) {
       proofFollowThroughRate30d: pct(proofSaved30d, partsnapResults30d),
       checkoutCompletionRate30d: pct(checkoutSuccess30d, checkoutStarts30d),
     },
+    activationFunnel: [
+      { key: 'campaign_visit', label: 'Tracked campaign visits', count: funnelCampaignVisitors.size, target: 100 },
+      { key: 'app_open', label: 'App or store opens', count: funnelAppStoreOpens.size, target: 30 },
+      { key: 'workflow_complete', label: 'Completed field workflows', count: funnelWorkflowCompleters.size, target: 15 },
+      { key: 'proof_saved', label: 'Proof saved or shared', count: funnelProofSavers.size, target: 8 },
+      { key: 'feedback', label: 'Direct feedback responses', count: funnelFeedbackSubmitters.size, target: 10 },
+      { key: 'seven_day_return', label: 'Returned after 7 days', count: sevenDayReturningClients30d, target: 5 },
+      { key: 'checkout_started', label: 'Checkout starts', count: funnelCheckoutStarters.size, target: 3 },
+      { key: 'paid', label: 'Paid conversions', count: funnelPaidClients.size, target: 1, stretchTarget: 3 },
+      { key: 'field_story', label: 'Usable field stories', count: funnelFieldStories.size, target: 3 },
+    ],
+    activationWindowDays: days,
     topEvents: topList(eventsByName),
     topSources: topList(sources),
     topReferrers: topList(referrers),
@@ -785,6 +912,7 @@ async function eventSummary(request, env) {
       'PWA install events are browser-dependent and may not fire on every iOS add-to-home-screen install.',
       'Native App Store downloads are only visible here after the app/web wrapper opens or when a tracked store click/referral reaches the app.',
       'Email alerts are intentionally limited to usage/conversion events, not outreach email opens.',
+      'Activation funnel counts exclude events tagged as test, demo, synthetic, Playwright, or benchmark traffic.',
     ],
   });
 }

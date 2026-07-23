@@ -207,6 +207,10 @@ const SPLASHLENS_ROLE_KEY = 'sl_role';
 const WORKFLOW_STYLE_KEY = 'splashlens-workflow-style';
 const FACILITY_PACKET_KEY = 'splashlens-facility-packets';
 const ACTIVATION_COMPLETED_KEY = 'splashlens-activation-completed-v1';
+const FIELD_CHALLENGE_CONTEXT_KEY = 'splashlens-field-challenge-context-v1';
+const FIELD_CHALLENGE_STARTED_KEY = 'splashlens-field-challenge-started-v1';
+const FIELD_CHALLENGE_COMPLETED_KEY = 'splashlens-field-challenge-completed-v1';
+const FIELD_REFERRAL_PROMPT_KEY = 'splashlens-field-referral-prompt-v1';
 const SPLASHLENS_ROLES = ['tech', 'facility', 'counter', 'trainer', 'homeowner'];
 let facilitySessionMode = '';
 let facilityForcedMode = false;
@@ -6979,6 +6983,103 @@ function getSplashLensAttribution() {
   return readAttribution(sessionStorage) || readAttribution(localStorage) || initSplashLensAttribution() || {};
 }
 
+function getFieldChallengeContext() {
+  try {
+    const params = new URL(window.location.href).searchParams;
+    const incoming = cleanAttributionValue(params.get('challenge') || '', 80);
+    const stored = JSON.parse(sessionStorage.getItem(FIELD_CHALLENGE_CONTEXT_KEY) || localStorage.getItem(FIELD_CHALLENGE_CONTEXT_KEY) || 'null');
+    const storedAt = Date.parse(stored?.captured_at || '');
+    const currentStored = Number.isFinite(storedAt) && Date.now() - storedAt <= 14 * 86400000 ? stored : null;
+    if (!incoming && !currentStored) return {};
+    const context = incoming ? {
+      field_challenge: incoming,
+      challenge_path: cleanAttributionValue(params.get('challenge_path') || '', 40),
+      challenge_id: cleanAttributionValue(params.get('challenge_id') || '', 100),
+      challenge_type: cleanAttributionValue(params.get('challenge_type') || '', 40),
+      pilot_id: cleanAttributionValue(params.get('pilot_id') || params.get('pilot') || '', 80),
+      participant_id: cleanAttributionValue(params.get('participant_id') || params.get('participant') || '', 80),
+      referral_id: cleanAttributionValue(params.get('ref') || params.get('referral_id') || '', 80),
+      captured_at: new Date().toISOString(),
+    } : currentStored;
+    sessionStorage.setItem(FIELD_CHALLENGE_CONTEXT_KEY, JSON.stringify(context));
+    localStorage.setItem(FIELD_CHALLENGE_CONTEXT_KEY, JSON.stringify(context));
+    return context;
+  } catch {
+    return {};
+  }
+}
+
+function claimFieldChallenge(key) {
+  try {
+    if (sessionStorage.getItem(key) === '1') return false;
+    sessionStorage.setItem(key, '1');
+    return true;
+  } catch {
+    return true;
+  }
+}
+
+function trackFieldChallengeOpen() {
+  const context = getFieldChallengeContext();
+  if (!context.field_challenge || !claimFieldChallenge(FIELD_CHALLENGE_STARTED_KEY)) return;
+  trackSplashLensEvent('field_challenge_started', context);
+  trackSplashLensEvent('field_challenge_routed', {
+    ...context,
+    route: context.challenge_path || 'app_choice',
+  });
+}
+
+function shareFieldResult(audience = 'tech') {
+  const attribution = getSplashLensAttribution();
+  const referralId = `sl-${Date.now().toString(36)}-${getScanClientId().slice(0, 6)}`;
+  const url = new URL(window.location.origin + window.location.pathname);
+  url.searchParams.set('utm_source', 'field_referral');
+  url.searchParams.set('utm_medium', 'share');
+  url.searchParams.set('utm_campaign', 'saved_me_time');
+  url.searchParams.set('ref', referralId);
+  const labels = { tech: 'another pool tech', senior: 'a senior tech', counter: 'a parts counter' };
+  const text = `SplashLens helped me get through a pool-service workflow. Try one real code or part: ${url.toString()}`;
+  trackSplashLensEvent('referral_share', {
+    audience,
+    referral_id: referralId,
+    attribution_source: attribution.source || 'app',
+  });
+  if (navigator.share) {
+    navigator.share({ title: 'Try SplashLens in the field', text, url: url.toString() }).catch(() => {});
+  } else {
+    navigator.clipboard?.writeText(text).then(() => alert(`Link copied for ${labels[audience] || 'another tech'}.`)).catch(() => prompt('Copy this SplashLens link:', url.toString()));
+  }
+  document.getElementById('field-referral-prompt')?.remove();
+}
+
+function showFieldReferralPrompt(trigger) {
+  if (document.getElementById('field-referral-prompt')) return;
+  try {
+    const lastShown = Number(localStorage.getItem(FIELD_REFERRAL_PROMPT_KEY) || 0);
+    if (lastShown && Date.now() - lastShown < 7 * 86400000) return;
+    localStorage.setItem(FIELD_REFERRAL_PROMPT_KEY, String(Date.now()));
+  } catch {}
+  const wrap = document.createElement('div');
+  wrap.id = 'field-referral-prompt';
+  wrap.setAttribute('role', 'dialog');
+  wrap.setAttribute('aria-label', 'Share a useful SplashLens result');
+  wrap.style.cssText = 'position:fixed;left:12px;right:12px;bottom:14px;z-index:9997;display:flex;justify-content:center;pointer-events:none;';
+  wrap.innerHTML = `
+    <div style="width:min(560px,100%);background:#0f172a;border:1px solid #334155;border-radius:12px;box-shadow:0 18px 46px rgba(15,23,42,.28);padding:13px;pointer-events:auto;">
+      <div style="display:flex;justify-content:space-between;gap:10px;align-items:start;">
+        <div><strong style="display:block;color:#fff;font-size:15px;">Useful result?</strong><span style="display:block;color:#cbd5e1;font-size:12px;line-height:1.4;margin-top:3px;">Send the same starting point without retyping it.</span></div>
+        <button type="button" onclick="document.getElementById('field-referral-prompt')?.remove()" aria-label="Close" style="border:0;background:transparent;color:#cbd5e1;font-size:20px;cursor:pointer;">x</button>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:10px;">
+        <button type="button" onclick="shareFieldResult('tech')" style="border:0;border-radius:8px;background:#0284c7;color:#fff;padding:10px 6px;font-size:11px;font-weight:900;cursor:pointer;">Another tech</button>
+        <button type="button" onclick="shareFieldResult('senior')" style="border:1px solid #475569;border-radius:8px;background:#1e293b;color:#fff;padding:10px 6px;font-size:11px;font-weight:900;cursor:pointer;">Senior tech</button>
+        <button type="button" onclick="shareFieldResult('counter')" style="border:1px solid #475569;border-radius:8px;background:#1e293b;color:#fff;padding:10px 6px;font-size:11px;font-weight:900;cursor:pointer;">Parts counter</button>
+      </div>
+    </div>`;
+  document.body.appendChild(wrap);
+  trackSplashLensEvent('referral_prompt_shown', { trigger });
+}
+
 function claimActivationCompletion(activationType) {
   const value = JSON.stringify({ activation_type: activationType, completed_at: new Date().toISOString() });
   try {
@@ -6998,16 +7099,29 @@ function claimActivationCompletion(activationType) {
 
 function maybeTrackActivationCompleted(eventName, props = {}) {
   const activationType = ACTIVATION_EVENT_TYPES.get(eventName);
-  if (!activationType || !claimActivationCompletion(activationType)) return;
+  if (!activationType) return;
   const attribution = getSplashLensAttribution();
-  trackSplashLensEvent('activation_completed', {
-    activation_type: activationType,
-    activation_trigger: eventName,
-    activation_source: attribution.source || props.attribution_source || props.source || 'direct',
-    activation_medium: attribution.medium || props.attribution_medium || '',
-    activation_campaign: attribution.campaign || props.attribution_campaign || '',
-    activation_referrer_host: attribution.referrer_host || props.attribution_referrer_host || '',
-  });
+  const firstActivation = claimActivationCompletion(activationType);
+  if (firstActivation) {
+    trackSplashLensEvent('activation_completed', {
+      activation_type: activationType,
+      activation_trigger: eventName,
+      activation_source: attribution.source || props.attribution_source || props.source || 'direct',
+      activation_medium: attribution.medium || props.attribution_medium || '',
+      activation_campaign: attribution.campaign || props.attribution_campaign || '',
+      activation_referrer_host: attribution.referrer_host || props.attribution_referrer_host || '',
+    });
+  }
+  const challenge = getFieldChallengeContext();
+  const challengeCompleted = challenge.field_challenge && claimFieldChallenge(FIELD_CHALLENGE_COMPLETED_KEY);
+  if (challengeCompleted) {
+    trackSplashLensEvent('field_challenge_completed', {
+      ...challenge,
+      activation_type: activationType,
+      activation_trigger: eventName,
+    });
+  }
+  if (firstActivation || challengeCompleted) setTimeout(() => showFieldReferralPrompt(eventName), 1200);
 }
 
 function trackReferralLandingOpen() {
@@ -7148,6 +7262,7 @@ function trackSplashLensEvent(name, props = {}) {
     attribution_landing_path: attribution.landing_path || '',
     attribution_article: attribution.article || '',
     splashlens_role: getSplashLensRole(),
+    ...getFieldChallengeContext(),
     ...props,
   };
   window.dataLayer = window.dataLayer || [];
@@ -7294,6 +7409,7 @@ function trackSplashLensAppOpen() {
     localStorage.setItem(firstOpenKey, '1');
     trackSplashLensEvent('first_app_open', { tab: S.tab, first_open: true });
   }
+  trackFieldChallengeOpen();
   trackSplashLensEvent('app_open', { tab: S.tab, first_open: !openedBefore });
 }
 
