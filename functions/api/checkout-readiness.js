@@ -4,6 +4,7 @@ import {
   splashLensPaymentLinkUrl,
   splashLensPlans,
 } from '../_shared/splashlens-plans.mjs';
+import { stripePaymentLinkStatus, stripeWebhookStatus } from '../_shared/stripe-readiness.mjs';
 
 function json(status, payload) {
   return new Response(JSON.stringify(payload), {
@@ -43,7 +44,11 @@ async function stripeAccountStatus(env) {
 }
 
 export async function onRequestGet({ env }) {
-  const stripe = await stripeAccountStatus(env);
+  const [stripe, webhook, paymentLinks] = await Promise.all([
+    stripeAccountStatus(env),
+    stripeWebhookStatus(env),
+    stripePaymentLinkStatus(env),
+  ]);
   const checkoutMode = clean(env.SPLASHLENS_CHECKOUT_MODE || '', 80).toLowerCase() || 'stripe_checkout';
   const paymentLinkDirect = ['payment_link_direct', 'payment_links', 'links'].includes(checkoutMode);
   const webhookConfigured = clean(env.STRIPE_WEBHOOK_SECRET || env.SPLASHLENS_STRIPE_WEBHOOK_SECRET, 300).startsWith('whsec_');
@@ -67,14 +72,31 @@ export async function onRequestGet({ env }) {
     };
   });
 
-  return json(200, {
-    ok: true,
+  const storageConfigured = Boolean(env.SCAN_USAGE_KV);
+  const livePlans = plans.filter((plan) => plan.publicStatus === 'live');
+  const productionReady = Boolean(
+    stripe.ok
+    && stripe.chargesEnabled
+    && stripe.payoutsEnabled
+    && webhookConfigured
+    && webhook.ok
+    && paymentLinks.ok
+    && storageConfigured
+    && livePlans.length
+    && livePlans.every((plan) => plan.configured)
+  );
+
+  return json(productionReady ? 200 : 503, {
+    ok: productionReady,
     observedAt: new Date().toISOString(),
     checkoutMode,
     stripe,
     webhookConfigured,
-    storageConfigured: Boolean(env.SCAN_USAGE_KV),
+    webhook,
+    paymentLinks,
+    storageConfigured,
     allPlansConfigured: plans.every((plan) => plan.configured),
+    productionReady,
     plans,
   });
 }

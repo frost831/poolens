@@ -74,6 +74,7 @@ Listen for:
 
 - `checkout.session.completed`
 - `checkout.session.async_payment_succeeded`
+- `charge.refunded`
 
 Required webhook secret:
 
@@ -115,6 +116,14 @@ Plan catalog check:
 ```powershell
 curl.exe -s "https://app.splashlens.com/api/checkout?catalog=1"
 ```
+
+Production payment readiness check:
+
+```powershell
+curl.exe -s "https://app.splashlens.com/api/checkout-readiness"
+```
+
+This route verifies the Stripe account can charge and pay out, the expected webhook endpoint is enabled with all required events, both configured PartSnap Payment Links are active and match their public URLs, and entitlement storage is bound. It returns `503` whenever the live paid lane is not fully ready.
 
 Admin pilot grant example:
 
