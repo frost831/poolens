@@ -14,3 +14,8 @@ export function paidFulfillmentGaps(env = {}) {
 export function outboundStoreKey(url) {
   return String(url.searchParams.get('store') || url.searchParams.get('vendor') || '').toLowerCase();
 }
+
+export function publicCheckoutAllowed(env, plan) {
+  if (String(plan?.publicStatus || '').toLowerCase() === 'live') return true;
+  return String(env.SPLASHLENS_STRIPE_INLINE_CHECKOUT_PUBLIC || '').trim().toLowerCase() === 'true';
+}

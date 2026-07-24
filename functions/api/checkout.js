@@ -5,7 +5,7 @@ import {
   splashLensPaymentLinkUrl,
   splashLensPlanPublicPayload,
 } from '../_shared/splashlens-plans.mjs';
-import { paidFulfillmentGaps } from '../_shared/checkout-safety.mjs';
+import { paidFulfillmentGaps, publicCheckoutAllowed } from '../_shared/checkout-safety.mjs';
 
 function json(status, payload) {
   return new Response(JSON.stringify(payload), {
@@ -104,6 +104,17 @@ export async function onRequestGet({ request, env }) {
   }
 
   const plan = resolveSplashLensPlan(url.searchParams.get('plan') || 'monthly');
+  if (!publicCheckoutAllowed(env, plan)) {
+    return json(403, {
+      ok: false,
+      error: 'request_access_required',
+      plan: plan.key,
+      label: plan.displayName,
+      publicStatus: plan.publicStatus,
+      message: 'This SplashLens lane is available through a guided pilot or partner setup. Request access so the workflow and entitlement can be configured correctly.',
+      requestAccess: 'mailto:hello@splashlens.com',
+    });
+  }
   const fulfillmentGaps = paidFulfillmentGaps(env);
   if (fulfillmentGaps.length) return paidCheckoutUnavailable(plan, fulfillmentGaps);
 

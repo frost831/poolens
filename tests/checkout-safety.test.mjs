@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { outboundStoreKey, paidFulfillmentGaps } from '../functions/_shared/checkout-safety.mjs';
+import { outboundStoreKey, paidFulfillmentGaps, publicCheckoutAllowed } from '../functions/_shared/checkout-safety.mjs';
 
 function fulfillmentEnv(overrides = {}) {
   return {
@@ -35,4 +35,11 @@ test('accepts the legacy vendor outbound parameter', () => {
 
 test('prefers the canonical store parameter over the compatibility alias', () => {
   assert.equal(outboundStoreKey(new URL('https://app.splashlens.com/api/outbound?store=web&vendor=leslies&q=part')), 'web');
+});
+
+test('allows live self-serve checkout and keeps pilot lanes gated by default', () => {
+  assert.equal(publicCheckoutAllowed({}, { publicStatus: 'live' }), true);
+  assert.equal(publicCheckoutAllowed({}, { publicStatus: 'pilot' }), false);
+  assert.equal(publicCheckoutAllowed({}, { publicStatus: 'partner' }), false);
+  assert.equal(publicCheckoutAllowed({ SPLASHLENS_STRIPE_INLINE_CHECKOUT_PUBLIC: 'true' }, { publicStatus: 'pilot' }), true);
 });
