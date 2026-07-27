@@ -48,3 +48,5 @@ Date: 2026-07-26
 ## Play Console
 
 Upload only the signed AAB listed above. Do not upload `android-twa/app/build/outputs/bundle/release/app-release.aab`, which is unsigned. Use release name `SplashLens 1.0.8 Android quality update` and retain a 100% United States rollout after Google review.
+
+Submitted to Google Play production review on July 26, 2026. Play Console shows `Changes in review` for version `1.0.8` / code `9`, with a full rollout to the existing United States target. Managed publishing remains off, so an approved release will publish automatically.
