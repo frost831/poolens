@@ -1908,6 +1908,20 @@ function renderFieldLearningOS(kind = 'partsnap') {
 
 function renderVerifiedProofNetwork() {
   showTab('report');
+  if (isStoreShellMode()) {
+    renderProofWorkflowOutput(
+      'SplashLens free-core native build',
+      'Manual lookup, basic PartSnap, calculators, Facility Assist, saved drafts, and customer-safe proof summaries remain available without account or payment.',
+      `<div class="brain-grid" style="margin-top:10px;">
+        <button type="button" class="brain-action green" onclick="startServiceProofWorkflow('visit')">Build proof</button>
+        <button type="button" class="brain-action secondary" onclick="renderFieldLearningOS('proof')">Proof Review</button>
+        <button type="button" class="brain-action secondary" onclick="showTab('scan');setTimeout(()=>setScanMode('lookup'),80)">Manual Lookup</button>
+      </div>
+      <p style="color:#64748b;font-size:11px;line-height:1.45;margin-top:10px;">Web subscriptions, checkout links, and paid lead capture are intentionally unavailable in native store shell mode.</p>`
+    );
+    trackSplashLensEvent('store_paid_lane_blocked', { source: 'verified_proof_network', store: getStoreShellMode() });
+    return;
+  }
   const network = window.SPLASHLENS_MONETIZATION_LANES || {};
   const plans = Array.isArray(network.plans) ? network.plans : [];
   const cards = plans.map((plan) => `
@@ -1941,6 +1955,11 @@ async function openSplashLensPaidLane(planKey, label) {
   const safePlan = String(planKey || '').trim();
   const safeLabel = String(label || 'SplashLens paid lane').trim();
   trackSplashLensEvent('paid_lane_click', { plan_key: safePlan, label: safeLabel });
+  if (isStoreShellMode()) {
+    trackSplashLensEvent('store_paid_lane_blocked', { plan_key: safePlan, label: safeLabel, store: getStoreShellMode() });
+    window.alert('This native store build is free-core. Web subscriptions and paid pilots are not offered inside the app.');
+    return;
+  }
   try {
     const response = await fetch('/api/checkout?catalog=1', { cache: 'no-store' });
     const payload = await response.json();
@@ -7214,12 +7233,7 @@ function showScanLimitModal(result, status) {
       result.innerHTML = `
         <div style="background:#1e293b;border:1px solid #334155;border-radius:14px;padding:18px;margin:0 0 14px;text-align:center;border-left:4px solid #0284c7;">
           <p style="color:#f1f5f9;font-size:19px;font-weight:900;margin-bottom:6px;">You've used ${usage.count} of ${SCAN_LIMIT_FREE} free AI scans this month.</p>
-          <p style="color:#94a3b8;font-size:13px;line-height:1.5;margin-bottom:14px;">Manual code lookup, dosing, reports, filters, and checklists stay free. PartSnap Pro uses the app store billing flow when native billing is available.</p>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
-            <button onclick="requestNativePartSnapPurchase('monthly')" style="background:#0284c7;color:#fff;border:0;border-radius:10px;padding:11px 8px;font-size:12px;font-weight:900;cursor:pointer;">Pro Monthly</button>
-            <button onclick="requestNativePartSnapPurchase('annual')" style="background:#16a34a;color:#fff;border:0;border-radius:10px;padding:11px 8px;font-size:12px;font-weight:900;cursor:pointer;">Pro Annual</button>
-          </div>
-          <button onclick="requestNativePartSnapRestore()" style="background:transparent;color:#bae6fd;border:1px solid #334155;border-radius:10px;padding:10px 14px;font-size:12px;font-weight:800;cursor:pointer;width:100%;margin-bottom:10px;">Restore Pro Access</button>
+          <p style="color:#94a3b8;font-size:13px;line-height:1.5;margin-bottom:14px;">Manual code lookup, dosing, reports, filters, and checklists stay free. Paid upgrades are not offered inside this native store build.</p>
           <button onclick="setScanMode('lookup');document.getElementById('scan-result').innerHTML=''" style="background:#334155;color:#fff;border:0;border-radius:10px;padding:11px 14px;font-size:12px;font-weight:800;cursor:pointer;width:100%;">Use Manual Lookup</button>
         </div>`;
     }
@@ -7448,7 +7462,7 @@ async function callAIScan(canvas, mode, result, status) {
     const res = await fetch('/api/scan', {
       method:  'POST',
       headers,
-      body:    JSON.stringify(withLanguageMetadata({ image: base64, mode, clientId: getScanClientId() })),
+      body:    JSON.stringify(withLanguageMetadata({ image: base64, mode, clientId: getScanClientId(), store_shell: getStoreShellMode() || '' })),
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const { result: aiResult } = await res.json();

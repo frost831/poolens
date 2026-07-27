@@ -304,15 +304,16 @@ async function enforceUsageQuota(request, env, headers, key, limit, source, upgr
     const usageKey = `scan:${monthKey()}:${key}`;
     const current = Number(await env.SCAN_USAGE_KV.get(usageKey)) || 0;
     if (current >= limit) {
+      const payload = {
+        error: source === 'entitlement'
+          ? 'Monthly scan entitlement limit reached.'
+          : 'Free scan limit reached for this month.',
+        limit,
+      };
+      if (upgradePath) payload.upgrade = upgradePath;
       return {
         ok: false,
-        response: json({
-          error: source === 'entitlement'
-            ? 'Monthly scan entitlement limit reached.'
-            : 'Free scan limit reached for this month.',
-          limit,
-          upgrade: upgradePath,
-        }, 429, headers),
+        response: json(payload, 429, headers),
       };
     }
     await env.SCAN_USAGE_KV.put(usageKey, String(current + 1), { expirationTtl: secondsUntilNextMonth() });
@@ -342,6 +343,11 @@ async function enforceUsageQuota(request, env, headers, key, limit, source, upgr
   bucket.count += 1;
   localScanWindow.set(key, bucket);
   return { ok: true, usage: { count: bucket.count, limit: LOCAL_FALLBACK_LIMIT, source: 'local' } };
+}
+
+function storeShellModeFromBody(body) {
+  const value = String(body?.store_shell || body?.store || body?.storeShell || '').toLowerCase();
+  return ['ios', 'android', 'native'].includes(value) ? value : '';
 }
 
 async function enforceScanAccess(request, env, headers, body) {
@@ -377,6 +383,7 @@ async function enforceScanAccess(request, env, headers, body) {
     };
   }
 
+  const storeShell = storeShellModeFromBody(body);
   return enforceUsageQuota(
     request,
     env,
@@ -384,7 +391,7 @@ async function enforceScanAccess(request, env, headers, body) {
     getClientKey(request, body),
     FREE_SCAN_LIMIT,
     'free_metered',
-    '/api/checkout?plan=monthly',
+    storeShell ? '' : '/api/checkout?plan=monthly',
   );
 }
 
