@@ -291,6 +291,10 @@
       .role-card h1 { font-size:24px; }
       .role-nudge-actions { grid-template-columns:repeat(3,1fr); }
     }
+    @media (max-height: 700px) {
+      .role-picker { align-items:flex-start; overflow-y:auto; padding:10px; }
+      .role-card { margin:0 auto; border-radius:12px; padding:14px; }
+    }
     @media (max-width: 360px) {
       .rescue-actions { grid-template-columns: 1fr; }
       .rescue-strip, .tech-radar-grid, .field-lane-strip, .operator-grid { grid-template-columns: 1fr; }

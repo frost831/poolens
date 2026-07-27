@@ -6,6 +6,8 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.widget.Toast;
 
+import androidx.core.view.WindowCompat;
+
 import com.android.billingclient.api.AcknowledgePurchaseParams;
 import com.android.billingclient.api.BillingClient;
 import com.android.billingclient.api.BillingClientStateListener;
@@ -35,6 +37,7 @@ public class BillingActivity extends Activity implements PurchasesUpdatedListene
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        WindowCompat.enableEdgeToEdge(getWindow());
         Uri data = getIntent().getData();
         if (data != null && data.getQueryParameter("action") != null) {
             action = data.getQueryParameter("action");
