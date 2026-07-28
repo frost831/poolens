@@ -8,7 +8,7 @@ $deploy = Join-Path $root ("_deploy\poolens-web-" + (Get-Date -Format "yyyyMMddH
 
 New-Item -ItemType Directory -Force -Path $deploy | Out-Null
 
-foreach ($file in @("index.html", "landing.html", "dashboard.html", "proof-packet.html", "manifest.json", "favicon.svg", "favicon.ico", "robots.txt", "llms.txt", "ai.txt", "sw.js", "sw-partsnap-corpus.js", "_headers", "_redirects")) {
+foreach ($file in @("index.html", "landing.html", "dashboard.html", "proof-packet.html", "manifest.json", "favicon.svg", "favicon.ico", "robots.txt", "llms.txt", "ai.txt", "sw.js", "sw-field-signals.js", "_headers", "_redirects")) {
   $source = Join-Path $root $file
   if (Test-Path $source) {
     Copy-Item -LiteralPath $source -Destination $deploy -Force

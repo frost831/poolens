@@ -100,7 +100,7 @@ test('app, worker, analytics, and native wrapper expose the Field Signals contra
   const [html, app, worker, events, swift] = await Promise.all([
     readFile(new URL('../index.html', import.meta.url), 'utf8'),
     readFile(new URL('../js/app.js', import.meta.url), 'utf8'),
-    readFile(new URL('../sw-partsnap-corpus.js', import.meta.url), 'utf8'),
+    readFile(new URL('../sw-field-signals.js', import.meta.url), 'utf8'),
     readFile(new URL('../functions/api/events.js', import.meta.url), 'utf8'),
     readFile(new URL('../ios/SplashLens/ContentView.swift', import.meta.url), 'utf8'),
   ]);
