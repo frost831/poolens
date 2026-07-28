@@ -2,7 +2,15 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 
-import { onRequestPost as scanRequestPost } from '../functions/api/scan.js';
+const generatedFamiliesSource = await readFile(new URL('../functions/_shared/partsnap-generated-families.mjs', import.meta.url), 'utf8');
+const generatedFamiliesUrl = `data:text/javascript;base64,${Buffer.from(generatedFamiliesSource).toString('base64')}`;
+const corpusSource = (await readFile(new URL('../functions/_shared/partsnap-corpus.mjs', import.meta.url), 'utf8'))
+  .replace("from './partsnap-generated-families.mjs'", `from '${generatedFamiliesUrl}'`);
+const corpusUrl = `data:text/javascript;base64,${Buffer.from(corpusSource).toString('base64')}`;
+const scanSource = (await readFile(new URL('../functions/api/scan.js', import.meta.url), 'utf8'))
+  .replace("from '../_shared/partsnap-corpus.mjs'", `from '${corpusUrl}'`);
+const scanModuleUrl = `data:text/javascript;base64,${Buffer.from(scanSource).toString('base64')}`;
+const { onRequestPost: scanRequestPost } = await import(scanModuleUrl);
 
 test('non-self-serve paid lanes are labeled and have a server lead path', async () => {
   const data = await readFile(new URL('../js/data.js', import.meta.url), 'utf8');
