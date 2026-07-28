@@ -629,6 +629,7 @@ function showTab(name) {
   if (name === 'route')  renderRoute();
   if (name === 'scan')   initScanTab();
   if (name === 'dosing') renderSlamBanner();
+  window.SplashLensFieldSignals?.onTabShown(name);
 }
 
 function initMarketingGate() {
@@ -2254,6 +2255,10 @@ function selectBrand(id) {
   btn.style.color = brand.color;
   renderCategoryStrip(id);
   renderCodesForBrand(id, null);
+  window.SplashLensFieldSignals?.onBrandSelected({
+    brand: brand.label || id,
+    category: Object.keys(brand.categories || {}).join(' '),
+  });
 }
 
 function resetBrandBtn(id) {
@@ -2343,10 +2348,16 @@ function toggleCode(uid) {
   const chev = document.getElementById(`chev-${uid}`);
   const open = det.classList.toggle('open');
   chev.style.transform = open ? 'rotate(180deg)' : '';
+  if (open) {
+    window.SplashLensFieldSignals?.onCodeOpened({
+      description: det.closest('.error-card')?.textContent || '',
+    });
+  }
 }
 
 function onErrorSearch(q) {
   q = q.trim().toLowerCase();
+  if (q.length >= 3) window.SplashLensFieldSignals?.onSearch(q);
   const clearBtn = document.getElementById('search-clear');
   clearBtn.style.display = q ? '' : 'none';
   if (!q) {
@@ -4135,6 +4146,7 @@ function saveReportToPoolHistory() {
   if (proof.complete) {
     trackSplashLensEvent('proof_ready_report_saved', { pool_id: target.id, visit_type: passport.visitType });
   }
+  window.SplashLensFieldSignals?.offerSystemNotificationsAfterValue('service_report_saved');
 
   const el = document.getElementById('rpt-copy-confirm');
   if (el) {
@@ -4781,6 +4793,7 @@ function renderPoolDetail(id) {
     <hr class="section-div">
     <button class="btn-delete" onclick="deletePool('${id}')">Delete Pool</button>
     <div style="height:8px;"></div>`;
+  window.SplashLensFieldSignals?.onPoolViewed(p);
 }
 
 function poolPill(text) {
@@ -4889,6 +4902,8 @@ function renderPoolEquipmentTree(pool) {
         <div style="border:1px solid #e2e8f0;border-radius:7px;padding:8px;margin-bottom:6px;background:#f8fafc;">
           <p style="color:#0f172a;font-size:13px;font-weight:900;">${escHtml([item.manufacturer, item.hardware, item.model].filter(Boolean).join(' / ') || 'Unknown equipment')}</p>
           <p style="color:#64748b;font-size:11px;line-height:1.4;">${escHtml(item.symptom || 'No symptom saved')} ${item.confidence ? ' - ' + escHtml(item.confidence) : ''}</p>
+          ${[item.speedType, item.thp ? `${item.thp} THP` : '', item.voltage ? `${item.voltage} V` : '', item.installedYear ? `Installed ${item.installedYear}` : ''].filter(Boolean).length ? `<p style="color:#64748b;font-size:10px;line-height:1.4;margin-top:4px;">${escHtml([item.speedType, item.thp ? `${item.thp} THP` : '', item.voltage ? `${item.voltage} V` : '', item.installedYear ? `Installed ${item.installedYear}` : ''].filter(Boolean).join(' / '))}</p>` : ''}
+          ${/pump|motor/i.test([item.hardware, item.model, item.symptom].filter(Boolean).join(' ')) ? `<button type="button" onclick="event.stopPropagation();SplashLensFieldSignals.openPumpDecisionFromEquipment('${escAttr(pool.id)}','${escAttr(item.id)}')" style="margin-top:7px;background:#fff;color:#075985;border:1px solid #7dd3fc;border-radius:7px;padding:7px 9px;font-size:10px;font-weight:900;cursor:pointer;">Compare repair or upgrade</button>` : ''}
         </div>`).join('') : `<p style="color:#94a3b8;font-size:12px;text-align:center;padding:10px 0;">No equipment saved yet. Add the first pump, heater, robot, light, cover, salt cell, or controller.</p>`;
   return `
     <div class="pool-form-panel" style="padding:12px;margin-bottom:10px;">
@@ -4932,6 +4947,18 @@ function showEquipmentForm(poolId) {
         </select>
       </div>
       <input id="eq-symptom-${poolId}" type="text" placeholder="Symptom, part clue, or next check" style="width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:10px;font-size:13px;margin-bottom:8px;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+        <select id="eq-speed-${poolId}" style="min-width:0;border:1px solid #cbd5e1;border-radius:8px;padding:10px;font-size:13px;background:#fff;">
+          <option value="">Pump speed type</option>
+          <option value="Single-speed">Single-speed</option>
+          <option value="Two-speed">Two-speed</option>
+          <option value="Variable-speed">Variable-speed</option>
+          <option value="Unknown speed">Unknown</option>
+        </select>
+        <input id="eq-thp-${poolId}" type="number" min="0" step="0.01" inputmode="decimal" placeholder="Total HP (THP)" style="min-width:0;border:1px solid #cbd5e1;border-radius:8px;padding:10px;font-size:13px;">
+        <input id="eq-voltage-${poolId}" type="number" min="0" step="1" inputmode="numeric" placeholder="Voltage" style="min-width:0;border:1px solid #cbd5e1;border-radius:8px;padding:10px;font-size:13px;">
+        <input id="eq-year-${poolId}" type="number" min="1950" max="2100" step="1" inputmode="numeric" placeholder="Installed year" style="min-width:0;border:1px solid #cbd5e1;border-radius:8px;padding:10px;font-size:13px;">
+      </div>
       <textarea id="eq-note-${poolId}" rows="2" placeholder="Proof note, label text, serial clue, vendor pointer..." style="width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:10px;font-size:13px;resize:vertical;margin-bottom:8px;"></textarea>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
         <button onclick="saveManualEquipment('${poolId}')" style="background:#0369a1;color:#fff;border:0;border-radius:9px;padding:10px;font-size:12px;font-weight:900;cursor:pointer;">Save Equipment</button>
@@ -4949,6 +4976,10 @@ function saveManualEquipment(poolId) {
     model: val('model'),
     symptom: val('symptom'),
     note: val('note'),
+    speedType: val('speed'),
+    thp: val('thp'),
+    voltage: val('voltage'),
+    installedYear: val('year'),
     confidence: document.getElementById(`eq-confidence-${poolId}`)?.value || 'needs manual verification',
     source: 'manual',
     savedAt: new Date().toISOString(),
@@ -4965,6 +4996,7 @@ function saveManualEquipment(poolId) {
   });
   if (pool) {
     trackSplashLensEvent('manual_equipment_saved', { pool_id: poolId, hardware: item.hardware || '', manufacturer: item.manufacturer || '' });
+    window.SplashLensFieldSignals?.onEquipmentSaved(item, poolId);
     renderPoolDetail(poolId);
   }
 }
@@ -5009,6 +5041,7 @@ function saveNextVisitReminder(poolId) {
   });
   if (pool) {
     trackSplashLensEvent('next_visit_reminder_saved', { pool_id: poolId, has_date: !!date, has_note: !!note });
+    window.SplashLensFieldSignals?.scheduleNextVisitReminder(poolId, pool.nextVisitReminder, pool);
     renderPoolDetail(poolId);
   }
 }
@@ -7285,6 +7318,7 @@ function trackSplashLensEvent(name, props = {}) {
   recordFieldFeedbackSignal(name);
   recordReviewableWin(name);
   maybeTrackActivationCompleted(name, eventProps);
+  if (!navigator.onLine) return;
 
   const payload = JSON.stringify(withLanguageMetadata({
     event: name,
@@ -7654,6 +7688,15 @@ function renderPartsSnapResult(ai, result, status) {
     </div>
     <div id="partsnap-feedback-panel"></div>
   `;
+  window.SplashLensFieldSignals?.onPartSnapResult({
+    manufacturer,
+    model,
+    component,
+    category,
+    partNumber,
+    description,
+    missingProof: missingProof.length ? missingProof : ladder.missing,
+  });
 }
 
 function renderPartSnapPrimaryAction(risk = {}, missingProof = []) {
@@ -7716,6 +7759,7 @@ function savePartSnapFieldStop() {
         <button onclick="sharePartSnapPacket()" style="background:#fff;color:#0f766e;border:1px solid #0f766e;border-radius:8px;padding:10px;font-size:11px;font-weight:900;cursor:pointer;">Share packet</button>
       </div>
     </div>${renderPostValueUpgradeOffer()}`;
+  window.SplashLensFieldSignals?.offerSystemNotificationsAfterValue('partsnap_field_stop_saved');
 }
 
 function renderPostValueUpgradeOffer() {

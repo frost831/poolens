@@ -333,6 +333,7 @@ async function eventSummary(request, env) {
   const activationCampaigns = new Map();
   const laneDemand = new Map();
   const partSnapCategories = new Map();
+  const fieldSignalIds = new Map();
   const roles = new Map();
   const languages = new Map();
   const locales = new Map();
@@ -370,6 +371,10 @@ async function eventSummary(request, env) {
     'operator_pilot_wizard_opened',
     'facility_workflow_action_selected',
     'facility_workflow_completed',
+    'field_signal_action',
+    'pump_decision_completed',
+    'pump_customer_summary_copied',
+    'pump_customer_summary_added_to_report',
     'activation_completed',
     'checkout_success',
   ]);
@@ -407,6 +412,14 @@ async function eventSummary(request, env) {
   let quickFeedbackHelpful30d = 0;
   let quickFeedbackMissed30d = 0;
   let operatorWizard30d = 0;
+  let fieldSignalsShown30d = 0;
+  let fieldSignalActions30d = 0;
+  let fieldSignalDismissals30d = 0;
+  let fieldSignalPermissionsGranted30d = 0;
+  let fieldSignalPermissionsDenied30d = 0;
+  let pumpDecisionsStarted30d = 0;
+  let pumpDecisionsCompleted30d = 0;
+  let pumpCustomerSummaries30d = 0;
   let checkoutSuccess30d = 0;
   let serviceProofShareLinks30d = 0;
   let serviceProofCustomerSummaries30d = 0;
@@ -668,6 +681,23 @@ async function eventSummary(request, env) {
         if (['missed', 'wrong', 'missing'].includes(props.answer)) quickFeedbackMissed30d += 1;
       }
       if (record.event === 'operator_pilot_wizard_opened') operatorWizard30d += 1;
+      if (record.event === 'field_signal_shown') {
+        fieldSignalsShown30d += 1;
+        inc(fieldSignalIds, props.signal_id || 'unknown');
+      }
+      if (record.event === 'field_signal_action') {
+        fieldSignalActions30d += 1;
+        inc(fieldSignalIds, props.signal_id || 'unknown');
+      }
+      if (record.event === 'field_signal_dismissed') fieldSignalDismissals30d += 1;
+      if (record.event === 'field_signal_permission_result') {
+        const granted = props.granted === true || props.granted === 'true' || props.result === 'granted';
+        if (granted) fieldSignalPermissionsGranted30d += 1;
+        else if (props.result === 'denied' || props.result === 'default') fieldSignalPermissionsDenied30d += 1;
+      }
+      if (record.event === 'pump_decision_started') pumpDecisionsStarted30d += 1;
+      if (record.event === 'pump_decision_completed') pumpDecisionsCompleted30d += 1;
+      if (record.event === 'pump_customer_summary_copied' || record.event === 'pump_customer_summary_added_to_report') pumpCustomerSummaries30d += 1;
       if (record.event === 'activation_completed') {
         activationCompletions30d += 1;
         if (clientId) activatedClients30d.add(clientId);
@@ -798,6 +828,16 @@ async function eventSummary(request, env) {
       quickFeedbackHelpful30d,
       quickFeedbackMissed30d,
       operatorWizard30d,
+      fieldSignalsShown30d,
+      fieldSignalActions30d,
+      fieldSignalDismissals30d,
+      fieldSignalPermissionsGranted30d,
+      fieldSignalPermissionsDenied30d,
+      fieldSignalActionRate30d: pct(fieldSignalActions30d, fieldSignalsShown30d),
+      pumpDecisionsStarted30d,
+      pumpDecisionsCompleted30d,
+      pumpDecisionCompletionRate30d: pct(pumpDecisionsCompleted30d, pumpDecisionsStarted30d),
+      pumpCustomerSummaries30d,
       checkoutSuccess30d,
       serviceProofShareLinks30d,
       serviceProofCustomerSummaries30d,
@@ -891,6 +931,7 @@ async function eventSummary(request, env) {
     topFacilityLanes: topList(facilityLanes),
     topFacilityOutcomes: topList(facilityOutcomes),
     topPartSnapCategories: topList(partSnapCategories),
+    topFieldSignals: topList(fieldSignalIds, 10),
     topPaths: topList(paths),
     scanModes: topList(scanModes),
     callbackRisks: topList(callbackRisks),
@@ -1073,6 +1114,12 @@ async function sendDigestEmail(env, summary) {
     `- Field feedback 30d: ${m.fieldFeedback30d || 0}`,
     `- Field tester opt-ins 30d: ${m.fieldTesterOptIns30d || 0}`,
     `- CPO/facility wizard opens 30d: ${m.operatorWizard30d || 0}`,
+    `- Field Signals shown 30d: ${m.fieldSignalsShown30d || 0}`,
+    `- Field Signal actions 30d: ${m.fieldSignalActions30d || 0}`,
+    `- Field Signal dismissals 30d: ${m.fieldSignalDismissals30d || 0}`,
+    `- System notification opt-ins 30d: ${m.fieldSignalPermissionsGranted30d || 0}`,
+    `- Pump decisions completed 30d: ${m.pumpDecisionsCompleted30d || 0}`,
+    `- Customer option summaries 30d: ${m.pumpCustomerSummaries30d || 0}`,
     `- Spa/hot tub demand 30d: ${m.spaSearches30d || 0}`,
     `- Robot demand 30d: ${m.robotSearches30d || 0}`,
     `- Automation demand 30d: ${m.automationSearches30d || 0}`,

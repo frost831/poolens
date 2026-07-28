@@ -83,7 +83,7 @@ def inject_demo_part(page: Page) -> None:
         DEMO_PART,
     )
     page.wait_for_selector("#scan-result", state="visible")
-    page.get_by_text("DEMO TEST Pump Lid", exact=True).wait_for(timeout=5000)
+    page.get_by_text("DEMO TEST Pump Lid", exact=True).first.wait_for(timeout=5000)
 
 
 def close_quick_feedback(page: Page) -> bool:
@@ -153,10 +153,12 @@ def run_role(page: Page, role: str, label: str, base_url: str) -> dict:
         result["wow_evidence"] = "Synthetic possible match rendered with missing proof, callback risk, and vendor packet"
 
     elif role == "trainer":
-        page.locator("#tab-scan.active").wait_for(timeout=5000)
-        page.get_by_text("DEMO TEST five-minute lesson", exact=True).wait_for(timeout=5000)
+        page.locator("#tab-report.active").wait_for(timeout=5000)
+        page.get_by_text("PartSnap miss to five-minute lesson", exact=True).wait_for(timeout=5000)
         result["sample_lesson_visible"] = True
-        page.get_by_role("button", name="Use real part", exact=True).click()
+        page.locator("#nav-scan").click()
+        page.locator("#tab-scan.active").wait_for(timeout=5000)
+        page.evaluate("() => setScanMode('parts')")
         page.get_by_text("PartSnap AI Service", exact=True).wait_for(timeout=5000)
         inject_demo_part(page)
         page.get_by_role("button", name="Apprentice Mode", exact=True).click()

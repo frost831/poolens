@@ -1,0 +1,46 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-07-28T12:00:00-05:00",
+  "items": [
+    {
+      "id": "doe-pump-motor-2026",
+      "category": "efficiency",
+      "status": "current",
+      "priority": 70,
+      "publishedAt": "2026-07-28",
+      "verifiedAt": "2026-07-28",
+      "equipmentTypes": ["pump", "motor"],
+      "title": "Replacement motor rules may affect the available options",
+      "body": "When a pump or motor decision is already in front of you, compare the repair and replacement paths using the exact equipment and job figures. Do not tell a customer that every working single-speed pump must be replaced.",
+      "action": "pump-decision",
+      "actionLabel": "Compare options",
+      "notificationEligible": true,
+      "jurisdiction": "United States",
+      "source": {
+        "label": "U.S. Department of Energy - Dedicated-Purpose Pool Pump Motors",
+        "url": "https://www.energy.gov/cmei/buildings/dedicated-purpose-pool-pump-motors",
+        "secondaryUrl": "https://www.energy.gov/gc/articles/dedicated-purpose-pool-pump-motors-enforcement-policy"
+      },
+      "guardrail": "Standards and enforcement timing vary by motor size, manufacturing date, product class, and other facts. Confirm current official guidance and manufacturer documentation before making a compliance statement."
+    },
+    {
+      "id": "before-you-leave-pump-proof-v1",
+      "category": "proof",
+      "status": "current",
+      "priority": 90,
+      "publishedAt": "2026-07-28",
+      "verifiedAt": "2026-07-28",
+      "equipmentTypes": ["pump", "motor"],
+      "title": "Before you leave the pump",
+      "body": "Capture both plates, THP, voltage, speed type, plumbing size, and one wide equipment-pad photo before quoting or ordering.",
+      "action": "pump-proof",
+      "actionLabel": "Open proof checklist",
+      "notificationEligible": false,
+      "source": {
+        "label": "SplashLens proof-first field workflow",
+        "url": "https://app.splashlens.com/"
+      },
+      "guardrail": "A proof checklist supports verification. It does not confirm fitment or diagnose the equipment."
+    }
+  ]
+}

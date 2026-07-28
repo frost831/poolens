@@ -1,5 +1,6 @@
 import SwiftUI
 import StoreKit
+import UserNotifications
 import WebKit
 
 struct ContentView: View {
@@ -18,6 +19,7 @@ struct SplashLensWebView: UIViewRepresentable {
         configuration.defaultWebpagePreferences.allowsContentJavaScript = true
         configuration.allowsInlineMediaPlayback = true
         configuration.userContentController.add(context.coordinator, name: "splashlensNativeBilling")
+        configuration.userContentController.add(context.coordinator, name: "splashlensNotifications")
 
         let webView = WKWebView(frame: .zero, configuration: configuration)
         context.coordinator.attach(webView)
@@ -27,7 +29,7 @@ struct SplashLensWebView: UIViewRepresentable {
         webView.scrollView.contentInsetAdjustmentBehavior = .never
         webView.isOpaque = false
         webView.backgroundColor = UIColor(red: 0.02, green: 0.07, blue: 0.09, alpha: 1)
-        webView.load(URLRequest(url: storeURL, cachePolicy: .reloadIgnoringLocalCacheData, timeoutInterval: 30))
+        webView.load(URLRequest(url: context.coordinator.initialURL(), cachePolicy: .reloadIgnoringLocalCacheData, timeoutInterval: 30))
         return webView
     }
 
@@ -49,9 +51,42 @@ struct SplashLensWebView: UIViewRepresentable {
 
         func attach(_ webView: WKWebView) {
             self.webView = webView
+            NotificationCenter.default.addObserver(
+                self,
+                selector: #selector(handleNotificationDeepLink(_:)),
+                name: SplashLensNotificationRouter.didReceiveDeepLink,
+                object: nil
+            )
+            DispatchQueue.main.async { [weak self] in
+                guard let pending = SplashLensNotificationRouter.pendingDeepLink,
+                      self?.allowedHosts.contains(pending.host ?? "") == true else { return }
+                SplashLensNotificationRouter.pendingDeepLink = nil
+                self?.webView?.load(URLRequest(url: pending))
+            }
+        }
+
+        deinit {
+            NotificationCenter.default.removeObserver(self)
+        }
+
+        func initialURL() -> URL {
+            defer { SplashLensNotificationRouter.pendingDeepLink = nil }
+            guard let pending = SplashLensNotificationRouter.pendingDeepLink,
+                  allowedHosts.contains(pending.host ?? "") else { return storeURL }
+            return pending
+        }
+
+        @objc private func handleNotificationDeepLink(_ notification: Notification) {
+            guard let url = notification.object as? URL,
+                  allowedHosts.contains(url.host ?? "") else { return }
+            webView?.load(URLRequest(url: url))
         }
 
         func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
+            if message.name == "splashlensNotifications" {
+                handleNotificationMessage(message.body)
+                return
+            }
             guard message.name == "splashlensNativeBilling" else { return }
             let payload = message.body as? [String: Any]
             let action = payload?["action"] as? String ?? "purchase"
@@ -63,6 +98,58 @@ struct SplashLensWebView: UIViewRepresentable {
                     await purchase(productId: productId)
                 }
             }
+        }
+
+        private func handleNotificationMessage(_ body: Any) {
+            guard let payload = body as? [String: Any],
+                  let action = payload["action"] as? String else { return }
+
+            switch action {
+            case "request":
+                UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .badge]) { [weak self] granted, error in
+                    let status = error == nil ? (granted ? "granted" : "denied") : "error"
+                    DispatchQueue.main.async {
+                        self?.sendNotificationPermissionResult(granted: granted, status: status)
+                    }
+                }
+            case "schedule":
+                scheduleNotification(payload)
+            case "cancelAll":
+                UNUserNotificationCenter.current().getPendingNotificationRequests { requests in
+                    let identifiers = requests.map(\.identifier).filter { $0.hasPrefix("splashlens-field-signal-") }
+                    UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: identifiers)
+                    UNUserNotificationCenter.current().removeDeliveredNotifications(withIdentifiers: identifiers)
+                }
+            default:
+                return
+            }
+        }
+
+        private func scheduleNotification(_ payload: [String: Any]) {
+            let signalId = payload["id"] as? String ?? UUID().uuidString
+            let content = UNMutableNotificationContent()
+            content.title = payload["title"] as? String ?? "SplashLens Field Signal"
+            content.body = payload["body"] as? String ?? ""
+            content.userInfo = ["deepLink": payload["deepLink"] as? String ?? storeURL.absoluteString]
+
+            let fireDate = (payload["fireAt"] as? String).flatMap { ISO8601DateFormatter().date(from: $0) }
+            let interval = max(1, fireDate?.timeIntervalSinceNow ?? 1)
+            let trigger = UNTimeIntervalNotificationTrigger(timeInterval: interval, repeats: false)
+            let request = UNNotificationRequest(
+                identifier: "splashlens-field-signal-\(signalId)",
+                content: content,
+                trigger: trigger
+            )
+            UNUserNotificationCenter.current().add(request)
+        }
+
+        @MainActor
+        private func sendNotificationPermissionResult(granted: Bool, status: String) {
+            let safeStatus = status.replacingOccurrences(of: "'", with: "")
+            let grantedLiteral = granted ? "true" : "false"
+            webView?.evaluateJavaScript(
+                "window.SplashLensFieldSignals?.nativePermissionResult(\(grantedLiteral),'\(safeStatus)');"
+            )
         }
 
         func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
