@@ -136,6 +136,46 @@ function parseProps(record) {
   return {};
 }
 
+function cleanEmail(value) {
+  const email = clean(value, 180).toLowerCase();
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ? email : '';
+}
+
+function eventUserProfile(record, props = {}) {
+  const email = cleanEmail(
+    props.known_email ||
+    props.email ||
+    props.customer_email ||
+    props.customerEmail ||
+    props.subject ||
+    props.contact_email ||
+    props.sl_email,
+  );
+  const name = clean(props.known_name || props.contact_name || props.name || [props.first_name, props.last_name].filter(Boolean).join(' '), 140);
+  const company = clean(props.known_company || props.company || props.organization || props.org || props.account, 160);
+  const role = clean(props.known_role || props.role || props.audience || props.persona || props.splashlens_role, 80);
+  const leadId = clean(props.lead_id || props.contact_id || props.recipient_id || props.prospect_id || props.referral_id, 120);
+  const pilotId = clean(props.pilot_id || props.pilot, 80);
+  const participantId = clean(props.participant_id || props.participant, 80);
+  const hasIdentity = Boolean(email || name || company || role || leadId || pilotId || participantId);
+  if (!hasIdentity) return null;
+  const label = email || name || company || leadId || participantId || pilotId || 'known user';
+  return {
+    label,
+    email,
+    name,
+    company,
+    role,
+    leadId,
+    pilotId,
+    participantId,
+    clientId: clean(props.client_id || props.clientId || '', 120),
+    sessionId: clean(props.session_id || props.sessionId || '', 160),
+    source: clean(props.identity_source || props.attribution_source || record.source || 'app', 80),
+    confidence: clean(props.identity_confidence || (email ? 'provided-email' : leadId || participantId || pilotId ? 'tracked-link' : 'self-described'), 40),
+  };
+}
+
 function shouldSendImmediateAlert(record) {
   if (!ALERT_EVENTS.has(record.event)) return false;
 
@@ -166,12 +206,62 @@ function topList(map, limit = 12) {
     .slice(0, limit);
 }
 
+function knownUserKey(user) {
+  if (!user) return '';
+  return clean(user.email || user.leadId || user.participantId || user.pilotId || user.label, 180).toLowerCase();
+}
+
+function rememberKnownUser(map, user, record) {
+  const key = knownUserKey(user);
+  if (!key) return;
+  const existing = map.get(key) || {
+    label: user.label,
+    email: user.email,
+    name: user.name,
+    company: user.company,
+    role: user.role,
+    leadId: user.leadId,
+    pilotId: user.pilotId,
+    participantId: user.participantId,
+    confidence: user.confidence,
+    source: user.source,
+    clientIds: new Set(),
+    sessionIds: new Set(),
+    firstAt: record.createdAt,
+    lastAt: record.createdAt,
+    eventCount: 0,
+    meaningfulCount: 0,
+    paidCount: 0,
+    lastEvent: record.event,
+  };
+  existing.label = existing.label || user.label;
+  existing.email = existing.email || user.email;
+  existing.name = existing.name || user.name;
+  existing.company = existing.company || user.company;
+  existing.role = existing.role || user.role;
+  existing.leadId = existing.leadId || user.leadId;
+  existing.pilotId = existing.pilotId || user.pilotId;
+  existing.participantId = existing.participantId || user.participantId;
+  existing.confidence = user.email ? 'provided-email' : existing.confidence || user.confidence;
+  existing.source = existing.source || user.source;
+  if (user.clientId) existing.clientIds.add(user.clientId);
+  if (user.sessionId) existing.sessionIds.add(user.sessionId);
+  existing.eventCount += 1;
+  existing.firstAt = eventTime(record) < eventTime({ createdAt: existing.firstAt }) ? record.createdAt : existing.firstAt;
+  existing.lastAt = eventTime(record) > eventTime({ createdAt: existing.lastAt }) ? record.createdAt : existing.lastAt;
+  existing.lastEvent = record.event;
+  if (record.event === 'checkout_success') existing.paidCount += 1;
+  map.set(key, existing);
+}
+
 function eventSource(record, props = {}) {
   return clean(record.source || props.attribution_source || props.source || 'app', 80) || 'app';
 }
 
 function eventIdentity(record, props = {}) {
+  const user = eventUserProfile(record, props);
   return clean(
+    user?.email || user?.leadId || user?.participantId || user?.pilotId || user?.label ||
     props.challenge_id || props.client_id || props.clientId || props.session_id || props.sessionId ||
     record.correlationId || record.id || `${record.event}:${record.createdAt}`,
     180,
@@ -462,6 +552,8 @@ async function eventSummary(request, env) {
   const meaningfulClients30d = new Set();
   const activatedClients30d = new Set();
   const poolProClients30d = new Set();
+  const knownUserClients30d = new Set();
+  const knownUsers = new Map();
   const clientActivityWindow = new Map();
   const funnelCampaignVisitors = new Set();
   const funnelAppStoreOpens = new Set();
@@ -488,6 +580,7 @@ async function eventSummary(request, env) {
     const props = parseProps(record);
     const clientId = clean(props.client_id || props.clientId || '', 120);
     const sessionId = clean(props.session_id || props.sessionId || '', 160);
+    const knownUser = eventUserProfile(record, props);
     const source = eventSource(record, props);
     const poolPro = isPoolProEvent(record, props);
     const preferredLanguage = clean(record.language?.preferredLanguage || props.preferred_language || props.source_language || 'en', 24).toLowerCase();
@@ -511,11 +604,22 @@ async function eventSummary(request, env) {
       if (lane) inc(laneDemand, lane);
       events30d += 1;
       if (clientId) uniqueClients30d.add(clientId);
+      if (knownUser && !isSyntheticEvent(record, props)) {
+        rememberKnownUser(knownUsers, knownUser, record);
+        if (clientId) knownUserClients30d.add(clientId);
+        const userRow = knownUsers.get(knownUserKey(knownUser));
+        if (userRow && meaningfulEvents.has(record.event)) userRow.meaningfulCount += 1;
+      }
       const sessionKey = sessionId || clientId || `event:${record.createdAt}`;
       if (sessionKey) {
         const existing = sessionEvents.get(sessionKey) || {
           sessionId: sessionId || '',
           clientId: clientId || '',
+          userLabel: knownUser?.label || '',
+          userEmail: knownUser?.email || '',
+          userCompany: knownUser?.company || '',
+          userRole: knownUser?.role || '',
+          userConfidence: knownUser?.confidence || '',
           source,
           firstAt: record.createdAt,
           lastAt: record.createdAt,
@@ -534,6 +638,13 @@ async function eventSummary(request, env) {
           events: [],
         };
         existing.eventCount += 1;
+        if (knownUser) {
+          existing.userLabel = existing.userLabel || knownUser.label || '';
+          existing.userEmail = existing.userEmail || knownUser.email || '';
+          existing.userCompany = existing.userCompany || knownUser.company || '';
+          existing.userRole = existing.userRole || knownUser.role || '';
+          existing.userConfidence = existing.userConfidence || knownUser.confidence || '';
+        }
         existing.firstAt = eventTime(record) < eventTime({ createdAt: existing.firstAt }) ? record.createdAt : existing.firstAt;
         existing.lastAt = eventTime(record) > eventTime({ createdAt: existing.lastAt }) ? record.createdAt : existing.lastAt;
         existing.source = existing.source || source;
@@ -789,6 +900,9 @@ async function eventSummary(request, env) {
       appOpens30d,
       firstOpens30d,
       uniqueClients30d: uniqueClients30d.size,
+      knownUsers30d: knownUsers.size,
+      knownUserClients30d: knownUserClients30d.size,
+      anonymousClients30d: Math.max(0, uniqueClients30d.size - knownUserClients30d.size),
       meaningfulClients30d: meaningfulClients30d.size,
       activatedClients30d: activatedClients30d.size,
       activationCompletions30d,
@@ -938,6 +1052,29 @@ async function eventSummary(request, env) {
     topTabDwell: topList(tabDwellSeconds, 12),
     manualQueries: topList(manualQueries, 20),
     recentPayments: recentPayments.slice(0, 20),
+    knownUsers: Array.from(knownUsers.values())
+      .map((user) => ({
+        label: user.label,
+        email: user.email,
+        name: user.name,
+        company: user.company,
+        role: user.role,
+        leadId: user.leadId,
+        pilotId: user.pilotId,
+        participantId: user.participantId,
+        confidence: user.confidence,
+        source: user.source,
+        clientCount: user.clientIds.size,
+        sessionCount: user.sessionIds.size,
+        eventCount: user.eventCount,
+        meaningfulCount: user.meaningfulCount,
+        paidCount: user.paidCount,
+        firstAt: user.firstAt,
+        lastAt: user.lastAt,
+        lastEvent: user.lastEvent,
+      }))
+      .sort((a, b) => eventTime({ createdAt: b.lastAt }) - eventTime({ createdAt: a.lastAt }))
+      .slice(0, 40),
     recentSessions: Array.from(sessionEvents.values())
       .sort((a, b) => eventTime({ createdAt: b.lastAt }) - eventTime({ createdAt: a.lastAt }))
       .slice(0, 30),
@@ -952,6 +1089,7 @@ async function eventSummary(request, env) {
       facilityFilter ? `Filtered to facilityId=${facilityFilter}.` : 'Facility reporting can be filtered with ?summary=1&facilityId=FACILITY_ID.',
       'PWA install events are browser-dependent and may not fire on every iOS add-to-home-screen install.',
       'Native App Store downloads are only visible here after the app/web wrapper opens or when a tracked store click/referral reaches the app.',
+      'Known-user reporting only appears when a user provides contact details, pays/restores, submits feedback, or arrives from a tagged outreach/pilot link.',
       'Email alerts are intentionally limited to usage/conversion events, not outreach email opens.',
       'Activation funnel counts exclude events tagged as test, demo, synthetic, Playwright, or benchmark traffic.',
     ],
@@ -1008,6 +1146,7 @@ async function sendEventAlert(env, record) {
   };
   const props = parseProps(record);
   const source = eventSource(record, props);
+  const user = eventUserProfile(record, props);
   const sourcePrefix = source && source !== 'app' ? `${source.toUpperCase()} - ` : '';
   const partSnapLines = record.event === 'partsnap_result' ? [
     '',
@@ -1058,6 +1197,15 @@ async function sendEventAlert(env, record) {
           `Attribution referrer: ${props.attribution_referrer || props.attribution_referrer_host || ''}`,
           `Attribution landing path: ${props.attribution_landing_path || ''}`,
           `Store shell: ${props.store_shell || ''}`,
+          `User: ${user?.label || 'Anonymous device'}`,
+          `Known email: ${user?.email || ''}`,
+          `Known name: ${user?.name || ''}`,
+          `Known company: ${user?.company || ''}`,
+          `Known role: ${user?.role || ''}`,
+          `Lead ID: ${user?.leadId || ''}`,
+          `Pilot ID: ${user?.pilotId || ''}`,
+          `Participant ID: ${user?.participantId || ''}`,
+          `Identity confidence: ${user?.confidence || 'anonymous'}`,
           `Client ID: ${props.client_id || props.clientId || ''}`,
           `Session ID: ${props.session_id || props.sessionId || ''}`,
           `Facility ID: ${props.facilityId || props.facility_id || ''}`,

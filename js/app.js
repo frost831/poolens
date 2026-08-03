@@ -1533,6 +1533,7 @@ function submitFieldFeedback() {
     }
     return;
   }
+  if (email) rememberSplashLensIdentity({ email, role: getSplashLensRole() }, 'field_feedback');
   const state = readFieldFeedbackState();
   state.submittedAt = Date.now();
   state.snoozedUntil = Date.now() + FIELD_FEEDBACK_AFTER_SUBMIT_MS;
@@ -1976,6 +1977,7 @@ async function openSplashLensPaidLane(planKey, label) {
     window.alert('Enter a valid email address.');
     return;
   }
+  rememberSplashLensIdentity({ email, role: getSplashLensRole() }, 'paid_lane_lead');
   try {
     const response = await fetch('/api/waitlist', {
       method: 'POST',
@@ -6356,6 +6358,8 @@ const PARTSNAP_REVIEW_KEY = 'splashlens-partsnap-review-tickets';
 const STORE_SHELL_KEY = 'sl_store_shell_mode';
 const ATTRIBUTION_KEY = 'splashlens-attribution-v1';
 const ATTRIBUTION_SESSION_KEY = 'splashlens-attribution-session-v1';
+const IDENTITY_PROFILE_KEY = 'splashlens-identity-profile-v1';
+const IDENTITY_SESSION_KEY = 'splashlens-identity-session-v1';
 
 function initScanTab() {
   updateAIStatusBar();
@@ -7035,6 +7039,107 @@ function getSplashLensAttribution() {
   return readAttribution(sessionStorage) || readAttribution(localStorage) || initSplashLensAttribution() || {};
 }
 
+function normalizeIdentityEmail(value) {
+  const email = cleanAttributionValue(value, 180).toLowerCase();
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ? email : '';
+}
+
+function readIdentityProfile(storage) {
+  try {
+    const raw = storage.getItem(storage === sessionStorage ? IDENTITY_SESSION_KEY : IDENTITY_PROFILE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+function writeIdentityProfile(storage, profile) {
+  try {
+    storage.setItem(storage === sessionStorage ? IDENTITY_SESSION_KEY : IDENTITY_PROFILE_KEY, JSON.stringify(profile));
+  } catch {}
+}
+
+function hasIdentitySignal(profile = {}) {
+  return Boolean(
+    profile.known_email ||
+    profile.known_name ||
+    profile.known_company ||
+    profile.known_role ||
+    profile.lead_id ||
+    profile.pilot_id ||
+    profile.participant_id
+  );
+}
+
+function identityFromCurrentPage() {
+  try {
+    const params = new URL(window.location.href).searchParams;
+    const email = normalizeIdentityEmail(params.get('contact_email') || params.get('email') || params.get('e') || params.get('sl_email'));
+    const firstName = cleanAttributionValue(params.get('first_name') || '', 80);
+    const lastName = cleanAttributionValue(params.get('last_name') || '', 80);
+    const name = cleanAttributionValue(params.get('contact_name') || params.get('name') || [firstName, lastName].filter(Boolean).join(' '), 140);
+    const company = cleanAttributionValue(params.get('company') || params.get('organization') || params.get('org') || params.get('account') || '', 160);
+    const role = cleanAttributionValue(params.get('role') || params.get('audience') || params.get('persona') || '', 80);
+    const leadId = cleanAttributionValue(params.get('lead_id') || params.get('contact_id') || params.get('recipient_id') || params.get('prospect_id') || '', 120);
+    const pilotId = cleanAttributionValue(params.get('pilot_id') || params.get('pilot') || '', 80);
+    const participantId = cleanAttributionValue(params.get('participant_id') || params.get('participant') || '', 80);
+    if (!email && !name && !company && !role && !leadId && !pilotId && !participantId) return null;
+    return {
+      known_email: email,
+      known_name: name,
+      known_company: company,
+      known_role: role,
+      lead_id: leadId,
+      pilot_id: pilotId,
+      participant_id: participantId,
+      identity_source: cleanAttributionValue(params.get('identity_source') || params.get('utm_source') || 'tracked_link', 80),
+      identity_confidence: email ? 'provided-email' : leadId || participantId ? 'tracked-link' : 'self-described',
+      identity_captured_at: new Date().toISOString(),
+      identity_last_seen: new Date().toISOString(),
+    };
+  } catch {
+    return null;
+  }
+}
+
+function mergeSplashLensIdentityProfile(incoming, source = 'app') {
+  const stored = readIdentityProfile(localStorage) || {};
+  const incomingFields = Object.fromEntries(Object.entries(incoming || {}).filter(([, value]) => value !== undefined && value !== null && String(value).trim() !== ''));
+  if (!hasIdentitySignal(stored) && !hasIdentitySignal(incomingFields)) return {};
+  const now = new Date().toISOString();
+  const profile = {
+    ...stored,
+    ...incomingFields,
+    identity_source: cleanAttributionValue((incoming || {}).identity_source || stored.identity_source || source, 80),
+    identity_confidence: cleanAttributionValue((incoming || {}).identity_confidence || stored.identity_confidence || 'self-described', 40),
+    identity_captured_at: stored.identity_captured_at || (incoming || {}).identity_captured_at || now,
+    identity_last_seen: now,
+  };
+  if (!hasIdentitySignal(profile)) return {};
+  writeIdentityProfile(localStorage, profile);
+  writeIdentityProfile(sessionStorage, profile);
+  return profile;
+}
+
+function rememberSplashLensIdentity(fields = {}, source = 'app') {
+  const incoming = {
+    known_email: normalizeIdentityEmail(fields.known_email || fields.email || fields.customer_email || fields.subject || ''),
+    known_name: cleanAttributionValue(fields.known_name || fields.name || fields.contact_name || '', 140),
+    known_company: cleanAttributionValue(fields.known_company || fields.company || fields.organization || fields.org || '', 160),
+    known_role: cleanAttributionValue(fields.known_role || fields.role || fields.audience || '', 80),
+    lead_id: cleanAttributionValue(fields.lead_id || fields.contact_id || fields.recipient_id || fields.prospect_id || '', 120),
+    pilot_id: cleanAttributionValue(fields.pilot_id || fields.pilot || '', 80),
+    participant_id: cleanAttributionValue(fields.participant_id || fields.participant || '', 80),
+    identity_source: source,
+    identity_confidence: normalizeIdentityEmail(fields.known_email || fields.email || fields.customer_email || fields.subject || '') ? 'provided-email' : 'self-described',
+  };
+  return mergeSplashLensIdentityProfile(incoming, source);
+}
+
+function getSplashLensIdentityProfile() {
+  return readIdentityProfile(sessionStorage) || readIdentityProfile(localStorage) || mergeSplashLensIdentityProfile(identityFromCurrentPage(), 'tracked_link') || {};
+}
+
 function getFieldChallengeContext() {
   try {
     const params = new URL(window.location.href).searchParams;
@@ -7225,6 +7330,7 @@ function unlockPartSnapProLocal() {
 async function restorePartSnapPro() {
   const email = prompt('Enter the email used at SplashLens checkout:');
   if (!email) return;
+  rememberSplashLensIdentity({ email, role: getSplashLensRole() }, 'restore_entitlement');
   const result = document.getElementById('scan-result');
   try {
     if (result) {
@@ -7290,6 +7396,7 @@ function showScanLimitModal(result, status) {
 function trackSplashLensEvent(name, props = {}) {
   const clientId = getScanClientId();
   const attribution = getSplashLensAttribution();
+  const identity = getSplashLensIdentityProfile();
   const sessionKey = 'splashlens-session-id';
   let sessionId = sessionStorage.getItem(sessionKey);
   if (!sessionId) {
@@ -7308,6 +7415,15 @@ function trackSplashLensEvent(name, props = {}) {
     attribution_referrer_host: attribution.referrer_host || '',
     attribution_landing_path: attribution.landing_path || '',
     attribution_article: attribution.article || '',
+    known_email: identity.known_email || '',
+    known_name: identity.known_name || '',
+    known_company: identity.known_company || '',
+    known_role: identity.known_role || '',
+    lead_id: identity.lead_id || '',
+    pilot_id: identity.pilot_id || '',
+    participant_id: identity.participant_id || '',
+    identity_source: identity.identity_source || '',
+    identity_confidence: identity.identity_confidence || '',
     splashlens_role: getSplashLensRole(),
     ...getFieldChallengeContext(),
     ...props,
@@ -8395,6 +8511,7 @@ async function submitMysteryPartFeedback() {
   const note = document.getElementById('partsnap-feedback-note')?.value || '';
   const ai = _lastPartSnapResult || {};
   const summary = [ai.manufacturer, ai.component, ai.model, ai.partNumber].filter(Boolean).join(' / ') || note || 'Mystery part submitted.';
+  if (email) rememberSplashLensIdentity({ email, role: getSplashLensRole() }, 'partsnap_mystery');
   if (status) status.textContent = 'Sending...';
   try {
     const res = await fetch(PARTSNAP_FEEDBACK_ENDPOINT, {
