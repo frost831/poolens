@@ -1,6 +1,6 @@
 # SplashLens Growth Plan Run
 
-Generated: 2026-08-07T13:18:47.980Z
+Generated: 2026-08-07T13:38:36.059Z
 
 ## Classification
 
@@ -14,8 +14,8 @@ Can SplashLens tell which attention sources turn into real app use, first useful
 
 - App event endpoint: 200 storage=YES email=YES
 - Site event endpoint: 200 stored=YES fresh=YES
-- Site public 7d events: 24
-- Site public 30d events: 214
+- Site public 7d events: 26
+- Site public 30d events: 216
 - App smoke stored: 200 stored=YES amplitudeQueued=NO
 - Site smoke stored: 200 funnelForwarded=NO amplitudeQueued=NO
 - Stripe readiness: productionReady=YES mode=payment_link_direct
@@ -61,8 +61,9 @@ Can SplashLens tell which attention sources turn into real app use, first useful
 ## Public Site Top Events
 
 - site_page_view: 17
-- amplitude_readiness_smoke: 5
+- amplitude_readiness_smoke: 6
 - amplitude_wiring_smoke: 1
+- growth_plan_smoke: 1
 - persona_fork_click: 1
 
 ## Confidence
