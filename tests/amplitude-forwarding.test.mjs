@@ -7,6 +7,8 @@ test('Amplitude config is disabled without a Cloudflare secret', () => {
   const config = amplitudeConfigPayload({});
   assert.equal(config.enabled, false);
   assert.equal(config.apiKey, '');
+  assert.equal(config.status, 'missing_api_key');
+  assert.equal(config.ingestion, 'server_side_http_v2');
 });
 
 test('Amplitude forwarding sends canonical SplashLens event shape', async () => {
@@ -30,6 +32,8 @@ test('Amplitude forwarding sends canonical SplashLens event shape', async () => 
         client_id: 'client-test-12345',
         session_id: 'session-test-12345',
         known_email: 'tech@example.com',
+        known_company: 'Demo Pool Service',
+        facility_id: 'facility-demo-1',
         splashlens_role: 'tech',
         corpus_status: 'source-backed candidates',
       }),
@@ -43,6 +47,8 @@ test('Amplitude forwarding sends canonical SplashLens event shape', async () => 
     assert.equal(captured.body.events[0].device_id, 'client-test-12345');
     assert.equal(captured.body.events[0].event_properties.product, 'splashlens');
     assert.equal(captured.body.events[0].user_properties.role, 'tech');
+    assert.equal(captured.body.events[0].groups.company, 'Demo Pool Service');
+    assert.equal(captured.body.events[0].groups.facility, 'facility-demo-1');
   } finally {
     globalThis.fetch = originalFetch;
   }

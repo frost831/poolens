@@ -25,10 +25,13 @@ export function amplitudeEnabled(env) {
 }
 
 export function amplitudeConfigPayload(env) {
+  const enabled = amplitudeEnabled(env);
   return {
     ok: true,
-    enabled: amplitudeEnabled(env),
-    apiKey: amplitudeEnabled(env) ? amplitudeApiKey(env) : '',
+    enabled,
+    status: enabled ? 'ready' : 'missing_api_key',
+    ingestion: 'server_side_http_v2',
+    apiKey: enabled ? amplitudeApiKey(env) : '',
     project: 'splashlens',
     product: 'app',
     sdkUrl: 'https://cdn.amplitude.com/libs/analytics-browser-2.11.7-min.js.gz',
@@ -77,6 +80,18 @@ function pruneObject(value) {
   return Object.fromEntries(Object.entries(value).filter(([, item]) => item !== undefined && item !== null && item !== ''));
 }
 
+function amplitudeGroups(props) {
+  const company = clean(props.known_company || props.company || props.organization || props.org || props.account || '', 160);
+  const pilot = clean(props.pilot_id || props.pilot || '', 80);
+  const facility = clean(props.facilityId || props.facility_id || '', 120);
+  const groups = pruneObject({
+    company,
+    pilot,
+    facility,
+  });
+  return Object.keys(groups).length ? groups : undefined;
+}
+
 export async function forwardEventToAmplitude(env, record) {
   if (!amplitudeEnabled(env)) return { sent: false, skipped: true, reason: 'missing_amplitude_api_key' };
   const props = parseProps(record);
@@ -98,6 +113,7 @@ export async function forwardEventToAmplitude(env, record) {
       event_type: clean(record.event || 'splashlens_event', 80),
       event_properties: eventProperties,
       user_properties: pruneObject(amplitudeUserProperties(record, props)),
+      groups: amplitudeGroups(props),
       time: Date.parse(record.createdAt || '') || Date.now(),
       insert_id: clean(record.correlationId || `${record.event}:${record.createdAt}`, 180),
     }],
