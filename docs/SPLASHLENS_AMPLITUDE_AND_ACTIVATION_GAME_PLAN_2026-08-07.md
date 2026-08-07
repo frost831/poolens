@@ -11,8 +11,18 @@ SplashLens has a first-party event spine already live:
 - Owner dashboard: `https://app.splashlens.com/dashboard`
 - App Amplitude config: `https://app.splashlens.com/api/amplitude-config`
 - Site Amplitude config: `https://splashlens.com/api/amplitude-config`
+- Checkout readiness: `https://app.splashlens.com/api/checkout-readiness`
 
 Amplitude forwarding is wired in code for both the app and marketing site through server-side HTTP V2 forwarding. The owner dashboard remains the operational source of truth for immediate usage: opens, known users, anonymous clients, PartSnap use, scanner use, proof saves, feedback, checkout starts, paid conversions, campaigns, referrers, and demand lanes.
+
+Live checkout status on 2026-08-07:
+
+- `checkout-readiness` returned `productionReady:true`.
+- Stripe account check returned `ok:true`, `chargesEnabled:true`, and `payoutsEnabled:true`.
+- Webhook endpoint is enabled at `https://app.splashlens.com/api/stripe-webhook`.
+- Required webhook events are present: `checkout.session.completed`, `checkout.session.async_payment_succeeded`, and `charge.refunded`.
+- Monthly and annual PartSnap Pro Payment Links are active and route through `payment_link_direct`.
+- Broader Service Proof, Team, Facility/CPO, Manufacturer Cards, Distributor/Counter, and Training Partner lanes are configured as pilot/partner checkout-capable lanes, while the public site still markets them conservatively.
 
 ## Remaining Wiring
 
