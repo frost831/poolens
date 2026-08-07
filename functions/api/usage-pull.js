@@ -65,6 +65,52 @@ function isSynthetic(record, props) {
   return /codex|smoke|test|launch-gate|qa|audit|probe|demo/.test(joined);
 }
 
+function hasKnownUserSignal(props) {
+  return Boolean(
+    props.known_email ||
+    props.known_name ||
+    props.known_company ||
+    props.known_role ||
+    props.lead_id ||
+    props.pilot_id ||
+    props.participant_id ||
+    props.referral_id
+  );
+}
+
+function stageName(event) {
+  if (/article_referral_open|campaign_|field_challenge_started|field_challenge_routed/.test(event)) return 'campaign_or_challenge';
+  if (/first_app_open|app_open|native_shell_open|native_shell_first_open|pwa_standalone_open/.test(event)) return 'open';
+  if (/role_picker_first_open|role_selected/.test(event)) return 'role_picker';
+  if (/manual_code_search|first_value_completed|activation_completed|partsnap_result|facility_workflow_completed|service_report_saved|proof_ready_report_saved/.test(event)) return 'first_value_or_workflow';
+  if (/partsnap|ai_scan_started/.test(event)) return 'partsnap_scan';
+  if (/field_feedback/.test(event)) return 'feedback';
+  if (/identity_/.test(event)) return 'identity_capture';
+  if (/checkout|upgrade|paid/.test(event)) return 'checkout_or_paid';
+  return 'other';
+}
+
+function getCount(map, key) {
+  return map.get(key) || 0;
+}
+
+function pct(numerator, denominator) {
+  if (!denominator) return 0;
+  return Math.round((numerator / denominator) * 1000) / 10;
+}
+
+function weakSpot(label, numerator, denominator, goodAt, warningAt, fix) {
+  const rate = pct(numerator, denominator);
+  return {
+    label,
+    numerator,
+    denominator,
+    rate,
+    status: rate >= goodAt ? 'good' : rate >= warningAt ? 'watch' : 'weak',
+    fix,
+  };
+}
+
 function dayPrefix(date) {
   return `event:${date.toISOString().slice(0, 10)}`;
 }
@@ -156,10 +202,13 @@ export async function onRequestGet({ request, env }) {
     realEvents: new Map(),
     syntheticEvents: new Map(),
     sources: new Map(),
+    realSources: new Map(),
     paths: new Map(),
+    realPaths: new Map(),
     modes: new Map(),
     plans: new Map(),
     days: new Map(),
+    realFunnelStages: new Map(),
     challenge: new Map(),
     partsnap: new Map(),
     facility: new Map(),
@@ -173,6 +222,7 @@ export async function onRequestGet({ request, env }) {
   let parseErrors = 0;
   let realCount = 0;
   let syntheticCount = 0;
+  let knownSignalCount = 0;
 
   for (const [name, raw] of values) {
     if (!raw) continue;
@@ -188,6 +238,7 @@ export async function onRequestGet({ request, env }) {
     const event = clean(record.event || 'unknown', 80);
     const synthetic = isSynthetic(record, props);
     const day = clean(record.createdAt || record.created_at || name, 40).slice(0, 10);
+    const knownSignal = hasKnownUserSignal(props);
 
     add(maps.events, event);
     add(synthetic ? maps.syntheticEvents : maps.realEvents, event);
@@ -199,17 +250,42 @@ export async function onRequestGet({ request, env }) {
     for (const key of Object.keys(props)) add(maps.propKeys, key);
 
     if (synthetic) syntheticCount += 1;
-    else realCount += 1;
+    else {
+      realCount += 1;
+      if (knownSignal) knownSignalCount += 1;
+      add(maps.realSources, record.source || props.source);
+      add(maps.realPaths, record.path || props.path);
+      add(maps.realFunnelStages, stageName(event));
+    }
     if (/challenge/i.test(event) || props.challenge || props.challenge_id) add(maps.challenge, event);
     if (/partsnap/i.test(event) || /partsnap/i.test(String(record.mode || props.mode || ''))) add(maps.partsnap, event);
     if (/facility|operator/i.test(event) || props.facility_id || props.facility_lane) add(maps.facility, event);
     if (/feedback/i.test(event)) add(maps.feedback, event);
     if (/checkout|upgrade|paid/i.test(event)) add(maps.checkout, event);
-    if (props.known_email || props.known_name || props.known_company || props.lead_id || props.pilot_id || props.participant_id) {
+    if (knownSignal) {
       add(maps.knownUserSignals, event);
     }
     if (recentSampleShape.length < 25) recentSampleShape.push(safeSample(name, record, props));
   }
+
+  const firstOpens = getCount(maps.realEvents, 'first_app_open');
+  const appOpens = getCount(maps.realEvents, 'app_open');
+  const firstValues = getCount(maps.realEvents, 'first_value_completed') + getCount(maps.realEvents, 'activation_completed');
+  const scanStarts = getCount(maps.realEvents, 'ai_scan_started');
+  const partSnapResults = getCount(maps.realEvents, 'partsnap_result');
+  const feedbackPrompts = getCount(maps.realEvents, 'field_feedback_prompt_shown') + getCount(maps.realEvents, 'field_feedback_quick_shown');
+  const feedbackSubmits = getCount(maps.realEvents, 'field_feedback_submitted') + getCount(maps.realEvents, 'field_feedback_quick_answered');
+  const checkoutStarts = getCount(maps.realEvents, 'checkout_click') + getCount(maps.realEvents, 'upgrade_click') + getCount(maps.realEvents, 'post_value_upgrade_clicked');
+  const challengeStarts = getCount(maps.realEvents, 'field_challenge_started');
+  const challengeCompletes = getCount(maps.realEvents, 'field_challenge_completed');
+  const weakSpotScorecard = [
+    weakSpot('Known-user attribution', knownSignalCount, realCount, 35, 12, 'Ask for company/email after first value and ensure every outreach link carries lead_id or pilot_id.'),
+    weakSpot('First-value completion', firstValues, Math.max(firstOpens, 1), 55, 25, 'Route new users into one 60-second task instead of making them browse all tools.'),
+    weakSpot('PartSnap scan completion', partSnapResults, Math.max(scanStarts, 1), 70, 40, 'Keep proof prompts short and surface camera/second-photo guidance earlier.'),
+    weakSpot('Feedback capture', feedbackSubmits, Math.max(feedbackPrompts, 1), 45, 20, 'Use one-tap feedback first, then ask for details only on wrong/missing answers.'),
+    weakSpot('Checkout intent after value', checkoutStarts, Math.max(firstValues, 1), 12, 4, 'Show paid upgrade only after saved proof, repeated scans, or vendor packet creation.'),
+    weakSpot('Field challenge completion', challengeCompletes, Math.max(challengeStarts, 1), 50, 20, 'Send campaign links directly into challenge_path and measure one task to completion.'),
+  ];
 
   return json(200, {
     ok: true,
@@ -222,15 +298,22 @@ export async function onRequestGet({ request, env }) {
     parseErrors,
     realCount,
     syntheticCount,
+    knownSignalCount,
+    anonymousRealCount: Math.max(0, realCount - knownSignalCount),
+    knownSignalRate: pct(knownSignalCount, realCount),
     keyCountsByDay,
     topEvents: topList(maps.events, 60),
     realTopEvents: topList(maps.realEvents, 60),
     syntheticTopEvents: topList(maps.syntheticEvents, 40),
     topSources: topList(maps.sources, 40),
+    realTopSources: topList(maps.realSources, 40),
     topPaths: topList(maps.paths, 40),
+    realTopPaths: topList(maps.realPaths, 40),
     topModes: topList(maps.modes, 30),
     topPlans: topList(maps.plans, 30),
     eventsByDay: topList(maps.days, 120),
+    realFunnelStages: topList(maps.realFunnelStages, 20),
+    weakSpotScorecard,
     challengeEvents: topList(maps.challenge, 40),
     partSnapEvents: topList(maps.partsnap, 40),
     facilityEvents: topList(maps.facility, 40),

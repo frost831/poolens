@@ -126,6 +126,27 @@
     .funnel-track { height: 5px; margin-top: 8px; overflow: hidden; background: #e2e8f0; border-radius: 3px; }
     .funnel-track i { display: block; height: 100%; background: #0e7490; }
     .funnel-step.hit .funnel-track i { background: #16a34a; }
+    .weakspot-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      padding: 12px;
+    }
+    .weakspot-card {
+      border: 1px solid #e2e8f0;
+      border-left: 5px solid #0e7490;
+      border-radius: 8px;
+      padding: 12px;
+      background: #fff;
+      min-height: 132px;
+    }
+    .weakspot-card.weak { border-left-color: #dc2626; background: #fff7f7; }
+    .weakspot-card.watch { border-left-color: #d97706; background: #fffbeb; }
+    .weakspot-card.good { border-left-color: #16a34a; background: #f0fdf4; }
+    .weakspot-card b { display: block; color: #64748b; font-size: 10px; letter-spacing: .08em; text-transform: uppercase; }
+    .weakspot-card strong { display: block; margin-top: 6px; color: #0f172a; font-size: 30px; line-height: 1; font-variant-numeric: tabular-nums; }
+    .weakspot-card span { display: block; margin-top: 7px; color: #334155; font-size: 12px; line-height: 1.35; font-weight: 800; }
+    .weakspot-card small { display: block; margin-top: 7px; color: #64748b; font-size: 11px; line-height: 1.35; }
     .grid {
       display: grid;
       grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -305,6 +326,7 @@
     @media (max-width: 820px) {
       header, .auth, .panels { grid-template-columns: 1fr; display: grid; }
       .attention-grid { grid-template-columns: 1fr; }
+      .weakspot-grid { grid-template-columns: 1fr; }
       .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .funnel-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .funnel-step { border-bottom: 1px solid #e2e8f0; }
@@ -347,6 +369,17 @@
         <div class="funnel-window" id="funnel-window">7-day target</div>
       </div>
       <div class="funnel-grid" id="activation-funnel"><div class="funnel-step"><span>Load the dashboard to see the funnel.</span></div></div>
+    </section>
+
+    <section class="panel funnel-panel" aria-labelledby="weakspot-title">
+      <div class="funnel-header">
+        <div>
+          <h2 id="weakspot-title">Weak Spot Scorecard</h2>
+          <p>Shows the biggest product leaks from the first-party usage pull: identity, first value, PartSnap, feedback, checkout, and challenge completion.</p>
+        </div>
+        <div class="funnel-window" id="weakspot-window">Full usage pull</div>
+      </div>
+      <div class="weakspot-grid" id="weakspot-scorecard"><div class="weakspot-card"><span>Load the dashboard to see weak spots.</span></div></div>
     </section>
 
     <section class="grid" id="metrics"></section>
@@ -532,6 +565,21 @@
           return `<div class="funnel-step ${count >= target ? 'hit' : ''}"><strong>${count.toLocaleString()}</strong><span>${escapeHtml(step.label || '')}</span><small>Goal ${escapeHtml(goal)} | ${progress}%</small><div class="funnel-track" aria-label="${progress}% of target"><i style="width:${progress}%"></i></div></div>`;
         }).join('')
         : '<div class="funnel-step"><span>No activation data loaded.</span></div>';
+    }
+
+    function renderWeakSpots(data) {
+      const scorecard = data?.weakSpotScorecard || [];
+      const target = document.getElementById('weakspot-scorecard');
+      const windowEl = document.getElementById('weakspot-window');
+      if (windowEl && data?.windowDays) windowEl.textContent = `${data.windowDays}-day usage pull`;
+      if (!target) return;
+      target.innerHTML = scorecard.length
+        ? scorecard.map((item) => {
+          const status = String(item.status || 'watch').toLowerCase();
+          const count = `${Number(item.numerator || 0).toLocaleString()} / ${Number(item.denominator || 0).toLocaleString()}`;
+          return `<div class="weakspot-card ${escapeHtml(status)}"><b>${escapeHtml(status)}</b><strong>${Number(item.rate || 0)}%</strong><span>${escapeHtml(item.label)}<br>${escapeHtml(count)}</span><small>${escapeHtml(item.fix || '')}</small></div>`;
+        }).join('')
+        : '<div class="weakspot-card"><span>No weak-spot data loaded. The protected usage pull may be unavailable.</span></div>';
     }
 
     function intelligenceMetric(label, value, hint) {
@@ -821,8 +869,14 @@
         headers: { Authorization: `Bearer ${secret}` }, cache: 'no-store'
       });
       const aggregate = await aggregateResponse.json().catch(() => ({}));
+      const usagePullResponse = await fetch(`/api/usage-pull?days=${encodeURIComponent(days)}&maxKeys=50000`, {
+        headers: { 'X-SplashLens-Stats-Secret': secret },
+        cache: 'no-store'
+      });
+      const usagePull = await usagePullResponse.json().catch(() => ({}));
       renderAttention(data);
       renderActivationFunnel(data);
+      renderWeakSpots(usagePullResponse.ok && usagePull.ok ? usagePull : {});
       renderProductIntelligence(data, aggregateResponse.ok ? aggregate : {});
       await renderAnalyticsWiring();
       document.getElementById('metrics').innerHTML = [

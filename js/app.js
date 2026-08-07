@@ -211,6 +211,7 @@ const FIELD_CHALLENGE_CONTEXT_KEY = 'splashlens-field-challenge-context-v1';
 const FIELD_CHALLENGE_STARTED_KEY = 'splashlens-field-challenge-started-v1';
 const FIELD_CHALLENGE_COMPLETED_KEY = 'splashlens-field-challenge-completed-v1';
 const FIELD_REFERRAL_PROMPT_KEY = 'splashlens-field-referral-prompt-v1';
+const FIELD_IDENTITY_PROMPT_KEY = 'splashlens-field-identity-prompt-v1';
 const SPLASHLENS_ROLES = ['tech', 'facility', 'counter', 'trainer', 'homeowner'];
 let facilitySessionMode = '';
 let facilityForcedMode = false;
@@ -7237,6 +7238,86 @@ function showFieldReferralPrompt(trigger) {
   trackSplashLensEvent('referral_prompt_shown', { trigger });
 }
 
+function shouldShowValueIdentityPrompt() {
+  if (hasIdentitySignal(getSplashLensIdentityProfile())) return false;
+  if (document.getElementById('field-identity-prompt') || document.getElementById('field-feedback-overlay')) return false;
+  try {
+    const lastShown = Number(localStorage.getItem(FIELD_IDENTITY_PROMPT_KEY) || 0);
+    if (lastShown && Date.now() - lastShown < 14 * 86400000) return false;
+  } catch {}
+  return true;
+}
+
+function showValueIdentityPrompt(trigger = 'value_completed') {
+  if (!shouldShowValueIdentityPrompt()) return;
+  try { localStorage.setItem(FIELD_IDENTITY_PROMPT_KEY, String(Date.now())); } catch {}
+  const role = getSplashLensRole();
+  const wrap = document.createElement('div');
+  wrap.id = 'field-identity-prompt';
+  wrap.setAttribute('role', 'dialog');
+  wrap.setAttribute('aria-label', 'Tag this SplashLens field test');
+  wrap.style.cssText = 'position:fixed;left:12px;right:12px;bottom:14px;z-index:9997;display:flex;justify-content:center;pointer-events:none;';
+  wrap.innerHTML = `
+    <div style="width:min(560px,100%);background:#ffffff;border:1px solid #bae6fd;border-radius:14px;box-shadow:0 18px 46px rgba(15,23,42,.24);padding:14px;pointer-events:auto;">
+      <div style="display:flex;justify-content:space-between;gap:10px;align-items:start;margin-bottom:10px;">
+        <div>
+          <strong style="display:block;color:#0f172a;font-size:15px;line-height:1.2;">Want Joshua to see this field test worked?</strong>
+          <span style="display:block;color:#64748b;font-size:12px;line-height:1.4;margin-top:3px;">Tag this session with a company or email. Free use still stays free.</span>
+        </div>
+        <button type="button" onclick="dismissValueIdentityPrompt('${escAttr(trigger)}')" aria-label="Close" style="border:0;background:transparent;color:#64748b;font-size:20px;font-weight:900;cursor:pointer;">x</button>
+      </div>
+      <div style="display:grid;grid-template-columns:1.2fr 1fr .9fr;gap:8px;">
+        <input id="field-identity-email" type="email" inputmode="email" placeholder="email" style="min-width:0;border:1px solid #cbd5e1;border-radius:10px;padding:10px;font-size:13px;">
+        <input id="field-identity-company" type="text" placeholder="company" style="min-width:0;border:1px solid #cbd5e1;border-radius:10px;padding:10px;font-size:13px;">
+        <select id="field-identity-role" style="min-width:0;border:1px solid #cbd5e1;border-radius:10px;padding:10px;font-size:13px;background:#fff;">
+          ${SPLASHLENS_ROLES.map(item => `<option value="${escAttr(item)}" ${item === role ? 'selected' : ''}>${item}</option>`).join('')}
+        </select>
+      </div>
+      <div id="field-identity-error" style="display:none;background:#fef2f2;border:1px solid #fecaca;color:#991b1b;border-radius:8px;padding:7px;font-size:12px;font-weight:800;margin-top:8px;"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:9px;">
+        <button type="button" onclick="submitValueIdentityPrompt('${escAttr(trigger)}')" style="background:#0369a1;color:#fff;border:0;border-radius:10px;padding:11px 8px;font-size:13px;font-weight:950;cursor:pointer;">Tag This Test</button>
+        <button type="button" onclick="dismissValueIdentityPrompt('${escAttr(trigger)}')" style="background:#f8fafc;color:#334155;border:1px solid #cbd5e1;border-radius:10px;padding:11px 8px;font-size:13px;font-weight:900;cursor:pointer;">Keep Anonymous</button>
+      </div>
+    </div>`;
+  document.body.appendChild(wrap);
+  trackSplashLensEvent('identity_prompt_shown', { trigger, prompt: 'post_value_field_test' });
+}
+
+function dismissValueIdentityPrompt(trigger = 'value_completed') {
+  document.getElementById('field-identity-prompt')?.remove();
+  trackSplashLensEvent('identity_prompt_dismissed', { trigger, prompt: 'post_value_field_test' });
+}
+
+function submitValueIdentityPrompt(trigger = 'value_completed') {
+  const email = (document.getElementById('field-identity-email')?.value || '').trim();
+  const company = (document.getElementById('field-identity-company')?.value || '').trim();
+  const role = (document.getElementById('field-identity-role')?.value || '').trim();
+  const error = document.getElementById('field-identity-error');
+  if (!email && !company) {
+    if (error) {
+      error.textContent = 'Add an email or company so the field test is identifiable.';
+      error.style.display = 'block';
+    }
+    return;
+  }
+  if (!validOptionalEmail(email)) {
+    if (error) {
+      error.textContent = 'Use a valid email or leave email blank and enter a company.';
+      error.style.display = 'block';
+    }
+    return;
+  }
+  rememberSplashLensIdentity({ email, company, role }, 'post_value_prompt');
+  trackSplashLensEvent('identity_captured_after_value', {
+    trigger,
+    prompt: 'post_value_field_test',
+    has_email: Boolean(email),
+    has_company: Boolean(company),
+    captured_role: role,
+  });
+  document.getElementById('field-identity-prompt')?.remove();
+}
+
 function claimActivationCompletion(activationType) {
   const value = JSON.stringify({ activation_type: activationType, completed_at: new Date().toISOString() });
   try {
@@ -7278,7 +7359,10 @@ function maybeTrackActivationCompleted(eventName, props = {}) {
       activation_trigger: eventName,
     });
   }
-  if (firstActivation || challengeCompleted) setTimeout(() => showFieldReferralPrompt(eventName), 1200);
+  if (firstActivation || challengeCompleted) {
+    setTimeout(() => showValueIdentityPrompt(eventName), 1200);
+    setTimeout(() => showFieldReferralPrompt(eventName), 6200);
+  }
 }
 
 function trackReferralLandingOpen() {

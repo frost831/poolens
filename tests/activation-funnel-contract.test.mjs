@@ -12,6 +12,9 @@ test('app records the field challenge and attributed referral loop', () => {
     'field_challenge_completed',
     'referral_prompt_shown',
     'referral_share',
+    'identity_prompt_shown',
+    'identity_captured_after_value',
+    'identity_prompt_dismissed',
   ]) {
     assert.match(app, new RegExp(`['\"]${signal}['\"]`));
   }
@@ -19,6 +22,9 @@ test('app records the field challenge and attributed referral loop', () => {
   assert.match(app, /pilot_id/);
   assert.match(app, /participant_id/);
   assert.match(app, /challenge_id/);
+  assert.match(app, /showValueIdentityPrompt/);
+  assert.match(app, /Keep Anonymous/);
+  assert.match(app, /post_value_prompt/);
 });
 
 test('protected event summary exposes the activation funnel and excludes synthetic traffic', () => {
@@ -44,6 +50,9 @@ test('owner dashboard renders the activation target scorecard', () => {
   const dashboard = read('../dashboard.html');
   assert.match(dashboard, /id="activation-funnel"/);
   assert.match(dashboard, /function renderActivationFunnel/);
+  assert.match(dashboard, /id="weakspot-scorecard"/);
+  assert.match(dashboard, /function renderWeakSpots/);
+  assert.match(dashboard, /\/api\/usage-pull/);
   assert.match(dashboard, /Demo and test traffic is excluded/);
   assert.match(dashboard, /id="analytics-wiring"/);
   assert.match(dashboard, /function renderAnalyticsWiring/);

@@ -20,6 +20,12 @@ test('usage pull endpoint returns aggregate funnel categories without raw identi
     'feedbackEvents',
     'checkoutEvents',
     'knownUserSignalEvents',
+    'knownSignalRate',
+    'anonymousRealCount',
+    'realTopSources',
+    'realTopPaths',
+    'realFunnelStages',
+    'weakSpotScorecard',
     'recentSampleShape',
   ]) {
     assert.match(source, new RegExp(key));
