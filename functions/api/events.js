@@ -1,4 +1,5 @@
 import { buildSplashLensAggregate } from '../_shared/splashlens-intelligence.mjs';
+import { amplitudeEnabled, forwardEventToAmplitude } from '../_shared/amplitude.mjs';
 
 const ALERT_EVENTS = new Set([
   'pwa_installed',
@@ -1360,6 +1361,8 @@ export async function onRequestPost({ request, env }) {
     await env.SCAN_USAGE_KV.put(key, JSON.stringify(record), { expirationTtl: 60 * 60 * 24 * 120 });
   }
 
+  const amplitude = await forwardEventToAmplitude(env, record);
+
   let alert = { sent: false, skipped: true };
   if (shouldSendImmediateAlert(record)) {
     alert = await sendEventAlert(env, record);
@@ -1371,6 +1374,8 @@ export async function onRequestPost({ request, env }) {
     stored: Boolean(env.SCAN_USAGE_KV),
     alertQueued: Boolean(alert.sent),
     emailConfigured: alert.reason !== 'missing_sendgrid_config',
+    amplitudeQueued: Boolean(amplitude.sent),
+    amplitudeConfigured: amplitude.reason !== 'missing_amplitude_api_key',
   });
 }
 
@@ -1404,5 +1409,6 @@ export async function onRequestGet({ request, env }) {
     status: 'SplashLens app event endpoint ready.',
     storageConfigured: Boolean(env.SCAN_USAGE_KV),
     emailConfigured: Boolean((env.SENDGRID_API_KEY || '').trim() && (env.SPLASHLENS_NOTIFY_TO || env.FLAGSHIP_NOTIFY_TO || env.LEAD_NOTIFY_TO || env.ADMIN_EMAIL || '').trim()),
+    amplitudeConfigured: amplitudeEnabled(env),
   });
 }
