@@ -41,6 +41,14 @@ node tools\check-amplitude-readiness.mjs
 
 GREEN means both the app and site accepted smoke events and queued them to Amplitude.
 
+For a complete live funnel/payment plan run, use:
+
+```powershell
+node tools\run-splashlens-growth-plan.mjs
+```
+
+That script writes the current report to `docs\SPLASHLENS_GROWTH_PLAN_RUN_YYYY-MM-DD.md`.
+
 ## Amplitude Events That Matter
 
 Use these as the first saved Amplitude chart set:

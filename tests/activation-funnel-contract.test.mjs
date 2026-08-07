@@ -36,6 +36,8 @@ test('protected event summary exposes the activation funnel and excludes synthet
   }
   assert.match(events, /isSyntheticEvent/);
   assert.match(events, /activationFunnel/);
+  assert.match(events, /checkout_click/);
+  assert.match(events, /checkoutStarts \+= 1/);
 });
 
 test('owner dashboard renders the activation target scorecard', () => {
@@ -43,4 +45,7 @@ test('owner dashboard renders the activation target scorecard', () => {
   assert.match(dashboard, /id="activation-funnel"/);
   assert.match(dashboard, /function renderActivationFunnel/);
   assert.match(dashboard, /Demo and test traffic is excluded/);
+  assert.match(dashboard, /id="analytics-wiring"/);
+  assert.match(dashboard, /function renderAnalyticsWiring/);
+  assert.match(dashboard, /Analytics \+ Payment Wiring/);
 });

@@ -653,7 +653,7 @@ async function eventSummary(request, env) {
         if (record.event === 'ai_scan_started') existing.scanCount += 1;
         if (record.event === 'partsnap_result') existing.partSnapResults += 1;
         if (record.event === 'checkout_success') existing.checkoutSuccess += 1;
-        if (record.event === 'upgrade_click') existing.checkoutStarts += 1;
+        if (record.event === 'upgrade_click' || record.event === 'checkout_started' || record.event === 'checkout_click') existing.checkoutStarts += 1;
         if (meaningfulEvents.has(record.event)) existing.meaningful = true;
         if (record.event === 'first_action_started' && (!existing.firstActionAt || eventTime(record) < eventTime({ createdAt: existing.firstActionAt }))) existing.firstActionAt = record.createdAt;
         if (['first_value_completed', 'activation_completed'].includes(record.event) && (!existing.firstValueAt || eventTime(record) < eventTime({ createdAt: existing.firstValueAt }))) existing.firstValueAt = record.createdAt;
@@ -689,7 +689,7 @@ async function eventSummary(request, env) {
         if (FUNNEL_WORKFLOW_EVENTS.has(record.event)) funnelWorkflowCompleters.add(identity);
         if (FUNNEL_PROOF_EVENTS.has(record.event)) funnelProofSavers.add(identity);
         if (FUNNEL_FEEDBACK_EVENTS.has(record.event)) funnelFeedbackSubmitters.add(identity);
-        if (record.event === 'upgrade_click' || record.event === 'checkout_started') funnelCheckoutStarters.add(identity);
+        if (record.event === 'upgrade_click' || record.event === 'checkout_started' || record.event === 'checkout_click') funnelCheckoutStarters.add(identity);
         if (record.event === 'checkout_success') funnelPaidClients.add(identity);
         if (record.event === 'field_challenge_started') funnelChallengeStarts.add(identity);
         if (record.event === 'field_challenge_completed') funnelChallengeCompletions.add(identity);

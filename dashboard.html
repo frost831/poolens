@@ -362,6 +362,13 @@
       </div>
     </section>
 
+    <section class="panel intelligence-panel">
+      <h2>Analytics + Payment Wiring</h2>
+      <div class="grid" id="analytics-wiring">
+        <div class="metric"><div class="label">Wiring</div><div class="value">Check</div><div class="hint">Load the dashboard to verify app events, site events, Amplitude, Stripe, webhook, and public checkout.</div></div>
+      </div>
+    </section>
+
     <section class="panels">
       <div class="panel">
         <h2>Top Events</h2>
@@ -575,6 +582,52 @@
       ].join('');
     }
 
+    async function jsonFrom(url) {
+      const response = await fetch(url, { cache: 'no-store' });
+      const data = await response.json().catch(() => ({}));
+      return { ok: response.ok && data.ok !== false, status: response.status, data };
+    }
+
+    function wiringCard(label, state, hint) {
+      const normalized = String(state || '').toLowerCase();
+      const color = normalized.includes('ready') || normalized.includes('ok') || normalized.includes('live') || normalized.includes('verified') ? '#16a34a'
+        : normalized.includes('missing') || normalized.includes('pending') || normalized.includes('yellow') ? '#d97706'
+        : normalized.includes('fail') || normalized.includes('red') || normalized.includes('blocked') ? '#dc2626'
+        : '#0369a1';
+      return `<div class="metric"><div class="label">${escapeHtml(label)}</div><div class="value" style="font-size:22px;color:${color}">${escapeHtml(state || 'Unknown')}</div><div class="hint">${escapeHtml(hint || '')}</div></div>`;
+    }
+
+    async function renderAnalyticsWiring() {
+      const target = document.getElementById('analytics-wiring');
+      if (!target) return;
+      target.innerHTML = wiringCard('Wiring', 'Checking', 'Reading live app, site, Amplitude, and Stripe readiness endpoints.');
+
+      const [appEvents, appAmplitude, siteEvents, siteAmplitude, checkout] = await Promise.all([
+        jsonFrom('/api/events'),
+        jsonFrom('/api/amplitude-config'),
+        jsonFrom('https://splashlens.com/api/event'),
+        jsonFrom('https://splashlens.com/api/amplitude-config'),
+        jsonFrom('/api/checkout-readiness'),
+      ]);
+
+      const checkoutData = checkout.data || {};
+      const webhook = checkoutData.webhook || {};
+      const paymentLinks = checkoutData.paymentLinks || {};
+      const appAmp = appAmplitude.data || {};
+      const siteAmp = siteAmplitude.data || {};
+
+      target.innerHTML = [
+        wiringCard('App Events', appEvents.ok ? 'OK' : `HTTP ${appEvents.status}`, `Storage: ${Boolean(appEvents.data?.storageConfigured)} | Email alerts: ${Boolean(appEvents.data?.emailConfigured)}`),
+        wiringCard('Site Events', siteEvents.ok ? 'OK' : `HTTP ${siteEvents.status}`, `Stored: ${Boolean(siteEvents.data?.stored)} | Fresh: ${Boolean(siteEvents.data?.fresh)}`),
+        wiringCard('App Amplitude', appAmp.enabled ? 'Ready' : 'Missing key', appAmp.status || 'No AMPLITUDE_API_KEY on poolens. First-party events still store.'),
+        wiringCard('Site Amplitude', siteAmp.enabled ? 'Ready' : 'Missing key', siteAmp.status || 'No AMPLITUDE_API_KEY on poolens-site. Site events still store.'),
+        wiringCard('Stripe', checkoutData.productionReady ? 'Ready' : 'Needs review', `Mode: ${checkoutData.checkoutMode || ''} | Stripe: ${checkoutData.stripe?.ok ? 'ok' : 'not ok'}`),
+        wiringCard('Webhook', webhook.ok ? 'Ready' : 'Needs review', `${webhook.endpointStatus || 'unknown'} | missing events: ${(webhook.missingEvents || []).length}`),
+        wiringCard('Payment Links', paymentLinks.ok ? 'Live' : 'Needs review', `Configured: ${paymentLinks.configured || 0} | active: ${paymentLinks.active || 0}`),
+        wiringCard('Revenue Truth', checkoutData.productionReady ? 'Server verified' : 'Do not trust revenue yet', 'Paid conversion counts require Stripe webhook or verified checkout success, never clicks alone.'),
+      ].join('');
+    }
+
     function renderCountTable(id, rows, nameLabel) {
       const el = document.getElementById(id);
       const body = (rows || []).map((row) => `<tr><td><code>${escapeHtml(row.name || 'unknown')}</code></td><td>${Number(row.count || 0).toLocaleString()}</td></tr>`).join('');
@@ -771,6 +824,7 @@
       renderAttention(data);
       renderActivationFunnel(data);
       renderProductIntelligence(data, aggregateResponse.ok ? aggregate : {});
+      await renderAnalyticsWiring();
       document.getElementById('metrics').innerHTML = [
         metricCard('App Opens 7d', m.appOpens7d, 'Real app usage, not email opens.'),
         metricCard('Known Users 30d', m.knownUsers30d, 'Tracked lead, form, payment, restore, or voluntary email identity.'),
@@ -919,6 +973,7 @@
     });
     document.getElementById('download-review-json').addEventListener('click', downloadReviewJson);
     document.getElementById('copy-promotion-command').addEventListener('click', copyPromotionCommand);
+    renderAnalyticsWiring().catch(() => {});
     if (saved) loadDashboard().catch(() => {});
   </script>
 </body>
