@@ -31,7 +31,7 @@ export function amplitudeConfigPayload(env) {
     enabled,
     status: enabled ? 'ready' : 'missing_api_key',
     ingestion: 'server_side_http_v2',
-    apiKey: enabled ? amplitudeApiKey(env) : '',
+    keyExposed: false,
     project: 'splashlens',
     product: 'app',
     sdkUrl: 'https://cdn.amplitude.com/libs/analytics-browser-2.11.7-min.js.gz',

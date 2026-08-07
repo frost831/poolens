@@ -6,9 +6,18 @@ import { amplitudeConfigPayload, forwardEventToAmplitude } from '../functions/_s
 test('Amplitude config is disabled without a Cloudflare secret', () => {
   const config = amplitudeConfigPayload({});
   assert.equal(config.enabled, false);
-  assert.equal(config.apiKey, '');
+  assert.equal(config.keyExposed, false);
+  assert.equal(Object.hasOwn(config, 'apiKey'), false);
   assert.equal(config.status, 'missing_api_key');
   assert.equal(config.ingestion, 'server_side_http_v2');
+});
+
+test('Amplitude config does not expose the project key when enabled', () => {
+  const config = amplitudeConfigPayload({ AMPLITUDE_API_KEY: 'amp_test_key' });
+  assert.equal(config.enabled, true);
+  assert.equal(config.status, 'ready');
+  assert.equal(config.keyExposed, false);
+  assert.equal(Object.hasOwn(config, 'apiKey'), false);
 });
 
 test('Amplitude forwarding sends canonical SplashLens event shape', async () => {
