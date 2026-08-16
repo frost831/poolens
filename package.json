@@ -1,0 +1,12 @@
+{
+  "name": "splashlens-field-tools",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test tests/*.test.mjs",
+    "audit:node": "npm audit --audit-level=high",
+    "scan:secrets": "node tools/secret-scan.mjs",
+    "security:gate": "npm run scan:secrets && npm run audit:node && npm test"
+  }
+}

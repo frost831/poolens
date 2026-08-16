@@ -1,5 +1,6 @@
 import { buildSplashLensAggregate } from '../_shared/splashlens-intelligence.mjs';
 import { amplitudeEnabled, forwardEventToAmplitude } from '../_shared/amplitude.mjs';
+import { officialSenderConfig, protectUserSubmission } from '../_shared/security-gate.mjs';
 
 const ALERT_EVENTS = new Set([
   'pwa_installed',
@@ -102,10 +103,12 @@ function clean(value, max = 120) {
 }
 
 function notifyConfig(env) {
+  const sender = officialSenderConfig(env);
   return {
     apiKey: (env.SENDGRID_API_KEY || '').trim(),
-    from: (env.SENDGRID_FROM || env.FLAGSHIP_NOTIFY_FROM || 'hello@splashlens.com').trim(),
+    from: sender.from,
     to: (env.SPLASHLENS_NOTIFY_TO || env.FLAGSHIP_NOTIFY_TO || env.LEAD_NOTIFY_TO || env.ADMIN_EMAIL || '').trim(),
+    senderPolicyOk: sender.fromPolicyOk,
   };
 }
 
@@ -1102,6 +1105,7 @@ async function sendEventAlert(env, record) {
   if (!config.apiKey || !config.from || !config.to) {
     return { sent: false, reason: 'missing_sendgrid_config' };
   }
+  if (!config.senderPolicyOk) return { sent: false, reason: 'sender_policy_blocked' };
   const labels = {
     first_app_open: 'First app open',
     article_referral_open: 'Article/referral landing',
@@ -1231,6 +1235,7 @@ async function sendDigestEmail(env, summary) {
   if (!config.apiKey || !config.from || !config.to) {
     return { sent: false, reason: 'missing_sendgrid_config' };
   }
+  if (!config.senderPolicyOk) return { sent: false, reason: 'sender_policy_blocked' };
   const m = summary.metrics || {};
   const lines = [
     'SplashLens daily owner digest',
@@ -1342,6 +1347,34 @@ export async function onRequestPost({ request, env }) {
   if (!event) return json(400, { ok: false, error: 'Event name required' });
 
   const props = body.props && typeof body.props === 'object' ? body.props : {};
+  const protection = await protectUserSubmission({
+    env,
+    request,
+    action: `event_${event}`.slice(0, 70),
+    subject: props.known_email || props.email || props.client_id || props.clientId || props.session_id || props.sessionId || '',
+    actorName: props.known_name || props.contact_name || props.name || '',
+    textParts: [
+      props.message,
+      props.note,
+      props.feedback,
+      props.feedback_text,
+      props.field_note,
+      props.customer_note,
+      props.query,
+      props.search,
+      props.title,
+    ],
+    rateLimit: { limit: 120, windowSeconds: 10 * 60 },
+    context: 'app_event',
+  });
+  if (!protection.ok) {
+    return json(protection.status, {
+      ok: false,
+      error: protection.error,
+      message: protection.message,
+      reasons: protection.moderation?.reasons || [],
+    });
+  }
   const record = {
     correlationId: crypto.randomUUID(),
     event,
@@ -1374,6 +1407,7 @@ export async function onRequestPost({ request, env }) {
     stored: Boolean(env.SCAN_USAGE_KV),
     alertQueued: Boolean(alert.sent),
     emailConfigured: alert.reason !== 'missing_sendgrid_config',
+    senderPolicyOk: notifyConfig(env).senderPolicyOk,
     amplitudeQueued: Boolean(amplitude.sent),
     amplitudeConfigured: amplitude.reason !== 'missing_amplitude_api_key',
   });

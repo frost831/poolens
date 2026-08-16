@@ -1,3 +1,5 @@
+import { officialSenderConfig, protectUserSubmission } from '../_shared/security-gate.mjs';
+
 const DEFAULT_ALLOWED_ORIGINS = [
   'https://app.splashlens.com',
   'https://splashlens.com',
@@ -34,11 +36,13 @@ function clean(value, max = 120) {
 }
 
 function notifyConfig(env) {
+  const sender = officialSenderConfig(env);
   return {
     apiKey: (env.SENDGRID_API_KEY || '').trim(),
-    from: (env.SENDGRID_FROM || env.FLAGSHIP_NOTIFY_FROM || 'hello@splashlens.com').trim(),
-    replyTo: (env.SPLASHLENS_REPLY_TO || env.SENDGRID_REPLY_TO || 'hello@splashlens.com').trim(),
+    from: sender.from,
+    replyTo: sender.replyTo,
     to: (env.SPLASHLENS_NOTIFY_TO || env.FLAGSHIP_NOTIFY_TO || env.LEAD_NOTIFY_TO || env.ADMIN_EMAIL || '').trim(),
+    senderPolicyOk: sender.fromPolicyOk && sender.replyToPolicyOk,
   };
 }
 
@@ -47,6 +51,7 @@ async function sendWaitlistAlert(env, record) {
   if (!config.apiKey || !config.from || !config.to) {
     return { sent: false, reason: 'missing_sendgrid_config' };
   }
+  if (!config.senderPolicyOk) return { sent: false, reason: 'sender_policy_blocked' };
 
   const response = await fetch('https://api.sendgrid.com/v3/mail/send', {
     method: 'POST',
@@ -88,6 +93,7 @@ async function sendWaitlistAlert(env, record) {
 async function sendWaitlistConfirmation(env, record) {
   const config = notifyConfig(env);
   if (!config.apiKey || !config.from) return { sent: false, reason: 'missing_sendgrid_config' };
+  if (!config.senderPolicyOk) return { sent: false, reason: 'sender_policy_blocked' };
   const label = record.interestLabel || 'SplashLens updates';
   const subject = `We received your SplashLens ${label} request`;
   const text = [
@@ -131,6 +137,25 @@ export async function onRequestPost({ request, env }) {
   const email = clean(body.email, 200).toLowerCase();
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return json(request, env, 400, { ok: false, error: 'Valid email required' });
+  }
+
+  const protection = await protectUserSubmission({
+    env,
+    request,
+    action: 'waitlist_request',
+    subject: email,
+    actorName: body.name || body.known_name || body.company || '',
+    textParts: [body.name, body.company, body.interest, body.interest_label, body.message, body.note],
+    rateLimit: { limit: 6, windowSeconds: 60 * 60 },
+    context: 'waitlist_request',
+  });
+  if (!protection.ok) {
+    return json(request, env, protection.status, {
+      ok: false,
+      error: protection.error,
+      message: protection.message,
+      reasons: protection.moderation?.reasons || [],
+    });
   }
 
   const record = {
@@ -179,6 +204,7 @@ export async function onRequestPost({ request, env }) {
     alertQueued: Boolean(alert.sent),
     confirmationQueued: Boolean(confirmation.sent),
     emailConfigured: alert.reason !== 'missing_sendgrid_config',
+    senderPolicyOk: notifyConfig(env).senderPolicyOk,
   });
 }
 

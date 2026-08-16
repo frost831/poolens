@@ -1,3 +1,5 @@
+import { officialSenderConfig, protectUserSubmission } from '../_shared/security-gate.mjs';
+
 const DEFAULT_ALLOWED_ORIGINS = [
   'https://app.splashlens.com',
   'https://splashlens.com',
@@ -32,16 +34,19 @@ function clean(value, max = 500) {
 }
 
 function notifyConfig(env) {
+  const sender = officialSenderConfig(env);
   return {
     apiKey: (env.SENDGRID_API_KEY || '').trim(),
-    from: (env.SENDGRID_FROM || env.FLAGSHIP_NOTIFY_FROM || 'hello@splashlens.com').trim(),
+    from: sender.from,
     to: (env.SPLASHLENS_NOTIFY_TO || env.FLAGSHIP_NOTIFY_TO || env.LEAD_NOTIFY_TO || env.ADMIN_EMAIL || '').trim(),
+    senderPolicyOk: sender.fromPolicyOk,
   };
 }
 
 async function sendFeedbackAlert(env, record) {
   const config = notifyConfig(env);
   if (!config.apiKey || !config.from || !config.to) return { sent: false, reason: 'missing_sendgrid_config' };
+  if (!config.senderPolicyOk) return { sent: false, reason: 'sender_policy_blocked' };
 
   const response = await fetch('https://api.sendgrid.com/v3/mail/send', {
     method: 'POST',
@@ -93,6 +98,25 @@ export async function onRequestPost({ request, env }) {
     return json(request, env, 400, { ok: false, error: 'Valid email required, or leave email blank.' });
   }
 
+  const protection = await protectUserSubmission({
+    env,
+    request,
+    action: 'partsnap_feedback',
+    subject: email,
+    actorName: body.name || body.known_name || '',
+    textParts: [body.note, body.escalation],
+    rateLimit: { limit: 8, windowSeconds: 60 * 60 },
+    context: 'partsnap_feedback',
+  });
+  if (!protection.ok) {
+    return json(request, env, protection.status, {
+      ok: false,
+      error: protection.error,
+      message: protection.message,
+      reasons: protection.moderation?.reasons || [],
+    });
+  }
+
   const record = {
     id: `mpr-${Date.now().toString(36)}-${crypto.randomUUID().slice(0, 8)}`,
     email,
@@ -118,7 +142,12 @@ export async function onRequestPost({ request, env }) {
     stored: Boolean(env.SCAN_USAGE_KV),
     alertQueued: Boolean(alert.sent),
     emailConfigured: alert.reason !== 'missing_sendgrid_config',
+    senderPolicyOk: alert.reason === 'missing_sendgrid_config' ? true : configSenderPolicyOk(env),
   });
+}
+
+function configSenderPolicyOk(env) {
+  return officialSenderConfig(env).fromPolicyOk;
 }
 
 export async function onRequestOptions({ request, env }) {

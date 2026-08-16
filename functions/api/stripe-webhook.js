@@ -5,6 +5,7 @@ import {
   splashLensPlanFromSession,
 } from '../_shared/splashlens-plans.mjs';
 import { refundedEntitlementDecision } from '../_shared/splashlens-refund.mjs';
+import { officialSenderConfig } from '../_shared/security-gate.mjs';
 
 const TOKEN_PREFIX = 'sl_scan_v1';
 const textEncoder = new TextEncoder();
@@ -37,11 +38,13 @@ function webhookSecret(env) {
 }
 
 function notifyConfig(env) {
+  const sender = officialSenderConfig(env);
   return {
     apiKey: clean(env.SENDGRID_API_KEY, 300),
-    from: clean(env.SENDGRID_FROM || env.FLAGSHIP_NOTIFY_FROM || 'hello@splashlens.com', 180),
-    replyTo: clean(env.SPLASHLENS_REPLY_TO || env.SENDGRID_REPLY_TO || 'hello@splashlens.com', 180),
+    from: sender.from,
+    replyTo: sender.replyTo,
     ownerTo: clean(env.SPLASHLENS_NOTIFY_TO || env.FLAGSHIP_NOTIFY_TO || env.LEAD_NOTIFY_TO || env.ADMIN_EMAIL, 180),
+    senderPolicyOk: sender.fromPolicyOk && sender.replyToPolicyOk,
   };
 }
 
@@ -176,6 +179,7 @@ async function issueActivation(session, env) {
 
 async function sendMail(config, to, subject, text, templateId, categories = [], customArgs = {}) {
   if (!config.apiKey || !config.from || !to) return { sent: false, reason: 'missing_sendgrid_config' };
+  if (!config.senderPolicyOk) return { sent: false, reason: 'sender_policy_blocked' };
   const response = await fetch('https://api.sendgrid.com/v3/mail/send', {
     method: 'POST',
     headers: {

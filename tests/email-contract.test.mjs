@@ -2,6 +2,8 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 
+import { isOfficialEmailAddress, officialSenderConfig } from '../functions/_shared/security-gate.mjs';
+
 const files = [
   new URL('../functions/api/stripe-webhook.js', import.meta.url),
   new URL('../functions/api/restore-entitlement.js', import.meta.url),
@@ -31,6 +33,7 @@ test('app-owned email sends use stable template ids and per-send correlation ids
     '../functions/api/waitlist.js',
     '../functions/api/events.js',
     '../functions/api/partsnap-feedback.js',
+    '../functions/_shared/security-gate.mjs',
   ].map((path) => readFile(new URL(path, import.meta.url), 'utf8')));
   const source = sources.join('\n');
   for (const templateId of [
@@ -44,6 +47,7 @@ test('app-owned email sends use stable template ids and per-send correlation ids
     'event_owner_alert',
     'event_digest',
     'partsnap_feedback',
+    'security_gate_alert',
   ]) {
     assert.match(source, new RegExp(`template_id: ['"]${templateId}['"]|['"]${templateId}['"]`));
   }
@@ -53,4 +57,20 @@ test('app-owned email sends use stable template ids and per-send correlation ids
   assert.match(source, /stripe_session_id:/);
   assert.match(source, /event_type:/);
   assert.match(source, /feedback_id:/);
+});
+
+test('official app notices are constrained to the SplashLens sender domain', () => {
+  assert.equal(isOfficialEmailAddress('hello@splashlens.com'), true);
+  assert.equal(isOfficialEmailAddress('support@splashlens.com'), true);
+  assert.equal(isOfficialEmailAddress('frost@belowzeromedia.com'), false);
+  assert.equal(isOfficialEmailAddress('joshua@gmail.com'), false);
+
+  const sender = officialSenderConfig({
+    SENDGRID_FROM: 'frost@belowzeromedia.com',
+    SENDGRID_REPLY_TO: 'support@outlook.com',
+  });
+  assert.equal(sender.from, 'hello@splashlens.com');
+  assert.equal(sender.replyTo, 'hello@splashlens.com');
+  assert.equal(sender.fromPolicyOk, false);
+  assert.equal(sender.replyToPolicyOk, false);
 });
