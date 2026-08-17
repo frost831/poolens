@@ -6746,6 +6746,24 @@ function captureAndAnalyze() {
       showScanLimitModal(result, status);
       return;
     }
+    if (isPartsScan) {
+      const preflight = inspectPartSnapImage(canvas);
+      if (preflight.block) {
+        showPartSnapImagePreflight(preflight, result, status);
+        return;
+      }
+      if (preflight.warnings.length) {
+        trackSplashLensEvent('partsnap_image_preflight_warning', {
+          warnings: preflight.warnings,
+          brightness: preflight.brightness,
+          contrast: preflight.contrast,
+          edge_score: preflight.edgeScore,
+          width: preflight.width,
+          height: preflight.height,
+          recovery: getPartSnapRecoveryContext()?.active || false,
+        });
+      }
+    }
     const aiMode = isPartsScan ? 'parts_snap' : isStripScan ? 'test_strip' : 'error_code';
     callAIScan(canvas, aiMode, result, status);
     return;
@@ -6778,6 +6796,117 @@ function captureAndAnalyze() {
 
   // Final fallback: manual entry
   showCaptureWithManualEntry(canvas, '', result, status);
+}
+
+function inspectPartSnapImage(canvas) {
+  const width = canvas.width || 0;
+  const height = canvas.height || 0;
+  const warnings = [];
+  const blockers = [];
+  if (width < 320 || height < 220) blockers.push('low_resolution');
+
+  const sampleSize = 48;
+  const sample = document.createElement('canvas');
+  sample.width = sampleSize;
+  sample.height = sampleSize;
+  const ctx = sample.getContext('2d', { willReadFrequently: true });
+  if (!ctx) return { block: false, warnings, blockers, width, height, brightness: 0, contrast: 0, edgeScore: 0 };
+  ctx.drawImage(canvas, 0, 0, sampleSize, sampleSize);
+  const pixels = ctx.getImageData(0, 0, sampleSize, sampleSize).data;
+  const luminance = [];
+  let total = 0;
+  for (let i = 0; i < pixels.length; i += 4) {
+    const y = (pixels[i] * 0.2126) + (pixels[i + 1] * 0.7152) + (pixels[i + 2] * 0.0722);
+    luminance.push(y);
+    total += y;
+  }
+  const brightness = total / luminance.length;
+  const variance = luminance.reduce((sum, y) => sum + ((y - brightness) ** 2), 0) / luminance.length;
+  const contrast = Math.sqrt(variance);
+  let edgeTotal = 0;
+  let edgeCount = 0;
+  for (let y = 1; y < sampleSize; y += 1) {
+    for (let x = 1; x < sampleSize; x += 1) {
+      const index = y * sampleSize + x;
+      const left = luminance[index - 1];
+      const up = luminance[index - sampleSize];
+      edgeTotal += Math.abs(luminance[index] - left) + Math.abs(luminance[index] - up);
+      edgeCount += 2;
+    }
+  }
+  const edgeScore = edgeTotal / Math.max(edgeCount, 1);
+
+  if (brightness < 38) blockers.push('too_dark');
+  else if (brightness < 55) warnings.push('dim');
+  if (brightness > 238) blockers.push('washed_out');
+  else if (brightness > 220) warnings.push('bright_glare');
+  if (contrast < 12) blockers.push('flat_or_blank');
+  else if (contrast < 20) warnings.push('low_contrast');
+  if (edgeScore < 4.5) blockers.push('blurry_or_too_far');
+  else if (edgeScore < 7) warnings.push('soft_focus');
+
+  return {
+    block: blockers.length > 0,
+    warnings,
+    blockers,
+    width,
+    height,
+    brightness: Math.round(brightness),
+    contrast: Math.round(contrast),
+    edgeScore: Math.round(edgeScore * 10) / 10,
+  };
+}
+
+function partSnapPreflightCopy(code) {
+  const copy = {
+    low_resolution: ['Move closer', 'The photo is too small for part markings. Fill the screen with the label or part.'],
+    too_dark: ['Add light', 'Turn on the pad light/flashlight or move the part into brighter light.'],
+    washed_out: ['Reduce glare', 'Angle the phone so the label or plastic is not washed out by reflection.'],
+    flat_or_blank: ['Find markings', 'PartSnap sees too little detail. Aim at a label, molded number, casting mark, or model plate.'],
+    blurry_or_too_far: ['Steady and closer', 'Hold still, move closer, and tap the label/marking area before scanning.'],
+  };
+  return copy[code] || ['Retake photo', 'Capture a clearer part close-up and the equipment model plate.'];
+}
+
+function showPartSnapImagePreflight(preflight, result, status) {
+  if (status) status.textContent = 'PHOTO NEEDS PROOF BEFORE AI SCAN';
+  const primary = preflight.blockers[0] || preflight.warnings[0] || 'retake';
+  const [title, body] = partSnapPreflightCopy(primary);
+  trackSplashLensEvent('partsnap_image_preflight_blocked', {
+    blockers: preflight.blockers,
+    warnings: preflight.warnings,
+    brightness: preflight.brightness,
+    contrast: preflight.contrast,
+    edge_score: preflight.edgeScore,
+    width: preflight.width,
+    height: preflight.height,
+    recovery: getPartSnapRecoveryContext()?.active || false,
+  });
+  if (!result) return;
+  result.innerHTML = `
+    <div style="background:#fff7ed;border:2px solid #fb923c;border-radius:12px;padding:14px;margin:8px 0;">
+      <p style="color:#9a3412;font-size:10px;font-weight:950;text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px;">Photo check</p>
+      <p style="color:#0f172a;font-size:16px;font-weight:950;margin-bottom:5px;">${escHtml(title)}</p>
+      <p style="color:#7c2d12;font-size:12px;line-height:1.45;margin-bottom:10px;">${escHtml(body)}</p>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:10px;">
+        <div style="background:#fff;border:1px solid #fed7aa;border-radius:8px;padding:8px;text-align:center;">
+          <p style="color:#92400e;font-size:9px;font-weight:950;text-transform:uppercase;">Light</p>
+          <p style="color:#0f172a;font-size:14px;font-weight:950;">${preflight.brightness}</p>
+        </div>
+        <div style="background:#fff;border:1px solid #fed7aa;border-radius:8px;padding:8px;text-align:center;">
+          <p style="color:#92400e;font-size:9px;font-weight:950;text-transform:uppercase;">Contrast</p>
+          <p style="color:#0f172a;font-size:14px;font-weight:950;">${preflight.contrast}</p>
+        </div>
+        <div style="background:#fff;border:1px solid #fed7aa;border-radius:8px;padding:8px;text-align:center;">
+          <p style="color:#92400e;font-size:9px;font-weight:950;text-transform:uppercase;">Detail</p>
+          <p style="color:#0f172a;font-size:14px;font-weight:950;">${preflight.edgeScore}</p>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <button onclick="captureAndAnalyze()" style="background:#ea580c;color:#fff;border:0;border-radius:9px;padding:12px 9px;font-size:12px;font-weight:950;cursor:pointer;">Retake now</button>
+        <button onclick="requestPartSnapSecondProof()" style="background:#0f172a;color:#fed7aa;border:1px solid #92400e;border-radius:9px;padding:12px 9px;font-size:12px;font-weight:950;cursor:pointer;">Show proof tips</button>
+      </div>
+    </div>`;
 }
 
 function aiScanLabel() {
@@ -7693,10 +7822,17 @@ async function callAIScan(canvas, mode, result, status) {
     const headers = { 'Content-Type': 'application/json', ...getLanguageHeaders() };
     const entitlementToken = getScanEntitlementToken();
     if (entitlementToken) headers['X-SplashLens-Entitlement-Token'] = entitlementToken;
+    const partSnapRecovery = mode === 'parts_snap' ? getPartSnapRecoveryContext() : null;
     const res = await fetch('/api/scan', {
       method:  'POST',
       headers,
-      body:    JSON.stringify(withLanguageMetadata({ image: base64, mode, clientId: getScanClientId(), store_shell: getStoreShellMode() || '' })),
+      body:    JSON.stringify(withLanguageMetadata({
+        image: base64,
+        mode,
+        clientId: getScanClientId(),
+        store_shell: getStoreShellMode() || '',
+        partSnapRecovery,
+      })),
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const { result: aiResult } = await res.json();
@@ -7782,6 +7918,57 @@ function getScanClientId() {
   return id;
 }
 
+const PARTSNAP_RECOVERY_KEY = 'splashlens-partsnap-recovery-loop';
+
+function getPartSnapRecoveryContext() {
+  try {
+    const value = JSON.parse(localStorage.getItem(PARTSNAP_RECOVERY_KEY) || '{}');
+    if (!value || typeof value !== 'object' || !value.active) return null;
+    const startedAt = Date.parse(value.startedAt || '');
+    if (Number.isFinite(startedAt) && Date.now() - startedAt > 30 * 60 * 1000) {
+      localStorage.removeItem(PARTSNAP_RECOVERY_KEY);
+      return null;
+    }
+    return value;
+  } catch {
+    return null;
+  }
+}
+
+function savePartSnapRecoveryContext(value = {}) {
+  const existing = getPartSnapRecoveryContext() || {};
+  const next = {
+    ...existing,
+    ...value,
+    active: true,
+    startedAt: existing.startedAt || new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    attempts: Math.min(10, Number(existing.attempts || 0) + 1),
+  };
+  localStorage.setItem(PARTSNAP_RECOVERY_KEY, JSON.stringify(next));
+  return next;
+}
+
+function clearPartSnapRecoveryContext(reason = 'completed') {
+  const existing = getPartSnapRecoveryContext();
+  localStorage.removeItem(PARTSNAP_RECOVERY_KEY);
+  return existing ? { ...existing, clearedReason: reason, clearedAt: new Date().toISOString() } : null;
+}
+
+function knownPartSnapComponent(ai = {}) {
+  const component = String(ai.component || '').trim().toLowerCase();
+  return Boolean(component && component !== 'unknown' && !component.includes('unknown'));
+}
+
+function isPartSnapRecoveryImproved(ai = {}, candidates = [], visibleEvidence = [], missingProof = []) {
+  const confidence = String(ai.confidence || '').toLowerCase();
+  return knownPartSnapComponent(ai) ||
+    candidates.length > 0 ||
+    visibleEvidence.length > 0 ||
+    ['medium', 'high'].includes(confidence) ||
+    missingProof.length <= 1;
+}
+
 function renderPartsSnapResult(ai, result, status) {
   if (!result) return;
   _lastPartSnapResult = ai || {};
@@ -7800,6 +7987,7 @@ function renderPartsSnapResult(ai, result, status) {
   const risk = partSnapCallbackRisk(_lastPartSnapResult, ladder, visibleEvidence, missingProof);
   const buyLinks = ladder.allowLinks ? renderPartBuyLinks(searchTerms, partNumber, manufacturer, component) : '';
   const showGuidedRetry = shouldShowPartSnapGuidedRetry(_lastPartSnapResult, corpusCandidates, ladder, risk, visibleEvidence, missingProof);
+  const recoveryBefore = getPartSnapRecoveryContext();
 
   if (status) status.textContent = showGuidedRetry ? 'PART NOT IDENTIFIED - NEEDS TWO PHOTOS' : low ? 'PART NOT IDENTIFIED - TRY CLOSER' : `POSSIBLE MATCH: ${component || 'Unknown part'}`;
 
@@ -7826,12 +8014,39 @@ function renderPartsSnapResult(ai, result, status) {
     result_summary: [manufacturer, component, model || partNumber].filter(Boolean).join(' / ') || 'Unknown PartSnap result',
   });
   if (showGuidedRetry) {
+    const recovery = savePartSnapRecoveryContext({
+      lastSummary: [manufacturer, component, model || partNumber].filter(Boolean).join(' / ') || 'Unknown PartSnap result',
+      lastMissingProof: compactPartSnapList(missingProof.length ? missingProof : ladder.missing),
+      lastRisk: risk.level,
+      lastConfidence: confidence || 'unknown',
+      lastCorpusStatus: corpusStatus.label || (corpusCandidates.length ? 'source-backed candidates' : 'ai-only'),
+    });
     trackSplashLensEvent('partsnap_guided_retry_shown', {
       confidence: confidence || 'unknown',
       risk: risk.level,
       corpus_status: corpusStatus.label || (corpusCandidates.length ? 'source-backed candidates' : 'ai-only'),
       proof_visible_count: visibleEvidence.length,
       proof_missing_count: missingProof.length || (ladder.missing || []).length,
+      recovery_attempts: recovery.attempts,
+    });
+    if (recoveryBefore?.active) {
+      trackSplashLensEvent('partsnap_guided_retry_still_missing', {
+        recovery_attempts: recovery.attempts,
+        proof_missing_count: missingProof.length || (ladder.missing || []).length,
+        result_summary: [manufacturer, component, model || partNumber].filter(Boolean).join(' / ') || 'Unknown PartSnap result',
+      });
+    }
+  } else if (recoveryBefore?.active && isPartSnapRecoveryImproved(_lastPartSnapResult, corpusCandidates, visibleEvidence, missingProof)) {
+    const recovery = clearPartSnapRecoveryContext('improved_result');
+    trackSplashLensEvent('partsnap_guided_retry_completed', {
+      recovery_attempts: recovery?.attempts || 1,
+      confidence: confidence || 'unknown',
+      risk: risk.level,
+      corpus_status: corpusStatus.label || (corpusCandidates.length ? 'source-backed candidates' : 'ai-only'),
+      corpus_candidate_count: corpusCandidates.length,
+      proof_visible_count: visibleEvidence.length,
+      proof_missing_count: missingProof.length || (ladder.missing || []).length,
+      result_summary: [manufacturer, component, model || partNumber].filter(Boolean).join(' / ') || 'Unknown PartSnap result',
     });
   }
   trackSplashLensEvent('first_value_completed', {
@@ -8612,6 +8827,15 @@ function requestPartSnapSecondProof() {
   const missingProof = Array.isArray(ai.missingProof) ? ai.missingProof.filter(Boolean).slice(0, 4) : [];
   const ladder = partConfidenceLadder(ai.confidence, ai.partNumber, ai.manufacturer, ai.model, ai.component);
   const risk = partSnapCallbackRisk(ai, ladder, visibleEvidence, missingProof);
+  const proofRequestId = `proof-${Date.now().toString(36)}`;
+  const recovery = savePartSnapRecoveryContext({
+    proofRequestId,
+    secondProofRequestedAt: new Date().toISOString(),
+    lastSummary: [ai.manufacturer, ai.component, ai.model || ai.partNumber].filter(Boolean).join(' / ') || 'Unknown PartSnap result',
+    lastMissingProof: missingProof.length ? missingProof : (ladder.missing || []).slice(0, 4),
+    lastRisk: risk.level,
+    lastConfidence: ai.confidence || 'unknown',
+  });
   const result = document.getElementById('scan-result');
   const status = document.getElementById('scan-camera-status');
   if (status) status.textContent = 'SECOND PROOF: CAPTURE LABEL, MODEL PLATE, OR PART NUMBER';
@@ -8622,6 +8846,8 @@ function requestPartSnapSecondProof() {
       <button onclick="setScanMode('parts')" style="background:#0f766e;color:#fff;border:none;border-radius:10px;padding:10px 18px;font-size:12px;font-weight:900;cursor:pointer;">Capture Second Proof</button>
     </div>`;
   trackSplashLensEvent('partsnap_second_proof_requested', {
+    proof_request_id: proofRequestId,
+    recovery_attempts: recovery.attempts,
     confidence: ai.confidence || 'unknown',
     category: ai.category || ai.component || 'unknown',
     risk: risk.level,
