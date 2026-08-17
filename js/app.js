@@ -7794,17 +7794,18 @@ function renderPartsSnapResult(ai, result, status) {
   const low = confidence === 'low';
   const notes = verificationNotes || replacementNotes;
 
-  if (status) status.textContent = low ? 'PART NOT IDENTIFIED — TRY CLOSER' : `POSSIBLE MATCH: ${component || 'Unknown part'}`;
-
-  if (status && status.textContent.startsWith('POSSIBLE MATCH:')) {
-    status.textContent = status.textContent.replace('POSSIBLE MATCH:', 'POSSIBLE MATCH:');
-  }
-
   const condColor = { new:'#16a34a', good:'#16a34a', worn:'#d97706', damaged:'#dc2626', unknown:'#64748b' }[condition] || '#64748b';
 
   const ladder = partConfidenceLadder(confidence, partNumber, manufacturer, model, component);
   const risk = partSnapCallbackRisk(_lastPartSnapResult, ladder, visibleEvidence, missingProof);
   const buyLinks = ladder.allowLinks ? renderPartBuyLinks(searchTerms, partNumber, manufacturer, component) : '';
+  const showGuidedRetry = shouldShowPartSnapGuidedRetry(_lastPartSnapResult, corpusCandidates, ladder, risk, visibleEvidence, missingProof);
+
+  if (status) status.textContent = showGuidedRetry ? 'PART NOT IDENTIFIED - NEEDS TWO PHOTOS' : low ? 'PART NOT IDENTIFIED - TRY CLOSER' : `POSSIBLE MATCH: ${component || 'Unknown part'}`;
+
+  if (status && status.textContent.startsWith('POSSIBLE MATCH:')) {
+    status.textContent = status.textContent.replace('POSSIBLE MATCH:', 'POSSIBLE MATCH:');
+  }
   trackSplashLensEvent('partsnap_result', {
     confidence: confidence || 'unknown',
     category: category || 'unknown',
@@ -7824,6 +7825,15 @@ function renderPartsSnapResult(ai, result, status) {
     proof_missing: compactPartSnapList(missingProof.length ? missingProof : ladder.missing),
     result_summary: [manufacturer, component, model || partNumber].filter(Boolean).join(' / ') || 'Unknown PartSnap result',
   });
+  if (showGuidedRetry) {
+    trackSplashLensEvent('partsnap_guided_retry_shown', {
+      confidence: confidence || 'unknown',
+      risk: risk.level,
+      corpus_status: corpusStatus.label || (corpusCandidates.length ? 'source-backed candidates' : 'ai-only'),
+      proof_visible_count: visibleEvidence.length,
+      proof_missing_count: missingProof.length || (ladder.missing || []).length,
+    });
+  }
   trackSplashLensEvent('first_value_completed', {
     role: getSplashLensRole(),
     workflow: 'partsnap_result',
@@ -7854,6 +7864,7 @@ function renderPartsSnapResult(ai, result, status) {
       ` : ''}
       ${replacementNotes ? `<p style="color:#fbbf24;font-size:12px;font-weight:600;margin-bottom:10px;">⚠ ${replacementNotes}</p>` : ''}
       ${verificationNotes ? `<p style="color:#fbbf24;font-size:12px;font-weight:600;margin-bottom:10px;">Check: ${verificationNotes}</p>` : ''}
+      ${showGuidedRetry ? renderPartSnapGuidedRetry(_lastPartSnapResult, ladder, risk, missingProof) : ''}
       ${renderPartSnapFastWorkflow(_lastPartSnapResult, corpusCandidates, ladder, missingProof)}
       ${renderPartSnapPrimaryAction(risk, missingProof.length ? missingProof : ladder.missing)}
       ${renderPartSnapProofSnapshot(ladder, risk, visibleEvidence, missingProof)}
@@ -7875,7 +7886,7 @@ function renderPartsSnapResult(ai, result, status) {
       ${!ladder.allowLinks ? `<div style="margin-top:12px;background:#0f172a;border:1px solid #334155;border-radius:8px;padding:10px;"><p style="color:#fbbf24;font-size:12px;font-weight:900;margin-bottom:4px;">Hold buying links until proof improves</p><p style="color:#94a3b8;font-size:11px;line-height:1.45;">Need: ${ladder.missing.map(escHtml).join(', ')}.</p></div>` : ''}
       ${ai.escalationSummary ? `<div style="margin-top:12px;background:#020617;border:1px solid #334155;border-radius:10px;padding:11px;"><p style="color:#94a3b8;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px;">Escalation packet</p><p style="color:#e2e8f0;font-size:12px;line-height:1.45;">${escHtml(ai.escalationSummary)}</p></div>` : ''}
       <p style="color:#94a3b8;font-size:11px;line-height:1.45;margin-top:10px;">Reference only. Confirm model, dimensions, and the current manufacturer parts diagram before ordering.</p>
-      ${low ? `<p style="color:#64748b;font-size:12px;margin-top:12px;text-align:center;">Try getting closer, better lighting, or a different angle</p>` : ''}
+      ${low && !showGuidedRetry ? `<p style="color:#64748b;font-size:12px;margin-top:12px;text-align:center;">Try getting closer, better lighting, or a different angle</p>` : ''}
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:8px 0 8px;">
       <button onclick="sharePartSnapPacket()" style="background:#0f766e;color:#fff;border:none;border-radius:10px;padding:11px 8px;font-size:12px;font-weight:900;cursor:pointer;">Share Packet</button>
@@ -7897,6 +7908,53 @@ function renderPartsSnapResult(ai, result, status) {
     description,
     missingProof: missingProof.length ? missingProof : ladder.missing,
   });
+}
+
+function shouldShowPartSnapGuidedRetry(ai = {}, candidates = [], ladder = {}, risk = {}, visibleEvidence = [], missingProof = []) {
+  const confidence = String(ai.confidence || '').toLowerCase();
+  const component = String(ai.component || '').toLowerCase();
+  const corpusLabel = String(ai.corpusStatus?.label || '').toLowerCase();
+  const missingCount = missingProof.length || (ladder.missing || []).length;
+  const unknownPart = !component || component === 'unknown' || component.includes('unknown');
+  return unknownPart &&
+    candidates.length === 0 &&
+    visibleEvidence.length === 0 &&
+    missingCount >= 2 &&
+    (confidence === 'low' || risk.level === 'high' || corpusLabel.includes('ai-only'));
+}
+
+function renderPartSnapGuidedRetry(ai = {}, ladder = {}, risk = {}, missingProof = []) {
+  const missing = (missingProof.length ? missingProof : (ladder.missing || [])).filter(Boolean).slice(0, 3);
+  const firstNeed = missing[0] || 'clear close-up of the part';
+  const secondNeed = missing[1] || 'equipment model plate';
+  const thirdNeed = missing[2] || 'wide shot showing where the part lives';
+  return `
+    <div style="background:#fff7ed;border:2px solid #fb923c;border-radius:12px;padding:13px;margin:10px 0;">
+      <p style="color:#9a3412;font-size:10px;font-weight:950;text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px;">Quick retry path</p>
+      <p style="color:#0f172a;font-size:15px;font-weight:950;line-height:1.25;margin-bottom:5px;">PartSnap needs two better proof shots before it can help.</p>
+      <p style="color:#7c2d12;font-size:12px;line-height:1.4;margin-bottom:10px;">Do not order from this result yet. Grab the fastest proof, then run PartSnap again.</p>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-bottom:10px;">
+        <div style="background:#fff;border:1px solid #fed7aa;border-radius:9px;padding:10px;">
+          <b style="display:inline-grid;place-items:center;width:22px;height:22px;border-radius:999px;background:#ea580c;color:#fff;font-size:11px;margin-bottom:6px;">1</b>
+          <p style="color:#0f172a;font-size:12px;font-weight:950;line-height:1.25;">Close-up</p>
+          <p style="color:#92400e;font-size:10px;line-height:1.35;margin-top:4px;">${escHtml(firstNeed)}</p>
+        </div>
+        <div style="background:#fff;border:1px solid #fed7aa;border-radius:9px;padding:10px;">
+          <b style="display:inline-grid;place-items:center;width:22px;height:22px;border-radius:999px;background:#d97706;color:#fff;font-size:11px;margin-bottom:6px;">2</b>
+          <p style="color:#0f172a;font-size:12px;font-weight:950;line-height:1.25;">Model plate</p>
+          <p style="color:#92400e;font-size:10px;line-height:1.35;margin-top:4px;">${escHtml(secondNeed)}</p>
+        </div>
+        <div style="background:#fff;border:1px solid #fed7aa;border-radius:9px;padding:10px;">
+          <b style="display:inline-grid;place-items:center;width:22px;height:22px;border-radius:999px;background:#b45309;color:#fff;font-size:11px;margin-bottom:6px;">3</b>
+          <p style="color:#0f172a;font-size:12px;font-weight:950;line-height:1.25;">Context</p>
+          <p style="color:#92400e;font-size:10px;line-height:1.35;margin-top:4px;">${escHtml(thirdNeed)}</p>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <button onclick="requestPartSnapSecondProof()" style="background:#ea580c;color:#fff;border:0;border-radius:9px;padding:12px 9px;font-size:12px;font-weight:950;cursor:pointer;">Add proof photo</button>
+        <button onclick="document.getElementById('scan-result').innerHTML='';setScanMode('parts')" style="background:#0f172a;color:#fed7aa;border:1px solid #92400e;border-radius:9px;padding:12px 9px;font-size:12px;font-weight:950;cursor:pointer;">Run PartSnap again</button>
+      </div>
+    </div>`;
 }
 
 function renderPartSnapPrimaryAction(risk = {}, missingProof = []) {

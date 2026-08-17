@@ -145,7 +145,7 @@ function cleanEmail(value) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ? email : '';
 }
 
-function eventUserProfile(record, props = {}) {
+export function eventUserProfile(record, props = {}) {
   const email = cleanEmail(
     props.known_email ||
     props.email ||
@@ -161,7 +161,7 @@ function eventUserProfile(record, props = {}) {
   const leadId = clean(props.lead_id || props.contact_id || props.recipient_id || props.prospect_id || props.referral_id, 120);
   const pilotId = clean(props.pilot_id || props.pilot, 80);
   const participantId = clean(props.participant_id || props.participant, 80);
-  const hasIdentity = Boolean(email || name || company || role || leadId || pilotId || participantId);
+  const hasIdentity = Boolean(email || name || company || leadId || pilotId || participantId);
   if (!hasIdentity) return null;
   const label = email || name || company || leadId || participantId || pilotId || 'known user';
   return {
@@ -180,7 +180,7 @@ function eventUserProfile(record, props = {}) {
   };
 }
 
-function shouldSendImmediateAlert(record) {
+export function shouldSendImmediateAlert(record) {
   if (!ALERT_EVENTS.has(record.event)) return false;
 
   if (record.event === 'partsnap_result') {
@@ -196,6 +196,37 @@ function shouldSendImmediateAlert(record) {
   }
 
   return true;
+}
+
+function weakPartSnapDedupeKey(record, props = {}) {
+  if (record.event !== 'partsnap_result') return '';
+  const confidence = clean(props.confidence || props.match_confidence || props.certainty || '', 80).toLowerCase();
+  const risk = clean(props.callback_risk || props.callbackRisk || props.risk || '', 80).toLowerCase();
+  const corpusStatus = clean(props.corpus_status || '', 80).toLowerCase();
+  const summary = clean(props.result_summary || '', 120).toLowerCase();
+  const component = clean(props.component || '', 120).toLowerCase();
+  const proofMissing = Array.isArray(props.proof_missing) ? props.proof_missing.length : Number(props.proof_missing_count || 0);
+  const weakUnknown = (confidence.includes('low') || risk.includes('high') || corpusStatus.includes('ai-only')) &&
+    proofMissing >= 2 &&
+    (!summary || summary.includes('unknown') || !component || component === 'unknown');
+  if (!weakUnknown) return '';
+  const session = clean(props.session_id || props.sessionId || props.client_id || props.clientId || record.correlationId || '', 160).toLowerCase();
+  const store = clean(props.store_shell || props.store || record.path || '', 80).toLowerCase();
+  if (!session) return '';
+  return `alert-dedupe:partsnap-weak:${session}:${store}`;
+}
+
+export async function shouldQueueImmediateAlert(record, env = {}) {
+  if (!shouldSendImmediateAlert(record)) return { ok: false, reason: 'not_alert_event' };
+  const props = parseProps(record);
+  const key = weakPartSnapDedupeKey(record, props);
+  if (!key || !env.SCAN_USAGE_KV || typeof env.SCAN_USAGE_KV.get !== 'function' || typeof env.SCAN_USAGE_KV.put !== 'function') {
+    return { ok: true, reason: 'not_deduped' };
+  }
+  const prior = await env.SCAN_USAGE_KV.get(key);
+  if (prior) return { ok: false, reason: 'duplicate_weak_partsnap_result', dedupeKey: key };
+  await env.SCAN_USAGE_KV.put(key, record.createdAt || new Date().toISOString(), { expirationTtl: 10 * 60 });
+  return { ok: true, reason: 'dedupe_recorded', dedupeKey: key };
 }
 
 function inc(map, key, amount = 1) {
@@ -258,8 +289,14 @@ function rememberKnownUser(map, user, record) {
   map.set(key, existing);
 }
 
-function eventSource(record, props = {}) {
-  return clean(record.source || props.attribution_source || props.source || 'app', 80) || 'app';
+export function eventSource(record, props = {}) {
+  const explicit = clean(record.source || props.attribution_source || props.source || '', 80);
+  if (explicit && explicit !== 'app') return explicit;
+  const storeShell = clean(props.store_shell || props.store || '', 40).toLowerCase();
+  if (storeShell === 'ios') return 'ios_app';
+  if (storeShell === 'android' || storeShell === 'google_play') return 'android_app';
+  if (props.standalone === true || String(props.standalone || '').toLowerCase() === 'true') return 'standalone_app';
+  return explicit || 'app';
 }
 
 function eventIdentity(record, props = {}) {
@@ -1152,6 +1189,7 @@ async function sendEventAlert(env, record) {
   const props = parseProps(record);
   const source = eventSource(record, props);
   const user = eventUserProfile(record, props);
+  const roleLabel = clean(user?.role || props.known_role || props.role || props.audience || props.persona || props.splashlens_role || '', 80);
   const sourcePrefix = source && source !== 'app' ? `${source.toUpperCase()} - ` : '';
   const partSnapLines = record.event === 'partsnap_result' ? [
     '',
@@ -1206,7 +1244,7 @@ async function sendEventAlert(env, record) {
           `Known email: ${user?.email || ''}`,
           `Known name: ${user?.name || ''}`,
           `Known company: ${user?.company || ''}`,
-          `Known role: ${user?.role || ''}`,
+          `Known role: ${roleLabel}`,
           `Lead ID: ${user?.leadId || ''}`,
           `Pilot ID: ${user?.pilotId || ''}`,
           `Participant ID: ${user?.participantId || ''}`,
@@ -1396,8 +1434,9 @@ export async function onRequestPost({ request, env }) {
 
   const amplitude = await forwardEventToAmplitude(env, record);
 
-  let alert = { sent: false, skipped: true };
-  if (shouldSendImmediateAlert(record)) {
+  let alert = { sent: false, skipped: true, reason: 'not_alert_event' };
+  const alertDecision = await shouldQueueImmediateAlert(record, env);
+  if (alertDecision.ok) {
     alert = await sendEventAlert(env, record);
     console.log('SplashLens app event alert:', JSON.stringify({ event, alert }));
   }
@@ -1406,6 +1445,7 @@ export async function onRequestPost({ request, env }) {
     ok: true,
     stored: Boolean(env.SCAN_USAGE_KV),
     alertQueued: Boolean(alert.sent),
+    alertSkippedReason: alert.sent ? '' : (alert.reason || alertDecision.reason || ''),
     emailConfigured: alert.reason !== 'missing_sendgrid_config',
     senderPolicyOk: notifyConfig(env).senderPolicyOk,
     amplitudeQueued: Boolean(amplitude.sent),
