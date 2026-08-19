@@ -24,6 +24,28 @@ test('attaches source-backed candidates for known salt-system family language', 
   assert.match(result.corpusCandidates[0].component, /AquaRite|TurboCell/i);
 });
 
+test('attaches source-backed connected-pump candidates for IntelliFlo3 service proof', () => {
+  const result = attachPartSnapCorpusCandidates({
+    manufacturer: 'Pentair',
+    category: 'pump',
+    component: 'IntelliFlo3 VSF connected pump with priming alert',
+    model: '011076',
+    visibleEvidence: ['pump nameplate', 'Pentair app screen', 'RS-485 terminal'],
+    missingProof: ['filter pressure', 'speed schedule screenshot'],
+    searchTerms: ['Pentair IntelliFlo3 VSF Pool Brain turnover alert I/O board'],
+  });
+
+  const candidate = result.corpusCandidates.find((row) => row.id === 'pentair-intelliflo3-connected-pump-proof');
+  assert.equal(result.corpusStatus.label, 'source-backed candidates');
+  assert.ok(candidate);
+  assert.equal(candidate.sourceTier, 1);
+  assert.ok(candidate.sourceLabels.some((label) => /Pentair official IntelliFlo3/i.test(label)));
+  assert.ok(candidate.requiredProof.some((item) => /model plate/i.test(item)));
+  assert.ok(candidate.requiredProof.some((item) => /RS-485|I\/O board/i.test(item)));
+  assert.ok(candidate.lookalikeWarnings.some((item) => /not exact part fitment|not.*diagnosis/i.test(item)));
+  assert.ok(candidate.lookalikeWarnings.some((item) => /do not imply SplashLens has partner access/i.test(item)));
+});
+
 test('marks unknown scans as AI-only when no corpus family matches', () => {
   const result = attachPartSnapCorpusCandidates({
     manufacturer: null,

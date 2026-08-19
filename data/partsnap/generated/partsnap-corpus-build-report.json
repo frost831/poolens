@@ -1,6 +1,6 @@
 {
   "ok": true,
-  "generatedAt": "2026-07-18T17:23:56.112Z",
+  "generatedAt": "2026-08-19T15:08:06.499Z",
   "importDir": "data/partsnap/imports",
   "importFiles": [
     "data/partsnap/imports/approved-field-promotions.json",
@@ -8,7 +8,7 @@
   ],
   "runtimePath": "functions/_shared/partsnap-generated-families.mjs",
   "importFileCount": 2,
-  "importedFamilyCount": 19,
+  "importedFamilyCount": 20,
   "coverage": {
     "byCategory": [
       {
@@ -32,15 +32,15 @@
         "count": 2
       },
       {
+        "name": "pump",
+        "count": 2
+      },
+      {
         "name": "automation",
         "count": 1
       },
       {
         "name": "filter",
-        "count": 1
-      },
-      {
-        "name": "pump",
         "count": 1
       },
       {
@@ -50,15 +50,15 @@
     ],
     "byManufacturer": [
       {
+        "name": "Pentair",
+        "count": 5
+      },
+      {
         "name": "Hayward",
         "count": 4
       },
       {
         "name": "Jandy",
-        "count": 4
-      },
-      {
-        "name": "Pentair",
         "count": 4
       },
       {

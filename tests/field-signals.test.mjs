@@ -96,6 +96,22 @@ test('pump comparison uses only explicit job inputs', () => {
   assert.match(buildPumpCustomerSummary(input, result), /not a requirement or guarantee/);
 });
 
+test('current field-signal feed includes conservative IntelliFlo3 connected-pump intelligence', async () => {
+  const feed = JSON.parse(await readFile(new URL('../data/field-signals/current.json', import.meta.url), 'utf8'));
+  const signal = feed.items.find((item) => item.id === 'pentair-intelliflo3-connected-pump-intelligence-2026');
+
+  assert.ok(signal);
+  assert.equal(signal.status, 'current');
+  assert.equal(signal.notificationEligible, true);
+  assert.match(signal.body, /pump plate/i);
+  assert.match(signal.body, /RS-485|I-O board/i);
+  assert.match(signal.source.url, /pentair\.com/);
+  assert.match(signal.source.secondaryUrl, /pentair\.com/);
+  assert.match(signal.guardrail, /does not diagnose/i);
+  assert.match(signal.guardrail, /does not.*endorsement/i);
+  assert.match(signal.guardrail, /live Pentair telemetry/i);
+});
+
 test('app, worker, analytics, and native wrapper expose the Field Signals contract', async () => {
   const [html, app, worker, events, swift] = await Promise.all([
     readFile(new URL('../index.html', import.meta.url), 'utf8'),

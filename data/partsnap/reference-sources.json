@@ -71,6 +71,36 @@
       "notes": "Pentair says catalog updates are made quarterly. Use as new-tech radar and current SKU update lane."
     },
     {
+      "id": "pentair-intelliflo3-vsf-product",
+      "tier": 1,
+      "brand_scope": ["Pentair", "IntelliFlo3", "IntelliPro3", "Pentair Pool App", "Pentair Pro App"],
+      "url": "https://www.pentair.com/en-us/pool-spa/products/pumps/intelliflo3-vsf-pool-pump.html",
+      "source_type": "official connected variable-speed and flow pump product page",
+      "priority_categories": ["pumps", "connected equipment", "automation", "energy decisions", "field proof"],
+      "ingestion_status": "source_identified",
+      "notes": "Use for IntelliFlo3/IntelliPro3 family language, app connectivity, optional I/O board/touchscreen references, item-number aliases, and proof prompts. Do not copy marketing savings claims into diagnostics or ordering recommendations."
+    },
+    {
+      "id": "pentair-intelliflo3-vsf-install-guide",
+      "tier": 1,
+      "brand_scope": ["Pentair", "IntelliFlo3", "IntelliPro3", "RS-485", "Pentair Pool App"],
+      "url": "https://www.pentair.com/content/dam/extranet/nam/pentair-pool/residential/pumps/intelliflo3-vsf/manuals/install-guide/intelliflo3-pro3-vsf-install-guide.pdf",
+      "source_type": "official installation and maintenance guide",
+      "priority_categories": ["pumps", "automation wiring", "alerts", "connectivity", "qualified technician boundaries"],
+      "ingestion_status": "source_identified",
+      "notes": "Use for source-backed proof prompts around Wi-Fi/Bluetooth connectivity, RS-485 automation, dry-start/loss-of-prime clues, smart priming, flexible demand, and qualified electrical safety boundaries."
+    },
+    {
+      "id": "pentair-poolbrain-integration",
+      "tier": 1,
+      "brand_scope": ["Pentair", "Pool Brain", "IntelliFlo3", "Pentair Lighthouse"],
+      "url": "https://www.pentair.com/en-us/pool-spa/education-support/professional-support/pool-and-spa-education/if3-vsf-and-pool-brain.html",
+      "source_type": "official product integration education page",
+      "priority_categories": ["connected equipment", "service alerts", "water turnover", "remote diagnostics", "route prioritization"],
+      "ingestion_status": "source_identified",
+      "notes": "Use as market intelligence that connected pump data is becoming a service workflow. Mention Pool Brain only as a third-party integration reference, not as SplashLens terminology or endorsement."
+    },
+    {
       "id": "hayward-manuals",
       "tier": 1,
       "brand_scope": ["Hayward", "AquaRite", "OmniLogic", "TriStar", "Super Pump", "ColorLogic"],

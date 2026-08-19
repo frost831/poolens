@@ -176,6 +176,73 @@ export const GENERATED_FAMILY_IMPORTS = [
     "importStatus": "reviewed_seed_family_import"
   },
   {
+    "id": "pentair-intelliflo3-connected-pump-proof",
+    "sourceIds": [
+      "pentair-intelliflo3-vsf-product",
+      "pentair-intelliflo3-vsf-install-guide",
+      "pentair-poolbrain-integration"
+    ],
+    "manufacturer": "Pentair",
+    "category": "pump",
+    "component": "IntelliFlo3 / IntelliPro3 VSF connected pump, I/O board, touchscreen, automation, and service-alert proof family",
+    "modelFamilies": [
+      "IntelliFlo3",
+      "IntelliPro3",
+      "VSF",
+      "011075",
+      "011076",
+      "011065",
+      "011066",
+      "356159Z",
+      "356365Z"
+    ],
+    "aliases": [
+      "intelliflo3",
+      "intellipro3",
+      "vsf pump",
+      "variable speed flow",
+      "sensorless flow",
+      "pentair pool app",
+      "pentair pro app",
+      "pool brain",
+      "lighthouse",
+      "turnover",
+      "gpm",
+      "rs-485",
+      "i/o board",
+      "touchscreen",
+      "loss of prime",
+      "dry startup",
+      "priming alert",
+      "wifi offline"
+    ],
+    "visualClues": [
+      "Pentair IntelliFlo3 pump body",
+      "drive display",
+      "touchscreen add-on",
+      "pump nameplate",
+      "RS-485 terminal",
+      "I/O board",
+      "Pentair app screen"
+    ],
+    "requiredProof": [
+      "pump model plate and item number",
+      "drive display or app alert",
+      "wide equipment-pad photo",
+      "automation/RS-485 or I/O board photo",
+      "filter pressure and water level context",
+      "speed or flow schedule screenshot",
+      "current Pentair manual verification"
+    ],
+    "lookalikeWarnings": [
+      "Connected-pump alerts can be water level, filter restriction, valve position, schedule, app/network, automation wiring, or pump-drive conditions.",
+      "Pool Brain is a separate service-management integration; do not imply SplashLens has partner access or live Pentair telemetry without written authorization.",
+      "Source-backed means likely family and proof prompts, not exact part fitment, warranty approval, or diagnosis."
+    ],
+    "importFile": "data/partsnap/imports/seed-expansion.json",
+    "importStatus": "reviewed_seed_family_import"
+  },
+  {
     "id": "hayward-colorlogic-light-transformer",
     "sourceIds": [
       "hayward-manuals"

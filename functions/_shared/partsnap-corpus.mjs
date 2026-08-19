@@ -11,6 +11,21 @@ const SOURCE_LOOKUP = {
     label: 'Pentair 2025-2026 product catalog',
     url: 'https://www.pentair.com/en-us/pool-spa/products/catalog.html',
   },
+  'pentair-intelliflo3-vsf-product': {
+    tier: 1,
+    label: 'Pentair official IntelliFlo3 VSF product page',
+    url: 'https://www.pentair.com/en-us/pool-spa/products/pumps/intelliflo3-vsf-pool-pump.html',
+  },
+  'pentair-intelliflo3-vsf-install-guide': {
+    tier: 1,
+    label: 'Pentair IntelliFlo3 VSF and IntelliPro3 VSF installation and maintenance guide',
+    url: 'https://www.pentair.com/content/dam/extranet/nam/pentair-pool/residential/pumps/intelliflo3-vsf/manuals/install-guide/intelliflo3-pro3-vsf-install-guide.pdf',
+  },
+  'pentair-poolbrain-integration': {
+    tier: 1,
+    label: 'Pentair official IntelliFlo3 and Pool Brain integration education page',
+    url: 'https://www.pentair.com/en-us/pool-spa/education-support/professional-support/pool-and-spa-education/if3-vsf-and-pool-brain.html',
+  },
   'hayward-manuals': {
     tier: 1,
     label: 'Hayward official manuals and guides',

@@ -41,6 +41,27 @@
         "url": "https://app.splashlens.com/"
       },
       "guardrail": "A proof checklist supports verification. It does not confirm fitment or diagnose the equipment."
+    },
+    {
+      "id": "pentair-intelliflo3-connected-pump-intelligence-2026",
+      "category": "connected-equipment",
+      "status": "current",
+      "priority": 82,
+      "publishedAt": "2026-08-19",
+      "verifiedAt": "2026-08-19",
+      "equipmentTypes": ["pump", "automation", "connected equipment"],
+      "title": "Connected pumps are becoming service signals",
+      "body": "For an IntelliFlo3 or IntelliPro3 VSF pump, capture the pump plate, drive/app alert, speed or flow schedule, water-turnover context, filter pressure, water level, and automation or RS-485/I-O board photo before quoting, escalating, or recommending a change.",
+      "action": "connected-pump-proof",
+      "actionLabel": "Capture connected pump proof",
+      "notificationEligible": true,
+      "jurisdiction": "United States",
+      "source": {
+        "label": "Pentair IntelliFlo3 VSF product and Pool Brain integration pages",
+        "url": "https://www.pentair.com/en-us/pool-spa/products/pumps/intelliflo3-vsf-pool-pump.html",
+        "secondaryUrl": "https://www.pentair.com/en-us/pool-spa/education-support/professional-support/pool-and-spa-education/if3-vsf-and-pool-brain.html"
+      },
+      "guardrail": "Use this as market and proof intelligence only. It does not diagnose the pump, confirm a repair/replacement decision, imply SplashLens has live Pentair telemetry, or imply any Pool Brain or Pentair endorsement."
     }
   ]
 }
