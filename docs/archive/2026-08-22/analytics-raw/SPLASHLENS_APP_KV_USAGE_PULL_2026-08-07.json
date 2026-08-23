@@ -1,0 +1,663 @@
+{
+  "generatedAt": "2026-08-10T03:22:28.675Z",
+  "windowDays": 35,
+  "namespaceId": "05a02cae79bc40039fb7b29559b0a271",
+  "totalKeys": 26438,
+  "parsedCount": 5894,
+  "getErrors": 20544,
+  "keyCountsByDay": {
+    "2026-08-07": 9,
+    "2026-08-06": 0,
+    "2026-08-05": 91,
+    "2026-08-04": 21,
+    "2026-08-03": 48,
+    "2026-08-02": 9,
+    "2026-08-01": 70,
+    "2026-07-31": 0,
+    "2026-07-30": 2118,
+    "2026-07-29": 3074,
+    "2026-07-28": 4287,
+    "2026-07-27": 5590,
+    "2026-07-26": 2889,
+    "2026-07-25": 2940,
+    "2026-07-24": 2923,
+    "2026-07-23": 1116,
+    "2026-07-22": 150,
+    "2026-07-21": 231,
+    "2026-07-20": 25,
+    "2026-07-19": 21,
+    "2026-07-18": 50,
+    "2026-07-17": 125,
+    "2026-07-16": 21,
+    "2026-07-15": 213,
+    "2026-07-14": "error",
+    "2026-07-13": 37,
+    "2026-07-12": 12,
+    "2026-07-11": 14,
+    "2026-07-10": 43,
+    "2026-07-09": 107,
+    "2026-07-08": 26,
+    "2026-07-07": 97,
+    "2026-07-06": 58,
+    "2026-07-05": 0,
+    "2026-07-04": 23
+  },
+  "errors": [
+    {
+      "prefix": "event:2026-07-14",
+      "message": "Command failed: wrangler \"kv\" \"key\" \"list\" \"--namespace-id\" \"05a02cae79bc40039fb7b29559b0a271\" \"--prefix\" \"event:2026-07-14\" \"--remote\"\n\u001b[31mX \u001b[41;31m[\u001b[41;97mERROR\u001b[41;31m]\u001b[0m \u001b[1mA request to the Cloudflare API (/accounts/214023f3c23554a68344d77bc7a16185/storage/kv/namespaces/05a02cae79bc40039fb"
+    },
+    {
+      "key": "event:2026-07-30T17:53:30.824Z:29198da0-9007-4e06-acaa-d4eeba2ca2d2",
+      "message": "Command failed: wrangler \"kv\" \"key\" \"get\" \"event:2026-07-30T17:53:30.824Z:29198da0-9007-4e06-acaa-d4eeba2ca2d2\" \"--namespace-id\" \"05a02cae79bc40039fb7b29559b0a271\" \"--remote\"\n\u001b[31mX \u001b[41;31m[\u001b[41;97mERROR\u001b[41;31m]\u001b[0m \u001b[1mFailed to fetch https://api.cloudflare.com/client/v4/accounts/214023f3c23554a6"
+    },
+    {
+      "key": "event:2026-07-30T14:50:25.741Z:94276a0c-f5e3-4d01-a83c-f12b1c6bcb20",
+      "message": "Command failed: wrangler \"kv\" \"key\" \"get\" \"event:2026-07-30T14:50:25.741Z:94276a0c-f5e3-4d01-a83c-f12b1c6bcb20\" \"--namespace-id\" \"05a02cae79bc40039fb7b29559b0a271\" \"--remote\"\n\u001b[31mX \u001b[41;31m[\u001b[41;97mERROR\u001b[41;31m]\u001b[0m \u001b[1mFailed to fetch https://api.cloudflare.com/client/v4/accounts/214023f3c23554a6"
+    },
+    {
+      "key": "event:2026-07-30T10:51:55.229Z:28d7a76b-7120-4b5a-bf26-8172b6009e7d",
+      "message": "Command failed: wrangler \"kv\" \"key\" \"get\" \"event:2026-07-30T10:51:55.229Z:28d7a76b-7120-4b5a-bf26-8172b6009e7d\" \"--namespace-id\" \"05a02cae79bc40039fb7b29559b0a271\" \"--remote\"\n\u001b[31mX \u001b[41;31m[\u001b[41;97mERROR\u001b[41;31m]\u001b[0m \u001b[1mFailed to fetch https://api.cloudflare.com/client/v4/accounts/214023f3c23554a6"
+    },
+    {
+      "key": "event:2026-07-30T10:29:25.232Z:98b3b77c-8405-4b19-9a9a-e62a2dbe4f16",
+      "message": "Command failed: wrangler \"kv\" \"key\" \"get\" \"event:2026-07-30T10:29:25.232Z:98b3b77c-8405-4b19-9a9a-e62a2dbe4f16\" \"--namespace-id\" \"05a02cae79bc40039fb7b29559b0a271\" \"--remote\"\n\u001b[31mX \u001b[41;31m[\u001b[41;97mERROR\u001b[41;31m]\u001b[0m \u001b[1mFailed to fetch https://api.cloudflare.com/client/v4/accounts/214023f3c23554a6"
+    },
+    {
+      "key": "event:2026-07-30T09:24:25.094Z:f550ddf1-fa93-4da0-88bf-23fd1ac24852",
+      "message": "Command failed: wrangler \"kv\" \"key\" \"get\" \"event:2026-07-30T09:24:25.094Z:f550ddf1-fa93-4da0-88bf-23fd1ac24852\" \"--namespace-id\" \"05a02cae79bc40039fb7b29559b0a271\" \"--remote\"\n\u001b[31mX \u001b[41;31m[\u001b[41;97mERROR\u001b[41;31m]\u001b[0m \u001b[1mFailed to fetch https://api.cloudflare.com/client/v4/accounts/214023f3c23554a6"
+    },
+    {
+      "key": "event:2026-07-30T09:23:55.065Z:44b8afe2-ebf1-4133-a2e4-71888d35b348",
+      "message": "Command failed: wrangler \"kv\" \"key\" \"get\" \"event:2026-07-30T09:23:55.065Z:44b8afe2-ebf1-4133-a2e4-71888d35b348\" \"--namespace-id\" \"05a02cae79bc40039fb7b29559b0a271\" \"--remote\"\n\u001b[31mX \u001b[41;31m[\u001b[41;97mERROR\u001b[41;31m]\u001b[0m \u001b[1mFailed to fetch https://api.cloudflare.com/client/v4/accounts/214023f3c23554a6"
+    },
+    {
+      "key": "event:2026-07-30T07:42:24.906Z:d791a3c9-42e9-493b-8710-8e4aa66f6ce1",
+      "message": "Command failed: wrangler \"kv\" \"key\" \"get\" \"event:2026-07-30T07:42:24.906Z:d791a3c9-42e9-493b-8710-8e4aa66f6ce1\" \"--namespace-id\" \"05a02cae79bc40039fb7b29559b0a271\" \"--remote\"\n\u001b[31mX \u001b[41;31m[\u001b[41;97mERROR\u001b[41;31m]\u001b[0m \u001b[1mFailed to fetch https://api.cloudflare.com/client/v4/accounts/214023f3c23554a6"
+    },
+    {
+      "key": "event:2026-07-30T06:54:24.809Z:79fc8ae2-fd04-44a7-9fb4-1baf43afe25d",
+      "message": "Command failed: wrangler \"kv\" \"key\" \"get\" \"event:2026-07-30T06:54:24.809Z:79fc8ae2-fd04-44a7-9fb4-1baf43afe25d\" \"--namespace-id\" \"05a02cae79bc40039fb7b29559b0a271\" \"--remote\"\n\u001b[31mX \u001b[41;31m[\u001b[41;97mERROR\u001b[41;31m]\u001b[0m \u001b[1mFailed to fetch https://api.cloudflare.com/client/v4/accounts/214023f3c23554a6"
+    },
+    {
+      "key": "event:2026-07-30T04:19:54.470Z:c2bad0b6-3d22-4c7e-833e-7234fd5ce0ba",
+      "message": "Command failed: wrangler \"kv\" \"key\" \"get\" \"event:2026-07-30T04:19:54.470Z:c2bad0b6-3d22-4c7e-833e-7234fd5ce0ba\" \"--namespace-id\" \"05a02cae79bc40039fb7b29559b0a271\" \"--remote\"\n\u001b[31mX \u001b[41;31m[\u001b[41;97mERROR\u001b[41;31m]\u001b[0m \u001b[1mFailed to fetch https://api.cloudflare.com/client/v4/accounts/214023f3c23554a6"
+    },
+    {
+      "key": "event:2026-07-30T02:35:54.254Z:5a099a05-6954-4e0b-8fa6-95e0262ea5ea",
+      "message": "Command failed: wrangler \"kv\" \"key\" \"get\" \"event:2026-07-30T02:35:54.254Z:5a099a05-6954-4e0b-8fa6-95e0262ea5ea\" \"--namespace-id\" \"05a02cae79bc40039fb7b29559b0a271\" \"--remote\"\n\u001b[31mX \u001b[41;31m[\u001b[41;97mERROR\u001b[41;31m]\u001b[0m \u001b[1mThe request to Cloudflare's API timed out.\u001b[0m\n\n  This is likely due to networ"
+    },
+    {
+      "key": "event:2026-07-29T23:24:53.956Z:ac807c92-aed3-40c5-a93f-0493aed6b123",
+      "message": "Command failed: wrangler \"kv\" \"key\" \"get\" \"event:2026-07-29T23:24:53.956Z:ac807c92-aed3-40c5-a93f-0493aed6b123\" \"--namespace-id\" \"05a02cae79bc40039fb7b29559b0a271\" \"--remote\"\n\u001b[31mX \u001b[41;31m[\u001b[41;97mERROR\u001b[41;31m]\u001b[0m \u001b[1mFailed to fetch https://api.cloudflare.com/client/v4/accounts/214023f3c23554a6"
+    },
+    {
+      "key": "event:2026-07-29T21:11:28.931Z:ca4cc8ab-f0e4-4df6-813b-1cdac419ecce",
+      "message": "Command failed: wrangler \"kv\" \"key\" \"get\" \"event:2026-07-29T21:11:28.931Z:ca4cc8ab-f0e4-4df6-813b-1cdac419ecce\" \"--namespace-id\" \"05a02cae79bc40039fb7b29559b0a271\" \"--remote\"\n\u001b[31mX \u001b[41;31m[\u001b[41;97mERROR\u001b[41;31m]\u001b[0m \u001b[1mFailed to fetch https://api.cloudflare.com/client/v4/accounts/214023f3c23554a6"
+    },
+    {
+      "key": "event:2026-07-29T20:32:53.530Z:86299b25-dfff-4940-bdad-9ffc388840c6",
+      "message": "Command failed: wrangler \"kv\" \"key\" \"get\" \"event:2026-07-29T20:32:53.530Z:86299b25-dfff-4940-bdad-9ffc388840c6\" \"--namespace-id\" \"05a02cae79bc40039fb7b29559b0a271\" \"--remote\"\n\u001b[31mX \u001b[41;31m[\u001b[41;97mERROR\u001b[41;31m]\u001b[0m \u001b[1mFailed to fetch https://api.cloudflare.com/client/v4/accounts/214023f3c23554a6"
+    },
+    {
+      "key": "event:2026-07-29T17:55:53.267Z:eb9996c6-a5b9-42b4-bae5-e800880f0644",
+      "message": "Command failed: wrangler \"kv\" \"key\" \"get\" \"event:2026-07-29T17:55:53.267Z:eb9996c6-a5b9-42b4-bae5-e800880f0644\" \"--namespace-id\" \"05a02cae79bc40039fb7b29559b0a271\" \"--remote\"\n\u001b[31mX \u001b[41;31m[\u001b[41;97mERROR\u001b[41;31m]\u001b[0m \u001b[1mFailed to fetch https://api.cloudflare.com/client/v4/accounts/214023f3c23554a6"
+    },
+    {
+      "key": "event:2026-07-29T11:41:22.348Z:f1fb8d4f-c856-484f-a5c2-e57288d9ea6f",
+      "message": "Command failed: wrangler \"kv\" \"key\" \"get\" \"event:2026-07-29T11:41:22.348Z:f1fb8d4f-c856-484f-a5c2-e57288d9ea6f\" \"--namespace-id\" \"05a02cae79bc40039fb7b29559b0a271\" \"--remote\"\n\u001b[31mX \u001b[41;31m[\u001b[41;97mERROR\u001b[41;31m]\u001b[0m \u001b[1mFailed to fetch https://api.cloudflare.com/client/v4/accounts/214023f3c23554a6"
+    },
+    {
+      "key": "event:2026-07-29T09:02:52.000Z:2f5fbfa1-7423-44be-913e-6fa43feda9d6",
+      "message": "Command failed: wrangler \"kv\" \"key\" \"get\" \"event:2026-07-29T09:02:52.000Z:2f5fbfa1-7423-44be-913e-6fa43feda9d6\" \"--namespace-id\" \"05a02cae79bc40039fb7b29559b0a271\" \"--remote\"\n\u001b[31mX \u001b[41;31m[\u001b[41;97mERROR\u001b[41;31m]\u001b[0m \u001b[1mFailed to fetch https://api.cloudflare.com/client/v4/accounts/214023f3c23554a6"
+    },
+    {
+      "key": "event:2026-07-29T06:28:51.697Z:7b23111b-8019-4b32-adfe-0804c2c32090",
+      "message": "Command failed: wrangler \"kv\" \"key\" \"get\" \"event:2026-07-29T06:28:51.697Z:7b23111b-8019-4b32-adfe-0804c2c32090\" \"--namespace-id\" \"05a02cae79bc40039fb7b29559b0a271\" \"--remote\"\n\u001b[31mX \u001b[41;31m[\u001b[41;97mERROR\u001b[41;31m]\u001b[0m \u001b[1mFailed to fetch https://api.cloudflare.com/client/v4/accounts/214023f3c23554a6"
+    },
+    {
+      "key": "event:2026-07-29T03:50:51.339Z:72ac5c8f-cf4b-4ae4-a100-e18090245bb6",
+      "message": "Command failed: wrangler \"kv\" \"key\" \"get\" \"event:2026-07-29T03:50:51.339Z:72ac5c8f-cf4b-4ae4-a100-e18090245bb6\" \"--namespace-id\" \"05a02cae79bc40039fb7b29559b0a271\" \"--remote\"\n\u001b[31mX \u001b[41;31m[\u001b[41;97mERROR\u001b[41;31m]\u001b[0m \u001b[1mFailed to fetch https://api.cloudflare.com/client/v4/accounts/214023f3c23554a6"
+    },
+    {
+      "key": "event:2026-07-29T01:48:21.083Z:d9a2494b-0e72-4b64-b057-b11393f15085",
+      "message": "Command failed: wrangler \"kv\" \"key\" \"get\" \"event:2026-07-29T01:48:21.083Z:d9a2494b-0e72-4b64-b057-b11393f15085\" \"--namespace-id\" \"05a02cae79bc40039fb7b29559b0a271\" \"--remote\"\n\u001b[31mX \u001b[41;31m[\u001b[41;97mERROR\u001b[41;31m]\u001b[0m \u001b[1mFailed to fetch https://api.cloudflare.com/client/v4/accounts/214023f3c23554a6"
+    }
+  ],
+  "topEvents": [
+    {
+      "name": "session_heartbeat",
+      "count": 5527
+    },
+    {
+      "name": "app_tab_view",
+      "count": 50
+    },
+    {
+      "name": "first_value_completed",
+      "count": 29
+    },
+    {
+      "name": "tab_dwell",
+      "count": 29
+    },
+    {
+      "name": "manual_code_search",
+      "count": 28
+    },
+    {
+      "name": "app_open",
+      "count": 22
+    },
+    {
+      "name": "language_mode_open",
+      "count": 21
+    },
+    {
+      "name": "session_started",
+      "count": 21
+    },
+    {
+      "name": "role_picker_first_open",
+      "count": 20
+    },
+    {
+      "name": "first_app_open",
+      "count": 19
+    },
+    {
+      "name": "app_tab_click",
+      "count": 17
+    },
+    {
+      "name": "spanish_quick_chip",
+      "count": 15
+    },
+    {
+      "name": "role_selected",
+      "count": 10
+    },
+    {
+      "name": "native_shell_open",
+      "count": 9
+    },
+    {
+      "name": "session_ended",
+      "count": 9
+    },
+    {
+      "name": "article_referral_open",
+      "count": 8
+    },
+    {
+      "name": "native_shell_first_open",
+      "count": 7
+    },
+    {
+      "name": "pwa_standalone_open",
+      "count": 7
+    },
+    {
+      "name": "amplitude_readiness_smoke",
+      "count": 6
+    },
+    {
+      "name": "field_signal_center_opened",
+      "count": 5
+    },
+    {
+      "name": "pwa_install_prompt_seen",
+      "count": 5
+    },
+    {
+      "name": "language_preference_set",
+      "count": 3
+    },
+    {
+      "name": "activation_completed",
+      "count": 2
+    },
+    {
+      "name": "field_feedback_prompt_shown",
+      "count": 2
+    },
+    {
+      "name": "growth_plan_smoke",
+      "count": 2
+    },
+    {
+      "name": "lane_start",
+      "count": 2
+    },
+    {
+      "name": "persona_fork_click",
+      "count": 2
+    },
+    {
+      "name": "referral_prompt_shown",
+      "count": 2
+    },
+    {
+      "name": "voice_note_started",
+      "count": 2
+    },
+    {
+      "name": "wizard_open",
+      "count": 2
+    },
+    {
+      "name": "amplitude_wiring_smoke",
+      "count": 1
+    },
+    {
+      "name": "facility_workflow_completed",
+      "count": 1
+    },
+    {
+      "name": "field_challenge_started",
+      "count": 1
+    },
+    {
+      "name": "field_feedback_quick_answered",
+      "count": 1
+    },
+    {
+      "name": "field_feedback_quick_shown",
+      "count": 1
+    },
+    {
+      "name": "field_signal_context_match",
+      "count": 1
+    },
+    {
+      "name": "field_signal_shown",
+      "count": 1
+    },
+    {
+      "name": "first_action_started",
+      "count": 1
+    },
+    {
+      "name": "packet_created",
+      "count": 1
+    },
+    {
+      "name": "role_picker_opened",
+      "count": 1
+    },
+    {
+      "name": "service_proof_workflow_started",
+      "count": 1
+    }
+  ],
+  "topSources": [
+    {
+      "name": "test",
+      "count": 5427
+    },
+    {
+      "name": "app",
+      "count": 310
+    },
+    {
+      "name": "bhgefbdu",
+      "count": 85
+    },
+    {
+      "name": "splashlens.com",
+      "count": 41
+    },
+    {
+      "name": "com.splashlens.fieldtools",
+      "count": 19
+    },
+    {
+      "name": "role_picker",
+      "count": 6
+    },
+    {
+      "name": "first_use_role_picker",
+      "count": 3
+    },
+    {
+      "name": "site",
+      "count": 2
+    },
+    {
+      "name": "codex_smoke",
+      "count": 1
+    }
+  ],
+  "topPaths": [
+    {
+      "name": "/?tab=scan&mode=parts&utm_source=test&utm_medium=qa&utm_campaign=field60-test&participant=test-tech-01&pilot=test-pilot&ref=test-ref&challenge=field60&challenge_path=partsnap&chall",
+      "count": 5426
+    },
+    {
+      "name": "/?store=ios",
+      "count": 257
+    },
+    {
+      "name": "/",
+      "count": 99
+    },
+    {
+      "name": "/?utm_source=bhgefbdu&utm_medium=email&utm_campaign=bhthfg_abdvyvgl_ffeivdf_cebba&company=Dbzzfedvby+Bdhbgvd+Ffeivdff&lead_id=dbzzfedvbybdhbgvd-53593138",
+      "count": 45
+    },
+    {
+      "name": "/?utm_source=bhgefbdu&utm_medium=email&utm_campaign=bhthfg_efc_cebehdg_cebba&company=Cfeabezbadf+Yvax+Efc+Tebhc&lead_id=cyefctebhc-53593138",
+      "count": 23
+    },
+    {
+      "name": "/?store=android",
+      "count": 19
+    },
+    {
+      "name": "/?mode=tech",
+      "count": 11
+    },
+    {
+      "name": "/amplitude-readiness",
+      "count": 6
+    },
+    {
+      "name": "/?tab=scan",
+      "count": 4
+    },
+    {
+      "name": "/growth-plan",
+      "count": 2
+    },
+    {
+      "name": "/?utm_source=test&contact_email=demo%2Bsplashlens-tracking%40belowzeromedia.com",
+      "count": 1
+    },
+    {
+      "name": "/api/events",
+      "count": 1
+    }
+  ],
+  "topModes": [
+    {
+      "name": "unknown",
+      "count": 5894
+    }
+  ],
+  "topPlans": [
+    {
+      "name": "unknown",
+      "count": 5894
+    }
+  ],
+  "eventsByDay": [
+    {
+      "name": "2026-07-29",
+      "count": 3064
+    },
+    {
+      "name": "2026-07-30",
+      "count": 2108
+    },
+    {
+      "name": "2026-07-28",
+      "count": 474
+    },
+    {
+      "name": "2026-08-05",
+      "count": 91
+    },
+    {
+      "name": "2026-08-01",
+      "count": 70
+    },
+    {
+      "name": "2026-08-03",
+      "count": 48
+    },
+    {
+      "name": "2026-08-04",
+      "count": 21
+    },
+    {
+      "name": "2026-08-02",
+      "count": 9
+    },
+    {
+      "name": "2026-08-07",
+      "count": 9
+    }
+  ],
+  "challengeEvents": [
+    {
+      "name": "field_challenge_started",
+      "count": 1
+    }
+  ],
+  "partSnapEvents": [],
+  "facilityEvents": [
+    {
+      "name": "facility_workflow_completed",
+      "count": 1
+    }
+  ],
+  "feedbackEvents": [
+    {
+      "name": "field_feedback_prompt_shown",
+      "count": 2
+    },
+    {
+      "name": "field_feedback_quick_answered",
+      "count": 1
+    },
+    {
+      "name": "field_feedback_quick_shown",
+      "count": 1
+    }
+  ],
+  "checkoutEvents": [],
+  "knownUserSignalEvents": [],
+  "topPropKeys": [],
+  "recentSampleShape": [
+    {
+      "key": "event:2026-08-07T13:38:38.043Z:c32abe85-cf6d-4de4-baf0-777e93efdeb6",
+      "event": "growth_plan_smoke",
+      "source": "app",
+      "path": "/growth-plan",
+      "createdAt": "2026-08-07T13:38:38.043Z",
+      "propKeys": []
+    },
+    {
+      "key": "event:2026-08-07T13:19:54.941Z:3497de45-6cf8-4e01-9813-266980f140f4",
+      "event": "amplitude_readiness_smoke",
+      "source": "app",
+      "path": "/amplitude-readiness",
+      "createdAt": "2026-08-07T13:19:54.941Z",
+      "propKeys": []
+    },
+    {
+      "key": "event:2026-08-07T13:18:50.814Z:1a62b4ce-c86f-452b-9a8d-bb7c31fa827a",
+      "event": "growth_plan_smoke",
+      "source": "app",
+      "path": "/growth-plan",
+      "createdAt": "2026-08-07T13:18:50.814Z",
+      "propKeys": []
+    },
+    {
+      "key": "event:2026-08-07T12:36:31.580Z:bef05e1c-74e0-4f94-a563-13961bdbed45",
+      "event": "amplitude_readiness_smoke",
+      "source": "app",
+      "path": "/amplitude-readiness",
+      "createdAt": "2026-08-07T12:36:31.580Z",
+      "propKeys": []
+    },
+    {
+      "key": "event:2026-08-07T12:34:48.232Z:257ba937-faca-4288-9fec-747cf5ef134c",
+      "event": "amplitude_readiness_smoke",
+      "source": "app",
+      "path": "/amplitude-readiness",
+      "createdAt": "2026-08-07T12:34:48.232Z",
+      "propKeys": []
+    },
+    {
+      "key": "event:2026-08-07T12:33:31.938Z:d1892fa9-2d3b-4e90-b8c1-1af341c08cdd",
+      "event": "amplitude_readiness_smoke",
+      "source": "app",
+      "path": "/amplitude-readiness",
+      "createdAt": "2026-08-07T12:33:31.938Z",
+      "propKeys": []
+    },
+    {
+      "key": "event:2026-08-07T12:33:01.030Z:faf59ed0-0e15-40b0-9deb-42f4c188415f",
+      "event": "amplitude_readiness_smoke",
+      "source": "app",
+      "path": "/amplitude-readiness",
+      "createdAt": "2026-08-07T12:33:01.030Z",
+      "propKeys": []
+    },
+    {
+      "key": "event:2026-08-07T12:31:59.241Z:dba88090-4751-455d-9872-623487d48c94",
+      "event": "amplitude_readiness_smoke",
+      "source": "app",
+      "path": "/amplitude-readiness",
+      "createdAt": "2026-08-07T12:31:59.241Z",
+      "propKeys": []
+    },
+    {
+      "key": "event:2026-08-07T02:45:54.445Z:eb8d660f-8d90-459e-a6a3-345d429ed49f",
+      "event": "amplitude_wiring_smoke",
+      "source": "codex_smoke",
+      "path": "/api/events",
+      "createdAt": "2026-08-07T02:45:54.445Z",
+      "propKeys": []
+    },
+    {
+      "key": "event:2026-08-05T14:18:50.225Z:fcc111ee-f04d-44b3-b12b-82ce30f334d6",
+      "event": "session_heartbeat",
+      "source": "bhgefbdu",
+      "path": "/?utm_source=bhgefbdu&utm_medium=email&utm_campaign=bhthfg_abdvyvgl_ffeivdf_cebba&company=Dbzzfedvby+Bdhbgvd+Ffeivdff&lead_id=dbzzfedvbybdhbgvd-53593138",
+      "createdAt": "2026-08-05T14:18:50.225Z",
+      "propKeys": []
+    },
+    {
+      "key": "event:2026-08-05T14:18:48.417Z:61372393-087b-4021-bf71-e6d62065ecbc",
+      "event": "session_heartbeat",
+      "source": "bhgefbdu",
+      "path": "/?utm_source=bhgefbdu&utm_medium=email&utm_campaign=bhthfg_abdvyvgl_ffeivdf_cebba&company=Dbzzfedvby+Bdhbgvd+Ffeivdff&lead_id=dbzzfedvbybdhbgvd-53593138",
+      "createdAt": "2026-08-05T14:18:48.417Z",
+      "propKeys": []
+    },
+    {
+      "key": "event:2026-08-05T14:18:46.630Z:9b453294-f47b-4a34-befa-770912e1dbf4",
+      "event": "session_heartbeat",
+      "source": "bhgefbdu",
+      "path": "/?utm_source=bhgefbdu&utm_medium=email&utm_campaign=bhthfg_abdvyvgl_ffeivdf_cebba&company=Dbzzfedvby+Bdhbgvd+Ffeivdff&lead_id=dbzzfedvbybdhbgvd-53593138",
+      "createdAt": "2026-08-05T14:18:46.630Z",
+      "propKeys": []
+    },
+    {
+      "key": "event:2026-08-05T14:18:44.865Z:a8589985-08dd-4c88-8186-a3ffcd6ad7e2",
+      "event": "session_heartbeat",
+      "source": "bhgefbdu",
+      "path": "/?utm_source=bhgefbdu&utm_medium=email&utm_campaign=bhthfg_abdvyvgl_ffeivdf_cebba&company=Dbzzfedvby+Bdhbgvd+Ffeivdff&lead_id=dbzzfedvbybdhbgvd-53593138",
+      "createdAt": "2026-08-05T14:18:44.865Z",
+      "propKeys": []
+    },
+    {
+      "key": "event:2026-08-05T14:18:43.091Z:f1cc0fc9-ac86-450a-8446-31cdef7ed679",
+      "event": "session_heartbeat",
+      "source": "bhgefbdu",
+      "path": "/?utm_source=bhgefbdu&utm_medium=email&utm_campaign=bhthfg_abdvyvgl_ffeivdf_cebba&company=Dbzzfedvby+Bdhbgvd+Ffeivdff&lead_id=dbzzfedvbybdhbgvd-53593138",
+      "createdAt": "2026-08-05T14:18:43.091Z",
+      "propKeys": []
+    },
+    {
+      "key": "event:2026-08-05T14:18:41.231Z:ffc39cc9-4ee0-4a6c-97af-42d6bf01b474",
+      "event": "session_heartbeat",
+      "source": "bhgefbdu",
+      "path": "/?utm_source=bhgefbdu&utm_medium=email&utm_campaign=bhthfg_abdvyvgl_ffeivdf_cebba&company=Dbzzfedvby+Bdhbgvd+Ffeivdff&lead_id=dbzzfedvbybdhbgvd-53593138",
+      "createdAt": "2026-08-05T14:18:41.231Z",
+      "propKeys": []
+    },
+    {
+      "key": "event:2026-08-05T14:18:39.433Z:be669792-8948-4376-8079-3dadb5815e00",
+      "event": "session_heartbeat",
+      "source": "bhgefbdu",
+      "path": "/?utm_source=bhgefbdu&utm_medium=email&utm_campaign=bhthfg_abdvyvgl_ffeivdf_cebba&company=Dbzzfedvby+Bdhbgvd+Ffeivdff&lead_id=dbzzfedvbybdhbgvd-53593138",
+      "createdAt": "2026-08-05T14:18:39.433Z",
+      "propKeys": []
+    },
+    {
+      "key": "event:2026-08-05T14:18:37.632Z:a5c4fa7c-3d20-413c-9672-abd76c63d889",
+      "event": "session_heartbeat",
+      "source": "bhgefbdu",
+      "path": "/?utm_source=bhgefbdu&utm_medium=email&utm_campaign=bhthfg_abdvyvgl_ffeivdf_cebba&company=Dbzzfedvby+Bdhbgvd+Ffeivdff&lead_id=dbzzfedvbybdhbgvd-53593138",
+      "createdAt": "2026-08-05T14:18:37.632Z",
+      "propKeys": []
+    },
+    {
+      "key": "event:2026-08-05T14:18:35.872Z:701c22a0-900c-4c10-bec4-b2367cdda82b",
+      "event": "session_heartbeat",
+      "source": "bhgefbdu",
+      "path": "/?utm_source=bhgefbdu&utm_medium=email&utm_campaign=bhthfg_abdvyvgl_ffeivdf_cebba&company=Dbzzfedvby+Bdhbgvd+Ffeivdff&lead_id=dbzzfedvbybdhbgvd-53593138",
+      "createdAt": "2026-08-05T14:18:35.872Z",
+      "propKeys": []
+    },
+    {
+      "key": "event:2026-08-05T14:18:34.136Z:86a946e9-01e7-47a5-a5c2-596af8f5ece0",
+      "event": "session_heartbeat",
+      "source": "bhgefbdu",
+      "path": "/?utm_source=bhgefbdu&utm_medium=email&utm_campaign=bhthfg_abdvyvgl_ffeivdf_cebba&company=Dbzzfedvby+Bdhbgvd+Ffeivdff&lead_id=dbzzfedvbybdhbgvd-53593138",
+      "createdAt": "2026-08-05T14:18:34.136Z",
+      "propKeys": []
+    },
+    {
+      "key": "event:2026-08-05T14:18:32.240Z:5321dadb-4e1f-4832-b66e-9823f766ced7",
+      "event": "session_heartbeat",
+      "source": "bhgefbdu",
+      "path": "/?utm_source=bhgefbdu&utm_medium=email&utm_campaign=bhthfg_abdvyvgl_ffeivdf_cebba&company=Dbzzfedvby+Bdhbgvd+Ffeivdff&lead_id=dbzzfedvbybdhbgvd-53593138",
+      "createdAt": "2026-08-05T14:18:32.240Z",
+      "propKeys": []
+    },
+    {
+      "key": "event:2026-08-05T14:18:30.464Z:aa37d752-1168-4270-a6a1-ee2818c970da",
+      "event": "session_heartbeat",
+      "source": "bhgefbdu",
+      "path": "/?utm_source=bhgefbdu&utm_medium=email&utm_campaign=bhthfg_abdvyvgl_ffeivdf_cebba&company=Dbzzfedvby+Bdhbgvd+Ffeivdff&lead_id=dbzzfedvbybdhbgvd-53593138",
+      "createdAt": "2026-08-05T14:18:30.464Z",
+      "propKeys": []
+    },
+    {
+      "key": "event:2026-08-05T14:18:28.671Z:1cea88d1-022c-4667-bf31-42142403841c",
+      "event": "session_heartbeat",
+      "source": "bhgefbdu",
+      "path": "/?utm_source=bhgefbdu&utm_medium=email&utm_campaign=bhthfg_abdvyvgl_ffeivdf_cebba&company=Dbzzfedvby+Bdhbgvd+Ffeivdff&lead_id=dbzzfedvbybdhbgvd-53593138",
+      "createdAt": "2026-08-05T14:18:28.671Z",
+      "propKeys": []
+    },
+    {
+      "key": "event:2026-08-05T14:18:26.918Z:28d18cde-2d9f-49f4-993d-16bd218c54ea",
+      "event": "session_heartbeat",
+      "source": "bhgefbdu",
+      "path": "/?utm_source=bhgefbdu&utm_medium=email&utm_campaign=bhthfg_abdvyvgl_ffeivdf_cebba&company=Dbzzfedvby+Bdhbgvd+Ffeivdff&lead_id=dbzzfedvbybdhbgvd-53593138",
+      "createdAt": "2026-08-05T14:18:26.918Z",
+      "propKeys": []
+    },
+    {
+      "key": "event:2026-08-05T14:18:26.387Z:e656aee6-68df-4cbe-a661-d8cbcc169645",
+      "event": "pwa_install_prompt_seen",
+      "source": "bhgefbdu",
+      "path": "/?utm_source=bhgefbdu&utm_medium=email&utm_campaign=bhthfg_abdvyvgl_ffeivdf_cebba&company=Dbzzfedvby+Bdhbgvd+Ffeivdff&lead_id=dbzzfedvbybdhbgvd-53593138",
+      "createdAt": "2026-08-05T14:18:26.387Z",
+      "propKeys": []
+    },
+    {
+      "key": "event:2026-08-05T14:18:25.046Z:e54597cc-5988-4f20-a2a0-f654a6445301",
+      "event": "app_open",
+      "source": "bhgefbdu",
+      "path": "/?utm_source=bhgefbdu&utm_medium=email&utm_campaign=bhthfg_abdvyvgl_ffeivdf_cebba&company=Dbzzfedvby+Bdhbgvd+Ffeivdff&lead_id=dbzzfedvbybdhbgvd-53593138",
+      "createdAt": "2026-08-05T14:18:25.046Z",
+      "propKeys": []
+    }
+  ]
+}

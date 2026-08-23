@@ -12,7 +12,8 @@ The modeled fix bundle raises expected first-value completion from **61% to 78%*
 ## Evidence Boundary
 
 - **5,000 synthetic lives:** 1,000 per role in ten exact 100-person batches.
-- **Browser anchor:** the existing five-role live smoke run against https://app.splashlens.com, with event and feedback writes intercepted.
+- **Browser anchor:** five-role browser smoke against https://app.splashlens.com/, with event and feedback writes intercepted.
+- **Run scenario:** baseline_plus_recommendations.
 - **Not testimonials:** every opinion is labeled SIMULATED PERSONA FEEDBACK.
 - **No production pollution:** zero accounts, zero analytics writes, zero retained app records.
 - **Relevant life context only:** no race, religion, sexual orientation, politics, or other irrelevant protected profiling.
@@ -27,6 +28,16 @@ The modeled fix bundle raises expected first-value completion from **61% to 78%*
 | 3 | Counter / Distributor | 61.5% | 35.9% | 65.3 | 69.5 | 50.4 | 80.8 | 10.8 min | 96.8s |
 | 4 | Trainer | 50.2% | 22.1% | 57.1 | 63.1 | 41.5 | 78.2 | 6.3 min | 114s |
 | 5 | Homeowner | 52.3% | 20.4% | 56.3 | 60 | 42.6 | 78.3 | 5.4 min | 94.3s |
+
+## Current Landing After Recommendations
+
+| Role | Expected completion | Expected wow | Expected love | Expected time to value |
+|---|---:|---:|---:|---:|
+| Service Tech | 67.1% | 46.8% | 72.7 | 76.1s |
+| Facility / CPO | 72.4% | 57.9% | 78.1 | 65.4s |
+| Counter / Distributor | 59.4% | 33.9% | 65.3 | 96.8s |
+| Trainer | 51.4% | 21.4% | 57.1 | 114s |
+| Homeowner | 54.5% | 23.2% | 56.3 | 94.3s |
 
 ## What Creates The Aha
 
