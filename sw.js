@@ -1,5 +1,5 @@
-const CACHE = 'splashlens-v35-landscape-onboarding';
-const ASSETS = ['/', '/index.html', '/js/errors.js', '/js/data.js?v=20260718-partsnap-cache-safe', '/js/app.js?v=20260721-post-value-upgrade', '/favicon.svg', '/favicon.ico', '/apple-touch-icon.png', '/icon-192.png', '/icon-512.png', '/manifest.json'];
+const CACHE = 'splashlens-v36-closing-season-mode';
+const ASSETS = ['/', '/index.html', '/js/errors.js', '/js/data.js?v=20260823-closing-season-mode', '/js/app.js?v=20260823-closing-season-mode', '/favicon.svg', '/favicon.ico', '/apple-touch-icon.png', '/icon-192.png', '/icon-512.png', '/manifest.json'];
 
 function cacheKey(url) {
   return `${url.pathname}${url.search}`;

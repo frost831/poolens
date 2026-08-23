@@ -350,57 +350,88 @@ window.POOL_VOLUME_DATA = {
 };
 
 window.CLOSING_CHECKLIST = [
-  { phase:"Chemistry — Pre-Close (do first, run pump 24h after)", steps:[
-    "Test all 6: FC, CC, pH, TA, CH, CYA",
-    "Adjust pH to 7.2–7.4 — slightly low prevents winter scale",
-    "Adjust TA to 80–100 ppm",
-    "Adjust CH to 200–400 ppm",
-    "Shock pool to 10+ ppm FC using Cal-Hypo — big kill before cover goes on",
-    "Add PolyQuat 60 algaecide per label (preferred — no foaming, works under cover)",
-    "Add phosphate remover if phosphates were above 500 ppb",
-    "Add metal sequestrant if source water is high in iron or copper",
-    "DO NOT add extra CYA — it persists and you waste stabilizer"
+  { phase:"1. Pre-close proof and chemistry", steps:[
+    "Confirm pool type, surface, cover type, sanitizer system, heater, automation, cleaners, and freeze climate before choosing a closing method.",
+    "Test and record FC, CC, pH, TA, CH, CYA, salt if present, and water temperature before adding products.",
+    "Balance water to the target used by the service company, product labels, and local/operator requirements; do not rely on this app alone.",
+    "Add closing products only per label and customer/system requirements. Save product names, strengths, and approximate dose math.",
+    "Photograph the water clarity, water level, equipment pad, filter pressure, controller screen, and any pre-existing cracks, leaks, or damage.",
+    "Record whether the customer approved any repair, cover, antifreeze, chemistry, or equipment storage recommendations."
   ]},
-  { phase:"Equipment Shutdown", steps:[
-    "Run pump/filter minimum 24 hours after adding closing chemicals",
-    "Backwash sand/DE filter OR clean cartridge elements before shutdown",
-    "For DE filters: disassemble and hose off grids — rinse thoroughly",
-    "Turn off heater FIRST — allow 15 min to cool before shutting pump off",
-    "Shut off salt chlorinator — clean cell with acid wash per spec",
-    "Remove and store salt cell indoors for winter",
-    "Disconnect and store automation equipment and remote controls",
-    "Clean pump strainer basket thoroughly",
-    "Turn off main power at breaker panel — tape breaker if pool is near public access"
+  { phase:"2. Equipment shutdown and drain proof", steps:[
+    "Turn off and lock out power only when the closing method requires it and the tech is qualified to do so.",
+    "Drain pump, filter, heater, chlorinator, salt cell housing, booster pump, water feature loop, and any component that can trap water.",
+    "Open filter air relief before draining pressure vessels. Stand clear and follow the exact equipment manual.",
+    "Save a close photo of every removed drain plug, cap, union, and winterized component.",
+    "Store drain plugs in the pump basket or a labeled customer bag, then photograph that storage location.",
+    "Mark any seized, missing, cracked, or questionable plugs as spring follow-up instead of leaving it as a memory item."
   ]},
-  { phase:"Winterize Plumbing", steps:[
-    "Lower water level below skimmer opening (or mid-tile on vinyl/fiberglass)",
-    "Blow out return lines with compressor — work pump → returns",
-    "Insert Gizzmo / winterization plug into each skimmer throat",
-    "Blow out skimmer line — plug when water clears",
-    "Blow out main drain line — close valve or plug if accessible",
-    "Add propylene glycol antifreeze to lines in hard-freeze climates (NEVER ethylene glycol)",
-    "Drain pump completely — remove drain plug and store in basket",
-    "Drain filter tank — remove drain cap",
-    "Drain heater heat exchanger and chlorinator — open all unions",
-    "Store all drain plugs in pump basket or labeled bag"
+  { phase:"3. Lines, skimmers, returns, and antifreeze", steps:[
+    "Document the water level decision and why it matches the cover, surface, skimmer, and local freeze risk.",
+    "Blow or drain each line using the service company's approved process; plug immediately after the line clears.",
+    "Record which skimmers, returns, main drain, cleaner line, spa line, water feature, slide, bubbler, or deck jet were winterized.",
+    "Use only pool-safe propylene glycol where the company method calls for antifreeze. Never use automotive antifreeze.",
+    "Photograph winter plugs, gizmos, skimmer throats, return plugs, and any unusual plumbing that may confuse spring opening.",
+    "Flag any line that would not clear, would not hold air, or had a questionable valve position for senior review."
   ]},
-  { phase:"Cover Installation", steps:[
-    "Vacuum and skim pool surface before covering",
-    "Install underwater return plugs before installing cover",
-    "Install safety cover: all anchors fully seated and tensioned evenly",
-    "For mesh safety covers: use water tubes or sandbags at perimeter against wind",
-    "For solid covers: install submersible cover pump — must drain rain/snowmelt",
-    "For above-ground: install air pillow first to absorb ice expansion pressure",
-    "Verify cover cannot be lifted by wind — check all attachment points"
+  { phase:"4. Heaters, heat pumps, salt, robots, and smart equipment", steps:[
+    "For gas heaters and heat pumps, follow the exact winterizing section in the manufacturer manual before declaring the heater protected.",
+    "For salt systems, document the controller state, cell model, cell condition, and whether the cell was drained, removed, cleaned, or stored.",
+    "Remove robotic cleaners, caddies, power supplies, cords, and batteries according to the specific robot manual and storage temperature guidance.",
+    "Capture automation freeze-protection settings, pump schedules, app alerts, and local panel state before changing anything.",
+    "Do not trust freeze protection as a complete winterization plan unless the equipment manual and local service policy support that use.",
+    "Create a senior-tech or vendor packet for any connected-pump, heater, automation, or robot issue that may affect winter protection."
   ]},
-  { phase:"Final Steps", steps:[
-    "Photograph equipment pad — show plugs removed, drains open (reference for spring)",
-    "Wrap exposed pipe unions with foam pipe insulation in freeze climates",
-    "Lock and secure equipment enclosure",
-    "Log closing date, all chemical levels, and any issues in notes",
-    "Schedule spring opening 2–3 weeks before first use (chemistry needs time to stabilize)"
+  { phase:"5. Cover and site closeout", steps:[
+    "Clean debris before the cover goes on so the customer can see the closing was not rushed.",
+    "Install the cover per cover type and manufacturer instructions. Photograph anchors, straps, springs, water bags, cable, pillow, and cover pump where relevant.",
+    "Verify cover pump placement, discharge route, GFCI/power context, and customer instructions for water on the cover.",
+    "Photograph gates, latches, safety cover fit, and any visible trip or access risk before leaving.",
+    "Leave customer-safe instructions for cover water, winter checks, pets/kids access, and when to call before a freeze event.",
+    "Save any customer declined-work notes before leaving the property."
+  ]},
+  { phase:"6. Callback and insurance-ready documentation", steps:[
+    "Create the customer-safe closing summary before driving away: what was done, what was not done, and what still needs monitoring.",
+    "Attach photos of water level, equipment pad, drain plugs, plugs/gizmos, cover, chemistry, and unusual conditions.",
+    "Mark callback risk if any proof is missing, weather is changing fast, equipment would not drain, or the customer declined a recommended step.",
+    "If a dispute, freeze claim, or insurance conversation happens later, use the proof packet as documentation support only; it is not a coverage guarantee.",
+    "Save the closing packet to Pool History so the opening crew can find plug locations, issue notes, and spring follow-ups.",
+    "Schedule the spring/opening reminder or follow-up repair while the account details are still fresh."
   ]}
 ];
+
+window.CLOSING_SEASON_PROOF = {
+  title: "Closing Season Mode",
+  promise: "Document the close before the freeze. SplashLens helps techs capture the evidence that prevents spring confusion, callback arguments, and blind repair handoffs.",
+  trustBoundary: "Reference aid only. Verify the exact product manual, local code, company winterization method, chemical label, and qualified technician judgment.",
+  proofPhotos: [
+    "water level and cover type",
+    "equipment pad wide photo",
+    "pump, filter, heater, salt cell, and chlorinator drain points",
+    "removed drain plugs stored together",
+    "skimmer gizmos and return plugs",
+    "automation/freeze-protection screen",
+    "cover anchors, straps, water bags, cable, pillow, or cover pump",
+    "pre-existing damage, leaks, cracks, or declined work"
+  ],
+  callbackFlags: [
+    "missing drain-plug proof",
+    "heater or heat pump not manually verified",
+    "salt cell status unknown",
+    "robot or power supply left exposed",
+    "cover pump not documented",
+    "customer declined repair or winter product",
+    "hard-freeze forecast within 72 hours",
+    "line would not clear or valve position unclear"
+  ],
+  sourceLanes: [
+    "Pentair winterization and freeze-protection guidance",
+    "Hayward closing and freeze-protection guidance",
+    "Raypak equipment winterization guidance",
+    "Maytronics robotic cleaner winter storage guidance",
+    "Exact product manual and local code remain the source of truth"
+  ]
+};
 
 window.WEEKLY_CHECKLIST = [
   { phase:"Water Testing", steps:[

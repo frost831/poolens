@@ -14,9 +14,9 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="SplashLens">
-  <meta name="description" content="SplashLens is a free no-account field reference app for pool, spa, hot tub, and swim spa service techs with PartSnap part identification assistance, Connected Pool Network troubleshooting, Field Learning OS workflows, robot cleaner references, Balboa, Gecko, Waterway NEO, swim current, GFCI, sanitizer, pool equipment codes, dosing calculators, voice notes, checklists, and route tools.">
+  <meta name="description" content="SplashLens is a free no-account field reference app for pool, spa, hot tub, and swim spa service techs with PartSnap part identification assistance, Closing Season Mode, Connected Pool Network troubleshooting, Field Learning OS workflows, robot cleaner references, Balboa, Gecko, Waterway NEO, swim current, GFCI, sanitizer, pool equipment codes, dosing calculators, voice notes, checklists, and route tools.">
   <meta name="robots" content="index,follow,max-image-preview:large">
-  <meta name="keywords" content="pool service app, pool tech app, pool technician app, spa service app, hot tub troubleshooting app, swim spa troubleshooting app, Master Spas H2X troubleshooting, Endless Pools troubleshooting, Hydropool swim spa troubleshooting, Balboa spa pack, Gecko spa pack, Waterway NEO, spa GFCI tripping, swim spa current pump, spa sanitizer feeder, pool parts identification, PartSnap, Connected Pool Network, pool equipment error codes, pool hardware, pool pump troubleshooting, pool heater codes, pool heat pump troubleshooting, pool automation troubleshooting, pool robot troubleshooting, robotic pool cleaner troubleshooting, salt cell troubleshooting, Jandy TruClear troubleshooting, pool lighting troubleshooting, pool chemical controller, smart chlorine dispenser, pool cover troubleshooting, pool dosing calculator, pool route notes, pool service training, pool tech training">
+  <meta name="keywords" content="pool service app, pool tech app, pool technician app, pool closing app, pool winterizing checklist, closing season proof packet, pool technician closing checklist, spa service app, hot tub troubleshooting app, swim spa troubleshooting app, Master Spas H2X troubleshooting, Endless Pools troubleshooting, Hydropool swim spa troubleshooting, Balboa spa pack, Gecko spa pack, Waterway NEO, spa GFCI tripping, swim spa current pump, spa sanitizer feeder, pool parts identification, PartSnap, Connected Pool Network, pool equipment error codes, pool hardware, pool pump troubleshooting, pool heater codes, pool heat pump troubleshooting, pool automation troubleshooting, pool robot troubleshooting, robotic pool cleaner troubleshooting, salt cell troubleshooting, Jandy TruClear troubleshooting, pool lighting troubleshooting, pool chemical controller, smart chlorine dispenser, pool cover troubleshooting, pool dosing calculator, pool route notes, pool service training, pool tech training">
   <link rel="canonical" href="https://app.splashlens.com/">
   <link rel="alternate" hreflang="en" href="https://app.splashlens.com/">
   <link rel="alternate" hreflang="es" href="https://app.splashlens.com/?lang=es">
@@ -46,7 +46,7 @@
     "applicationCategory": "UtilitiesApplication",
     "operatingSystem": "Web, iOS, Android",
     "isAccessibleForFree": true,
-    "description": "Free no-account pool service field reference app with PartSnap part identification assistance, Connected Pool Network troubleshooting, Field Learning OS workflows, robot cleaner references, equipment-code lookup, dosing calculators, voice notes, checklists, and route tools.",
+    "description": "Free no-account pool service field reference app with PartSnap part identification assistance, Closing Season Mode, Connected Pool Network troubleshooting, Field Learning OS workflows, robot cleaner references, equipment-code lookup, dosing calculators, voice notes, checklists, and route tools.",
     "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"},
     "publisher": {"@type": "Organization", "name": "SplashLens", "url": "https://splashlens.com/"},
     "sameAs": [
@@ -66,6 +66,7 @@
       "Training mode and senior-tech escalation packets",
       "Route progress tools",
       "Opening, closing, weekly, and monthly checklists",
+      "Closing Season Mode and winterization proof packet workflow",
       "Pool pump, heater, automation, lighting, robot, and salt cell reference"
     ],
     "potentialAction": {"@type": "UseAction", "target": "https://app.splashlens.com/"}
@@ -147,7 +148,7 @@
     .proof-command-kicker { color:#7dd3fc; font-size:10px; font-weight:950; letter-spacing:.12em; text-transform:uppercase; margin-bottom:5px; }
     .proof-command h2 { color:#fff; font-size:22px; line-height:1.05; font-weight:950; margin-bottom:7px; }
     .proof-command p { color:#cbd5e1; font-size:12px; line-height:1.45; margin-bottom:11px; }
-    .proof-command-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+    .proof-command-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; }
     .proof-command button { min-height:82px; background:#ffffff; border:1px solid #bae6fd; border-radius:10px; color:#0f172a; padding:10px; text-align:left; cursor:pointer; box-shadow:var(--field-shadow-tight); }
     .proof-command button.primary { background:#0f766e; color:#ffffff; border-color:#5eead4; }
     .proof-command button.facility { background:#0369a1; color:#ffffff; border-color:#7dd3fc; }
@@ -159,6 +160,7 @@
     .proof-status-row { display:grid; grid-template-columns:repeat(4,1fr); gap:6px; margin-top:10px; }
     .proof-status-chip { background:rgba(255,255,255,.1); border:1px solid rgba(226,232,240,.18); border-radius:9px; padding:8px; color:#e2e8f0; font-size:10px; font-weight:900; line-height:1.25; text-align:center; }
     .proof-status-chip.ready { background:rgba(20,184,166,.18); border-color:rgba(94,234,212,.38); color:#ccfbf1; }
+    @media (max-width:720px){ .proof-command-grid{grid-template-columns:1fr 1fr;} }
     @media (max-width:560px){ .proof-command-grid,.proof-status-row{grid-template-columns:1fr 1fr;} }
 
     /* Buttons */
@@ -1094,7 +1096,8 @@
         <div class="proof-command-grid">
           <button type="button" class="primary" onclick="startServiceProofWorkflow('part')"><b>1</b><strong>Part or code</strong><span>Photos, labels, issue note, senior/vendor packet.</span></button>
           <button type="button" class="facility" onclick="startServiceProofWorkflow('facility')"><b>2</b><strong>Facility / CPO</strong><span>Daily check, contamination, dose, or escalation flow.</span></button>
-          <button type="button" onclick="startServiceProofWorkflow('visit')"><b>3</b><strong>Regular visit</strong><span>Readings, work note, customer-safe summary, passport save.</span></button>
+          <button type="button" onclick="startServiceProofWorkflow('closing')"><b>3</b><strong>Closing</strong><span>Winterize proof, drain plugs, cover, callback notes.</span></button>
+          <button type="button" onclick="startServiceProofWorkflow('visit')"><b>4</b><strong>Regular visit</strong><span>Readings, work note, customer-safe summary, passport save.</span></button>
         </div>
         <div class="proof-status-row">
           <div class="proof-status-chip ready">Voice notes ready</div>

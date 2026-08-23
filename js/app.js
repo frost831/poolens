@@ -1796,6 +1796,27 @@ function startServiceProofWorkflow(kind = 'visit') {
       `<div class="brain-grid"><button type="button" class="brain-action green" onclick="showTab('scan');setTimeout(()=>setScanMode('parts'),80)">Open PartSnap</button><button type="button" class="brain-action secondary" onclick="createServiceProofShareLink()">Build packet</button></div>`
     );
     focusReportField('rpt-photo-proof');
+  } else if (kind === 'closing') {
+    const proof = window.CLOSING_SEASON_PROOF || {};
+    setReportValueAndNotify('rpt-type', 'Closing / Winterization', { force: true });
+    setReportValueAndNotify('rpt-priority', 'seasonal', { force: true });
+    setReportValueAndNotify('rpt-review-to', 'Customer / owner / spring opening crew', { force: false });
+    setReportValueAndNotify('rpt-work', 'Completed closing-season proof workflow: chemistry recorded, visible equipment checked, winterization proof captured, and follow-up risks documented.', { force: false });
+    setReportValueAndNotify('rpt-photo-proof', `Closing proof needed: ${(proof.proofPhotos || []).join(', ') || 'water level, equipment pad, drain plugs, winter plugs, cover, and unusual conditions.'}`, { force: false });
+    setReportValueAndNotify('rpt-issue-note', `Callback risk check: ${(proof.callbackFlags || []).slice(0, 6).join(', ') || 'missing drain-plug proof, unclear cover proof, hard-freeze forecast, or declined work.'}`, { force: false });
+    setReportValueAndNotify('rpt-customer-summary', 'Pool was closed and documented for the season. Photos and notes show the visible work completed today, open items, and any customer-approved or declined follow-up. This record supports future review but does not replace the exact equipment manual, local code, or qualified judgment.', { force: false });
+    setReportCheck('rpt-proof-summary', true);
+    renderProofWorkflowOutput(
+      'Closing Season Proof Packet',
+      proof.promise || 'Document water level, equipment pad, drain plugs, winter plugs, cover details, and any callback risks before leaving the property.',
+      `<div class="brain-grid">
+        <button type="button" class="brain-action green" onclick="switchClType('closing');showTab('guide')">Open closing checklist</button>
+        <button type="button" class="brain-action secondary" onclick="createServiceProofShareLink()">Build proof packet</button>
+        <button type="button" class="brain-action secondary" onclick="saveReportDraft()">Save closing draft</button>
+      </div>
+      <p style="color:#64748b;font-size:11px;line-height:1.45;margin-top:10px;">${escHtml(proof.trustBoundary || 'Verify exact model manuals, product labels, company policy, local code, and qualified technician judgment before acting.')}</p>`
+    );
+    focusReportField('rpt-photo-proof');
   } else {
     setReportValueAndNotify('rpt-type', 'Regular Service', { force: false });
     setReportValueAndNotify('rpt-priority', 'today', { force: false });
