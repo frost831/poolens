@@ -1,1 +1,1 @@
-pool tech,PartSnap,parts,codes,pump,heater,salt,robot,proof,dosing,CPO,spa
+pool tech,PartSnap,parts,codes,pump,heater,salt,robot,proof,dosing,CPO,spa,swim,hot tub

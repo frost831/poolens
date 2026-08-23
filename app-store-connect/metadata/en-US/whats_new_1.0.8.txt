@@ -1,0 +1,1 @@
+Adds Field Learning OS, stronger PartSnap proof prompts, Facility Assist workflows, Service Proof records, quick scan feedback, and cleaner field packets for senior-tech or vendor review. SplashLens remains a reference aid and does not replace manuals, codes, certification, manufacturer guidance, or qualified judgment.

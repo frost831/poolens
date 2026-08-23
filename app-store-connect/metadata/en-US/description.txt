@@ -1,19 +1,17 @@
-SplashLens Field Tools is a proof-first pool and spa service app for technicians, CPOs, and facility operators who need PartSnap pool parts ID, fast equipment troubleshooting lookup, connected-pool field guidance, chemical dosing math, route notes, and Service Proof Passport records.
+SplashLens Field Tools is a free-core field reference app for pool and spa technicians, CPOs, and facility operators who need to move faster without guessing.
 
 Use SplashLens to:
 
-- Search 230+ pool equipment, automation, lighting, robot, cover, sanitizer, and controller troubleshooting entries
-- Use PartSnap to photograph unknown pool parts and receive possible manufacturer/model/part-number clues with verification prompts
-- Send quick in-app feedback after PartSnap or scan results so wrong or missing references can be reviewed
-- Review PartSnap Callback Risk Score, missing proof, Service Proof Passport saves, Mystery Part ticket IDs, and Apprentice Mode prompts
-- Build cleaner field packets for senior tech review, vendor support, or CRM notes
-- Capture Service Proof Passport history with readings, photos, voice notes, customer-safe summaries, and next-visit context
-- Use Facility Assist for daily checks, contamination events, basic equipment proof, and escalation packets
-- Calculate common chemical dosing adjustments
-- Build service notes, Route Brain field plans, Field Intelligence profiles, escalation packets, and report-style field records
-- Check filter guides, pump/filter checklists, and manual reference tools
-- Use optional online AI scan assistance for equipment displays, pool parts, and test strips
+- Search pool equipment, automation, lighting, robot, cover, sanitizer, heater, pump, spa, and controller reference entries
+- Use PartSnap to photograph an unknown part and see possible part-family clues plus the proof still needed before ordering
+- Look up common pool and spa error-code paths with cautious verification notes
+- Build cleaner proof packets for a senior tech, vendor, counter person, or customer note
+- Save service history with readings, photos, voice notes, customer-safe summaries, and next-visit context
+- Use Facility Assist for daily checks, contamination events, basic equipment proof, and escalation records
+- Run chemical dosing math and field checklists from a phone
+- Capture closing-season and winterizing proof so callbacks and missed details are easier to review
+- Use optional online scanner assistance for equipment displays, pool parts, and test strips
 
-Manual lookup, Route Brain planning, calculators, notes, filters, and checklists are designed for field use and can work from the app shell after first load. Online AI scan features require internet access and are assistance only. Always verify AI scan output and Route Brain guidance against equipment manuals, calibrated tests, label directions, and professional field judgment.
+Manual lookup, calculators, notes, filters, and checklists are designed for field use and can work from the app shell after first load. Online scanner and PartSnap features require internet access and are assistance only. Always verify scanner output against equipment manuals, calibrated tests, label directions, model numbers, and professional field judgment.
 
-SplashLens is designed to help techs save time and reduce messy follow-up by documenting the stop more clearly. It does not guarantee diagnosis, repair, chemical safety, manufacturer support, part fit, CRM sync, or training certification.
+SplashLens is designed to help techs save time and reduce messy follow-up by documenting the stop more clearly. It does not guarantee diagnosis, repair, chemical safety, manufacturer support, part fit, CRM sync, warranty approval, code compliance, or training certification.
