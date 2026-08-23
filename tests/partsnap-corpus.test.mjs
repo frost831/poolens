@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 
 import {
@@ -67,4 +68,9 @@ test('reports corpus health without exposing secrets', () => {
   assert.equal(snapshot.stats.seedFamilyCount, partsnapCorpusStats.seedFamilyCount);
   assert.ok(snapshot.stats.targetFamilyCount >= 500000);
   assert.ok(snapshot.sources.every((source) => source.url && !/secret|key|token/i.test(JSON.stringify(source))));
+});
+
+test('corpus health alias is an API route, not an app-shell fallback', async () => {
+  const routeSource = await readFile(new URL('../functions/api/partsnap-corpus-health.js', import.meta.url), 'utf8');
+  assert.match(routeSource, /export\s+\{\s*onRequestGet\s*\}\s+from\s+['"]\.\/partsnap-corpus\.js['"]/);
 });
