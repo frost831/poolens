@@ -1336,7 +1336,7 @@ window.ERROR_DB.spa_hot_tub = {
   color:"#7c3aed",
   categories:{
     "Spa Packs / Controllers": {
-      models:["Balboa BP/VS/GS/GL spa pack","Balboa spaTouch","Balboa TP500/TP600/TP800/TP900 topside","Gecko Y series","Gecko in.ye","Gecko in.yt","Gecko in.xe","Gecko in.touch","Waterway NEO 1100","Waterway NEO 1500","Waterway NEO 2100","Watkins/Hot Spring IQ-style controller","Jacuzzi/Sundance proprietary control","topside control","heater tube","flow switch","pressure switch","temperature sensor","high-limit sensor"],
+      models:["Balboa BP/VS/GS/GL spa pack","Balboa spaTouch","Balboa TP200/TP500/TP600/TP800/TP900 topside","Gecko Y series","Gecko in.ye","Gecko in.yt","Gecko in.xe","Gecko in.touch","Waterway NEO 1100","Waterway NEO 1500","Waterway NEO 2100","Waterway TP74","Viking VS Power System","Nordic Hot Tubs Balboa TP200","Dynasty Spas control","Saratoga / Adirondack control","Watkins/Hot Spring IQ-style controller","Jacuzzi/Sundance proprietary control","Marquis control","topside control","heater tube","flow switch","pressure switch","temperature sensor","high-limit sensor"],
       codes:[
         { code:"SPA-NO-POWER", name:"Spa Has No Power / Dead Topside",
           causes:["Breaker off or tripped","GFCI not reset","Service disconnect off","Pack fuse or transformer fault","Topside cable or controller issue","Line-voltage problem"],
@@ -1382,10 +1382,19 @@ window.ERROR_DB.spa_hot_tub = {
           causes:["Aux keypad locked or disabled","Cable unplugged or wet","Seat-side button failed","Controller setting not assigned","Low-voltage communication fault"],
           fix:["Confirm the main topside works first","Capture auxiliary keypad type, location, and whether one zone or all controls fail","Check owner lockout/settings screens before parts","Look for visible water intrusion or physical damage","Internal keypad wiring and controller testing require qualified service"],
           severity:"medium", callpro:true }
+        ,
+        { code:"SPA-TOPSIDE-LOCK", name:"Topside Locked, Wrong Mode, Or Customer Setting Confusion",
+          causes:["Panel locked by owner or rental staff","Economy/sleep/vacation mode active","Dual temperature range selected","Schedule/filter cycle changed","Auxiliary panel assigned to limited functions"],
+          fix:["Capture the exact panel family before button-combo advice","Record mode, setpoint, temperature range, and filter schedule","Use the current owner manual or dealer route for unlock/navigation steps","Do not call a control board failure until local settings and lock modes are ruled out","Save a customer-safe note explaining what setting was changed or what still needs qualified review"],
+          severity:"low", callpro:false },
+        { code:"SPA-MANUAL-ROUTE", name:"Brand Manual Route Needed Before Parts",
+          causes:["Mid-market spa uses common controls but brand/model year controls fit","Cabinet badge does not reveal pack version","Topside shape reused across multiple packs","Dealer-specific model names","Missing serial or year"],
+          fix:["Capture brand badge, cabinet serial, pack label, topside model, and visible symptom","Search by brand + model + year before ordering parts","Use official owner/manual pages for Nordic, Viking, Dynasty, Saratoga/Adirondack, Jacuzzi, Hot Spring/Caldera, and Marquis routes","Treat PartSnap as possible-family proof only until the current manual or parts diagram confirms fit","Send the proof packet to a senior tech, dealer, or vendor before buying"],
+          severity:"medium", callpro:false }
       ]
     },
     "Spa Plumbing / Jets / Pumps": {
-      models:["hot tub plumbing","swim spa plumbing","Master Spas H2X","Endless Pools fitness system","Hydropool swim spa","PDC TruSwim / Summit","Artesian TidalFit","Bullfrog spa","Jacuzzi spa","Sundance spa","Hot Spring / Caldera","Marquis","Coast Spas","Arctic Spas","Wellis","jet pump","swim current pump","circulation pump","pump capacitor","jet body","air control","blower","diverter valve","manifold","slice valve","suction fitting","VGB suction cover","spa filter cartridge"],
+      models:["hot tub plumbing","swim spa plumbing","Master Spas H2X","Endless Pools fitness system","Hydropool swim spa","PDC TruSwim / Summit","Artesian TidalFit","Bullfrog spa","Jacuzzi spa","Sundance spa","Hot Spring / Caldera","Marquis","Coast Spas","Arctic Spas","Wellis","Nordic Hot Tubs","Viking Spas","Dynasty Spas","Saratoga Spas","Adirondack Spas","Freeflow Spas","Fantasy Spas","jet pump","swim current pump","circulation pump","pump capacitor","jet body","air control","blower","diverter valve","manifold","slice valve","suction fitting","VGB suction cover","spa filter cartridge","weir door","standpipe","drain valve","cabinet leak"],
       codes:[
         { code:"SPA-JET-LOW-FLOW", name:"Spa Jets Weak Or Uneven",
           causes:["Filter dirty","Air control closed or leaking","Jet insert clogged","Pump air lock","Slice valve partly closed"],
@@ -1415,6 +1424,14 @@ window.ERROR_DB.spa_hot_tub = {
           causes:["Filter past service life","Pump suction too high for dirty cartridge","Wrong filter size","Chemical damage to media","Bypass/standpipe issue"],
           fix:["Replace damaged cartridges rather than cleaning them again","Verify exact filter dimensions and part number","Check whether issue improves with filter removed only as a short diagnostic","Document pump speed/flow mode and filter proof","Review water chemistry if cartridges are failing early"],
           severity:"medium", callpro:false },
+        { code:"SPA-FILTER-UNKNOWN", name:"Unknown Spa Filter Cartridge / Wrong Cartridge Risk",
+          causes:["Label washed off cartridge","Aftermarket cartridge installed","Wrong length or thread style","Bypass/standpipe mismatch","Brand/model unknown to customer"],
+          fix:["Capture cartridge length, outside diameter, inside diameter, end-cap style, thread/handle style, and any molded numbers","Photograph the filter bay, weir/skimmer area, and spa model label","Do not order by brand name alone; match dimensions and current cross-reference","If flow improves only with the filter removed, record that as proof but do not leave the spa running unfiltered","Save the proof packet for the counter or vendor before buying"],
+          severity:"medium", callpro:false },
+        { code:"SPA-LEAK-CABINET", name:"Spa Cabinet Wet / Leak Location Unknown",
+          causes:["Pump seal or union leak","Heater tube gasket","Slice valve or drain valve leak","Jet body/manifold seep","Condensation or splash misread as leak","Freeze damage or cracked plumbing"],
+          fix:["Mark water level and document drop over time before tearing into panels","Capture wide cabinet photo, wet area, equipment labels, and whether leak appears only while pumps run","Separate splash/condensation from active dripping","Do not pressure-test or disassemble plumbing beyond training and access boundaries","Escalate freeze cracks, electrical-adjacent leaks, or commercial/public spa leaks to qualified service"],
+          severity:"high", callpro:true },
         { code:"SPA-SUCTION-VGB", name:"Suction Cover / Intake Restriction Concern",
           causes:["Debris on suction cover","Cracked or missing cover","Wrong replacement cover","Hair/string at intake","Pump pulling from one restricted suction"],
           fix:["Stop operation if a suction cover is cracked, missing, or unsecured","Photograph cover model/marking and installation condition","Clear visible debris only when pump is off","Verify replacement cover rating and fit against current documentation","Treat commercial/public spa suction issues as qualified safety work"],
@@ -1482,6 +1499,10 @@ window.ERROR_DB.spa_hot_tub = {
           fix:["Capture water readings, usage context, and last drain/purge date","Use a purge-drain-refill-reset workflow when chemistry is unrecoverable","Check filters and sanitizer delivery before reopening","Keep customer-safe notes focused on operation and safety, not blame","Follow local code and operator rules for public/commercial spas"],
           severity:"high", callpro:true }
         ,
+        { code:"SPA-WINTERIZE-FREEZE", name:"Spa Winterizing / Freeze-Protection Proof Needed",
+          causes:["Seasonal shutdown requested","Power or heat unreliable during freezing weather","Vacation home or rental not monitored","Cover or cabinet insulation compromised","Unknown drain/blowout history","Freeze event already occurred"],
+          fix:["Document whether the spa is staying heated/monitored or being fully winterized","Capture water level, drain status, pump/heater/pack labels, cover condition, cabinet condition, and customer approval","Use the exact owner manual, company policy, local climate practice, and qualified judgment for winterizing procedure","Do not guarantee freeze protection or insurance coverage","Save a spring-opening note with plugs, drain points, unusual risks, and any declined work"],
+          severity:"high", callpro:true },
         { code:"PLUNGE-ALLIN-PROOF", name:"Connected Cold Plunge Cooling, Flow, Or App Alert",
           causes:["Filter or circulation path restricted","Ozone or sanitation maintenance is overdue","Temperature, pressure, or flow sensor alert","Wi-Fi connection weak or app data stale","Setpoint, schedule, or ambient conditions changed"],
           fix:["Verify actual water temperature with a reliable thermometer before assuming a cooling fault","Capture setpoint, app alert, filter condition, circulation, ozone status, and maintenance reminder","Confirm local controls work before troubleshooting Wi-Fi or cloud status","Check visible flow and filter condition without opening energized equipment","Use current Plunge documentation or qualified service for refrigeration, sensor, electrical, or internal sanitation work"],

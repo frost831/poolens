@@ -1,9 +1,9 @@
 {
   "ok": true,
-  "generatedAt": "2026-07-18T17:23:56.175Z",
+  "generatedAt": "2026-08-23T04:36:01.593Z",
   "stats": {
     "version": "seed-plus-imports-2026-07-18",
-    "seedFamilyCount": 41,
+    "seedFamilyCount": 45,
     "targetFamilyCount": 500000,
     "categories": [
       "automation",
@@ -21,14 +21,14 @@
     "byCategory": [
       {
         "name": "spa",
-        "count": 10
-      },
-      {
-        "name": "heater",
-        "count": 5
+        "count": 13
       },
       {
         "name": "pump",
+        "count": 6
+      },
+      {
+        "name": "heater",
         "count": 5
       },
       {
@@ -58,16 +58,16 @@
     ],
     "byManufacturer": [
       {
+        "name": "multi-brand",
+        "count": 11
+      },
+      {
         "name": "Hayward",
         "count": 9
       },
       {
-        "name": "multi-brand",
-        "count": 8
-      },
-      {
         "name": "Pentair",
-        "count": 8
+        "count": 9
       },
       {
         "name": "Jandy",
@@ -101,11 +101,15 @@
     "bySourceTier": [
       {
         "name": "tier_1",
-        "count": 41
+        "count": 42
+      },
+      {
+        "name": "tier_Infinity",
+        "count": 3
       }
     ]
   },
-  "sourceCount": 15,
+  "sourceCount": 18,
   "sources": [
     {
       "id": "balboa-user-guides",
@@ -166,6 +170,24 @@
       "tier": 1,
       "label": "Pentair 2025-2026 product catalog",
       "url": "https://www.pentair.com/en-us/pool-spa/products/catalog.html"
+    },
+    {
+      "id": "pentair-intelliflo3-vsf-install-guide",
+      "tier": 1,
+      "label": "Pentair IntelliFlo3 VSF and IntelliPro3 VSF installation and maintenance guide",
+      "url": "https://www.pentair.com/content/dam/extranet/nam/pentair-pool/residential/pumps/intelliflo3-vsf/manuals/install-guide/intelliflo3-pro3-vsf-install-guide.pdf"
+    },
+    {
+      "id": "pentair-intelliflo3-vsf-product",
+      "tier": 1,
+      "label": "Pentair official IntelliFlo3 VSF product page",
+      "url": "https://www.pentair.com/en-us/pool-spa/products/pumps/intelliflo3-vsf-pool-pump.html"
+    },
+    {
+      "id": "pentair-poolbrain-integration",
+      "tier": 1,
+      "label": "Pentair official IntelliFlo3 and Pool Brain integration education page",
+      "url": "https://www.pentair.com/en-us/pool-spa/education-support/professional-support/pool-and-spa-education/if3-vsf-and-pool-brain.html"
     },
     {
       "id": "pentair-replacement-parts",

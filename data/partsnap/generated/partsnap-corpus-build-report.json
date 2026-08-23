@@ -1,6 +1,6 @@
 {
   "ok": true,
-  "generatedAt": "2026-08-19T15:08:06.499Z",
+  "generatedAt": "2026-08-23T04:35:53.370Z",
   "importDir": "data/partsnap/imports",
   "importFiles": [
     "data/partsnap/imports/approved-field-promotions.json",
@@ -8,12 +8,12 @@
   ],
   "runtimePath": "functions/_shared/partsnap-generated-families.mjs",
   "importFileCount": 2,
-  "importedFamilyCount": 20,
+  "importedFamilyCount": 23,
   "coverage": {
     "byCategory": [
       {
         "name": "spa",
-        "count": 5
+        "count": 8
       },
       {
         "name": "lighting",
@@ -50,6 +50,10 @@
     ],
     "byManufacturer": [
       {
+        "name": "multi-brand",
+        "count": 5
+      },
+      {
         "name": "Pentair",
         "count": 5
       },
@@ -60,10 +64,6 @@
       {
         "name": "Jandy",
         "count": 4
-      },
-      {
-        "name": "multi-brand",
-        "count": 2
       },
       {
         "name": "Balboa",

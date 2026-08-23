@@ -241,6 +241,76 @@
       "notes": "Use for swim-spa and hot-tub family proof prompts."
     },
     {
+      "id": "nordic-hot-tubs-manuals",
+      "tier": 1,
+      "brand_scope": ["Nordic Hot Tubs", "Nordic Spas", "Balboa TP200"],
+      "url": "https://www.nordichottubs.com/download-owners-manuals/",
+      "source_type": "official owner manuals and control-panel guides",
+      "priority_categories": ["spas", "topsides", "filters", "covers", "startup", "maintenance"],
+      "ingestion_status": "source_identified",
+      "notes": "Use for Nordic model-family proof prompts and Balboa TP200 control context. Do not infer electrical repairs."
+    },
+    {
+      "id": "viking-spas-manuals",
+      "tier": 1,
+      "brand_scope": ["Viking Spas", "VS Power System", "SpaTouch"],
+      "url": "https://vikingspas.com/resources/owners-manuals-guides/",
+      "source_type": "official owner manuals and topside control guides",
+      "priority_categories": ["spas", "topsides", "controls", "filters", "startup", "maintenance"],
+      "ingestion_status": "source_identified",
+      "notes": "Use for Viking owner-guide route, VS Power System language, and SpaTouch proof prompts."
+    },
+    {
+      "id": "dynasty-spas-owners-hub",
+      "tier": 1,
+      "brand_scope": ["Dynasty Spas", "topsides", "filters", "covers", "winterizing"],
+      "url": "https://www.dynastyspas.com/owners-hub",
+      "source_type": "official owner hub",
+      "priority_categories": ["spas", "troubleshooting guides", "filter maintenance", "draining", "winterizing", "covers"],
+      "ingestion_status": "source_identified",
+      "notes": "Use for proof prompts around owner-manual route, filters, draining, winterizing, and cover maintenance."
+    },
+    {
+      "id": "saratoga-spas-manuals",
+      "tier": 1,
+      "brand_scope": ["Saratoga Spas", "Adirondack Spas", "Waterway NEO", "TP74"],
+      "url": "https://www.saratogaspas.com/support/owners-manuals.html",
+      "source_type": "official owner manuals and control references",
+      "priority_categories": ["spas", "controls", "covers", "operation", "owner manuals"],
+      "ingestion_status": "source_identified",
+      "notes": "Use for Saratoga/Adirondack proof prompts and Waterway NEO/TP74 control-reference routes."
+    },
+    {
+      "id": "hot-spring-manuals",
+      "tier": 1,
+      "brand_scope": ["Hot Spring", "Caldera", "Hot Spot", "FreshWater Salt"],
+      "url": "https://www.hotspring.com/owners/manuals-and-resources",
+      "source_type": "official owner manuals and resources",
+      "priority_categories": ["spas", "salt systems", "covers", "water care", "owner manuals"],
+      "ingestion_status": "source_identified",
+      "notes": "Use for Hot Spring/Watkins-style owner-resource routes and salt/mineral proof prompts."
+    },
+    {
+      "id": "jacuzzi-manuals",
+      "tier": 1,
+      "brand_scope": ["Jacuzzi", "J-200", "J-300", "J-LX", "parts catalog"],
+      "url": "https://www.jacuzzi.com/en-us/resources/manuals-and-user-guides.html",
+      "source_type": "official manuals, user guides, and parts catalogs",
+      "priority_categories": ["spas", "topsides", "parts catalogs", "covers", "operation"],
+      "ingestion_status": "source_identified",
+      "notes": "Use for Jacuzzi collection and parts-catalog proof prompts; final fit still requires current diagrams and qualified verification."
+    },
+    {
+      "id": "marquis-manuals",
+      "tier": 1,
+      "brand_scope": ["Marquis", "Crown", "Vector21", "Celebrity", "swim spas"],
+      "url": "https://www.marquisspas.com/support/manuals-and-downloads/",
+      "source_type": "official manuals and downloads",
+      "priority_categories": ["spas", "swim spas", "installation", "maintenance", "covers"],
+      "ingestion_status": "source_identified",
+      "notes": "Use for Marquis manuals and swim-spa support routes. Keep source language as manual-route proof, not repair instructions."
+    },
+    {
       "id": "partsnap-field-feedback",
       "tier": 4,
       "brand_scope": ["user-submitted"],

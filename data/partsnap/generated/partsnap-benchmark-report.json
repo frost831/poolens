@@ -1,9 +1,9 @@
 {
   "ok": true,
-  "generatedAt": "2026-07-18T17:23:56.233Z",
+  "generatedAt": "2026-08-23T04:36:07.191Z",
   "benchmarkPath": "data/partsnap/benchmarks/seed-benchmark.json",
-  "caseCount": 6,
-  "passed": 6,
+  "caseCount": 9,
+  "passed": 9,
   "failed": 0,
   "familyTop1Percent": 100,
   "caveat": "This is a tiny engineering benchmark for regression protection. Do not publish as product accuracy.",
@@ -51,6 +51,33 @@
       "pass": true,
       "corpusStatus": "source-backed candidates",
       "candidateCount": 4,
+      "topMatchLevel": "source-backed family"
+    },
+    {
+      "id": "bench-viking-topside-manual-proof",
+      "expectedTopFamily": "midmarket-spa-owner-manual-proof",
+      "actualTopFamily": "midmarket-spa-owner-manual-proof",
+      "pass": true,
+      "corpusStatus": "source-backed candidates",
+      "candidateCount": 4,
+      "topMatchLevel": "source-backed family"
+    },
+    {
+      "id": "bench-jacuzzi-freshwater-salt-proof",
+      "expectedTopFamily": "jacuzzi-hot-spring-marquis-proof",
+      "actualTopFamily": "jacuzzi-hot-spring-marquis-proof",
+      "pass": true,
+      "corpusStatus": "source-backed candidates",
+      "candidateCount": 2,
+      "topMatchLevel": "source-backed family"
+    },
+    {
+      "id": "bench-spa-filter-leak-proof",
+      "expectedTopFamily": "spa-filter-leak-winter-proof",
+      "actualTopFamily": "spa-filter-leak-winter-proof",
+      "pass": true,
+      "corpusStatus": "source-backed candidates",
+      "candidateCount": 1,
       "topMatchLevel": "source-backed family"
     },
     {

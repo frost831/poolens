@@ -68,6 +68,45 @@
       "expectedTopFamily": "balboa-spatouch-topside"
     },
     {
+      "id": "bench-viking-topside-manual-proof",
+      "aiResult": {
+        "manufacturer": "Viking Spas",
+        "category": "spa",
+        "component": "VS Power System topside manual proof",
+        "model": "VS Power System",
+        "visibleEvidence": ["Viking badge", "topside display"],
+        "missingProof": ["cabinet serial label", "manual year"],
+        "searchTerms": ["Viking Spas VS Power System topside manual"]
+      },
+      "expectedTopFamily": "midmarket-spa-owner-manual-proof"
+    },
+    {
+      "id": "bench-jacuzzi-freshwater-salt-proof",
+      "aiResult": {
+        "manufacturer": "Jacuzzi",
+        "category": "spa",
+        "component": "Jacuzzi collection salt cartridge and manual route",
+        "model": "J-300",
+        "visibleEvidence": ["Jacuzzi badge", "collection label"],
+        "missingProof": ["year", "parts catalog verification"],
+        "searchTerms": ["Jacuzzi J-300 owner manual parts catalog"]
+      },
+      "expectedTopFamily": "jacuzzi-hot-spring-marquis-proof"
+    },
+    {
+      "id": "bench-spa-filter-leak-proof",
+      "aiResult": {
+        "manufacturer": null,
+        "category": "spa",
+        "component": "hot tub filter cartridge and wet cabinet leak proof",
+        "model": "",
+        "visibleEvidence": ["filter cartridge", "wet cabinet floor"],
+        "missingProof": ["filter number", "leak location"],
+        "searchTerms": ["hot tub filter cartridge cabinet leak"]
+      },
+      "expectedTopFamily": "spa-filter-leak-winter-proof"
+    },
+    {
       "id": "bench-ai-only-unknown",
       "aiResult": {
         "manufacturer": null,

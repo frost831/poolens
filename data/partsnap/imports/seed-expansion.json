@@ -242,6 +242,42 @@
       "visualClues": ["air blower", "air control knob", "diverter valve", "jet insert", "manifold plumbing"],
       "requiredProof": ["which jet bank is weak", "blower/model label", "diverter position", "filter/water level", "pump role"],
       "lookalikeWarnings": ["Weak jets can be water level, filter, airlock, pump, diverter, manifold, or jet insert."]
+    },
+    {
+      "id": "midmarket-spa-owner-manual-proof",
+      "sourceIds": ["nordic-hot-tubs-manuals", "viking-spas-manuals", "dynasty-spas-owners-hub", "saratoga-spas-manuals"],
+      "manufacturer": "multi-brand",
+      "category": "spa",
+      "component": "Nordic, Viking, Dynasty, Saratoga, and Adirondack owner-manual proof family",
+      "modelFamilies": ["Nordic Hot Tubs", "Viking Spas", "Dynasty Spas", "Saratoga Spas", "Adirondack Spas", "VS Power System", "TP74", "Balboa TP200"],
+      "aliases": ["nordic spa", "viking spa", "dynasty spa", "saratoga spa", "adirondack spa", "owners manual", "topside guide", "waterway neo"],
+      "visualClues": ["brand badge", "owner manual collection", "topside display", "pack label", "filter bay", "cover label"],
+      "requiredProof": ["brand/model badge", "serial or cabinet label", "topside/control family", "manual year", "symptom and maintenance history"],
+      "lookalikeWarnings": ["Mid-market spa shells may use common Balboa, Gecko, or Waterway controls, but model year and pack label still control fit."]
+    },
+    {
+      "id": "jacuzzi-hot-spring-marquis-proof",
+      "sourceIds": ["jacuzzi-manuals", "hot-spring-manuals", "marquis-manuals"],
+      "manufacturer": "multi-brand",
+      "category": "spa",
+      "component": "Jacuzzi, Hot Spring, Caldera, and Marquis collection/manual proof family",
+      "modelFamilies": ["Jacuzzi J-200", "Jacuzzi J-300", "Jacuzzi J-LX", "Hot Spring Highlife", "Hot Spring Limelight", "Hot Spot", "Caldera", "Marquis Crown", "Marquis Vector21", "Celebrity"],
+      "aliases": ["jacuzzi hot tub", "hot spring spa", "caldera spa", "marquis spa", "freshwater salt", "parts catalog", "owner resources"],
+      "visualClues": ["collection badge", "control panel", "salt/mineral cartridge", "cover label", "cabinet serial label"],
+      "requiredProof": ["collection/model", "year/manual route", "topside code", "water-care system", "dealer or current parts diagram verification"],
+      "lookalikeWarnings": ["Brand family does not prove part fit; collection, year, serial, and current parts catalog/manual route matter."]
+    },
+    {
+      "id": "spa-filter-leak-winter-proof",
+      "sourceIds": ["dynasty-spas-owners-hub", "saratoga-spas-manuals", "nordic-hot-tubs-manuals", "viking-spas-manuals"],
+      "manufacturer": "multi-brand",
+      "category": "spa",
+      "component": "spa filter cartridge, cabinet leak, winterizing, and rental-reset proof family",
+      "modelFamilies": ["filter cartridge", "standpipe", "weir door", "cabinet leak", "slice valve", "drain valve", "winterizing", "vacation rental reset"],
+      "aliases": ["spa filter", "filter collapse", "hot tub leak", "cabinet wet", "winterize spa", "vacation rental spa", "drain refill", "cover maintenance"],
+      "visualClues": ["filter number", "wet cabinet floor", "drain valve", "standing water", "cover seam", "guest turnover log"],
+      "requiredProof": ["filter dimensions and number", "leak location photo", "water level trend", "drain/winterize history", "cover condition", "chemical readings"],
+      "lookalikeWarnings": ["Leaks, filter collapse, and winter reset calls often look like part failures until maintenance history and proof are captured."]
     }
   ]
 }
