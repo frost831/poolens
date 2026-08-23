@@ -24,6 +24,31 @@ test('closing workflow creates a proof packet path with source-boundary language
   assert.match(app, /does not replace the exact equipment manual, local code, or qualified judgment/);
 });
 
+test('closing season deep links open the intended report and checklist workflows', () => {
+  const app = read('js/app.js');
+  const site = read('../poolens-site/closing-season.html');
+  assert.match(site, /https:\/\/app\.splashlens\.com\/\?tab=report[^"]*workflow=closing/);
+  assert.match(app, /const workflow = params\.get\('workflow'\)/);
+  assert.match(app, /tab === 'report' && workflow === 'closing'/);
+  assert.match(app, /startServiceProofWorkflow\('closing'\)/);
+  assert.match(app, /const checklist = params\.get\('checklist'\)/);
+  assert.match(app, /tab === 'guide' && checklist === 'closing'/);
+  assert.match(app, /switchClType\('closing'\)/);
+  assert.match(app, /const hasDirectToolIntent = \(/);
+  assert.match(app, /params\.has\('workflow'\)/);
+  assert.match(app, /params\.has\('checklist'\)/);
+  assert.match(app, /hideRolePicker\(\)/);
+});
+
+test('spa campaign deep links can open the app directly into search results', () => {
+  const app = read('js/app.js');
+  const html = read('index.html');
+  assert.match(app, /tab === 'errors' && params\.has\('search'\)/);
+  assert.match(app, /focusErrorSearch\(params\.get\('search'\) \|\| ''\)/);
+  assert.match(html, /focusErrorSearch\('spa'\)/);
+  assert.match(html, /focusErrorSearch\('swim spa'\)/);
+});
+
 test('closing checklist is proof-first and avoids insurance guarantee language', () => {
   const data = read('js/data.js');
   assert.match(data, /window\.CLOSING_SEASON_PROOF/);

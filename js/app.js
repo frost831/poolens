@@ -674,6 +674,8 @@ function initDeepLink() {
   const params = new URLSearchParams(window.location.search);
   const tab = params.get('tab');
   const mode = params.get('mode');
+  const workflow = params.get('workflow');
+  const checklist = params.get('checklist');
   const allowed = new Set(['errors', 'dosing', 'report', 'guide', 'pools', 'scan', 'volume', 'sand', 'route']);
   if (mode === 'facility') {
     setSplashLensRole('facility', { persist: false, forced: true });
@@ -685,6 +687,15 @@ function initDeepLink() {
   if (tab && allowed.has(tab)) {
     showTab(tab);
     if (tab === 'scan' && mode) setTimeout(() => setScanMode(mode), 120);
+    if (tab === 'errors' && params.has('search')) {
+      setTimeout(() => focusErrorSearch(params.get('search') || ''), 120);
+    }
+    if (tab === 'report' && workflow === 'closing') {
+      setTimeout(() => startServiceProofWorkflow('closing'), 120);
+    }
+    if (tab === 'guide' && checklist === 'closing') {
+      setTimeout(() => switchClType('closing'), 120);
+    }
   }
 }
 
@@ -723,6 +734,21 @@ function initSplashLensPersonaMode() {
       showRoleNudge('partsnap_direct');
     }, 120);
     trackSplashLensEvent('partsnap_direct_entry', { role: '', nonblocking_role_prompt: true });
+    return;
+  }
+
+  const hasDirectToolIntent = (
+    params.has('tab') ||
+    params.has('activate_scan') ||
+    params.has('token') ||
+    params.has('session_id') ||
+    params.has('workflow') ||
+    params.has('checklist')
+  );
+  if (hasDirectToolIntent) {
+    revealSplashLensApp();
+    hideRoleNudge();
+    hideRolePicker();
     return;
   }
 
