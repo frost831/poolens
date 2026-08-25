@@ -173,6 +173,72 @@ function entitlementSecret(env) {
   return secret.length >= 32 ? secret : '';
 }
 
+function cleanEntitlementSubject(value) {
+  const subject = String(value || '').trim().toLowerCase().slice(0, 160);
+  if (!subject || !/^[a-z0-9._%+\-:@_]+$/.test(subject)) return '';
+  return subject;
+}
+
+function cleanPlan(value) {
+  return String(value || 'SplashLens Premium').trim().slice(0, 80) || 'SplashLens Premium';
+}
+
+async function loadStoredEntitlement(env, subject) {
+  const cleanSubject = cleanEntitlementSubject(subject);
+  if (!cleanSubject) {
+    return { checked: true, ok: false, status: 401, error: 'Invalid scan entitlement subject.' };
+  }
+
+  if (!env.SCAN_USAGE_KV || typeof env.SCAN_USAGE_KV.get !== 'function') {
+    return { checked: false, ok: true, subject: cleanSubject };
+  }
+
+  const raw = await env.SCAN_USAGE_KV.get(`entitlement:${cleanSubject}`);
+  if (!raw) {
+    return {
+      checked: true,
+      ok: false,
+      status: 402,
+      error: 'No active SplashLens scan entitlement was found. Restore PartSnap Pro from the checkout email.',
+    };
+  }
+
+  let record;
+  try {
+    record = JSON.parse(raw);
+  } catch {
+    return { checked: true, ok: false, status: 500, error: 'Stored scan entitlement could not be read.' };
+  }
+
+  const expiresAt = Date.parse(record.expiresAt || '');
+  if (Number.isFinite(expiresAt) && expiresAt <= Date.now()) {
+    return {
+      checked: true,
+      ok: false,
+      status: 402,
+      error: 'SplashLens scan entitlement has expired. Restore or renew PartSnap Pro.',
+    };
+  }
+
+  if (!scopeAllowed(record.scopes, 'scan')) {
+    return {
+      checked: true,
+      ok: false,
+      status: 403,
+      error: 'Stored SplashLens entitlement does not include scanner access.',
+    };
+  }
+
+  return {
+    checked: true,
+    ok: true,
+    subject: cleanSubject,
+    plan: cleanPlan(record.plan),
+    planKey: String(record.planKey || '').slice(0, 80),
+    feature: String(record.feature || '').slice(0, 80),
+  };
+}
+
 function entitlementTokenFromRequest(request, body) {
   const headerToken = request.headers.get('x-splashlens-entitlement-token')?.trim();
   if (headerToken) return headerToken;
@@ -218,11 +284,25 @@ async function verifyEntitlementToken(request, env, body) {
     return { present: true, ok: false, status: 403, error: 'Scan entitlement does not include scanner access.' };
   }
 
+  const subject = cleanEntitlementSubject(payload.sub);
+  const stored = await loadStoredEntitlement(env, subject);
+  if (stored.checked && !stored.ok) {
+    return {
+      present: true,
+      ok: false,
+      status: stored.status || 401,
+      error: stored.error || 'Scan entitlement is not active.',
+    };
+  }
+
   return {
     present: true,
     ok: true,
-    subject: String(payload.sub).slice(0, 120),
-    plan: String(payload.plan || 'SplashLens Premium').slice(0, 80),
+    subject,
+    plan: stored.plan || cleanPlan(payload.plan),
+    planKey: stored.planKey || String(payload.planKey || '').slice(0, 80),
+    feature: stored.feature || String(payload.feature || '').slice(0, 80),
+    verifiedBy: stored.checked ? 'signed_token_and_kv' : 'signed_token',
   };
 }
 
@@ -316,8 +396,13 @@ async function enforceUsageQuota(request, env, headers, key, limit, source, upgr
         response: json(payload, 429, headers),
       };
     }
-    await env.SCAN_USAGE_KV.put(usageKey, String(current + 1), { expirationTtl: secondsUntilNextMonth() });
-    return { ok: true, usage: { count: current + 1, limit, source } };
+    return {
+      ok: true,
+      usage: { count: current + 1, limit, source },
+      async commit() {
+        await env.SCAN_USAGE_KV.put(usageKey, String(current + 1), { expirationTtl: secondsUntilNextMonth() });
+      },
+    };
   }
 
   const production = isProductionRequest(request, env);
@@ -340,9 +425,14 @@ async function enforceUsageQuota(request, env, headers, key, limit, source, upgr
       response: json({ error: 'Local scan limit reached. Configure SCAN_USAGE_KV for production metering.' }, 429, headers),
     };
   }
-  bucket.count += 1;
-  localScanWindow.set(key, bucket);
-  return { ok: true, usage: { count: bucket.count, limit: LOCAL_FALLBACK_LIMIT, source: 'local' } };
+  return {
+    ok: true,
+    usage: { count: bucket.count + 1, limit: LOCAL_FALLBACK_LIMIT, source: 'local' },
+    async commit() {
+      bucket.count += 1;
+      localScanWindow.set(key, bucket);
+    },
+  };
 }
 
 function storeShellModeFromBody(body) {
@@ -370,7 +460,17 @@ async function enforceScanAccess(request, env, headers, body) {
       '/account',
     );
     if (!quota.ok) return quota;
-    return { ok: true, usage: { ...quota.usage, plan: entitlement.plan } };
+    return {
+      ok: true,
+      usage: {
+        ...quota.usage,
+        plan: entitlement.plan,
+        planKey: entitlement.planKey || '',
+        feature: entitlement.feature || '',
+        verifiedBy: entitlement.verifiedBy || '',
+      },
+      commit: quota.commit,
+    };
   }
 
   if (truthy(env.SCAN_REQUIRE_ENTITLEMENT)) {
@@ -498,6 +598,10 @@ export async function onRequestPost({ request, env }) {
 
     if (mode === 'parts_snap') {
       parsed = attachPartSnapCorpusCandidates(parsed);
+    }
+
+    if (typeof meter.commit === 'function') {
+      await meter.commit();
     }
 
     return json({ ok: true, mode, result: parsed, usage: meter.usage, preferred_language: preferredLanguage }, 200, headers);

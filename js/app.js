@@ -7563,8 +7563,17 @@ function canUseAIScan() {
   return isPartSnapPro() || getScanUsage().count < SCAN_LIMIT_FREE;
 }
 
-function recordAIScan(mode) {
-  if (!isPartSnapPro()) {
+function syncScanUsageFromServer(serverUsage) {
+  if (!serverUsage || serverUsage.source !== 'free_metered') return;
+  const count = Number(serverUsage.count);
+  if (!Number.isFinite(count)) return;
+  saveScanUsage({ month: currentScanMonth(), count: Math.max(0, Math.min(count, SCAN_LIMIT_FREE)) });
+}
+
+function recordAIScan(mode, serverUsage = null) {
+  if (serverUsage && serverUsage.source === 'free_metered') {
+    syncScanUsageFromServer(serverUsage);
+  } else if (!isPartSnapPro()) {
     const usage = getScanUsage();
     usage.count += 1;
     saveScanUsage(usage);
@@ -7870,6 +7879,7 @@ async function callAIScan(canvas, mode, result, status) {
     const entitlementToken = getScanEntitlementToken();
     if (entitlementToken) headers['X-SplashLens-Entitlement-Token'] = entitlementToken;
     const partSnapRecovery = mode === 'parts_snap' ? getPartSnapRecoveryContext() : null;
+    const identity = getSplashLensIdentityProfile();
     const res = await fetch('/api/scan', {
       method:  'POST',
       headers,
@@ -7878,12 +7888,45 @@ async function callAIScan(canvas, mode, result, status) {
         mode,
         clientId: getScanClientId(),
         store_shell: getStoreShellMode() || '',
+        known_email: identity.known_email || '',
+        known_company: identity.known_company || '',
+        known_role: identity.known_role || '',
+        lead_id: identity.lead_id || '',
+        pilot_id: identity.pilot_id || '',
+        participant_id: identity.participant_id || '',
+        identity_source: identity.identity_source || '',
+        identity_confidence: identity.identity_confidence || '',
         partSnapRecovery,
       })),
     });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const { result: aiResult } = await res.json();
-    recordAIScan(mode);
+    const payload = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      if (res.status === 429 && /free scan limit/i.test(payload.error || '')) {
+        syncScanUsageFromServer({ source: 'free_metered', count: payload.limit || SCAN_LIMIT_FREE });
+        trackSplashLensEvent('scan_limit_reached_server', { mode, limit: payload.limit || SCAN_LIMIT_FREE, upgrade: payload.upgrade || '' });
+        showScanLimitModal(result, status);
+        return;
+      }
+      if ([401, 402, 403].includes(res.status) && entitlementToken) {
+        localStorage.removeItem(SCAN_ENTITLEMENT_TOKEN_KEY);
+        localStorage.removeItem(SCAN_ENTITLEMENT_META_KEY);
+        localStorage.removeItem(SCAN_PRO_KEY);
+        updateAIStatusBar();
+        trackSplashLensEvent('scan_entitlement_rejected', { mode, status: res.status, error: payload.error || '' });
+        if (result) {
+          result.innerHTML = `<div style="background:#450a0a;border:1px solid #dc2626;border-radius:12px;padding:18px;text-align:center;">
+            <p style="color:#fecaca;font-size:16px;font-weight:900;margin-bottom:6px;">PartSnap Pro needs restore</p>
+            <p style="color:#fee2e2;font-size:12px;line-height:1.5;margin-bottom:12px;">${escHtml(payload.error || 'Your paid scanner access could not be verified on this device.')}</p>
+            <button onclick="restorePartSnapPro()" style="width:100%;background:#dc2626;color:#fff;border:0;border-radius:10px;padding:11px 8px;font-size:12px;font-weight:900;cursor:pointer;">Restore from checkout email</button>
+          </div>`;
+        }
+        if (status) status.textContent = 'PARTSNAP PRO RESTORE NEEDED';
+        return;
+      }
+      throw new Error(payload.error || `HTTP ${res.status}`);
+    }
+    const { result: aiResult, usage: serverUsage } = payload;
+    recordAIScan(mode, serverUsage);
 
     if (mode === 'parts_snap') {
       renderPartsSnapResult(aiResult, result, status);
