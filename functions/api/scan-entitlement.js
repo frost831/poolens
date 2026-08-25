@@ -125,6 +125,10 @@ export async function onRequestOptions({ request }) {
   return new Response(null, { status: 204, headers: corsHeaders(request) });
 }
 
+export async function onRequestGet({ request }) {
+  return json(request, { ok: false, error: 'Use POST to create a SplashLens scan entitlement.' }, 405);
+}
+
 async function signToken(secret, payload) {
   const payloadPart = base64UrlEncode(textEncoder.encode(JSON.stringify(payload)));
   const signed = `${TOKEN_PREFIX}.${payloadPart}`;
