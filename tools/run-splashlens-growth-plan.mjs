@@ -91,6 +91,26 @@ async function main() {
   const webhook = checkoutData.webhook || {};
   const paymentLinks = checkoutData.paymentLinks || {};
   const classification = classify({ appEvents, siteEvents, appAmp, siteAmp, checkout });
+  const amplitudeReady = Boolean(appAmp.data?.enabled && siteAmp.data?.enabled);
+  const nextSevenDays = amplitudeReady
+    ? [
+        '1. Review Amplitude and the owner dashboard daily for source-to-workflow drop-off.',
+        '2. Pull the protected owner-dashboard KPI snapshot with the stats secret before making paid-channel decisions.',
+        '3. Use `https://splashlens.com/campaign` or `https://splashlens.com/paid-media` for every serious send, not the broad homepage.',
+        '4. Send the CTA as a field challenge: run one real code, part, or equipment family.',
+        '5. Push the first paid ask only after a useful PartSnap/proof moment, not on first page load.',
+        '6. Call any checkout-click-without-checkout-success pattern a copy/pricing/checkout friction issue and inspect the flow.',
+        '7. Make the next homepage/app emphasis follow the highest first-value workflow, not opinion.',
+      ]
+    : [
+        '1. Add the real SplashLens Amplitude API key to both Cloudflare Pages projects.',
+        '2. Rerun `node tools\\check-amplitude-readiness.mjs` until GREEN.',
+        '3. Use `https://splashlens.com/campaign` or `https://splashlens.com/paid-media` for every serious send, not the broad homepage.',
+        '4. Send the CTA as a field challenge: run one real code, part, or equipment family.',
+        '5. Push the first paid ask only after a useful PartSnap/proof moment, not on first page load.',
+        '6. Call any checkout-click-without-checkout-success pattern a copy/pricing/checkout friction issue and inspect the flow.',
+        '7. Make the next homepage/app emphasis follow the highest first-value workflow, not opinion.',
+      ];
 
   const report = [
     '# SplashLens Growth Plan Run',
@@ -145,13 +165,7 @@ async function main() {
     '',
     '## Next Seven Days',
     '',
-    '1. Add the real SplashLens Amplitude API key to both Cloudflare Pages projects.',
-    '2. Rerun `node tools\\check-amplitude-readiness.mjs` until GREEN.',
-    '3. Use `https://splashlens.com/campaign` or `https://splashlens.com/paid-media` for every serious send, not the broad homepage.',
-    '4. Send the CTA as a field challenge: run one real code, part, or equipment family.',
-    '5. Push the first paid ask only after a useful PartSnap/proof moment, not on first page load.',
-    '6. Call any checkout-click-without-checkout-success pattern a copy/pricing/checkout friction issue and inspect the flow.',
-    '7. Make the next homepage/app emphasis follow the highest first-value workflow, not opinion.',
+    ...nextSevenDays,
     '',
     '## Public Site Top Events',
     '',
@@ -159,9 +173,11 @@ async function main() {
     '',
     '## Confidence',
     '',
-    checkoutData.productionReady && appEvents.ok && siteEvents.ok
-      ? 'High for first-party event capture and Stripe readiness. Medium for full behavior analytics until Amplitude key is installed and the protected dashboard is reviewed with the stats secret.'
-      : 'Medium. Fix the broken public probes before interpreting campaign performance.',
+    checkoutData.productionReady && appEvents.ok && siteEvents.ok && amplitudeReady
+      ? 'High for first-party event capture, Stripe readiness, and Amplitude smoke forwarding. Medium for owner-level KPI interpretation until the protected dashboard is reviewed with the stats secret.'
+      : checkoutData.productionReady && appEvents.ok && siteEvents.ok
+        ? 'High for first-party event capture and Stripe readiness. Medium for full behavior analytics until Amplitude key is installed and the protected dashboard is reviewed with the stats secret.'
+        : 'Medium. Fix the broken public probes before interpreting campaign performance.',
     '',
   ].join('\n');
 
