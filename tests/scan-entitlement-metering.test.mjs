@@ -10,7 +10,7 @@ const corpusUrl = `data:text/javascript;base64,${Buffer.from(corpusSource).toStr
 const scanSource = (await readFile(new URL('../functions/api/scan.js', import.meta.url), 'utf8'))
   .replace("from '../_shared/partsnap-corpus.mjs'", `from '${corpusUrl}'`);
 const scanModuleUrl = `data:text/javascript;base64,${Buffer.from(scanSource).toString('base64')}`;
-const { onRequestPost: scanRequestPost } = await import(scanModuleUrl);
+const { onRequestGet: scanRequestGet, onRequestPost: scanRequestPost } = await import(scanModuleUrl);
 
 const TOKEN_PREFIX = 'sl_scan_v1';
 const ENTITLEMENT_SECRET = 'scan-entitlement-test-secret-32-chars';
@@ -201,4 +201,16 @@ test('active paid entitlement uses the entitled monthly quota lane', async () =>
   assert.equal(payload.usage.planKey, 'partsnap_pro_monthly');
   assert.equal(payload.usage.verifiedBy, 'signed_token_and_kv');
   assert.equal(entitledPut?.value, '1');
+});
+
+test('scan API GET returns JSON method boundary instead of app shell fallback', async () => {
+  const response = await scanRequestGet({
+    request: new Request('https://app.splashlens.com/api/scan'),
+    env: {},
+  });
+  const payload = await response.json();
+  assert.equal(response.status, 405);
+  assert.match(response.headers.get('content-type') || '', /application\/json/);
+  assert.equal(payload.route, '/api/scan');
+  assert.deepEqual(payload.allowedMethods, ['POST', 'OPTIONS']);
 });

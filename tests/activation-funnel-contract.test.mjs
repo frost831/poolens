@@ -58,3 +58,13 @@ test('owner dashboard renders the activation target scorecard', () => {
   assert.match(dashboard, /function renderAnalyticsWiring/);
   assert.match(dashboard, /Analytics \+ Payment Wiring/);
 });
+
+test('paid lane language is stable and request-access based', () => {
+  const data = read('../js/data.js');
+  const app = read('../js/app.js');
+  assert.doesNotMatch(data, /pilot target/i);
+  assert.match(data, /\$19\/mo — request access/);
+  assert.match(data, /\$99\/mo — company setup/);
+  assert.match(app, /Request access/);
+  assert.doesNotMatch(app, /Request pilot access/);
+});

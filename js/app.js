@@ -1989,14 +1989,14 @@ function renderVerifiedProofNetwork() {
           ${(plan.includes || []).map(item => `<li>${escHtml(item)}</li>`).join('')}
         </ul>
         <p style="color:#0f766e;font-size:11px;line-height:1.45;font-weight:850;margin-top:6px;"><strong>Trust boundary:</strong> ${escHtml(plan.guardrail || network.trustBoundary || '')}</p>
-        ${plan.planKey && plan.planKey !== 'free_core' ? `<button type="button" class="brain-action green" style="width:100%;margin-top:8px;" onclick="openSplashLensPaidLane('${escHtml(plan.planKey)}','${escHtml(plan.name)}')">${plan.availability === 'self_serve' ? 'Start paid plan' : plan.availability === 'partner' ? 'Request partner discussion' : 'Request pilot access'}</button>` : ''}
+        ${plan.planKey && plan.planKey !== 'free_core' ? `<button type="button" class="brain-action green" style="width:100%;margin-top:8px;" onclick="openSplashLensPaidLane('${escHtml(plan.planKey)}','${escHtml(plan.name)}')">${plan.availability === 'self_serve' ? 'Start paid plan' : plan.availability === 'partner' ? 'Request partner discussion' : 'Request access'}</button>` : ''}
       </div>
     </details>
   `).join('');
   renderProofWorkflowOutput(
     'SplashLens Verified Proof Network',
     network.promise || 'Free lookup first. Paid when the work needs to be saved, shared, reported, or reviewed.',
-    `<div style="margin-top:10px;">${cards}</div><div class="brain-grid" style="margin-top:10px;"><a class="brain-action green" href="mailto:hello@splashlens.com?subject=SplashLens%20Service%20Proof%20Pro%20pilot" onclick="trackSplashLensEvent('upgrade_interest_click',{plan:'service_proof_pro_network'})" style="text-align:center;text-decoration:none;">Proof Pro pilot</a><a class="brain-action secondary" href="mailto:hello@splashlens.com?subject=SplashLens%20Verified%20Proof%20Network" onclick="trackSplashLensEvent('partner_interest_click',{lane:'verified_proof_network'})" style="text-align:center;text-decoration:none;">Talk partner lane</a></div>`
+    `<div style="margin-top:10px;">${cards}</div><div class="brain-grid" style="margin-top:10px;"><a class="brain-action green" href="mailto:hello@splashlens.com?subject=SplashLens%20Service%20Proof%20Pro%20access" onclick="trackSplashLensEvent('upgrade_interest_click',{plan:'service_proof_pro_network'})" style="text-align:center;text-decoration:none;">Request Proof Pro</a><a class="brain-action secondary" href="mailto:hello@splashlens.com?subject=SplashLens%20Verified%20Proof%20Network" onclick="trackSplashLensEvent('partner_interest_click',{lane:'verified_proof_network'})" style="text-align:center;text-decoration:none;">Talk partner lane</a></div>`
   );
   trackSplashLensEvent('verified_proof_network_viewed', { plans: plans.length });
 }

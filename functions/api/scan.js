@@ -617,3 +617,14 @@ export async function onRequestOptions({ request, env }) {
     headers: corsHeaders(request, env)
   });
 }
+
+export async function onRequestGet({ request, env }) {
+  const headers = corsHeaders(request, env);
+  headers.Allow = 'POST, OPTIONS';
+  return json({
+    ok: false,
+    error: 'Use POST with a compressed image payload to run SplashLens scan.',
+    route: '/api/scan',
+    allowedMethods: ['POST', 'OPTIONS'],
+  }, 405, headers);
+}

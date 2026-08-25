@@ -218,7 +218,7 @@ window.SPLASHLENS_MONETIZATION_LANES = {
       name: "Service Proof Pro",
       planKey: "service_proof_pro_monthly",
       availability: "pilot",
-      price: "$19/mo pilot target — request access",
+      price: "$19/mo — request access",
       buyer: "Solo techs who want proof they can find later",
       includes: ["Save each pool's photos, readings, notes, and repair history", "Plain-English summary you can send to the customer", "One-tap packet for a boss, senior tech, or vendor", "Spot repeat issues before they become callbacks"],
       guardrail: "Built for cleaner documentation without becoming a full CRM."
@@ -227,7 +227,7 @@ window.SPLASHLENS_MONETIZATION_LANES = {
       name: "Team / Facility Plans",
       planKey: "team_proof_os_monthly",
       availability: "pilot",
-      price: "$99+/mo pilot target — request access",
+      price: "$99/mo — company setup",
       buyer: "Owners, facilities, CPOs, and training groups",
       includes: ["See what your techs used, searched, and missed", "Reports with your company name on them", "Daily check and incident workflows for CPOs and facilities", "Team-level searched/missed reports"],
       guardrail: "Exports support existing CRMs; SplashLens is not a billing replacement."
@@ -236,7 +236,7 @@ window.SPLASHLENS_MONETIZATION_LANES = {
       name: "Facility / CPO Pilot",
       planKey: "facility_cpo_pilot_monthly",
       availability: "pilot",
-      price: "Included in pilots — request access",
+      price: "Request facility access",
       buyer: "Facilities and training groups",
       includes: ["Daily checks", "Contamination event workflow", "Dose logs", "Escalation packets", "Staff handoff records"],
       guardrail: "Local code, facility policy, and CPO/trainer guidance still control."
