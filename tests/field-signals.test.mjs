@@ -112,6 +112,24 @@ test('current field-signal feed includes conservative IntelliFlo3 connected-pump
   assert.match(signal.guardrail, /live Pentair telemetry/i);
 });
 
+test('current field-signal feed includes conservative Jandy connected-equipment radar', async () => {
+  const feed = JSON.parse(await readFile(new URL('../data/field-signals/current.json', import.meta.url), 'utf8'));
+  const signal = feed.items.find((item) => item.id === 'jandy-insider-connected-equipment-radar-2026');
+
+  assert.ok(signal);
+  assert.equal(signal.status, 'current');
+  assert.equal(signal.notificationEligible, true);
+  assert.match(signal.body, /AquaLink EDGE/);
+  assert.match(signal.body, /Home Hub/);
+  assert.match(signal.body, /app\/cloud status timestamp/i);
+  assert.match(signal.body, /RS-485/i);
+  assert.match(signal.source.url, /jandy\.com/);
+  assert.match(signal.source.secondaryUrl, /jandy\.com/);
+  assert.match(signal.guardrail, /does not diagnose/i);
+  assert.match(signal.guardrail, /live Jandy telemetry/i);
+  assert.match(signal.guardrail, /Fluidra\/Jandy endorsement/i);
+});
+
 test('app, worker, analytics, and native wrapper expose the Field Signals contract', async () => {
   const [html, app, worker, events, swift] = await Promise.all([
     readFile(new URL('../index.html', import.meta.url), 'utf8'),

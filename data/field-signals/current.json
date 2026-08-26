@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-07-28T12:00:00-05:00",
+  "generatedAt": "2026-08-26T12:00:00-05:00",
   "items": [
     {
       "id": "doe-pump-motor-2026",
@@ -62,6 +62,27 @@
         "secondaryUrl": "https://www.pentair.com/en-us/pool-spa/education-support/professional-support/pool-and-spa-education/if3-vsf-and-pool-brain.html"
       },
       "guardrail": "Use this as market and proof intelligence only. It does not diagnose the pump, confirm a repair/replacement decision, imply SplashLens has live Pentair telemetry, or imply any Pool Brain or Pentair endorsement."
+    },
+    {
+      "id": "jandy-insider-connected-equipment-radar-2026",
+      "category": "connected-equipment",
+      "status": "current",
+      "priority": 84,
+      "publishedAt": "2026-08-26",
+      "verifiedAt": "2026-08-26",
+      "equipmentTypes": ["automation", "heater", "lighting", "salt system", "water care", "connected equipment"],
+      "title": "Local-plus-cloud systems need layered proof",
+      "body": "For AquaLink EDGE, Home Hub, iAquaLink, JXiQ, TruClear XL, X-Series AOP, Infinite WaterColors, SpeedSet, or similar connected equipment, capture the equipment label, local panel or Home Hub state, app/cloud status timestamp, network or hotspot state, schedules/scenes affected, connected-device assignments, relay or RS-485 evidence, and manual readings before escalating.",
+      "action": "connected-equipment-proof",
+      "actionLabel": "Capture connected proof",
+      "notificationEligible": true,
+      "jurisdiction": "United States",
+      "source": {
+        "label": "Jandy Insider connected pool equipment articles",
+        "url": "https://www.jandy.com/en/support/insider/insights/edge-computing-meets-pool-automation",
+        "secondaryUrl": "https://www.jandy.com/en/support/insider/insights/meet-the-home-hub-smarter-pool-control-with-aqualink-edge"
+      },
+      "guardrail": "Use this as market and proof intelligence only. It does not diagnose connected equipment, certify compatibility, confirm repair or warranty decisions, imply SplashLens has live Jandy telemetry, or imply Fluidra/Jandy endorsement."
     }
   ]
 }

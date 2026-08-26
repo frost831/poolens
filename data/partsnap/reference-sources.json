@@ -131,6 +131,16 @@
       "notes": "Official page points to genuine Jandy replacement parts. Use for partner/outreach ask and verified cards."
     },
     {
+      "id": "jandy-insider-connected-equipment-radar",
+      "tier": 1,
+      "brand_scope": ["Jandy", "Fluidra", "AquaLink EDGE", "Home Hub", "iAquaLink", "JXiQ", "TruClear XL", "X-Series AOP", "Infinite WaterColors", "SpeedSet"],
+      "url": "https://www.jandy.com/en/support/insider",
+      "source_type": "official connected-equipment insight and product-radar articles",
+      "priority_categories": ["automation", "local control", "app cloud status", "smart heaters", "water care", "lighting", "variable-speed pumps", "service proof"],
+      "ingestion_status": "source_identified",
+      "notes": "Use for source-backed proof prompts around local panel control, Home Hub state, app/cloud timestamps, network or hotspot state, connected-device assignments, smart heater status, water-care readings, lighting zones, and pump decision context. Do not imply SplashLens has live Jandy telemetry, diagnoses systems, certifies fit, or has Fluidra/Jandy endorsement."
+    },
+    {
       "id": "zodiac-genuine-parts",
       "tier": 1,
       "brand_scope": ["Zodiac", "Polaris", "Baracuda", "Nature2", "Fluidra"],

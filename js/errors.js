@@ -1155,7 +1155,7 @@ Object.assign(window.ERROR_DB.jandy.categories, {
     ]
   },
   "Automation - AquaLink RS / iAquaLink": {
-    models:["AquaLink RS","AquaLink PDA","iAquaLink 2.0","iAquaLink 3.0","AquaPure integration"],
+    models:["AquaLink RS","AquaLink PDA","AquaLink EDGE","AquaLink EDGE Home Hub","iAquaLink 2.0","iAquaLink 3.0","Fluidra Pool app","AquaPure integration"],
     codes:[
       { code:"WAITING-CONNECTION", name:"iAquaLink Waiting For Connection",
         causes:["Wi-Fi/Ethernet connection lost","Device registration issue","Router changed SSID/password","Weak signal at equipment pad"],
@@ -1172,6 +1172,10 @@ Object.assign(window.ERROR_DB.jandy.categories, {
       { code:"ACTUATOR-STUCK", name:"Jandy Valve Actuator Stuck",
         causes:["Toggle switch off","Limit cam misadjusted","Actuator motor failed","Valve diverter seized"],
         fix:["Check actuator toggle switch and command from service panel","Remove actuator and turn valve manually","Inspect cams/limit switches and wiring","Replace actuator if motor does not run with confirmed 24VAC"],
+        severity:"medium", callpro:false },
+      { code:"AQUALINK-EDGE-LOCAL-CLOUD", name:"AquaLink EDGE Local vs Cloud Control Check",
+        causes:["App/cloud status differs from local panel","Wi-Fi, backup network, or hotspot path changed","Home Hub or in-can display works while app status is stale","Schedule, scene, profile, or access-level confusion","Relay, RS-485, or connected-device assignment not documented"],
+        fix:["Confirm local control at the in-can display or Home Hub before treating the controller or equipment as failed","Capture app/cloud status with timestamp plus local screen proof","Document primary Wi-Fi, backup network, or tech hotspot state if visible","Photograph connected-device assignments, relay labels, RS-485 wiring, and the affected equipment plate before changes","Escalate with a proof packet before replacing a controller, radio, board, router, pump, heater, light, or actuator"],
         severity:"medium", callpro:false }
     ]
   }
@@ -1254,11 +1258,15 @@ window.ERROR_DB.connected_pool_brain = {
   color:"#2563eb",
   categories:{
     "Automation / Smart Backyard": {
-      models:["Pentair IntelliCenter","Pentair EasyTouch","Hayward OmniLogic","Hayward OmniPL","Jandy AquaLink RS","iAquaLink","Zodiac iAquaLink","CCEI Vigipool","CCEI Tild VP","CCEI Antea VS","RS-485 pumps","Smart heaters","Valve actuators","App-connected lighting"],
+      models:["Pentair IntelliCenter","Pentair EasyTouch","Hayward OmniLogic","Hayward OmniPL","Jandy AquaLink RS","Jandy AquaLink EDGE","AquaLink EDGE Home Hub","iAquaLink","Fluidra Pool app","Zodiac iAquaLink","Jandy JXiQ","Jandy TruClear XL","Jandy Infinite WaterColors","CCEI Vigipool","CCEI Tild VP","CCEI Antea VS","RS-485 pumps","Smart heaters","Valve actuators","App-connected lighting"],
       codes:[
         { code:"SMART-OFFLINE", name:"Pool App Shows System Offline",
           causes:["Wi-Fi/Ethernet lost at equipment pad","Router credentials changed","Controller cloud service/account issue","Controller needs reboot","Weak outdoor signal"],
           fix:["Confirm local control at the panel first","Check Ethernet/Wi-Fi signal and router changes","Power cycle controller using normal shutdown before breaker cycle","Wait several minutes before judging cloud reconnection","Capture app screen and controller network page before vendor escalation"],
+          severity:"medium", callpro:false },
+        { code:"LOCAL-CLOUD-MISMATCH", name:"Local Control Works But App / Cloud Does Not",
+          causes:["Local controller, Home Hub, or service panel can run equipment but app status is stale","Cloud or account route is unavailable","Primary Wi-Fi changed or backup network is active","Phone app profile, permission, or scene is wrong","Connected device assignment does not match the physical pad"],
+          fix:["Prove local control first from the panel, in-can display, or Home Hub","Capture app/cloud screen with timestamp and any alert text","Record Wi-Fi, backup network, or hotspot state before resetting anything","Compare schedule, scene, profile, and circuit names against the physical relay/device labels","Send the packet before replacing control boards, radios, routers, pumps, heaters, lights, or actuators"],
           severity:"medium", callpro:false },
         { code:"RS485-NO-COMM", name:"RS-485 Device Not Communicating",
           causes:["A/B polarity reversed","Loose low-voltage terminal","Address conflict","Pump has relay power instead of constant line power","Damaged data cable"],
