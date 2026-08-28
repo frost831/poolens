@@ -109,6 +109,168 @@ window.CHEM_DATA = {
   }
 };
 
+window.SPLASHLENS_TECH_RADAR = {
+  updated: "2026-07-17",
+  cadence: {
+    daily: "Add 3-5 codes, model clues, part families, or proof prompts when new field patterns show up.",
+    weekly: "Publish one field card, training scenario, or SEO/AEO hub update for pool tech search.",
+    monthly: "Ship a Field Intelligence Update with new robots, automation, heaters, heat pumps, lights, salts, covers, and controller notes."
+  },
+  categories: [
+    {
+      name: "Robots",
+      status: "High priority",
+      examples: ["Beatbot AquaSense X", "Beatbot AquaSense 2 Ultra", "Beatbot Sora 30", "Aiper Scuba X1 / X1 Pro Max", "Aiper Scuba V3", "Aiper Scuba S1", "Aiper Scuba 800 / L1 / N1 / N3 AI Vision", "Aiper EcoSurfer / Surfer", "Maytronics Dolphin", "Polaris Alpha iQ", "WYBOT", "Ecovacs", "iGarden", "Betta", "Water Tech Volt"],
+      proof: ["power supply or dock", "charging contacts", "self-cleaning station/dock", "tracks and brushes", "filter basket", "cord or battery housing", "app pairing screen", "firmware/status screen", "demo-unit accessory check", "fine-filter or ultra-fine-filter proof"],
+      fieldFlags: ["no power", "will not climb", "Wi-Fi pairing failure", "HydroComm/app offline", "water intrusion", "short runtime", "navigation/mapping miss", "AI vision miss", "self-cleaning dock not rinsing fully", "demo unit missing dock/accessory"],
+      sourceNotes: ["Beatbot is pushing AI mapping, debris recognition, cordless workflows, and self-cleaning/charging stations; SplashLens should capture dock, filter, charging, sensor, and app proof before warranty/support escalation."]
+    },
+    {
+      name: "Connected Pool Network",
+      status: "Live reference layer",
+      examples: ["Pentair IntelliCenter", "Hayward Omni", "Jandy AquaLink RS", "Jandy AquaLink TCX", "Jandy AquaLink EDGE", "Jandy iAquaLink", "CCEI Vigipool", "CCEI Tild VP", "CCEI Antea VS", "RS-485 pumps", "valve actuators", "smart heaters", "lighting relays", "automatic covers"],
+      proof: ["controller model", "firmware/app screen", "alert timestamp", "manual chemistry check", "local panel state", "relay label", "RS-485 wiring photo", "device assignment screen", "breaker/GFCI behavior", "wireless remote/handheld proof"],
+      fieldFlags: ["offline app", "stale remote alert", "chemistry mismatch", "lost communication", "wrong relay", "actuator wrong direction", "pump not seen by automation", "light schedule mismatch", "remote controls app but local panel differs"],
+      sourceNotes: ["Jandy automation controls lights, water features, spa settings, valves, filtration, cleaning, pumps, heaters, and remote app workflows; SplashLens should capture both app state and local panel proof."]
+    },
+    {
+      name: "Heat / Cool",
+      status: "Expanding",
+      examples: ["Raypak", "Pentair MasterTemp / UltraTemp", "Hayward Universal H-Series / HeatPro", "Jandy JXi / VersaTemp", "AquaCal", "Gulfstream", "Rheem / Ruud", "Plunge All-In Gen 2"],
+      proof: ["model plate", "fault display", "water flow reading", "filter pressure", "gas/electrical context", "ambient temperature"],
+      fieldFlags: ["LO/IF/HL faults", "flow switch", "defrost", "refrigerant/service call", "heater lockout", "cooler/chiller sizing question"]
+    },
+    {
+      name: "Lighting",
+      status: "Live reference layer",
+      examples: ["Pentair IntelliBrite / MicroBrite", "Hayward ColorLogic / Omni Direct", "Jandy WaterColors", "Jandy Infinite WaterColors", "CMP Brilliant Wonders / PAL", "retrofit niche lights"],
+      proof: ["fixture label", "voltage", "transformer size", "junction box condition", "cord route", "automation mode"],
+      fieldFlags: ["GFCI trip", "wrong color", "flicker", "one light out", "voltage drop", "retrofit compatibility"]
+    },
+    {
+      name: "Chem Controllers / Feeders",
+      status: "Live reference layer",
+      examples: ["Rola-Chem", "CAT", "BECS", "Chemtrol", "IPS", "Stenner", "Prominent", "Walchem", "Pulsar", "SunnyWhale FinWhale"],
+      proof: ["manual test reading", "probe age", "calibration standard", "flow cell", "tank/tablet level", "feed pump/tube", "app alert screen"],
+      fieldFlags: ["ORP low", "pH high", "probe drift", "no sample flow", "overfeed risk", "blocked injection fitting", "low tablets", "stale app trend"]
+    },
+    {
+      name: "Advanced Sanitizers",
+      status: "Updated July 2026",
+      examples: ["Jandy X-Series AOP In-Line", "Jandy X-Series AOP Off-Line", "CMP DEL Ozone", "Paramount Clear O3", "Hayward HydraPure", "Pentair BioShield", "UV-C systems", "ozone systems"],
+      proof: ["model plate", "in-line or off-line configuration", "pool volume", "LED state", "flow and plumbing orientation", "mounting", "lamp age", "ozone tubing and check valve", "manual sanitizer reading"],
+      fieldFlags: ["status light", "low flow", "lamp service interval", "water in ozone tubing", "check-valve failure", "configuration mismatch", "sanitizer residual not verified"]
+    },
+    {
+      name: "Pool Safety Monitoring",
+      status: "New proof lane",
+      examples: ["SwamCam", "SwamCam OverWatchAI Dual Camera", "smart pool cameras", "pool alarms", "gate alarms", "wearable alarms"],
+      proof: ["camera fields of view", "blind spots", "armed state", "walk-test timestamp", "audible alarm", "alert destinations", "network state", "backup power", "keypad and auto-arm", "privacy/access settings"],
+      fieldFlags: ["coverage gap", "camera offline", "alert path failed", "backup power failed", "auto-arm failed", "notification permissions off", "privacy review needed", "supplemental safety layer only"]
+    },
+    {
+      name: "Covers / Safety",
+      status: "Live reference layer",
+      examples: ["Coverstar", "Cover-Pools", "APC", "Coverstar Central", "Save-T Cover", "cover pumps", "Latham MeasureGO", "Latham MeasurePRO"],
+      proof: ["track condition", "rope/pulley view", "motor/key switch", "controller label", "standing water load", "fabric alignment", "full pool perimeter", "steps and raised walls", "obstructions and anchor context", "measurement device capability"],
+      fieldFlags: ["will not move", "travels crooked", "water on cover", "manual operation", "safety layer warning", "measure proof incomplete", "manufacturer review pending"]
+    },
+    {
+      name: "Salt Systems",
+      status: "Updated July 2026",
+      examples: ["Jandy TruClear", "Jandy TruClear XL", "AquaPure", "Hayward AquaRite", "Pentair IntelliChlor", "Circupool"],
+      proof: ["cell window or blade photo", "controller display", "independent salt test", "FC/CYA reading", "cell age", "pump schedule"],
+      fieldFlags: ["check cell", "low output", "visible scale", "drop-in fit", "cleaning cap", "cell replacement quote"]
+    },
+    {
+      name: "Hot Tubs / Spas",
+      status: "Live spa lane",
+      examples: ["Balboa BP/VS/GS/GL and TP/spaTouch systems", "Balboa TP400/TP500/TP600/TP800/TP900", "Balboa spaTouch Mini / spaTouch 2 / 3 / 4", "Gecko Y/XE/YT/in.touch", "Waterway NEO 1100 / 1500 / 2100", "Watkins / Hot Spring / Caldera controls", "Jacuzzi / Sundance controls", "Cal Spas 2026 Patio / Escape / Swim Pro", "Master Spas H2X", "Endless Pools fitness systems", "Hydropool swim spas", "PDC TruSwim / Summit", "Artesian TidalFit", "Bullfrog", "Marquis", "Coast", "Arctic", "Wellis", "FROG hot tub systems", "spa jet plumbing", "swim current pumps", "ozone / UV spa systems", "pipe and jet cleanser", "spa covers and lifters"],
+      proof: ["spa pack label", "topside display code", "control panel family", "filter condition", "flow or pressure-switch context", "heater tube or sensor proof", "pump wet-end and motor label", "jet body or manifold proof", "suction cover marking", "sanitizer cartridge", "ozone/UV module and check valve", "manual water test", "drain/purge history", "cover/lifter condition", "GFCI trip timing", "swim-current pump label", "auxiliary keypad proof"],
+      fieldFlags: ["no power", "flow/pressure error", "dry heater", "high limit", "sensor sync", "GFCI trips immediately", "GFCI trips on heat call", "one pump or jet bank dead", "weak swim current", "app offline", "aux keypad dead", "biofilm flush", "no heat", "heat loss overnight", "rapid pH drift", "foaming", "sanitizer depletion", "cover waterlogged", "audio/light accessory dead"],
+      sourceNotes: ["Balboa publishes user guides for TP and spaTouch panels; Cal Spas publishes 2026 hot tub and swim-spa manuals; Coast and Master Spas publish owner manual lanes. SplashLens cards should stay proof-first and manual-verified."]
+    }
+  ]
+};
+
+window.SPLASHLENS_MONETIZATION_LANES = {
+  promise: "Free lookup first. Pay only when you need more scanner use, saved proof, team reporting, facility records, or real partner-reviewed cards.",
+  trustBoundary: "Manual lookup, basic PartSnap, calculators, Facility Assist, and cautious reference language stay useful without an account. Paid lanes add capacity or business workflows; they do not create diagnosis, fitment, warranty, or partner guarantees.",
+  plans: [
+    {
+      name: "Free Field App",
+      planKey: "free_core",
+      price: "$0",
+      buyer: "Pool and spa techs who need a field answer now",
+      includes: ["Equipment code lookup", "Basic PartSnap", "Calculators", "Facility Assist", "Offline manual tools after first load"],
+      guardrail: "No diagnosis, fitment, warranty, or official partner claim."
+    },
+    {
+      name: "PartSnap Pro",
+      planKey: "partsnap_pro_monthly",
+      availability: "self_serve",
+      price: "$4.99/mo or $39/yr",
+      buyer: "Techs who use PartSnap or Error Scan a lot",
+      includes: ["More online PartSnap and Error Scan usage", "Proof checklist before ordering or escalating", "Local distributor/SCP-style verification first, online price-check links second", "Scanner activation and restore flow"],
+      guardrail: "Search links are for price checking; verify model, dimensions, and current parts diagram before ordering."
+    },
+    {
+      name: "Service Proof Pro",
+      planKey: "service_proof_pro_monthly",
+      availability: "pilot",
+      price: "$19/mo — request access",
+      buyer: "Solo techs who want proof they can find later",
+      includes: ["Save each pool's photos, readings, notes, and repair history", "Plain-English summary you can send to the customer", "One-tap packet for a boss, senior tech, or vendor", "Spot repeat issues before they become callbacks"],
+      guardrail: "Built for cleaner documentation without becoming a full CRM."
+    },
+    {
+      name: "Team / Facility Plans",
+      planKey: "team_proof_os_monthly",
+      availability: "pilot",
+      price: "$99/mo — company setup",
+      buyer: "Owners, facilities, CPOs, and training groups",
+      includes: ["See what your techs used, searched, and missed", "Reports with your company name on them", "Daily check and incident workflows for CPOs and facilities", "Team-level searched/missed reports"],
+      guardrail: "Exports support existing CRMs; SplashLens is not a billing replacement."
+    },
+    {
+      name: "Facility / CPO Pilot",
+      planKey: "facility_cpo_pilot_monthly",
+      availability: "pilot",
+      price: "Request facility access",
+      buyer: "Facilities and training groups",
+      includes: ["Daily checks", "Contamination event workflow", "Dose logs", "Escalation packets", "Staff handoff records"],
+      guardrail: "Local code, facility policy, and CPO/trainer guidance still control."
+    },
+    {
+      name: "Verified Manufacturer Cards",
+      planKey: "verified_manufacturer_cards_monthly",
+      availability: "partner",
+      price: "Not self-serve — partner discussion",
+      buyer: "Manufacturers and expert vendors that want field language shown correctly",
+      includes: ["Partner-reviewed field cards", "Required proof photos", "Warranty-safe wording", "Preferred escalation steps"],
+      guardrail: "Only marked partner-verified after written partner review/approval."
+    },
+    {
+      name: "Distributor / Counter Mode",
+      planKey: "distributor_counter_mode_monthly",
+      availability: "partner",
+      price: "Not self-serve — partner discussion",
+      buyer: "Parts counters and distributors",
+      includes: ["Required model plate prompts", "Second photo workflow", "Symptom/code capture", "Wrong-order prevention packet"],
+      guardrail: "Possible match and missing proof, never guaranteed fit."
+    },
+    {
+      name: "Field Learning OS",
+      planKey: "training_partner_layer_monthly",
+      availability: "partner",
+      price: "Not self-serve — partner discussion",
+      buyer: "Pool schools and instructors",
+      includes: ["5-minute field lessons from PartSnap misses", "Proof-based quizzes", "CPO scenario workflows", "Senior-review practice packets", "Partner-reviewed lesson cards"],
+      guardrail: "No official training alignment unless agreed in writing."
+    }
+  ]
+};
+
 window.SAND_FILTER_DATA = {
   // Sand weight by tank diameter (inches) → pounds of #20 silica sand
   sandByDiameter: [
@@ -188,57 +350,88 @@ window.POOL_VOLUME_DATA = {
 };
 
 window.CLOSING_CHECKLIST = [
-  { phase:"Chemistry — Pre-Close (do first, run pump 24h after)", steps:[
-    "Test all 6: FC, CC, pH, TA, CH, CYA",
-    "Adjust pH to 7.2–7.4 — slightly low prevents winter scale",
-    "Adjust TA to 80–100 ppm",
-    "Adjust CH to 200–400 ppm",
-    "Shock pool to 10+ ppm FC using Cal-Hypo — big kill before cover goes on",
-    "Add PolyQuat 60 algaecide per label (preferred — no foaming, works under cover)",
-    "Add phosphate remover if phosphates were above 500 ppb",
-    "Add metal sequestrant if source water is high in iron or copper",
-    "DO NOT add extra CYA — it persists and you waste stabilizer"
+  { phase:"1. Pre-close proof and chemistry", steps:[
+    "Confirm pool type, surface, cover type, sanitizer system, heater, automation, cleaners, and freeze climate before choosing a closing method.",
+    "Test and record FC, CC, pH, TA, CH, CYA, salt if present, and water temperature before adding products.",
+    "Balance water to the target used by the service company, product labels, and local/operator requirements; do not rely on this app alone.",
+    "Add closing products only per label and customer/system requirements. Save product names, strengths, and approximate dose math.",
+    "Photograph the water clarity, water level, equipment pad, filter pressure, controller screen, and any pre-existing cracks, leaks, or damage.",
+    "Record whether the customer approved any repair, cover, antifreeze, chemistry, or equipment storage recommendations."
   ]},
-  { phase:"Equipment Shutdown", steps:[
-    "Run pump/filter minimum 24 hours after adding closing chemicals",
-    "Backwash sand/DE filter OR clean cartridge elements before shutdown",
-    "For DE filters: disassemble and hose off grids — rinse thoroughly",
-    "Turn off heater FIRST — allow 15 min to cool before shutting pump off",
-    "Shut off salt chlorinator — clean cell with acid wash per spec",
-    "Remove and store salt cell indoors for winter",
-    "Disconnect and store automation equipment and remote controls",
-    "Clean pump strainer basket thoroughly",
-    "Turn off main power at breaker panel — tape breaker if pool is near public access"
+  { phase:"2. Equipment shutdown and drain proof", steps:[
+    "Turn off and lock out power only when the closing method requires it and the tech is qualified to do so.",
+    "Drain pump, filter, heater, chlorinator, salt cell housing, booster pump, water feature loop, and any component that can trap water.",
+    "Open filter air relief before draining pressure vessels. Stand clear and follow the exact equipment manual.",
+    "Save a close photo of every removed drain plug, cap, union, and winterized component.",
+    "Store drain plugs in the pump basket or a labeled customer bag, then photograph that storage location.",
+    "Mark any seized, missing, cracked, or questionable plugs as spring follow-up instead of leaving it as a memory item."
   ]},
-  { phase:"Winterize Plumbing", steps:[
-    "Lower water level below skimmer opening (or mid-tile on vinyl/fiberglass)",
-    "Blow out return lines with compressor — work pump → returns",
-    "Insert Gizzmo / winterization plug into each skimmer throat",
-    "Blow out skimmer line — plug when water clears",
-    "Blow out main drain line — close valve or plug if accessible",
-    "Add propylene glycol antifreeze to lines in hard-freeze climates (NEVER ethylene glycol)",
-    "Drain pump completely — remove drain plug and store in basket",
-    "Drain filter tank — remove drain cap",
-    "Drain heater heat exchanger and chlorinator — open all unions",
-    "Store all drain plugs in pump basket or labeled bag"
+  { phase:"3. Lines, skimmers, returns, and antifreeze", steps:[
+    "Document the water level decision and why it matches the cover, surface, skimmer, and local freeze risk.",
+    "Blow or drain each line using the service company's approved process; plug immediately after the line clears.",
+    "Record which skimmers, returns, main drain, cleaner line, spa line, water feature, slide, bubbler, or deck jet were winterized.",
+    "Use only pool-safe propylene glycol where the company method calls for antifreeze. Never use automotive antifreeze.",
+    "Photograph winter plugs, gizmos, skimmer throats, return plugs, and any unusual plumbing that may confuse spring opening.",
+    "Flag any line that would not clear, would not hold air, or had a questionable valve position for senior review."
   ]},
-  { phase:"Cover Installation", steps:[
-    "Vacuum and skim pool surface before covering",
-    "Install underwater return plugs before installing cover",
-    "Install safety cover: all anchors fully seated and tensioned evenly",
-    "For mesh safety covers: use water tubes or sandbags at perimeter against wind",
-    "For solid covers: install submersible cover pump — must drain rain/snowmelt",
-    "For above-ground: install air pillow first to absorb ice expansion pressure",
-    "Verify cover cannot be lifted by wind — check all attachment points"
+  { phase:"4. Heaters, heat pumps, salt, robots, and smart equipment", steps:[
+    "For gas heaters and heat pumps, follow the exact winterizing section in the manufacturer manual before declaring the heater protected.",
+    "For salt systems, document the controller state, cell model, cell condition, and whether the cell was drained, removed, cleaned, or stored.",
+    "Remove robotic cleaners, caddies, power supplies, cords, and batteries according to the specific robot manual and storage temperature guidance.",
+    "Capture automation freeze-protection settings, pump schedules, app alerts, and local panel state before changing anything.",
+    "Do not trust freeze protection as a complete winterization plan unless the equipment manual and local service policy support that use.",
+    "Create a senior-tech or vendor packet for any connected-pump, heater, automation, or robot issue that may affect winter protection."
   ]},
-  { phase:"Final Steps", steps:[
-    "Photograph equipment pad — show plugs removed, drains open (reference for spring)",
-    "Wrap exposed pipe unions with foam pipe insulation in freeze climates",
-    "Lock and secure equipment enclosure",
-    "Log closing date, all chemical levels, and any issues in notes",
-    "Schedule spring opening 2–3 weeks before first use (chemistry needs time to stabilize)"
+  { phase:"5. Cover and site closeout", steps:[
+    "Clean debris before the cover goes on so the customer can see the closing was not rushed.",
+    "Install the cover per cover type and manufacturer instructions. Photograph anchors, straps, springs, water bags, cable, pillow, and cover pump where relevant.",
+    "Verify cover pump placement, discharge route, GFCI/power context, and customer instructions for water on the cover.",
+    "Photograph gates, latches, safety cover fit, and any visible trip or access risk before leaving.",
+    "Leave customer-safe instructions for cover water, winter checks, pets/kids access, and when to call before a freeze event.",
+    "Save any customer declined-work notes before leaving the property."
+  ]},
+  { phase:"6. Callback and insurance-ready documentation", steps:[
+    "Create the customer-safe closing summary before driving away: what was done, what was not done, and what still needs monitoring.",
+    "Attach photos of water level, equipment pad, drain plugs, plugs/gizmos, cover, chemistry, and unusual conditions.",
+    "Mark callback risk if any proof is missing, weather is changing fast, equipment would not drain, or the customer declined a recommended step.",
+    "If a dispute, freeze claim, or insurance conversation happens later, use the proof packet as documentation support only; it is not a coverage guarantee.",
+    "Save the closing packet to Pool History so the opening crew can find plug locations, issue notes, and spring follow-ups.",
+    "Schedule the spring/opening reminder or follow-up repair while the account details are still fresh."
   ]}
 ];
+
+window.CLOSING_SEASON_PROOF = {
+  title: "Closing Season Mode",
+  promise: "Document the close before the freeze. SplashLens helps techs capture the evidence that prevents spring confusion, callback arguments, and blind repair handoffs.",
+  trustBoundary: "Reference aid only. Verify the exact product manual, local code, company winterization method, chemical label, and qualified technician judgment.",
+  proofPhotos: [
+    "water level and cover type",
+    "equipment pad wide photo",
+    "pump, filter, heater, salt cell, and chlorinator drain points",
+    "removed drain plugs stored together",
+    "skimmer gizmos and return plugs",
+    "automation/freeze-protection screen",
+    "cover anchors, straps, water bags, cable, pillow, or cover pump",
+    "pre-existing damage, leaks, cracks, or declined work"
+  ],
+  callbackFlags: [
+    "missing drain-plug proof",
+    "heater or heat pump not manually verified",
+    "salt cell status unknown",
+    "robot or power supply left exposed",
+    "cover pump not documented",
+    "customer declined repair or winter product",
+    "hard-freeze forecast within 72 hours",
+    "line would not clear or valve position unclear"
+  ],
+  sourceLanes: [
+    "Pentair winterization and freeze-protection guidance",
+    "Hayward closing and freeze-protection guidance",
+    "Raypak equipment winterization guidance",
+    "Maytronics robotic cleaner winter storage guidance",
+    "Exact product manual and local code remain the source of truth"
+  ]
+};
 
 window.WEEKLY_CHECKLIST = [
   { phase:"Water Testing", steps:[
@@ -421,6 +614,7 @@ window.SALT_CHLORINATOR_DATA = {
     { brand:"Hayward AquaRite",        target:"3000–3400 ppm", low:2700, high:3400 },
     { brand:"Pentair IntelliChlor",    target:"3100–3400 ppm", low:3100, high:3400 },
     { brand:"Zodiac / Jandy AquaPure", target:"3000–3500 ppm", low:3000, high:3500 },
+    { brand:"Jandy TruClear / TruClear XL", target:"3000–3500 ppm", low:3000, high:3500 },
     { brand:"CircuPool",               target:"3000–3500 ppm", low:3000, high:3500 },
     { brand:"Generic / most brands",   target:"2700–3400 ppm", low:2700, high:3400 },
   ],

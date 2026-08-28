@@ -3,14 +3,75 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>SplashLens — Field Reference</title>
-  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <title>SplashLens - Pool Service Field Reference and PartSnap</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="/icons/icon-192.png" type="image/png" sizes="192x192">
+  <link rel="apple-touch-icon" href="/icons/icon-192.png">
+  <link rel="shortcut icon" href="/icons/icon-192.png" type="image/png">
   <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#0369a1">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="SplashLens">
+  <meta name="description" content="SplashLens is a free no-account field reference app for pool, spa, hot tub, and swim spa service techs with PartSnap part identification assistance, Closing Season Mode, Connected Pool Network troubleshooting, Field Learning OS workflows, robot cleaner references, Balboa, Gecko, Waterway NEO, swim current, GFCI, sanitizer, pool equipment codes, dosing calculators, voice notes, checklists, and route tools.">
+  <meta name="robots" content="index,follow,max-image-preview:large">
+  <meta name="keywords" content="pool service app, pool tech app, pool technician app, pool closing app, pool winterizing checklist, closing season proof packet, pool technician closing checklist, spa service app, hot tub troubleshooting app, swim spa troubleshooting app, Master Spas H2X troubleshooting, Endless Pools troubleshooting, Hydropool swim spa troubleshooting, Balboa spa pack, Gecko spa pack, Waterway NEO, spa GFCI tripping, swim spa current pump, spa sanitizer feeder, pool parts identification, PartSnap, Connected Pool Network, pool equipment error codes, pool hardware, pool pump troubleshooting, pool heater codes, pool heat pump troubleshooting, pool automation troubleshooting, pool robot troubleshooting, robotic pool cleaner troubleshooting, salt cell troubleshooting, Jandy TruClear troubleshooting, pool lighting troubleshooting, pool chemical controller, smart chlorine dispenser, pool cover troubleshooting, pool dosing calculator, pool route notes, pool service training, pool tech training">
+  <link rel="canonical" href="https://app.splashlens.com/">
+  <link rel="alternate" hreflang="en" href="https://app.splashlens.com/">
+  <link rel="alternate" hreflang="es" href="https://app.splashlens.com/?lang=es">
+  <meta property="og:site_name" content="SplashLens">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="SplashLens - Pool Service Field Reference and PartSnap">
+  <meta property="og:description" content="Free pool-service field reference with PartSnap, Connected Pool Network, Field Learning OS workflows, robot and automation troubleshooting, equipment-code lookup, dosing calculators, voice notes, checklists, and route tools.">
+  <meta property="og:url" content="https://app.splashlens.com/">
+  <link rel="image_src" href="https://splashlens.com/splashlens-share-card.png">
+  <meta property="og:image" content="https://splashlens.com/splashlens-share-card.png">
+  <meta property="og:image:secure_url" content="https://splashlens.com/splashlens-share-card.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:type" content="image/png">
+  <meta property="og:image:alt" content="SplashLens field reference app for pool, spa, and aquatic service teams">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="SplashLens - Pool Service Field Reference and PartSnap">
+  <meta name="twitter:description" content="Free no-account field app for pool techs: PartSnap, Connected Pool Network, robot and automation references, equipment codes, dosing, voice notes, checklists, and route tools.">
+  <meta name="twitter:image" content="https://splashlens.com/splashlens-share-card.png">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "MobileApplication",
+    "name": "SplashLens",
+    "alternateName": "SplashLens Field Tools",
+    "url": "https://app.splashlens.com/",
+    "applicationCategory": "UtilitiesApplication",
+    "operatingSystem": "Web, iOS, Android",
+    "isAccessibleForFree": true,
+    "description": "Free no-account pool service field reference app with PartSnap part identification assistance, Closing Season Mode, Connected Pool Network troubleshooting, Field Learning OS workflows, robot cleaner references, equipment-code lookup, dosing calculators, voice notes, checklists, and route tools.",
+    "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"},
+    "publisher": {"@type": "Organization", "name": "SplashLens", "url": "https://splashlens.com/"},
+    "sameAs": [
+      "https://splashlens.com/",
+      "https://apps.apple.com/us/app/splashlens/id6763644905",
+      "https://play.google.com/store/apps/details?id=com.splashlens.fieldtools"
+    ],
+    "featureList": [
+      "PartSnap pool part identification assistance",
+      "Connected Pool Network for automation, robots, lights, covers, and chemical controllers",
+      "New Tech Radar for smart pool equipment",
+      "Pool equipment code lookup",
+      "Chemical dosing calculators",
+      "Voice-friendly service notes",
+      "Service Proof Passport",
+      "Field Learning OS",
+      "Training mode and senior-tech escalation packets",
+      "Route progress tools",
+      "Opening, closing, weekly, and monthly checklists",
+      "Closing Season Mode and winterization proof packet workflow",
+      "Pool pump, heater, automation, lighting, robot, and salt cell reference"
+    ],
+    "potentialAction": {"@type": "UseAction", "target": "https://app.splashlens.com/"}
+  }
+  </script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
@@ -36,8 +97,8 @@
     .tab-panel.active { display: block; }
 
     /* Bottom nav */
-    .nav-btn { background: none; border: none; color: #94a3b8; cursor: pointer; flex: 1; display: flex; flex-direction: column; align-items: center; padding: 9px 0 7px; gap: 3px; transition: color 0.15s; -webkit-tap-highlight-color: transparent; }
-    .nav-btn.active { color: #0284c7; }
+    .nav-btn { background: none; border: none; color: #64748b; cursor: pointer; min-width: 0; flex: 1 1 0; display: flex; flex-direction: column; align-items: center; padding: 9px 0 7px; gap: 3px; transition: color 0.15s; -webkit-tap-highlight-color: transparent; }
+    .nav-btn.active { color: #0369a1; }
     .nav-btn span { font-size: 10px; font-weight: 700; letter-spacing: 0.04em; }
 
     /* Brand buttons */
@@ -74,24 +135,75 @@
 
     .field-label { display: block; color: #64748b; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px; }
     .field-group { margin-bottom: 14px; }
+    .language-bar { background:#e0f2fe; border-bottom:1px solid #bae6fd; padding:8px 14px; display:flex; align-items:center; justify-content:space-between; gap:10px; }
+    .language-bar span { color:#075985; font-size:12px; font-weight:800; }
+    .language-bar select { width:auto; min-width:138px; padding:8px 32px 8px 10px; font-size:13px; border-color:#7dd3fc; color:#075985; font-weight:800; }
+    .spanish-field-strip { display:none; background:#f0fdfa; border-bottom:1px solid #99f6e4; padding:10px 12px; }
+    .spanish-field-strip.active { display:block; }
+    .spanish-field-strip strong { display:block; color:#115e59; font-size:12px; font-weight:950; margin-bottom:7px; }
+    .spanish-field-strip .chips { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:6px; }
+    .spanish-field-strip button { min-height:42px; border:1px solid #5eead4; background:#fff; color:#134e4a; border-radius:9px; font-size:11px; font-weight:950; cursor:pointer; padding:6px 5px; }
+    @media (max-width:560px){ .spanish-field-strip .chips{grid-template-columns:repeat(2,minmax(0,1fr));} }
+    .proof-command { background:linear-gradient(145deg,#082f49 0%,#0f172a 54%,#134e4a 100%); border:1px solid rgba(94,234,212,.32); border-radius:14px; padding:14px; margin-bottom:14px; box-shadow:var(--field-shadow); }
+    .proof-command-kicker { color:#7dd3fc; font-size:10px; font-weight:950; letter-spacing:.12em; text-transform:uppercase; margin-bottom:5px; }
+    .proof-command h2 { color:#fff; font-size:22px; line-height:1.05; font-weight:950; margin-bottom:7px; }
+    .proof-command p { color:#cbd5e1; font-size:12px; line-height:1.45; margin-bottom:11px; }
+    .proof-command-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; }
+    .proof-command button { min-height:82px; background:#ffffff; border:1px solid #bae6fd; border-radius:10px; color:#0f172a; padding:10px; text-align:left; cursor:pointer; box-shadow:var(--field-shadow-tight); }
+    .proof-command button.primary { background:#0f766e; color:#ffffff; border-color:#5eead4; }
+    .proof-command button.facility { background:#0369a1; color:#ffffff; border-color:#7dd3fc; }
+    .proof-command button b { display:grid; place-items:center; width:25px; height:25px; border-radius:999px; background:#e0f2fe; color:#0369a1; font-size:12px; margin-bottom:8px; }
+    .proof-command button.primary b, .proof-command button.facility b { background:rgba(255,255,255,.2); color:#ffffff; }
+    .proof-command button strong { display:block; font-size:13px; line-height:1.12; font-weight:950; margin-bottom:4px; }
+    .proof-command button span { display:block; color:#64748b; font-size:10px; line-height:1.25; font-weight:800; }
+    .proof-command button.primary span, .proof-command button.facility span { color:#e0f2fe; }
+    .proof-status-row { display:grid; grid-template-columns:repeat(4,1fr); gap:6px; margin-top:10px; }
+    .proof-status-chip { background:rgba(255,255,255,.1); border:1px solid rgba(226,232,240,.18); border-radius:9px; padding:8px; color:#e2e8f0; font-size:10px; font-weight:900; line-height:1.25; text-align:center; }
+    .proof-status-chip.ready { background:rgba(20,184,166,.18); border-color:rgba(94,234,212,.38); color:#ccfbf1; }
+    @media (max-width:720px){ .proof-command-grid{grid-template-columns:1fr 1fr;} }
+    @media (max-width:560px){ .proof-command-grid,.proof-status-row{grid-template-columns:1fr 1fr;} }
 
     /* Buttons */
     .btn-calc { background: linear-gradient(135deg, var(--field-blue-bright) 0%, var(--field-blue) 100%); color: white; border: none; border-radius: var(--field-radius); padding: 14px; font-weight: 800; font-size: 15px; width: 100%; cursor: pointer; letter-spacing: 0.03em; transition: all 0.15s; -webkit-tap-highlight-color: transparent; }
     .btn-calc:active { transform: scale(0.98); opacity: 0.88; }
 
     /* Field rescue home */
-    .rescue-hero { background: linear-gradient(145deg, #102033 0%, #0d2535 58%, #12384b 100%); border: 1px solid rgba(125,211,252,.24); border-radius: var(--field-radius); padding: 16px; margin-bottom: 12px; box-shadow: var(--field-shadow); }
+    .rescue-hero { background: linear-gradient(145deg, #082f49 0%, #0f172a 58%, #134e4a 100%); border: 1px solid rgba(125,211,252,.24); border-radius: 12px; padding: 16px; margin-bottom: 12px; box-shadow: var(--field-shadow); }
     .rescue-kicker { color: #7dd3fc; font-size: 10px; font-weight: 900; letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 7px; }
     .rescue-title { color: #ffffff; font-size: 24px; line-height: 1.05; font-weight: 900; margin-bottom: 7px; letter-spacing: 0; }
-    .rescue-sub { color: #cbd5e1; font-size: 13px; line-height: 1.45; margin-bottom: 14px; }
+    .rescue-sub { color: #cbd5e1; font-size: 13px; line-height: 1.35; margin-bottom: 12px; max-width: 42rem; }
+    .field-workflow { display:grid; grid-template-columns:repeat(5, minmax(92px,1fr)); gap:8px; overflow-x:auto; padding-bottom:2px; -webkit-overflow-scrolling:touch; scrollbar-width:none; }
+    .workflow-chip { min-height:82px; border:1px solid #bae6fd; border-radius:10px; background:#ffffff; color:#0f172a; padding:10px; text-align:left; cursor:pointer; box-shadow:var(--field-shadow-tight); display:flex; flex-direction:column; justify-content:space-between; -webkit-tap-highlight-color:transparent; }
+    .workflow-chip:active { transform:scale(.98); }
+    .workflow-chip.partsnap { background:#0f766e; color:#ffffff; border-color:#5eead4; }
+    .workflow-chip.primary { background:#0369a1; color:#ffffff; border-color:#7dd3fc; }
+    .workflow-num { width:25px; height:25px; border-radius:999px; display:grid; place-items:center; background:#e0f2fe; color:#0369a1; font-size:12px; font-weight:950; margin-bottom:8px; }
+    .workflow-chip.partsnap .workflow-num, .workflow-chip.primary .workflow-num { background:rgba(255,255,255,.18); color:#ffffff; }
+    .workflow-chip strong { display:block; font-size:13px; line-height:1.1; font-weight:950; }
+    .workflow-chip span { display:block; color:#64748b; font-size:10px; line-height:1.2; font-weight:800; margin-top:4px; }
+    .workflow-chip.partsnap span { color:#ccfbf1; }
+    .workflow-chip.primary span { color:#e0f2fe; }
     .rescue-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-    .rescue-action { background: #ffffff; color: #0f172a; border: 1px solid #bae6fd; border-radius: var(--field-radius); padding: 12px 10px; min-height: 84px; cursor: pointer; text-align: left; display: flex; flex-direction: column; justify-content: space-between; -webkit-tap-highlight-color: transparent; box-shadow: var(--field-shadow-tight); }
+    .rescue-action { background: #ffffff; color: #0f172a; border: 1px solid #bae6fd; border-radius: var(--field-radius); padding: 10px; min-height: 74px; cursor: pointer; text-align: left; display: flex; flex-direction: column; justify-content: space-between; -webkit-tap-highlight-color: transparent; box-shadow: var(--field-shadow-tight); }
     .rescue-action strong { display: block; font-size: 14px; line-height: 1.15; font-weight: 900; letter-spacing: 0; }
     .rescue-action span { display: block; color: #64748b; font-size: 11px; line-height: 1.25; margin-top: 7px; }
     .rescue-action.primary { background: var(--field-blue-bright); color: #ffffff; border-color: #38bdf8; }
     .rescue-action.primary span { color: #dff6ff; }
-    .rescue-proof { color: #94a3b8; font-size: 11px; line-height: 1.4; margin-top: 12px; padding-top: 12px; border-top: 1px solid #334155; }
+    .rescue-action.partsnap { background:#0f766e; color:#ffffff; border-color:#5eead4; }
+    .rescue-action.partsnap span { color:#ccfbf1; }
+    .rescue-proof { color: #94a3b8; font-size: 11px; line-height: 1.3; margin-top: 10px; padding-top: 10px; border-top: 1px solid #334155; }
     .rescue-proof strong { color: #ffffff; }
+    .partsnap-hero-card { background:#ffffff; border:1px solid #99f6e4; border-left:4px solid #0f766e; border-radius:12px; padding:11px; margin-bottom:12px; box-shadow:var(--field-shadow-tight); }
+    .partsnap-hero-card strong { display:block; color:#0f172a; font-size:14px; font-weight:950; line-height:1.15; margin-bottom:4px; }
+    .partsnap-hero-card p { color:#475569; font-size:11.5px; line-height:1.35; margin-bottom:8px; }
+    .partsnap-steps { display:grid; grid-template-columns:repeat(5,minmax(82px,1fr)); gap:7px; overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none; }
+    .partsnap-step { background:#f0fdfa; border:1px solid #ccfbf1; border-radius:9px; padding:8px; min-height:68px; text-align:left; display:flex; flex-direction:column; justify-content:space-between; }
+    .partsnap-step b { display:block; color:#0f766e; font-size:12px; font-weight:950; line-height:1.1; }
+    .partsnap-step span { display:block; color:#64748b; font-size:10px; font-weight:800; margin-top:5px; line-height:1.2; }
+    .field-lane-strip { display:grid; grid-template-columns:repeat(3,1fr); gap:7px; margin-bottom:12px; }
+    .field-lane-chip { min-height:58px; background:#ffffff; border:1px solid #d8e3ea; border-radius:9px; padding:8px; text-align:left; cursor:pointer; box-shadow:var(--field-shadow-tight); }
+    .field-lane-chip strong { display:block; color:#075985; font-size:11px; font-weight:950; line-height:1.1; margin-bottom:3px; }
+    .field-lane-chip span { display:block; color:#64748b; font-size:9.8px; font-weight:800; line-height:1.2; }
     .rescue-strip { display: grid; grid-template-columns: repeat(3,1fr); gap: 6px; margin-bottom: 12px; }
     .rescue-chip { background: #ffffff; border: 1px solid #bae6fd; border-radius: 9px; padding: 8px 6px; text-align: center; }
     .rescue-chip strong { display: block; color: #0369a1; font-size: 14px; font-weight: 900; line-height: 1; }
@@ -99,9 +211,111 @@
     .route-ready-card { background:#ffffff; border:1px solid #c7e5f3; border-left:4px solid #0284c7; border-radius:9px; padding:12px; margin-bottom:12px; box-shadow:var(--field-shadow-tight); }
     .route-ready-card strong { display:block; color:#0f172a; font-size:14px; font-weight:900; margin-bottom:4px; }
     .route-ready-card span { display:block; color:#64748b; font-size:12px; line-height:1.45; }
+    .tech-radar-card { background:#ffffff; border:1px solid #ccfbf1; border-left:4px solid #0f766e; border-radius:10px; padding:12px; margin-bottom:12px; box-shadow:var(--field-shadow-tight); }
+    .tech-radar-card h2 { color:#0f172a; font-size:16px; line-height:1.15; font-weight:950; margin-bottom:5px; }
+    .tech-radar-card p { color:#475569; font-size:12px; line-height:1.45; margin-bottom:10px; }
+    .tech-radar-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:7px; }
+    .tech-radar-tile { background:#f8fafc; border:1px solid #d8e3ea; border-radius:8px; padding:8px; }
+    .tech-radar-tile strong { display:block; color:#0f766e; font-size:12px; font-weight:950; margin-bottom:3px; }
+    .tech-radar-tile span { display:block; color:#64748b; font-size:10.5px; font-weight:700; line-height:1.28; }
+    .operator-card { background:#ffffff; border:1px solid #bae6fd; border-left:4px solid #0ea5e9; border-radius:10px; padding:12px; margin-bottom:12px; box-shadow:var(--field-shadow-tight); }
+    .operator-card h2 { color:#0f172a; font-size:16px; font-weight:950; line-height:1.15; margin-bottom:5px; }
+    .operator-card p { color:#475569; font-size:12px; line-height:1.45; margin-bottom:10px; }
+    .operator-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:7px; }
+    .operator-chip { background:#f8fafc; border:1px solid #dbeafe; border-radius:8px; padding:9px; min-height:68px; text-align:left; cursor:pointer; }
+    .operator-chip strong { display:block; color:#0369a1; font-size:12px; font-weight:950; margin-bottom:3px; }
+    .operator-chip span { display:block; color:#64748b; font-size:10.5px; font-weight:700; line-height:1.28; }
+    .operator-result { margin-top:10px; }
+    .operator-alert { background:#fffbeb; border:1px solid #fde68a; border-radius:9px; padding:10px; color:#92400e; font-size:11px; line-height:1.45; font-weight:750; }
+    .role-picker { position:fixed; inset:0; z-index:1000; background:linear-gradient(145deg,#082f49,#0f172a 58%,#134e4a); padding:22px; display:none; align-items:center; justify-content:center; }
+    .role-picker.active { display:flex; }
+    .role-card { width:min(720px,100%); background:#ffffff; border-radius:16px; padding:18px; box-shadow:0 30px 80px rgba(2,6,23,.36); }
+    .role-card h1 { color:#0f172a; font-size:28px; line-height:1.05; font-weight:950; margin-bottom:8px; }
+    .role-card p { color:#475569; font-size:14px; line-height:1.45; margin-bottom:14px; }
+    .role-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(132px,1fr)); gap:10px; }
+    .role-choice { min-height:118px; background:#f8fafc; border:1px solid #dbe8ef; border-radius:12px; padding:13px; text-align:left; cursor:pointer; box-shadow:var(--field-shadow-tight); }
+    .role-choice strong { display:block; color:#075985; font-size:16px; line-height:1.1; font-weight:950; margin-bottom:8px; }
+    .role-choice span { display:block; color:#475569; font-size:12px; line-height:1.35; font-weight:750; }
+    .role-choice.primary { background:#e0f2fe; border-color:#7dd3fc; }
+    .role-preferences { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:0 0 14px; }
+    .role-pref-card { background:#f8fafc; border:1px solid #dbe8ef; border-radius:12px; padding:10px; }
+    .role-pref-card strong { display:block; color:#0f172a; font-size:12px; font-weight:950; margin-bottom:7px; }
+    .role-pref-row { display:flex; flex-wrap:wrap; gap:6px; }
+    .role-pref-row button { min-height:36px; background:#ffffff; border:1px solid #cbd5e1; color:#334155; border-radius:999px; padding:7px 10px; font-size:11px; font-weight:900; cursor:pointer; }
+    .role-pref-row button.active { background:#0369a1; color:#ffffff; border-color:#0284c7; }
+    .role-next-action { display:none; background:#ffffff; border:1px solid #99f6e4; border-left:4px solid #0f766e; border-radius:12px; padding:12px; margin-bottom:12px; box-shadow:var(--field-shadow-tight); }
+    .role-next-action.active { display:block; }
+    .role-next-grid { display:grid; grid-template-columns:1.1fr .9fr; gap:10px; align-items:stretch; }
+    .role-next-action h2 { color:#0f172a; font-size:20px; line-height:1.08; font-weight:950; margin-bottom:5px; }
+    .role-next-action p { color:#475569; font-size:12px; line-height:1.4; margin-bottom:9px; }
+    .role-next-actions { display:grid; grid-template-columns:1fr 1fr; gap:7px; }
+    .role-next-actions button { min-height:50px; border-radius:10px; border:1px solid #bae6fd; background:#f8fafc; color:#0f172a; padding:9px; font-size:12px; font-weight:950; text-align:left; cursor:pointer; }
+    .role-next-actions button.primary { background:#0f766e; color:#ffffff; border-color:#5eead4; }
+    .role-next-payoff { background:#0f172a; border-radius:10px; padding:10px; display:flex; flex-direction:column; justify-content:space-between; }
+    .role-next-payoff strong { color:#5eead4; font-size:11px; font-weight:950; text-transform:uppercase; letter-spacing:.08em; }
+    .role-next-payoff span { color:#e2e8f0; font-size:13px; font-weight:900; line-height:1.25; margin-top:8px; display:block; }
+    .role-nudge { position:fixed; left:12px; right:12px; bottom:82px; z-index:70; display:none; justify-content:center; pointer-events:none; }
+    .role-nudge.active { display:flex; }
+    .role-nudge-card { width:min(560px,100%); background:#ffffff; border:1px solid #99f6e4; border-left:4px solid #0f766e; border-radius:12px; padding:10px; box-shadow:0 18px 45px rgba(15,23,42,.22); pointer-events:auto; }
+    .role-nudge-card p { color:#334155; font-size:12px; line-height:1.35; font-weight:800; margin-bottom:8px; }
+    .role-nudge-actions { display:grid; grid-template-columns:repeat(5,1fr); gap:5px; }
+    .role-nudge-actions button { min-height:36px; border:1px solid #dbe8ef; background:#f8fafc; color:#075985; border-radius:8px; font-size:10px; font-weight:950; cursor:pointer; padding:6px 4px; }
+    .field-score-widget { position:fixed; left:12px; right:12px; bottom:86px; z-index:92; display:flex; justify-content:center; pointer-events:none; }
+    .field-score-widget[hidden] { display:none; }
+    .field-score-card { width:min(520px,100%); background:#ffffff; border:1px solid #bae6fd; border-left:4px solid #0284c7; border-radius:12px; box-shadow:0 20px 48px rgba(15,23,42,.24); padding:12px; pointer-events:auto; }
+    .field-score-head { display:flex; align-items:flex-start; justify-content:space-between; gap:10px; margin-bottom:9px; }
+    .field-score-kicker { color:#0369a1; font-size:10px; font-weight:950; text-transform:uppercase; letter-spacing:.08em; margin:0 0 3px; }
+    .field-score-title { color:#0f172a; font-size:16px; line-height:1.15; font-weight:950; margin:0; }
+    .field-score-close { width:32px; height:32px; border:1px solid #dbe8ef; border-radius:8px; background:#f8fafc; color:#334155; font-size:15px; font-weight:950; cursor:pointer; }
+    .field-score-actions { display:grid; grid-template-columns:repeat(4,1fr); gap:7px; }
+    .field-score-actions button { min-height:42px; border:1px solid #dbe8ef; border-radius:9px; background:#f8fafc; color:#0f172a; font-size:12px; font-weight:950; cursor:pointer; padding:8px 6px; }
+    .field-score-actions button:hover, .field-score-actions button:focus-visible { border-color:#0284c7; background:#e0f2fe; outline:none; }
+    .field-score-note { width:100%; margin-top:9px; min-height:58px; resize:vertical; border:1px solid #dbe8ef; border-radius:9px; padding:9px; color:#0f172a; font:inherit; font-size:13px; }
+    .field-score-note::placeholder { color:#64748b; }
+    .homeowner-mode nav[aria-label="SplashLens field tools"] .nav-btn { display:none; }
+    .homeowner-mode nav[aria-label="SplashLens field tools"] #nav-volume,
+    .homeowner-mode nav[aria-label="SplashLens field tools"] #nav-dosing,
+    .homeowner-mode nav[aria-label="SplashLens field tools"] #nav-guide,
+    .homeowner-mode nav[aria-label="SplashLens field tools"] #nav-report { display:flex; }
+    .facility-home { display:none; padding:14px; }
+    .facility-mode .facility-home { display:block; }
+    .facility-mode.facility-tools-hidden main .tab-panel, .facility-mode.facility-tools-hidden nav[aria-label="SplashLens field tools"] { display:none !important; }
+    .facility-hero { background:linear-gradient(145deg,#075985,#0f172a); border:1px solid #7dd3fc; border-radius:14px; padding:15px; margin-bottom:12px; box-shadow:var(--field-shadow); }
+    .facility-kicker { color:#bae6fd; font-size:10px; font-weight:950; letter-spacing:.12em; text-transform:uppercase; margin-bottom:7px; }
+    .facility-hero h1 { color:#fff; font-size:26px; line-height:1.05; font-weight:950; margin-bottom:8px; }
+    .facility-hero p { color:#dbeafe; font-size:13px; line-height:1.35; }
+    .facility-toolbar { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:12px; }
+    .facility-toolbar button, .facility-action-btn { min-height:44px; border:0; border-radius:9px; background:#0369a1; color:#fff; font-size:12px; font-weight:950; cursor:pointer; padding:9px; }
+    .facility-toolbar button.secondary, .facility-action-btn.secondary { background:#ffffff; color:#075985; border:1px solid #bae6fd; }
+    .facility-lanes { display:grid; grid-template-columns:repeat(2,1fr); gap:9px; margin-bottom:12px; }
+    .facility-lane { background:#ffffff; border:1px solid #dbe8ef; border-left:4px solid #0284c7; border-radius:11px; padding:12px; min-height:116px; text-align:left; cursor:pointer; box-shadow:var(--field-shadow-tight); }
+    .facility-lane strong { display:block; color:#0f172a; font-size:15px; line-height:1.12; font-weight:950; margin-bottom:7px; }
+    .facility-lane span { display:block; color:#64748b; font-size:11px; line-height:1.32; font-weight:750; }
+    .facility-lane.warn { border-left-color:#b45309; }
+    .facility-lane.help { border-left-color:#b91c1c; }
+    .facility-result { background:#ffffff; border:1px solid #dbe8ef; border-radius:12px; padding:12px; box-shadow:var(--field-shadow-tight); margin-bottom:12px; }
+    .facility-step { display:flex; gap:9px; align-items:flex-start; background:#f8fafc; border:1px solid #e2e8f0; border-radius:9px; padding:9px; margin-bottom:7px; }
+    .facility-step b { display:grid; place-items:center; width:24px; height:24px; border-radius:999px; background:#e0f2fe; color:#0369a1; font-size:11px; flex:0 0 auto; }
+    .facility-step span { color:#334155; font-size:12px; line-height:1.4; font-weight:760; }
+    .facility-packet pre { white-space:pre-wrap; word-break:break-word; background:#0f172a; color:#e0f2fe; border-radius:10px; padding:11px; font-size:11px; line-height:1.45; margin:10px 0; }
+    @media (max-width: 560px) {
+      .role-picker { align-items:flex-start; overflow-y:auto; padding:10px; }
+      .role-card { margin:0 auto; border-radius:12px; padding:14px; }
+      .role-grid, .facility-toolbar, .facility-lanes, .role-preferences, .role-next-grid, .role-next-actions { grid-template-columns:1fr; }
+      .role-card h1 { font-size:24px; }
+      .role-nudge-actions { grid-template-columns:repeat(3,1fr); }
+      .field-score-actions { grid-template-columns:repeat(2,1fr); }
+      .field-score-widget { bottom:82px; }
+    }
+    @media (max-height: 700px) {
+      .role-picker { align-items:flex-start; overflow-y:auto; padding:10px; }
+      .role-card { margin:0 auto; border-radius:12px; padding:14px; }
+    }
     @media (max-width: 360px) {
       .rescue-actions { grid-template-columns: 1fr; }
-      .rescue-strip { grid-template-columns: 1fr 1fr; }
+      .rescue-strip, .tech-radar-grid, .field-lane-strip, .operator-grid { grid-template-columns: 1fr; }
+      .field-workflow, .partsnap-steps { grid-template-columns:repeat(5,86px); }
+      .nav-btn span { font-size: 9px; letter-spacing: 0; }
     }
 
     /* Result display */
@@ -173,11 +387,248 @@
     .inline-chem-form { background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 10px; padding: 14px; margin-top: 10px; }
     textarea.pool-textarea { background: #ffffff; border: 1px solid #cbd5e1; color: #0f172a; border-radius: 9px; padding: 12px 14px; width: 100%; font-size: 14px; font-family: inherit; resize: vertical; -webkit-appearance: none; transition: border-color 0.15s; }
     textarea.pool-textarea:focus { outline: none; border-color: #0284c7; box-shadow: 0 0 0 3px rgba(2,132,199,0.12); }
+    .note-tools { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:6px; }
+    .note-tools .field-label { margin-bottom:0; }
+    .mic-btn { background:#eff6ff; border:1px solid #93c5fd; color:#0369a1; border-radius:999px; padding:6px 10px; min-height:30px; display:inline-flex; align-items:center; gap:6px; font-size:11px; font-weight:900; cursor:pointer; -webkit-tap-highlight-color:transparent; }
+    .mic-btn svg { width:13px; height:13px; flex-shrink:0; }
+    .mic-btn.listening { background:#fee2e2; border-color:#fca5a5; color:#991b1b; }
+    .mic-btn:disabled { background:#f1f5f9; border-color:#e2e8f0; color:#94a3b8; cursor:not-allowed; }
+    .mic-status { min-height:16px; margin-top:5px; color:#64748b; font-size:11px; font-weight:700; line-height:1.35; }
+    .brain-card { background:#ffffff; border:1px solid #d8e3ea; border-radius:10px; padding:13px; margin-bottom:10px; box-shadow:var(--field-shadow-tight); }
+    .brain-card.dark { background:linear-gradient(145deg,#0f172a,#12384b); border-color:#245a78; color:#ffffff; }
+    .brain-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+    .brain-chip { border:1px solid #cbd5e1; background:#f8fafc; color:#334155; border-radius:999px; padding:8px 10px; font-size:11px; font-weight:900; cursor:pointer; text-align:left; }
+    .brain-chip.primary { background:#e0f2fe; border-color:#7dd3fc; color:#075985; }
+    .brain-pill { display:inline-flex; align-items:center; gap:5px; border-radius:999px; padding:4px 8px; font-size:10px; font-weight:900; text-transform:uppercase; letter-spacing:.04em; }
+    .brain-pill.ready { background:#dcfce7; color:#166534; border:1px solid #86efac; }
+    .brain-pill.warn { background:#fef3c7; color:#92400e; border:1px solid #fcd34d; }
+    .brain-pill.risk { background:#fee2e2; color:#991b1b; border:1px solid #fca5a5; }
+    .brain-action { border:0; border-radius:9px; padding:11px 10px; color:#ffffff; background:#0369a1; font-size:12px; font-weight:900; cursor:pointer; }
+    .brain-action.secondary { background:#f1f5f9; color:#334155; border:1px solid #cbd5e1; }
+    .brain-action.green { background:#15803d; }
+    .brain-action.orange { background:#b45309; }
+    .brain-result h3 { color:#0f172a; font-size:14px; font-weight:900; margin-bottom:5px; }
+    .brain-result p, .brain-result li { color:#334155; font-size:12px; line-height:1.5; }
+    .brain-result ol, .brain-result ul { padding-left:18px; margin:6px 0 0; }
+    .brain-result .dark-note { background:#0f172a; color:#cbd5e1; border-radius:8px; padding:10px; margin-top:8px; }
+    .brain-result .dark-note p, .brain-result .dark-note li { color:#cbd5e1; }
+    @media (max-width: 380px) {
+      .brain-grid { grid-template-columns:1fr; }
+    }
+    .marketing-gate { min-height: 100dvh; background:#f8fbfd; color:#0f172a; }
+    .marketing-gate.hidden { display:none; }
+    .marketing-nav { min-height:64px; padding:14px 18px; display:flex; align-items:center; justify-content:space-between; gap:16px; border-bottom:1px solid #dbe8ef; background:#ffffff; position:sticky; top:0; z-index:60; }
+    .marketing-brand { display:flex; align-items:center; gap:10px; color:#0f172a; font-weight:950; letter-spacing:0; }
+    .marketing-mark { width:34px; height:34px; border-radius:8px; background:#0369a1; display:grid; place-items:center; color:#ffffff; font-size:14px; font-weight:950; }
+    .marketing-nav-actions { display:flex; align-items:center; gap:8px; }
+    .marketing-link { border:0; background:transparent; color:#0369a1; font-weight:900; font-size:13px; cursor:pointer; padding:9px 8px; }
+    .marketing-open { border:0; background:#0f766e; color:#ffffff; border-radius:8px; min-height:38px; padding:0 14px; font-size:13px; font-weight:950; cursor:pointer; }
+    .marketing-hero { max-width:1160px; margin:0 auto; padding:42px 20px 24px; display:grid; grid-template-columns:minmax(0,1.02fr) minmax(320px,.98fr); gap:32px; align-items:center; }
+    .marketing-copy h1 { font-size:clamp(42px,7vw,82px); line-height:.92; color:#082f49; font-weight:950; letter-spacing:0; max-width:780px; margin:0 0 18px; }
+    .marketing-copy p { max-width:620px; color:#475569; font-size:18px; line-height:1.5; margin:0 0 22px; }
+    .marketing-actions { display:flex; flex-wrap:wrap; gap:10px; margin-bottom:18px; }
+    .marketing-primary, .marketing-secondary { border-radius:8px; min-height:48px; padding:0 18px; font-size:15px; font-weight:950; cursor:pointer; }
+    .marketing-primary { border:0; background:#0284c7; color:#ffffff; box-shadow:0 10px 26px rgba(2,132,199,.22); }
+    .marketing-secondary { background:#ffffff; color:#0369a1; border:1px solid #b9d9e8; box-shadow:0 1px 2px rgba(15,23,42,.06); }
+    .marketing-proof { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; max-width:620px; }
+    .marketing-proof div { border:1px solid #dbe8ef; background:#ffffff; border-radius:8px; padding:12px; }
+    .marketing-proof strong { display:block; color:#0f172a; font-size:14px; font-weight:950; margin-bottom:4px; }
+    .marketing-proof span { display:block; color:#64748b; font-size:12px; line-height:1.35; }
+    .marketing-outcomes { display:grid; grid-template-columns:repeat(5,minmax(96px,1fr)); gap:8px; margin:14px 0 16px; max-width:760px; }
+    .marketing-outcome { min-height:74px; border:1px solid #cbd5e1; border-radius:10px; background:#ffffff; color:#0f172a; padding:10px; text-align:left; cursor:pointer; box-shadow:var(--field-shadow-tight); }
+    .marketing-outcome b { display:block; color:#0369a1; font-size:11px; font-weight:950; margin-bottom:5px; }
+    .marketing-outcome strong { display:block; font-size:13px; font-weight:950; line-height:1.1; }
+    .marketing-outcome span { display:block; color:#64748b; font-size:10px; font-weight:800; margin-top:5px; line-height:1.25; }
+    .marketing-preview { background:#082f49; border:1px solid #0e7490; border-radius:14px; padding:14px; box-shadow:0 24px 60px rgba(8,47,73,.2); }
+    .preview-top { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:12px; color:#dff6ff; font-size:12px; font-weight:900; }
+    .preview-screen { background:#ffffff; border-radius:10px; padding:14px; min-height:420px; display:flex; flex-direction:column; gap:10px; }
+    .preview-title { display:flex; justify-content:space-between; gap:10px; align-items:flex-start; }
+    .preview-title strong { color:#0f172a; font-size:20px; line-height:1.1; font-weight:950; }
+    .preview-pill { background:#dcfce7; color:#166534; border-radius:999px; padding:4px 8px; font-size:10px; font-weight:950; white-space:nowrap; }
+    .preview-card { border:1px solid #dbe8ef; border-radius:8px; padding:11px; background:#f8fafc; }
+    .preview-card.dark { background:#0f172a; border-color:#334155; color:#e2e8f0; }
+    .preview-card h3 { font-size:13px; margin-bottom:6px; color:inherit; }
+    .preview-card p { font-size:12px; line-height:1.45; color:#64748b; }
+    .preview-card.dark p { color:#cbd5e1; }
+    .preview-row { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+    .marketing-lanes { max-width:1160px; margin:0 auto; padding:10px 20px 34px; display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
+    .marketing-lane { background:#ffffff; border:1px solid #dbe8ef; border-radius:8px; padding:18px; }
+    .marketing-lane h2 { color:#082f49; font-size:20px; line-height:1.15; margin-bottom:8px; }
+    .marketing-lane p { color:#475569; font-size:14px; line-height:1.45; }
+    .app-shell.marketing-active { display:none; }
+    @media (max-width: 860px) {
+      .marketing-hero { grid-template-columns:1fr; padding-top:30px; gap:22px; }
+      .preview-screen { min-height:0; }
+      .marketing-lanes { grid-template-columns:1fr; }
+    }
+    @media (max-width: 520px) {
+      .marketing-nav { padding:12px 14px; }
+      .marketing-nav-actions .marketing-link { display:none; }
+      .marketing-hero { padding:28px 18px 20px; }
+      .marketing-copy h1 { font-size:46px; }
+      .marketing-copy p { font-size:16px; }
+      .marketing-proof { grid-template-columns:1fr; }
+      .marketing-outcomes { grid-template-columns:1fr 1fr; }
+      .marketing-actions { display:grid; grid-template-columns:1fr; }
+      .marketing-primary, .marketing-secondary { width:100%; }
+      .preview-row { grid-template-columns:1fr; }
+      .marketing-lanes { padding:4px 18px 28px; }
+      .field-workflow { grid-template-columns:1fr 1fr; overflow:visible; }
+      .workflow-chip { min-height:86px; }
+      .workflow-chip:last-child { grid-column:1 / -1; min-height:70px; }
+      .field-lane-strip { grid-template-columns:1fr 1fr; }
+      .partsnap-steps { grid-template-columns:1fr 1fr; overflow:visible; }
+      .partsnap-step:last-child { grid-column:1 / -1; min-height:58px; }
+    }
+    .field-signal-header-actions { display:flex; align-items:center; gap:8px; }
+    .field-signal-bell { width:38px; height:38px; border:1px solid rgba(255,255,255,.36); border-radius:8px; background:rgba(255,255,255,.15); color:#fff; display:grid; place-items:center; cursor:pointer; position:relative; }
+    .field-signal-bell:focus-visible { outline:3px solid #fef08a; outline-offset:2px; }
+    .field-signals-badge { display:none; place-items:center; position:absolute; top:-4px; right:-4px; min-width:18px; height:18px; padding:0 4px; border-radius:999px; background:#fbbf24; color:#422006; border:2px solid #0369a1; font-size:9px; font-weight:950; }
+    #field-signal-inline { display:none; margin:0 0 12px; }
+    .field-signal-card { background:#fff; border:1px solid #bae6fd; border-left:4px solid #0284c7; border-radius:8px; padding:12px; box-shadow:0 3px 12px rgba(15,23,42,.08); }
+    .field-signal-card.permission-offer { border-left-color:#0f766e; border-color:#99f6e4; }
+    .field-signal-head { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:5px; }
+    .field-signal-kicker { color:#0369a1; font-size:9px; font-weight:950; letter-spacing:.1em; text-transform:uppercase; }
+    .field-signal-icon-btn { width:30px; height:30px; border:0; border-radius:50%; background:#f1f5f9; color:#475569; cursor:pointer; font-size:15px; font-weight:900; }
+    .field-signal-card h2 { color:#0f172a; font-size:16px; line-height:1.15; margin-bottom:5px; }
+    .field-signal-card > p { color:#475569; font-size:12px; line-height:1.45; }
+    .field-signal-card .field-signal-source { color:#64748b; font-size:10px; margin-top:7px; }
+    .field-signal-card .field-signal-source a { color:#0369a1; font-weight:850; }
+    .field-signal-actions { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:10px; }
+    .field-signal-actions.three { grid-template-columns:repeat(3,1fr); }
+    .field-signal-actions button { min-height:42px; border:1px solid #cbd5e1; border-radius:8px; background:#fff; color:#334155; padding:9px 10px; font-size:11px; font-weight:900; cursor:pointer; }
+    .field-signal-actions button.primary { background:#0369a1; color:#fff; border-color:#0369a1; }
+    .field-signals-modal { display:none; position:fixed; inset:0; z-index:120; background:rgba(2,6,23,.58); align-items:flex-end; justify-content:center; padding:18px; }
+    .field-signals-modal.open { display:flex; }
+    .field-signals-sheet { width:min(720px,100%); max-height:min(86vh,820px); overflow:auto; background:#fff; border-radius:8px; box-shadow:0 24px 60px rgba(2,6,23,.35); }
+    .field-signals-sheet-head { position:sticky; top:0; z-index:2; display:flex; align-items:center; justify-content:space-between; gap:12px; background:#0f172a; color:#fff; padding:12px 14px; }
+    .field-signals-sheet-head h2 { font-size:16px; line-height:1.2; }
+    .field-signals-sheet-head button { width:36px; height:36px; border:1px solid #475569; border-radius:50%; background:#1e293b; color:#fff; font-size:18px; cursor:pointer; }
+    .field-signals-sheet-body { padding:14px; }
+    .field-signals-modal-open { overflow:hidden; }
+    .pump-decision-intro, .field-signal-settings-intro { background:#ecfeff; border:1px solid #a5f3fc; border-radius:8px; padding:11px; margin-bottom:12px; }
+    .pump-decision-intro strong, .field-signal-settings-intro strong { display:block; color:#0e7490; font-size:14px; margin-bottom:4px; }
+    .pump-decision-intro p, .field-signal-settings-intro p { color:#475569; font-size:11px; line-height:1.45; }
+    .field-signal-form-grid { display:grid; grid-template-columns:1fr 1fr; gap:9px; }
+    .field-signal-form-grid label, .field-signal-frequency label { color:#475569; font-size:10px; font-weight:900; }
+    .field-signal-form-grid input, .field-signal-form-grid select, .field-signal-frequency select { width:100%; margin-top:4px; min-height:42px; border:1px solid #cbd5e1; border-radius:8px; background:#fff; color:#0f172a; padding:9px 10px; font:13px/1.2 inherit; }
+    .field-signal-full-action { width:100%; min-height:46px; margin-top:11px; border:0; border-radius:8px; background:#0f766e; color:#fff; font-size:13px; font-weight:950; cursor:pointer; }
+    .pump-decision-result { margin-top:12px; border-top:1px solid #e2e8f0; padding-top:12px; }
+    .pump-decision-metrics { display:grid; grid-template-columns:repeat(4,1fr); gap:7px; }
+    .pump-decision-metrics div { background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:9px; }
+    .pump-decision-metrics span { display:block; color:#64748b; font-size:9px; font-weight:900; text-transform:uppercase; }
+    .pump-decision-metrics strong { display:block; color:#0f172a; font-size:13px; line-height:1.15; margin-top:4px; }
+    .pump-decision-warning { color:#92400e; background:#fffbeb; border:1px solid #fde68a; border-radius:8px; padding:9px; margin-top:8px; font-size:11px; line-height:1.4; font-weight:750; }
+    .pump-customer-summary { background:#f0fdf4; border:1px solid #86efac; border-radius:8px; padding:10px; margin-top:9px; }
+    .pump-customer-summary strong { color:#166534; font-size:11px; }
+    .pump-customer-summary p { color:#14532d; font-size:11px; line-height:1.45; margin-top:4px; }
+    .field-signal-source-box { background:#f8fafc; border:1px solid #cbd5e1; border-radius:8px; padding:10px; margin-top:12px; }
+    .field-signal-source-box strong { display:block; color:#0f172a; font-size:12px; margin-bottom:4px; }
+    .field-signal-source-box p { color:#475569; font-size:10px; line-height:1.45; margin-bottom:6px; }
+    .field-signal-source-box a { display:inline-block; color:#0369a1; font-size:10px; font-weight:900; margin-right:10px; }
+    .field-signal-source-box span { display:block; color:#64748b; font-size:9px; margin-top:6px; }
+    .pump-proof-list { display:grid; gap:7px; }
+    .pump-proof-list label { min-height:48px; display:flex; align-items:center; gap:9px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:8px 10px; cursor:pointer; }
+    .pump-proof-list input { width:22px; height:22px; accent-color:#0f766e; flex:0 0 auto; }
+    .pump-proof-list span { color:#334155; font-size:12px; font-weight:850; }
+    .pump-proof-list b { display:inline-grid; place-items:center; width:22px; height:22px; border-radius:50%; background:#e0f2fe; color:#0369a1; margin-right:7px; font-size:10px; }
+    .field-signal-setting-list { display:grid; gap:7px; margin:10px 0; }
+    .field-signal-setting-row { min-height:58px; display:flex; align-items:center; justify-content:space-between; gap:12px; border:1px solid #e2e8f0; border-radius:8px; padding:9px 10px; background:#fff; }
+    .field-signal-setting-row.system { background:#f0fdfa; border-color:#99f6e4; }
+    .field-signal-setting-row strong { display:block; color:#0f172a; font-size:12px; }
+    .field-signal-setting-row span, .field-signal-setting-row small { display:block; color:#64748b; font-size:10px; line-height:1.35; }
+    .field-signal-setting-row input { width:24px; height:24px; accent-color:#0f766e; }
+    .field-signal-setting-row button { min-width:76px; min-height:38px; border:1px solid #0f766e; border-radius:8px; background:#fff; color:#0f766e; font-size:11px; font-weight:900; cursor:pointer; }
+    .field-signal-setting-row button.on { background:#0f766e; color:#fff; }
+    .field-signal-frequency { background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:10px; }
+    .field-signal-frequency p, .field-signal-privacy { color:#64748b; font-size:10px; line-height:1.4; margin-top:6px; }
+    .field-signal-status { background:#fff7ed; border:1px solid #fed7aa; color:#9a3412; border-radius:8px; padding:9px; margin-bottom:9px; font-size:11px; font-weight:800; }
+    @media (max-width:560px) {
+      .field-signals-modal { padding:0; }
+      .field-signals-sheet { max-height:92vh; border-radius:8px 8px 0 0; }
+      .field-signal-form-grid { grid-template-columns:1fr; }
+      .pump-decision-metrics { grid-template-columns:1fr 1fr; }
+      .field-signal-actions.three { grid-template-columns:1fr; }
+    }
   </style>
 </head>
 <body>
 
-  <!-- ═══ HEADER ═══ -->
+  <section id="marketing-gate" class="marketing-gate" aria-label="SplashLens introduction">
+    <nav class="marketing-nav">
+      <div class="marketing-brand"><span class="marketing-mark">SL</span><span>SplashLens</span></div>
+      <div class="marketing-nav-actions">
+        <button type="button" class="marketing-link" onclick="enterSplashLensApp('scan','parts')">PartSnap</button>
+        <button type="button" class="marketing-link" onclick="enterSplashLensApp('errors')">Codes</button>
+        <button type="button" class="marketing-link" onclick="focusErrorSearch('spa')">Spas</button>
+        <button type="button" class="marketing-link" onclick="setSplashLensRole('trainer', { persist: true, source: 'marketing_nav' })">Learn</button>
+        <button type="button" class="marketing-open" onclick="enterSplashLensApp('scan','parts')">PartSnap</button>
+      </div>
+    </nav>
+
+    <div class="marketing-hero">
+      <div class="marketing-copy">
+        <h1>Get off the pad faster.</h1>
+        <p>Identify the part, capture the stop, build the packet, and get back to the next job without rewriting everything after dinner.</p>
+        <div class="marketing-actions">
+          <button id="continue-field-task" type="button" class="marketing-primary" style="display:none" onclick="continueLastFieldTask()">Continue last field task</button>
+          <button type="button" class="marketing-primary" onclick="enterSplashLensApp('scan','parts')">Try PartSnap</button>
+          <button type="button" class="marketing-secondary" onclick="enterSplashLensApp('errors')">Open Field Tools</button>
+        <button type="button" class="marketing-secondary" onclick="enterSplashLensApp('errors','search')">Look Up Codes</button>
+        <button type="button" class="marketing-secondary" onclick="setSplashLensRole('trainer', { persist: true, source: 'marketing_hero' })">Open Learning OS</button>
+        </div>
+        <div class="marketing-outcomes" aria-label="Choose a SplashLens workflow">
+          <button type="button" class="marketing-outcome" onclick="enterSplashLensApp('scan','parts')"><b>01</b><strong>ID part</strong><span>photo + proof</span></button>
+          <button type="button" class="marketing-outcome" onclick="enterSplashLensApp('report')"><b>02</b><strong>Save proof</strong><span>passport</span></button>
+          <button type="button" class="marketing-outcome" onclick="setSplashLensRole('facility', { persist: true })"><b>03</b><strong>Facility</strong><span>CPO path</span></button>
+          <button type="button" class="marketing-outcome" onclick="enterSplashLensApp('route')"><b>04</b><strong>Smart pad</strong><span>robots + controls</span></button>
+          <button type="button" class="marketing-outcome" onclick="quickServiceNote();enterSplashLensApp('report')"><b>05</b><strong>Voice note</strong><span>talk + save</span></button>
+          <button type="button" class="marketing-outcome" onclick="focusErrorSearch('spa')"><b>06</b><strong>Spa stop</strong><span>packs + flow</span></button>
+          <button type="button" class="marketing-outcome" onclick="setSplashLensRole('trainer', { persist: true, source: 'marketing_outcome' })"><b>07</b><strong>Train</strong><span>real stops</span></button>
+        </div>
+        <div class="marketing-proof">
+          <div><strong>PartSnap</strong><span>Possible part families, missing proof, callback risk, and clean escalation.</span></div>
+          <div><strong>Service Proof OS</strong><span>Photos, readings, notes, summaries, and saved stop history.</span></div>
+          <div><strong>Learning OS</strong><span>Real PartSnap misses and proof packets become five-minute field lessons.</span></div>
+        </div>
+      </div>
+
+      <div class="marketing-preview" aria-label="SplashLens product preview">
+        <div class="preview-top"><span>Field stop workflow</span><span>proof first</span></div>
+        <div class="preview-screen">
+          <div class="preview-title">
+            <strong>PartSnap result packet</strong>
+            <span class="preview-pill">Review ready</span>
+          </div>
+          <div class="preview-card dark">
+            <h3>Possible part family</h3>
+            <p>Pump lid / basket / O-ring path. Needs model plate and molded number before ordering.</p>
+          </div>
+          <div class="preview-row">
+            <div class="preview-card"><h3>Visible proof</h3><p>Part photo, housing shape, label close-up.</p></div>
+            <div class="preview-card"><h3>Missing proof</h3><p>Model plate, size, vendor cross-check.</p></div>
+          </div>
+          <div class="preview-card">
+            <h3>Senior-tech packet</h3>
+            <p>Copy one clean handoff with symptoms, proof, missing evidence, and what to verify before selling or replacing.</p>
+          </div>
+          <div class="preview-card">
+            <h3>Service Proof Passport</h3>
+            <p>Save the stop so next visit has the equipment context, not a mystery photo buried in texts.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="marketing-lanes">
+      <article class="marketing-lane"><h2>Identify the part.</h2><p>Use PartSnap for seals, lids, grids, cells, valves, robot parts, lights, boards, sensors, and the stuff nobody wants to guess at.</p></article>
+      <article class="marketing-lane"><h2>Verify the proof.</h2><p>SplashLens keeps the language cautious: possible matches, missing proof, and manual/vendor/manufacturer verification before ordering.</p></article>
+      <article class="marketing-lane"><h2>Finish the stop.</h2><p>Use dosing math, notes, Route Brain, training cards, and customer-safe summaries to leave cleaner and faster.</p></article>
+    </div>
+  </section>
+
+  <div id="app-shell" class="app-shell marketing-active">
+  <!-- HEADER -->
   <header style="background:var(--field-blue);padding:11px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;box-shadow:0 2px 10px rgba(3,105,161,0.22);">
     <div style="display:flex;align-items:center;gap:10px;">
       <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 32 32">
@@ -188,62 +639,213 @@
         <circle cx="16" cy="11" r="2" fill="white"/>
       </svg>
       <span style="color:#ffffff;font-weight:900;font-size:20px;letter-spacing:-0.5px;">SplashLens</span>
-      <span style="background:rgba(255,255,255,0.2);color:#ffffff;font-size:9px;font-weight:900;padding:2px 7px;border-radius:4px;border:1px solid rgba(255,255,255,0.35);letter-spacing:0.08em;">FIELD</span>
-      <div id="offline-dot" title="Checking offline status…" style="width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,0.25);flex-shrink:0;transition:background 0.4s;"></div>
+      <span style="background:#075985;color:#ffffff;font-size:9px;font-weight:900;padding:2px 7px;border-radius:4px;border:1px solid #7dd3fc;letter-spacing:0.08em;">FIELD</span>
+      <div id="offline-dot" title="Checking offline status..." style="width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,0.25);flex-shrink:0;transition:background 0.4s;"></div>
     </div>
-    <div id="pool-vol-badge" style="display:none;">
-      <button onclick="focusVolumeInput()" style="background:rgba(255,255,255,0.18);border:1px solid rgba(255,255,255,0.35);border-radius:7px;padding:4px 11px;cursor:pointer;">
-        <span style="color:rgba(255,255,255,0.75);font-size:10px;">Pool: </span>
-        <span id="pool-vol-display" style="color:#ffffff;font-size:12px;font-weight:900;"></span>
+    <div class="field-signal-header-actions">
+      <button type="button" class="field-signal-bell" aria-label="Open Field Signals" title="Field Signals" onclick="window.SplashLensFieldSignals?.openSignalCenter()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg>
+        <span id="field-signals-badge" class="field-signals-badge">0</span>
       </button>
+      <div id="pool-vol-badge" style="display:none;">
+        <button onclick="focusVolumeInput()" style="background:rgba(255,255,255,0.18);border:1px solid rgba(255,255,255,0.35);border-radius:7px;padding:4px 11px;cursor:pointer;">
+          <span style="color:rgba(255,255,255,0.75);font-size:10px;">Pool: </span>
+          <span id="pool-vol-display" style="color:#ffffff;font-size:12px;font-weight:900;"></span>
+        </button>
+      </div>
     </div>
   </header>
+  <div class="language-bar">
+    <span>Preferred language</span>
+    <select id="language-select" aria-label="Preferred language">
+      <option value="en">English</option>
+      <option value="es">Español</option>
+    </select>
+  </div>
+  <section id="spanish-field-strip" class="spanish-field-strip" aria-label="Spanish field quick start">
+    <strong>Modo campo en espanol: prueba primero, orden despues.</strong>
+    <div class="chips">
+      <button type="button" onclick="setScanMode('parts');trackSplashLensEvent('spanish_quick_chip',{chip:'photo_part'})">1 Foto pieza</button>
+      <button type="button" onclick="setScanMode('lookup');trackSplashLensEvent('spanish_quick_chip',{chip:'code_label'})">2 Codigo/placa</button>
+      <button type="button" onclick="startSpanishFieldWorkflow('readings')">3 Lecturas</button>
+      <button type="button" onclick="startSpanishFieldWorkflow('proof_note')">4 Nota prueba</button>
+      <button type="button" onclick="startSpanishFieldWorkflow('packet')">5 Paquete</button>
+    </div>
+  </section>
 
-  <!-- ═══ MAIN ═══ -->
-  <main style="padding-bottom:70px;">
+  <section id="role-picker" class="role-picker" aria-label="Choose SplashLens mode">
+    <div class="role-card">
+      <p style="color:#0284c7;font-size:10px;font-weight:950;letter-spacing:.12em;text-transform:uppercase;margin-bottom:7px;">Choose your front door</p>
+      <h1>Who are you today?</h1>
+      <p>SplashLens keeps every tool available. This just chooses the first workflow you see.</p>
+      <div class="role-preferences" aria-label="First-use preferences">
+        <div class="role-pref-card">
+          <strong>Language</strong>
+          <div class="role-pref-row">
+            <button type="button" data-pref-language="en" onclick="chooseRoleLanguage('en')">English</button>
+            <button type="button" data-pref-language="es" onclick="chooseRoleLanguage('es')">Español</button>
+          </div>
+        </div>
+        <div class="role-pref-card">
+          <strong>First result style</strong>
+          <div class="role-pref-row">
+            <button type="button" data-pref-style="steps" onclick="setWorkflowStyle('steps')">Numbered steps</button>
+            <button type="button" data-pref-style="visual" onclick="setWorkflowStyle('visual')">Visual proof</button>
+            <button type="button" data-pref-style="compact" onclick="setWorkflowStyle('compact')">Compact</button>
+          </div>
+        </div>
+      </div>
+      <div class="role-grid">
+        <button type="button" class="role-choice primary" onclick="setSplashLensRole('tech', { persist: true })"><strong>Service Tech</strong><span>PartSnap, codes, route notes, dosing, and proof packets first.</span></button>
+        <button type="button" class="role-choice" onclick="setSplashLensRole('facility', { persist: true })"><strong>Facility / CPO</strong><span>Daily checks, contamination response, basic proof, and support packets.</span></button>
+        <button type="button" class="role-choice" onclick="setSplashLensRole('counter', { persist: true })"><strong>Counter / Distributor</strong><span>Part, model, and vendor packet workflows without CRM clutter.</span></button>
+        <button type="button" class="role-choice" onclick="setSplashLensRole('trainer', { persist: true })"><strong>Trainer</strong><span>Apprentice prompts, CPO scenarios, and proof-first field lessons.</span></button>
+        <button type="button" class="role-choice" onclick="setSplashLensRole('homeowner', { persist: true })"><strong>Homeowner</strong><span>Plain-language notes, volume, dosing basics, and when to call a pro.</span></button>
+      </div>
+    </div>
+  </section>
 
-    <!-- ─── ERRORS ─── -->
+  <section id="facility-home" class="facility-home" aria-label="SplashLens Facility Mode">
+    <div class="facility-hero">
+      <p class="facility-kicker">Facility Assist</p>
+      <h1>What is going on?</h1>
+      <p id="facility-context">Pick the situation, gather proof, and end with either Resolved - logged or Escalate - send packet.</p>
+    </div>
+    <div class="facility-toolbar">
+      <button type="button" onclick="showFacilityTools()">All tools</button>
+      <button type="button" class="secondary" onclick="showRolePicker(true)">Switch mode</button>
+      <button type="button" class="secondary" onclick="openFacilityQrSheet()">QR stickers</button>
+    </div>
+    <div id="facility-known-issues"></div>
+    <div class="facility-lanes" id="facility-lanes">
+      <button type="button" class="facility-lane" data-lane="daily" onclick="startFacilityLane('daily')"><strong>Daily pool check</strong><span>Readings, clarity, equipment sound, and required log proof.</span></button>
+      <button type="button" class="facility-lane" data-lane="dose" onclick="startFacilityLane('dose')"><strong>Dose the pool</strong><span>Volume, current reading, target, product label, and retest note.</span></button>
+      <button type="button" class="facility-lane warn" data-lane="contamination" onclick="startFacilityLane('contamination')"><strong>Contamination event</strong><span>Close access, document time/type, follow approved standard, reopen checklist.</span></button>
+      <button type="button" class="facility-lane" data-lane="equipment" onclick="startFacilityLane('equipment')"><strong>Equipment acting up</strong><span>Safe visible checks only: water level, baskets, breaker state, alarms, labels.</span></button>
+      <button type="button" class="facility-lane" data-lane="manual" onclick="startFacilityLane('manual')"><strong>Find manual / what is this?</strong><span>Capture brand, model, code, label, and equipment proof before calling.</span></button>
+      <button type="button" class="facility-lane help" data-lane="help" onclick="startFacilityLane('help')"><strong>I need help now</strong><span>Build the support packet, then call/share using the configured route.</span></button>
+    </div>
+    <div id="facility-result" class="facility-result" style="display:none;"></div>
+  </section>
+
+  <aside id="role-nudge" class="role-nudge" aria-label="Choose a SplashLens mode">
+    <div class="role-nudge-card">
+      <p>Want SplashLens to trim this screen for your job today?</p>
+      <div class="role-nudge-actions">
+        <button type="button" onclick="setSplashLensRole('tech', { persist: true, source: 'nudge' })">Tech</button>
+        <button type="button" onclick="setSplashLensRole('facility', { persist: true, source: 'nudge' })">CPO</button>
+        <button type="button" onclick="setSplashLensRole('counter', { persist: true, source: 'nudge' })">Counter</button>
+        <button type="button" onclick="setSplashLensRole('trainer', { persist: true, source: 'nudge' })">Trainer</button>
+        <button type="button" onclick="setSplashLensRole('homeowner', { persist: true, source: 'nudge' })">Homeowner</button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main style="padding-bottom:96px;">
+
+    <!-- ERRORS -->
     <div id="tab-errors" class="tab-panel active" style="padding:14px;">
 
       <section class="rescue-hero">
-        <p class="rescue-kicker">SplashLens field rescue - formerly PoolLens tools</p>
-        <h1 class="rescue-title">Stuck at the equipment pad?</h1>
-        <p class="rescue-sub">SplashLens carries the PoolLens field toolkit forward with Route Ready service authority: scan the display, search the code, calculate the dose, or write the service note. No account. Core tools are free.</p>
-        <div class="rescue-actions">
-          <button type="button" class="rescue-action primary" onclick="showTab('scan')">
-            <strong>Scan Error Code</strong>
-            <span>10 free AI scans monthly. Manual tools stay free.</span>
+        <p class="rescue-kicker">PartSnap first - proof before ordering</p>
+        <h1 class="rescue-title">Find the part. Prove the path.</h1>
+        <p class="rescue-sub">Photo it, verify it, packet it, then move.</p>
+        <div class="field-workflow" aria-label="Fast field workflow">
+          <button type="button" class="workflow-chip partsnap" onclick="showTab('scan');setTimeout(()=>setScanMode('parts'),80)">
+            <span class="workflow-num">1</span>
+            <strong>ID Part</strong>
+            <span>photo + label</span>
           </button>
-          <button type="button" class="rescue-action" onclick="focusErrorSearch()">
-            <strong>Search Code</strong>
-            <span>500+ codes across major pool brands.</span>
+          <button type="button" class="workflow-chip primary" onclick="showTab('scan')">
+            <span class="workflow-num">2</span>
+            <strong>Scan Code</strong>
+            <span>display / plate</span>
           </button>
-          <button type="button" class="rescue-action" onclick="focusVolumeInput()">
-            <strong>Calculate Dose</strong>
-            <span>Fast pool math for the stop you are on.</span>
+          <button type="button" class="workflow-chip" onclick="focusErrorSearch()">
+            <span class="workflow-num">3</span>
+            <strong>Search</strong>
+            <span>brand / symptom</span>
           </button>
-          <button type="button" class="rescue-action" onclick="quickServiceNote()">
-            <strong>Make Service Note</strong>
-            <span>Copy, share, or print a clean visit report.</span>
+          <button type="button" class="workflow-chip" onclick="focusVolumeInput()">
+            <span class="workflow-num">4</span>
+            <strong>Dose</strong>
+            <span>pool math</span>
+          </button>
+          <button type="button" class="workflow-chip" onclick="quickServiceNote()">
+            <span class="workflow-num">5</span>
+            <strong>Note</strong>
+            <span>talk + save</span>
           </button>
         </div>
-        <p class="rescue-proof"><strong>Manual lookup works offline after first load.</strong> AI camera scan requires internet. PoolBrain and Skimmer run the company; SplashLens saves the stop.</p>
+        <p class="rescue-proof"><strong>Offline:</strong> manual lookup, calculators, guides. <strong>Online:</strong> AI scan, PartSnap, voice.</p>
       </section>
 
+      <section id="role-next-action" class="role-next-action" aria-live="polite"></section>
+      <section id="field-signal-inline" aria-live="polite" aria-label="Relevant field signal"></section>
+
+      <section class="operator-card" aria-label="CPO and facility manager quick start">
+        <h2>CPO / Facility quick start</h2>
+        <p>For managers who need the first safe step, not a deep repair tree. Pick the situation, document it, then escalate when it is above CPO scope.</p>
+        <div class="operator-grid">
+          <button type="button" class="operator-chip" onclick="startOperatorWizard('daily')"><strong>Daily Pool Check</strong><span>readings, clarity, equipment sound</span></button>
+          <button type="button" class="operator-chip" onclick="startOperatorWizard('dose')"><strong>Chemical Dose</strong><span>volume, target, product math</span></button>
+          <button type="button" class="operator-chip" onclick="startOperatorWizard('contamination')"><strong>Contamination Event</strong><span>vomit, fecal, body fluid</span></button>
+          <button type="button" class="operator-chip" onclick="startOperatorWizard('pump')"><strong>Pump / Motor Basic</strong><span>water, baskets, breaker, noise</span></button>
+          <button type="button" class="operator-chip" onclick="startOperatorWizard('manual')"><strong>Find Manual / Label</strong><span>equipment proof and QR path</span></button>
+          <button type="button" class="operator-chip" onclick="startOperatorWizard('support')"><strong>Call Support</strong><span>packet first, then expert help</span></button>
+        </div>
+        <div id="operator-wizard-result" class="operator-result"></div>
+      </section>
+
+      <section class="partsnap-hero-card" aria-label="PartSnap parts identification">
+        <strong>PartSnap flow</strong>
+        <div class="partsnap-steps">
+          <div class="partsnap-step"><b>1. Part</b><span>close + lit</span></div>
+          <div class="partsnap-step"><b>2. Label</b><span>model plate</span></div>
+          <div class="partsnap-step"><b>3. Proof</b><span>marking / size</span></div>
+          <div class="partsnap-step"><b>4. Risk</b><span>callback flag</span></div>
+          <div class="partsnap-step"><b>5. Packet</b><span>senior / vendor</span></div>
+        </div>
+      </section>
+
+      <div class="field-lane-strip" aria-label="Fast troubleshooting lanes">
+        <button type="button" class="field-lane-chip" onclick="selectBrand('spa_hot_tub')"><strong>Spa Packs</strong><span>Balboa, Gecko, Waterway, flow proof.</span></button>
+        <button type="button" class="field-lane-chip" onclick="selectBrand('robots_expanded')"><strong>Robots</strong><span>Dolphin, Aiper, Polaris, Beatbot, WYBOT.</span></button>
+        <button type="button" class="field-lane-chip" onclick="showTab('route')"><strong>Automation</strong><span>Omni, IntelliCenter, iAquaLink, relays.</span></button>
+        <button type="button" class="field-lane-chip" onclick="focusErrorSearch('light')"><strong>Lights</strong><span>ColorLogic, IntelliBrite, GFCI, niches.</span></button>
+        <button type="button" class="field-lane-chip" onclick="focusErrorSearch('salt')"><strong>Salt</strong><span>Cells, flow sensors, comms, scaling.</span></button>
+        <button type="button" class="field-lane-chip" onclick="focusErrorSearch('controller')"><strong>Chem Feed</strong><span>ORP, pH, AOP, ozone, feeders.</span></button>
+      </div>
+
       <div class="rescue-strip" aria-label="SplashLens field tools">
-        <div class="rescue-chip"><strong>500+</strong><span>Error codes</span></div>
+        <div class="rescue-chip"><strong>260+</strong><span>Current entries</span></div>
         <div class="rescue-chip"><strong>$0</strong><span>No card</span></div>
         <div class="rescue-chip"><strong>Offline</strong><span>Manual tools</span></div>
       </div>
 
       <div class="route-ready-card" aria-label="Route Ready service authority">
         <strong>Route Ready service authority</strong>
-        <span>Use SplashLens at the stop today. Route Ready training remains a pilot layer until field usage proves the modules; PartSnap Pro is the paid web scanner upgrade for extended online scans.</span>
+        <span>Use the chips first. Save the longer proof and training notes for review after the stop.</span>
       </div>
+
+      <section class="tech-radar-card" aria-label="New Tech Radar and Connected Pool Network">
+        <h2>PartSnap + Connected Pool Network</h2>
+        <p>Fast lanes for smart gear and weird stops.</p>
+        <div class="tech-radar-grid">
+          <button type="button" class="tech-radar-tile" onclick="showTab('route')"><strong>Connected Pool Network</strong><span>Omni, IntelliCenter, iAquaLink, RS-485, relays, actuators, app pairing.</span></button>
+          <button type="button" class="tech-radar-tile" onclick="selectBrand('robots_expanded')"><strong>Robot Field Guide</strong><span>Dolphin, Polaris, Aiper, Beatbot, WYBOT, Ecovacs, iGarden, Betta.</span></button>
+          <button type="button" class="tech-radar-tile" onclick="selectBrand('spa_hot_tub')"><strong>Spa Pack Lane</strong><span>Balboa, Gecko, Waterway, topsides, flow and heater proof.</span></button>
+          <button type="button" class="tech-radar-tile" onclick="focusErrorSearch('swim spa')"><strong>Swim Spa Proof</strong><span>Current pumps, covers, suctions, GFCI timing, and facility handoff.</span></button>
+          <button type="button" class="tech-radar-tile" onclick="showTab('scan');setScanMode('parts')"><strong>PartSnap Proof</strong><span>Photo, label, proof checklist, senior/vendor packet.</span></button>
+          <button type="button" class="tech-radar-tile" onclick="showTab('route')"><strong>Risk Flags</strong><span>Flow fault plus dirty filter plus weak proof means higher callback risk.</span></button>
+          <button type="button" class="tech-radar-tile" onclick="showTab('route')"><strong>Training Mode</strong><span>Turn real field symptoms into 5-minute new-tech lessons and senior-tech packets.</span></button>
+        </div>
+      </section>
 
       <div style="position:relative;margin-bottom:12px;">
         <svg style="position:absolute;left:13px;top:50%;transform:translateY(-50%);pointer-events:none;" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <input type="search" id="error-search" placeholder="Search codes, symptoms, brands…" oninput="onErrorSearch(this.value)" style="padding-left:40px;padding-right:40px;" autocomplete="off" spellcheck="false">
+        <input type="search" id="error-search" placeholder="Search codes, symptoms, brands..." oninput="onErrorSearch(this.value)" style="padding-left:40px;padding-right:40px;" autocomplete="off" spellcheck="false">
         <button id="search-clear" onclick="clearSearch()" style="display:none;position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:#94a3b8;cursor:pointer;padding:6px;">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>
@@ -255,12 +857,12 @@
         <div style="text-align:center;padding:40px 16px;">
           <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="1.5" style="margin:0 auto 14px;display:block;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
           <p style="font-size:15px;color:#475569;margin-bottom:5px;font-weight:600;">Pick a brand or search</p>
-          <p style="font-size:12px;color:#94a3b8;">Hayward · Pentair · Jandy · Maytronics · Aiper · Raypak</p>
+          <p style="font-size:12px;color:#475569;">Hayward / Pentair / Jandy / Maytronics / Aiper / Raypak</p>
         </div>
       </div>
     </div>
 
-    <!-- ─── DOSING ─── -->
+    <!-- DOSING -->
     <div id="tab-dosing" class="tab-panel" style="padding:14px;">
       <!-- SLAM active banner (shown/hidden by JS) -->
       <div id="slam-banner" style="display:none;margin-bottom:14px;"></div>
@@ -273,18 +875,56 @@
       <div class="field-group">
         <label class="field-label">What to Adjust</label>
         <select id="dose-param" onchange="onParamChange()">
-          <option value="">— Select parameter —</option>
+          <option value="">Select parameter</option>
           <option value="fc">Free Chlorine (FC)</option>
-          <option value="ph_lower">pH — Lower it</option>
-          <option value="ph_raise">pH — Raise it</option>
+          <option value="ph_lower">pH - Lower it</option>
+          <option value="ph_raise">pH - Raise it</option>
           <option value="ta">Total Alkalinity (TA)</option>
           <option value="ch">Calcium Hardness (CH)</option>
           <option value="cya">CYA / Stabilizer</option>
         </select>
       </div>
       <div id="dose-fields"></div>
+      <div style="background:#ffffff;border:1px solid #bae6fd;border-radius:10px;padding:12px;margin:12px 0;box-shadow:0 1px 3px rgba(0,0,0,0.05);">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px;">
+          <p style="color:#0369a1;font-weight:900;font-size:13px;">Product Line Helper</p>
+          <span style="background:#e0f2fe;color:#0369a1;border:1px solid #7dd3fc;border-radius:999px;padding:3px 8px;font-size:10px;font-weight:900;">truck-aware</span>
+        </div>
+        <div class="field-group" style="margin-bottom:10px;">
+          <label class="field-label">Line on the Truck</label>
+          <select id="dose-line" onchange="renderProductLineHelper()">
+            <option value="generic">Generic / active ingredient</option>
+            <option value="hasa">HASA</option>
+            <option value="orenda">Orenda</option>
+            <option value="bioguard">BioGuard</option>
+            <option value="natural">Natural Chemistry</option>
+            <option value="leslie">Leslie's / private label</option>
+            <option value="poolife">Poolife</option>
+            <option value="jacks">Jack's Magic</option>
+          </select>
+        </div>
+        <div id="dose-line-helper" style="font-size:12px;color:#334155;line-height:1.55;"></div>
+      </div>
       <button class="btn-calc" onclick="calculateDose()">Calculate Dose</button>
       <div id="dose-result" style="margin-top:14px;"></div>
+
+      <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:12px;margin-top:14px;box-shadow:0 1px 3px rgba(0,0,0,0.05);">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px;">
+          <p style="color:#0369a1;font-weight:900;font-size:13px;">LSI / CSI Sanity Check</p>
+          <span id="lsi-status-pill" style="background:#e2e8f0;color:#475569;border-radius:999px;padding:3px 8px;font-size:10px;font-weight:900;">field estimate</span>
+        </div>
+        <p style="color:#64748b;font-size:11px;line-height:1.45;margin-bottom:10px;">Before dosing, preview whether the change pushes water toward scale or corrosion. This is a field sanity check, not a lab certificate.</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px;">
+          <div><label class="field-label">pH</label><input type="number" id="lsi-ph" placeholder="7.5" step="0.1" inputmode="decimal"></div>
+          <div><label class="field-label">TA</label><input type="number" id="lsi-ta" placeholder="80" inputmode="decimal"></div>
+          <div><label class="field-label">CH</label><input type="number" id="lsi-ch" placeholder="250" inputmode="decimal"></div>
+          <div><label class="field-label">CYA</label><input type="number" id="lsi-cya" placeholder="40" inputmode="decimal"></div>
+          <div><label class="field-label">Temp F</label><input type="number" id="lsi-temp" placeholder="80" inputmode="decimal"></div>
+          <div><label class="field-label">Salt/TDS</label><input type="number" id="lsi-salt" placeholder="1000" inputmode="decimal"></div>
+        </div>
+        <button type="button" onclick="calculateLsiPreview()" style="width:100%;background:#eff6ff;border:1px solid #93c5fd;color:#0369a1;border-radius:9px;padding:10px;font-size:13px;font-weight:900;cursor:pointer;">Preview Balance Impact</button>
+        <div id="lsi-preview" style="margin-top:10px;"></div>
+      </div>
 
       <hr class="section-div">
       <p style="color:#0369a1;font-weight:900;font-size:15px;margin-bottom:12px;">Target Ranges</p>
@@ -292,12 +932,12 @@
 
       <hr class="section-div">
       <p style="color:#0369a1;font-weight:900;font-size:15px;margin-bottom:4px;">Addition Order</p>
-      <p style="color:#64748b;font-size:12px;margin-bottom:12px;">Always add in this sequence — never mix products directly.</p>
+      <p style="color:#64748b;font-size:12px;margin-bottom:12px;">Always add in this sequence - never mix products directly.</p>
       <div id="addition-order"></div>
 
       <hr class="section-div">
       <p style="color:#0369a1;font-weight:900;font-size:15px;margin-bottom:4px;">SLAM Calculator</p>
-      <p style="color:#64748b;font-size:12px;margin-bottom:14px;">Shock Level for Algae Management &mdash; FC target = CYA × multiplier</p>
+      <p style="color:#64748b;font-size:12px;margin-bottom:14px;">Shock Level for Algae Management - FC target = CYA x multiplier</p>
 
       <div class="field-group">
         <label class="field-label">CYA Level (ppm)</label>
@@ -324,19 +964,19 @@
 
       <hr class="section-div">
       <p style="color:#0369a1;font-weight:900;font-size:15px;margin-bottom:4px;">Treatment Plan Generator</p>
-      <p style="color:#64748b;font-size:12px;margin-bottom:14px;">Enter your full test results — get a prioritized, ordered action plan for the visit.</p>
+      <p style="color:#64748b;font-size:12px;margin-bottom:14px;">Enter your full test results - get a prioritized, ordered action plan for the visit.</p>
       <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:10px;padding:14px;margin-bottom:4px;box-shadow:0 1px 3px rgba(0,0,0,0.06);">
         <div class="field-group">
-          <label class="field-label">Pool Volume (gallons) — optional, needed for exact doses</label>
+          <label class="field-label">Pool Volume (gallons) - optional, needed for exact doses</label>
           <input type="number" id="plan-vol" placeholder="e.g. 15000" min="0" inputmode="decimal">
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px;">
-          <div><label class="field-label">FC</label><input type="number" id="plan-fc" placeholder="—" inputmode="decimal" step="0.1" min="0"></div>
-          <div><label class="field-label">CC</label><input type="number" id="plan-cc" placeholder="—" inputmode="decimal" step="0.1" min="0"></div>
-          <div><label class="field-label">pH</label><input type="number" id="plan-ph" placeholder="—" inputmode="decimal" step="0.1"></div>
-          <div><label class="field-label">TA</label><input type="number" id="plan-ta" placeholder="—" inputmode="decimal" min="0"></div>
-          <div><label class="field-label">CH</label><input type="number" id="plan-ch" placeholder="—" inputmode="decimal" min="0"></div>
-          <div><label class="field-label">CYA</label><input type="number" id="plan-cya" placeholder="—" inputmode="decimal" min="0"></div>
+          <div><label class="field-label">FC</label><input type="number" id="plan-fc" placeholder="-" inputmode="decimal" step="0.1" min="0"></div>
+          <div><label class="field-label">CC</label><input type="number" id="plan-cc" placeholder="-" inputmode="decimal" step="0.1" min="0"></div>
+          <div><label class="field-label">pH</label><input type="number" id="plan-ph" placeholder="-" inputmode="decimal" step="0.1"></div>
+          <div><label class="field-label">TA</label><input type="number" id="plan-ta" placeholder="-" inputmode="decimal" min="0"></div>
+          <div><label class="field-label">CH</label><input type="number" id="plan-ch" placeholder="-" inputmode="decimal" min="0"></div>
+          <div><label class="field-label">CYA</label><input type="number" id="plan-cya" placeholder="-" inputmode="decimal" min="0"></div>
         </div>
         <button class="btn-calc" onclick="calcTreatmentPlan()">Generate Treatment Plan</button>
         <div id="plan-result" style="margin-top:14px;"></div>
@@ -373,7 +1013,7 @@
       <div id="danger-section"></div>
     </div>
 
-    <!-- ─── VOLUME ─── -->
+    <!-- VOLUME -->
     <div id="tab-volume" class="tab-panel" style="padding:14px;">
       <p style="color:#0369a1;font-weight:900;font-size:16px;margin-bottom:14px;">Pool Volume</p>
       <div class="field-group">
@@ -385,7 +1025,7 @@
 
       <hr class="section-div">
       <p style="color:#0369a1;font-weight:900;font-size:15px;margin-bottom:4px;">Turnover Rate</p>
-      <p style="color:#64748b;font-size:12px;margin-bottom:14px;">How many hours to filter the full pool volume. Residential target: 6–8 hrs/day.</p>
+      <p style="color:#64748b;font-size:12px;margin-bottom:14px;">How many hours to filter the full pool volume. Residential target: 6-8 hrs/day.</p>
       <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:10px;padding:14px;box-shadow:0 1px 3px rgba(0,0,0,0.06);">
         <div class="field-group">
           <label class="field-label">Pool Volume (gallons)</label>
@@ -400,7 +1040,7 @@
       </div>
     </div>
 
-    <!-- ─── FILTERS (Sand / DE / Cartridge) ─── -->
+    <!-- FILTERS (Sand / DE / Cartridge) -->
     <div id="tab-sand" class="tab-panel" style="padding:14px;">
 
       <!-- Filter type sub-nav -->
@@ -435,7 +1075,7 @@
               <p style="color:#64748b;font-size:10px;margin-top:2px;">until sight glass clears</p>
             </div>
           </div>
-          <div class="warn-box">Always RINSE 15–30 seconds after backwash before returning to FILTER.</div>
+          <div class="warn-box">Always RINSE 15-30 seconds after backwash before returning to FILTER.</div>
         </div>
         <div id="alt-media-section"></div>
       </div>
@@ -451,18 +1091,100 @@
       </div>
     </div>
 
-    <!-- ─── ROUTE ─── -->
+    <!-- ROUTE -->
     <div id="tab-route" class="tab-panel" style="padding:14px;">
       <div id="route-content"></div>
     </div>
 
-    <!-- ─── REPORT ─── -->
+    <!-- REPORT -->
     <div id="tab-report" class="tab-panel" style="padding:14px;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
         <p style="color:#0369a1;font-weight:900;font-size:16px;">Visit Report</p>
-        <button onclick="toggleReportPoolPicker()" style="background:#eff6ff;border:1px solid #93c5fd;color:#0369a1;font-size:11px;font-weight:800;padding:6px 12px;border-radius:7px;cursor:pointer;">↓ Load Pool</button>
+        <button onclick="toggleReportPoolPicker()" style="background:#eff6ff;border:1px solid #93c5fd;color:#0369a1;font-size:11px;font-weight:800;padding:6px 12px;border-radius:7px;cursor:pointer;">Load Pool</button>
       </div>
       <div id="rpt-pool-picker" style="display:none;margin-bottom:14px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:10px;"></div>
+      <div class="info-box" style="margin-bottom:14px;">
+        Built for the tech at the stop: fewer taps, faster notes, cleaner proof, and less after-hours paperwork.
+      </div>
+      <section class="proof-command" aria-label="Service Proof workflow">
+        <p class="proof-command-kicker">Service Proof Passport</p>
+        <h2>Capture it once. Finish clean. Hand it off without retyping.</h2>
+        <p>Start with the field situation, then SplashLens preps the right proof checklist, voice-note fields, summary, packet, and save path.</p>
+        <div class="proof-command-grid">
+          <button type="button" class="primary" onclick="startServiceProofWorkflow('part')"><b>1</b><strong>Part or code</strong><span>Photos, labels, issue note, senior/vendor packet.</span></button>
+          <button type="button" class="facility" onclick="startServiceProofWorkflow('facility')"><b>2</b><strong>Facility / CPO</strong><span>Daily check, contamination, dose, or escalation flow.</span></button>
+          <button type="button" onclick="startServiceProofWorkflow('closing')"><b>3</b><strong>Closing</strong><span>Winterize proof, drain plugs, cover, callback notes.</span></button>
+          <button type="button" onclick="startServiceProofWorkflow('visit')"><b>4</b><strong>Regular visit</strong><span>Readings, work note, customer-safe summary, passport save.</span></button>
+        </div>
+        <div class="proof-status-row">
+          <div class="proof-status-chip ready">Voice notes ready</div>
+          <div class="proof-status-chip ready">Proof checklist</div>
+          <div class="proof-status-chip">Risk flags</div>
+          <div class="proof-status-chip">Export / share</div>
+        </div>
+      </section>
+      <section class="brain-card" style="margin-bottom:14px;" aria-label="SplashLens Field Learning OS">
+        <p style="color:#0f766e;font-size:10px;font-weight:950;letter-spacing:.12em;text-transform:uppercase;margin-bottom:5px;">Field Learning OS</p>
+        <h2 style="color:#0f172a;font-size:18px;line-height:1.1;font-weight:950;margin-bottom:7px;">Turn real stops into five-minute lessons.</h2>
+        <p style="color:#64748b;font-size:12px;line-height:1.45;margin-bottom:10px;">Use PartSnap misses, saved proof, facility incidents, and support packets as training material. The app shows student tasks, missing-proof checks, answer keys, and partner-review boundaries.</p>
+        <div class="brain-grid" style="grid-template-columns:repeat(3,1fr);">
+          <button type="button" class="brain-action green" onclick="renderFieldLearningOS('partsnap')">PartSnap Lesson</button>
+          <button type="button" class="brain-action secondary" onclick="renderFieldLearningOS('facility')">CPO Scenario</button>
+          <button type="button" class="brain-action secondary" onclick="renderFieldLearningOS('proof')">Proof Review</button>
+        </div>
+      </section>
+      <section class="brain-card" style="margin-bottom:14px;" aria-label="SplashLens free-core trust boundary">
+        <p style="color:#0f766e;font-size:10px;font-weight:950;letter-spacing:.12em;text-transform:uppercase;margin-bottom:5px;">Free-Core Native Build</p>
+        <h2 style="color:#0f172a;font-size:18px;line-height:1.1;font-weight:950;margin-bottom:7px;">Field proof without checkout friction.</h2>
+        <p style="color:#64748b;font-size:12px;line-height:1.45;margin-bottom:10px;">Manual lookup, basic PartSnap, calculators, Facility Assist, saved drafts, and customer-safe proof summaries remain free in the native store build. Web subscriptions and team pilots are not offered inside this iOS wrapper.</p>
+        <div class="brain-grid" style="grid-template-columns:repeat(3,1fr);">
+          <button type="button" class="brain-action green" onclick="startServiceProofWorkflow('visit')">Build proof</button>
+          <button type="button" class="brain-action secondary" onclick="renderFieldLearningOS('proof')">Proof Review</button>
+          <button type="button" class="brain-action secondary" onclick="showTab('scan');setTimeout(()=>setScanMode('lookup'),80)">Manual Lookup</button>
+        </div>
+      </section>
+      <section class="brain-card" style="margin-bottom:14px;" aria-label="Field Proof Queue">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:9px;">
+          <div><p style="color:#0f766e;font-size:10px;font-weight:950;letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px;">Field Proof Queue</p><h2 style="color:#0f172a;font-size:18px;line-height:1.1;font-weight:950;">Pause the stop. Finish it cleanly later.</h2></div>
+          <span id="rpt-draft-pill" class="brain-pill warn">No draft</span>
+        </div>
+        <p id="rpt-draft-status" style="color:#64748b;font-size:12px;line-height:1.4;margin-bottom:10px;">Save an incomplete stop locally before the route pulls you away.</p>
+        <div class="brain-grid">
+          <button type="button" class="brain-action green" onclick="saveReportDraft()">Save Draft</button>
+          <button type="button" class="brain-action secondary" onclick="resumeReportDraft()">Resume Draft</button>
+          <button type="button" class="brain-action secondary" onclick="createServiceProofShareLink()">Senior Tech Packet</button>
+          <button type="button" class="brain-action orange" onclick="clearReportDraft()">Clear Draft</button>
+        </div>
+      </section>
+      <section class="brain-card dark" style="margin-bottom:14px;" aria-label="Service Proof OS">
+        <p style="color:#7dd3fc;font-size:10px;font-weight:950;letter-spacing:.12em;text-transform:uppercase;margin-bottom:5px;">Service Proof OS</p>
+        <h2 style="color:#fff;font-size:22px;line-height:1.05;font-weight:950;margin-bottom:7px;">Turn this stop into a Service Proof Passport.</h2>
+        <p style="color:#cbd5e1;font-size:12px;line-height:1.45;margin-bottom:10px;">Capture readings, photos, voice notes, parts, approvals, and recommendations. Then generate a homeowner-safe summary and save the visit into the pool's permanent memory.</p>
+        <div class="brain-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:10px;">
+          <span class="brain-pill ready" style="justify-content:center;">Proof</span>
+          <span class="brain-pill ready" style="justify-content:center;">Memory</span>
+          <span class="brain-pill warn" style="justify-content:center;">Risk flags</span>
+          <span class="brain-pill warn" style="justify-content:center;">Portal preview</span>
+        </div>
+        <div class="brain-grid">
+          <button type="button" class="brain-action green" onclick="generateServiceProofSummary()">Generate Summary</button>
+          <button type="button" class="brain-action secondary" onclick="previewServiceTrustPortal()">Trust Portal Preview</button>
+          <button type="button" class="brain-action secondary" onclick="renderServiceProofAssistant()">Ask Proof Assistant</button>
+          <button type="button" class="brain-action orange" onclick="saveReportToPoolHistory()">Save Passport</button>
+        </div>
+      </section>
+      <section class="brain-card" style="margin-bottom:14px;" aria-label="CRM companion exports">
+        <p style="color:#0f766e;font-size:10px;font-weight:950;letter-spacing:.12em;text-transform:uppercase;margin-bottom:5px;">CRM companion</p>
+        <h2 style="color:#0f172a;font-size:18px;line-height:1.1;font-weight:950;margin-bottom:7px;">Export the proof into whatever system runs the company.</h2>
+        <p style="color:#64748b;font-size:12px;line-height:1.45;margin-bottom:10px;">SplashLens does the field proof. Jobber, Skimmer, Pool Brain, Paythepoolman, spreadsheets, or the office can keep the schedule and invoice.</p>
+        <div class="brain-grid">
+          <button type="button" class="brain-action green" onclick="copyCustomerSafeSummary()">Copy Customer Summary</button>
+          <button type="button" class="brain-action secondary" onclick="downloadServiceProofJson()">Download Proof JSON</button>
+          <button type="button" class="brain-action secondary" onclick="copyRouteNote()">Add To Route Notes</button>
+          <button type="button" class="brain-action orange" onclick="createServiceProofShareLink()">Vendor Packet</button>
+        </div>
+      </section>
+      <div id="rpt-proof-os-output" style="margin-bottom:14px;"></div>
 
       <div class="field-group">
         <label class="field-label">Customer Name</label>
@@ -495,16 +1217,79 @@
           <option>Inspection</option>
         </select>
       </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div class="field-group">
+          <label class="field-label">Proof Priority</label>
+          <select id="rpt-priority">
+            <option value="routine">Routine</option>
+            <option value="today">Finish Today</option>
+            <option value="callback-risk">Callback Risk</option>
+            <option value="senior-review">Senior Review</option>
+          </select>
+        </div>
+        <div class="field-group">
+          <label class="field-label">Review / Handoff To</label>
+          <input type="text" id="rpt-review-to" placeholder="Senior tech, vendor, office">
+        </div>
+      </div>
 
       <hr class="section-div">
       <p style="color:#0369a1;font-weight:900;font-size:14px;margin-bottom:12px;">Water Readings</p>
+      <div class="field-group">
+        <label class="field-label">Reading Source</label>
+        <select id="rpt-reading-source" onchange="validateReportProof({quiet:true})">
+          <option value="manual">Manual entry</option>
+          <option value="spintouch">LaMotte SpinTouch - device reading</option>
+          <option value="spintouch-edited">LaMotte SpinTouch - edited after import</option>
+          <option value="admin">Office/admin edited</option>
+        </select>
+      </div>
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px;">
-        <div><label class="field-label">FC (ppm)</label><input type="number" id="rpt-fc" placeholder="—" inputmode="decimal" step="0.1"></div>
-        <div><label class="field-label">CC (ppm)</label><input type="number" id="rpt-cc" placeholder="—" inputmode="decimal" step="0.1"></div>
-        <div><label class="field-label">pH</label><input type="number" id="rpt-ph" placeholder="—" inputmode="decimal" step="0.1"></div>
-        <div><label class="field-label">TA (ppm)</label><input type="number" id="rpt-ta" placeholder="—" inputmode="decimal"></div>
-        <div><label class="field-label">CH (ppm)</label><input type="number" id="rpt-ch" placeholder="—" inputmode="decimal"></div>
-        <div><label class="field-label">CYA (ppm)</label><input type="number" id="rpt-cya" placeholder="—" inputmode="decimal"></div>
+        <div><label class="field-label">FC (ppm)</label><input type="number" id="rpt-fc" placeholder="-" inputmode="decimal" step="0.1"></div>
+        <div><label class="field-label">CC (ppm)</label><input type="number" id="rpt-cc" placeholder="-" inputmode="decimal" step="0.1"></div>
+        <div><label class="field-label">pH</label><input type="number" id="rpt-ph" placeholder="-" inputmode="decimal" step="0.1"></div>
+        <div><label class="field-label">TA (ppm)</label><input type="number" id="rpt-ta" placeholder="-" inputmode="decimal"></div>
+        <div><label class="field-label">CH (ppm)</label><input type="number" id="rpt-ch" placeholder="-" inputmode="decimal"></div>
+        <div><label class="field-label">CYA (ppm)</label><input type="number" id="rpt-cya" placeholder="-" inputmode="decimal"></div>
+      </div>
+
+      <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:12px;margin-bottom:14px;box-shadow:0 1px 3px rgba(0,0,0,0.05);">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px;">
+          <p style="color:#0369a1;font-weight:900;font-size:13px;">Stop Proof Checklist</p>
+          <span id="rpt-proof-pill" style="background:#fee2e2;color:#991b1b;border-radius:999px;padding:3px 8px;font-size:10px;font-weight:900;">incomplete</span>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr;gap:8px;">
+          <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:#334155;font-weight:800;"><input type="checkbox" id="rpt-proof-water" onchange="validateReportProof({quiet:true})"> Water reading captured</label>
+          <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:#334155;font-weight:800;"><input type="checkbox" id="rpt-proof-equipment" onchange="validateReportProof({quiet:true})"> Equipment photo captured</label>
+          <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:#334155;font-weight:800;"><input type="checkbox" id="rpt-proof-summary" onchange="validateReportProof({quiet:true})"> Customer-safe summary ready</label>
+        </div>
+        <div class="field-group" style="margin-top:10px;">
+          <label class="field-label">Attach Photo Names / Proof Notes</label>
+          <input type="text" id="rpt-photo-proof" placeholder="e.g. pad-photo.jpg, spintouch-screen.jpg" oninput="validateReportProof({quiet:true})">
+        </div>
+        <div class="field-group">
+          <div class="note-tools">
+            <label class="field-label">Issue Note for Tech Record</label>
+            <button type="button" class="mic-btn" data-mic-target="rpt-issue-note" onclick="toggleVoiceNote('rpt-issue-note', this)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><path d="M12 19v3"/></svg>
+              Dictate
+            </button>
+          </div>
+          <textarea id="rpt-issue-note" rows="2" placeholder="Heater fault code visible; customer advised..." oninput="validateReportProof({quiet:true})" style="background:#ffffff;border:1px solid #cbd5e1;color:#0f172a;border-radius:9px;padding:12px 14px;width:100%;font-size:14px;font-family:inherit;resize:vertical;-webkit-appearance:none;"></textarea>
+          <div id="voice-status-rpt-issue-note" class="mic-status"></div>
+        </div>
+        <div class="field-group" style="margin-bottom:0;">
+          <div class="note-tools">
+            <label class="field-label">Customer-Visible Summary</label>
+            <button type="button" class="mic-btn" data-mic-target="rpt-customer-summary" onclick="toggleVoiceNote('rpt-customer-summary', this)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><path d="M12 19v3"/></svg>
+              Dictate
+            </button>
+          </div>
+          <textarea id="rpt-customer-summary" rows="2" placeholder="Water tested and balanced. Equipment is running normally..." oninput="validateReportProof({quiet:true})" style="background:#ffffff;border:1px solid #cbd5e1;color:#0f172a;border-radius:9px;padding:12px 14px;width:100%;font-size:14px;font-family:inherit;resize:vertical;-webkit-appearance:none;"></textarea>
+          <div id="voice-status-rpt-customer-summary" class="mic-status"></div>
+        </div>
+        <div id="rpt-proof-missing" style="margin-top:8px;color:#991b1b;font-size:11px;font-weight:800;"></div>
       </div>
 
       <hr class="section-div">
@@ -513,19 +1298,52 @@
         <button type="button" onclick="addChemRow()" style="background:#eff6ff;border:1px solid #93c5fd;color:#0369a1;font-size:12px;font-weight:700;padding:5px 12px;border-radius:6px;cursor:pointer;">+ Add</button>
       </div>
       <div id="chem-rows"></div>
+      <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:12px;margin:10px 0 14px;box-shadow:0 1px 3px rgba(0,0,0,0.05);">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px;">
+          <p style="color:#0369a1;font-weight:900;font-size:13px;">Chemical Cost + Truck Inventory</p>
+          <span id="rpt-cost-total" style="background:#dcfce7;color:#166534;border-radius:999px;padding:3px 8px;font-size:10px;font-weight:900;">$0.00</span>
+        </div>
+        <p id="rpt-inventory-summary" style="color:#64748b;font-size:12px;line-height:1.45;">Add chemical costs and stock source to estimate stop cost.</p>
+        <div class="field-group" style="margin:10px 0 0;">
+          <label class="field-label" for="rpt-dose-basis">Dose Basis / Calculator Source</label>
+          <input type="text" id="rpt-dose-basis" placeholder="e.g. manual test + product label, SplashLens calculator">
+          <p style="color:#64748b;font-size:11px;line-height:1.4;margin-top:5px;">Record where the recommendation came from. Verify volume, product strength, label directions, and the applied dose before closing the stop.</p>
+        </div>
+      </div>
 
       <hr class="section-div">
       <div class="field-group">
-        <label class="field-label">Work Performed</label>
+        <div class="note-tools">
+          <label class="field-label">Work Performed</label>
+          <button type="button" class="mic-btn" data-mic-target="rpt-work" onclick="toggleVoiceNote('rpt-work', this)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><path d="M12 19v3"/></svg>
+            Dictate
+          </button>
+        </div>
         <textarea id="rpt-work" rows="3" placeholder="Vacuumed, brushed walls, backwashed filter..." style="background:#ffffff;border:1px solid #cbd5e1;color:#0f172a;border-radius:9px;padding:12px 14px;width:100%;font-size:14px;font-family:inherit;resize:vertical;-webkit-appearance:none;transition:border-color 0.15s;"></textarea>
+        <div id="voice-status-rpt-work" class="mic-status"></div>
       </div>
       <div class="field-group">
-        <label class="field-label">Equipment Notes</label>
+        <div class="note-tools">
+          <label class="field-label">Equipment Notes</label>
+          <button type="button" class="mic-btn" data-mic-target="rpt-equip" onclick="toggleVoiceNote('rpt-equip', this)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><path d="M12 19v3"/></svg>
+            Dictate
+          </button>
+        </div>
         <textarea id="rpt-equip" rows="2" placeholder="Filter PSI: 18. Pump normal. Salt cell clean..." style="background:#ffffff;border:1px solid #cbd5e1;color:#0f172a;border-radius:9px;padding:12px 14px;width:100%;font-size:14px;font-family:inherit;resize:vertical;-webkit-appearance:none;transition:border-color 0.15s;"></textarea>
+        <div id="voice-status-rpt-equip" class="mic-status"></div>
       </div>
       <div class="field-group">
-        <label class="field-label">Recommendations</label>
+        <div class="note-tools">
+          <label class="field-label">Recommendations</label>
+          <button type="button" class="mic-btn" data-mic-target="rpt-rec" onclick="toggleVoiceNote('rpt-rec', this)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><path d="M12 19v3"/></svg>
+            Dictate
+          </button>
+        </div>
         <textarea id="rpt-rec" rows="2" placeholder="Schedule filter cleaning. Replace pump lid O-ring..." style="background:#ffffff;border:1px solid #cbd5e1;color:#0f172a;border-radius:9px;padding:12px 14px;width:100%;font-size:14px;font-family:inherit;resize:vertical;-webkit-appearance:none;transition:border-color 0.15s;"></textarea>
+        <div id="voice-status-rpt-rec" class="mic-status"></div>
       </div>
       <div class="field-group">
         <label class="field-label">Next Visit</label>
@@ -536,6 +1354,12 @@
         <button type="button" class="btn-calc" onclick="copyReport()" style="background:linear-gradient(135deg,#166534,#15803d);">Copy Text</button>
         <button type="button" class="btn-calc" onclick="printReport()">Print / PDF</button>
       </div>
+      <button type="button" class="btn-calc" onclick="createServiceProofShareLink()" style="width:100%;margin-top:10px;background:linear-gradient(135deg,#0f172a,#075985);">
+        Create Proof Packet Link
+      </button>
+      <button type="button" class="btn-calc" onclick="saveReportToPoolHistory()" style="width:100%;margin-top:10px;background:linear-gradient(135deg,#0f766e,#0d9488);">
+        Save to Pool History
+      </button>
       <button type="button" id="rpt-share-btn" onclick="shareReport()" style="width:100%;margin-top:10px;padding:14px;background:#0284c7;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
         Share Report
@@ -543,7 +1367,7 @@
       <div id="rpt-copy-confirm" style="display:none;margin-top:8px;text-align:center;color:#166534;font-size:13px;font-weight:700;">Copied to clipboard!</div>
     </div>
 
-    <!-- ─── GUIDE (all checklists) ─── -->
+    <!-- GUIDE (all checklists) -->
     <div id="tab-guide" class="tab-panel" style="padding:14px;">
       <div style="display:flex;gap:6px;margin-bottom:14px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:2px;">
         <button id="cl-btn-opening" class="cat-pill active" onclick="switchClType('opening')">Opening</button>
@@ -565,21 +1389,21 @@
       <div id="checklist-content"></div>
     </div>
 
-    <!-- ─── POOLS ─── -->
+    <!-- POOLS -->
     <div id="tab-pools" class="tab-panel" style="padding:14px;">
       <!-- Content rendered by JS: renderPoolList(), renderPoolDetail(), renderPoolForm() -->
       <div id="pools-content"></div>
     </div>
 
-    <!-- ═══ SCAN TAB ═══ -->
+    <!-- SCAN TAB -->
     <div id="tab-scan" class="tab-panel" style="padding:0;background:#0f172a;min-height:calc(100vh - 120px);">
       <!-- Mode bar -->
       <div id="scan-mode-bar" style="display:flex;background:#1e293b;border-bottom:1px solid #334155;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;">
-        <button id="scan-mode-camera" onclick="setScanMode('camera')" style="flex:1;min-width:68px;padding:10px 4px;background:#0284c7;color:#fff;border:none;cursor:pointer;font-size:10px;font-weight:700;letter-spacing:.02em;transition:background .15s;">📷 ERRORS</button>
-        <button id="scan-mode-parts" onclick="setScanMode('parts')" style="flex:1;min-width:68px;padding:10px 4px;background:transparent;color:#94a3b8;border:none;cursor:pointer;font-size:10px;font-weight:700;letter-spacing:.02em;transition:background .15s;">🔧 PARTS</button>
-        <button id="scan-mode-strip" onclick="setScanMode('strip')" style="flex:1;min-width:68px;padding:10px 4px;background:transparent;color:#94a3b8;border:none;cursor:pointer;font-size:10px;font-weight:700;letter-spacing:.02em;transition:background .15s;">🧪 STRIP</button>
-        <button id="scan-mode-lookup" onclick="setScanMode('lookup')" style="flex:1;min-width:68px;padding:10px 4px;background:transparent;color:#94a3b8;border:none;cursor:pointer;font-size:10px;font-weight:700;letter-spacing:.02em;transition:background .15s;">🔍 LOOKUP</button>
-        <button id="scan-mode-chem" onclick="setScanMode('chem')" style="flex:1;min-width:68px;padding:10px 4px;background:transparent;color:#94a3b8;border:none;cursor:pointer;font-size:10px;font-weight:700;letter-spacing:.02em;transition:background .15s;">📖 CHEM</button>
+        <button id="scan-mode-camera" onclick="setScanMode('camera')" style="flex:1;min-width:68px;padding:10px 4px;background:#0284c7;color:#fff;border:none;cursor:pointer;font-size:10px;font-weight:700;letter-spacing:.02em;transition:background .15s;">ERRORS</button>
+        <button id="scan-mode-parts" onclick="setScanMode('parts')" style="flex:1;min-width:78px;padding:10px 4px;background:transparent;color:#94a3b8;border:none;cursor:pointer;font-size:10px;font-weight:700;letter-spacing:.02em;transition:background .15s;">PARTSNAP</button>
+        <button id="scan-mode-strip" onclick="setScanMode('strip')" style="flex:1;min-width:68px;padding:10px 4px;background:transparent;color:#94a3b8;border:none;cursor:pointer;font-size:10px;font-weight:700;letter-spacing:.02em;transition:background .15s;">STRIP</button>
+        <button id="scan-mode-lookup" onclick="setScanMode('lookup')" style="flex:1;min-width:68px;padding:10px 4px;background:transparent;color:#94a3b8;border:none;cursor:pointer;font-size:10px;font-weight:700;letter-spacing:.02em;transition:background .15s;">LOOKUP</button>
+        <button id="scan-mode-chem" onclick="setScanMode('chem')" style="flex:1;min-width:68px;padding:10px 4px;background:transparent;color:#94a3b8;border:none;cursor:pointer;font-size:10px;font-weight:700;letter-spacing:.02em;transition:background .15s;">CHEM</button>
       </div>
       <!-- AI status bar -->
       <div id="scan-ai-bar" style="display:flex;align-items:center;justify-content:center;gap:8px;padding:6px 14px;background:#0f172a;border-bottom:1px solid #1e293b;">
@@ -602,18 +1426,18 @@
           </div>
           <canvas id="scan-canvas" style="display:none;"></canvas>
         </div>
-        <div id="scan-camera-status" style="text-align:center;padding:10px;color:#7dd3fc;font-size:12px;font-weight:600;letter-spacing:.04em;">AIM AT ERROR CODE DISPLAY — TAP CAPTURE</div>
+        <div id="scan-camera-status" style="text-align:center;padding:10px;color:#7dd3fc;font-size:12px;font-weight:600;letter-spacing:.04em;">AIM AT ERROR CODE DISPLAY - TAP CAPTURE</div>
         <div style="display:flex;gap:10px;padding:0 14px 14px;align-items:center;">
           <button id="scan-capture-btn" onclick="captureAndAnalyze()" style="flex:1;padding:16px;background:#0284c7;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;letter-spacing:.02em;">
-            ⬤ CAPTURE
+            CAPTURE
           </button>
-          <button onclick="toggleFlashlight()" id="scan-flash-btn" style="padding:14px;background:#1e293b;color:#94a3b8;border:1px solid #334155;border-radius:12px;font-size:16px;cursor:pointer;" title="Flashlight">🔦</button>
-          <button onclick="stopCamera()" style="padding:14px;background:#1e293b;color:#94a3b8;border:1px solid #334155;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;">⏹</button>
+          <button onclick="toggleFlashlight()" id="scan-flash-btn" style="padding:14px;background:#1e293b;color:#94a3b8;border:1px solid #334155;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer;" title="Flashlight">LIGHT</button>
+          <button onclick="stopCamera()" style="padding:14px;background:#1e293b;color:#94a3b8;border:1px solid #334155;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer;">STOP</button>
         </div>
         <div id="scan-result" style="padding:0 14px 80px;"></div>
         <div id="scan-no-camera" style="display:none;padding:20px 14px;">
           <div style="background:#1e293b;border:1px solid #334155;border-radius:12px;padding:20px;text-align:center;">
-            <div style="font-size:2rem;margin-bottom:10px;">📷</div>
+            <div style="font-size:2rem;margin-bottom:10px;">CAM</div>
             <p style="color:#94a3b8;font-size:14px;margin-bottom:16px;">Camera access not available or permission denied. Use Code Lookup to search manually.</p>
             <button onclick="setScanMode('lookup')" style="background:#0284c7;color:#fff;border:none;padding:12px 24px;border-radius:8px;font-weight:700;cursor:pointer;">Go to Code Lookup</button>
           </div>
@@ -644,9 +1468,37 @@
 
   </main>
 
-  <!-- ═══ BOTTOM NAV ═══ -->
-  <nav style="background:#ffffff;border-top:1px solid #e2e8f0;position:fixed;bottom:0;left:0;right:0;z-index:50;padding-bottom:env(safe-area-inset-bottom,0);display:flex;overflow-x:auto;-webkit-overflow-scrolling:touch;box-shadow:0 -2px 8px rgba(0,0,0,0.07);scrollbar-width:none;">
-    <style>.nav-btn{min-width:52px;flex-shrink:0;}</style>
+  <div id="field-signals-modal" class="field-signals-modal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="field-signals-modal-title" onclick="if(event.target===this)window.SplashLensFieldSignals?.closeModal()">
+    <section class="field-signals-sheet">
+      <header class="field-signals-sheet-head">
+        <h2 id="field-signals-modal-title">Field Signals</h2>
+        <button type="button" aria-label="Close" title="Close" onclick="SplashLensFieldSignals.closeModal()">x</button>
+      </header>
+      <div id="field-signals-modal-body" class="field-signals-sheet-body"></div>
+    </section>
+  </div>
+
+  <aside id="field-score-widget" class="field-score-widget" aria-live="polite" hidden>
+    <section class="field-score-card" aria-labelledby="field-score-title">
+      <div class="field-score-head">
+        <div>
+          <p class="field-score-kicker">Quick field check</p>
+          <h2 id="field-score-title" class="field-score-title">Did SplashLens help on this stop?</h2>
+        </div>
+        <button type="button" class="field-score-close" data-field-score-close aria-label="Close feedback">x</button>
+      </div>
+      <div class="field-score-actions">
+        <button type="button" data-field-score="helpful">Helpful</button>
+        <button type="button" data-field-score="saved_time">Saved time</button>
+        <button type="button" data-field-score="missing">Missing info</button>
+        <button type="button" data-field-score="wrong">Wrong</button>
+      </div>
+      <textarea id="field-score-note" class="field-score-note" maxlength="500" placeholder="Optional: what should we add or fix?"></textarea>
+    </section>
+  </aside>
+
+  <!-- BOTTOM NAV -->
+  <nav aria-label="SplashLens field tools" style="background:#ffffff;border-top:1px solid #e2e8f0;position:fixed;bottom:0;left:0;right:0;z-index:50;padding-bottom:env(safe-area-inset-bottom,0);display:flex;overflow:hidden;box-shadow:0 -2px 8px rgba(0,0,0,0.07);">
     <button class="nav-btn active" id="nav-errors" onclick="showTab('errors')">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
       <span>Errors</span>
@@ -685,13 +1537,17 @@
     </button>
   </nav>
 
-  <script src="js/errors.js"></script>
-  <script src="js/data.js"></script>
-  <script src="js/app.js"></script>
+  <script src="/js/errors.js"></script>
+  <script src="/js/data.js?v=20260823-closing-season-mode"></script>
+  <script src="/js/app.js?v=20260823-closing-season-mode"></script>
+  <script type="module" src="/js/field-signals.js?v=20260728-field-signals"></script>
+  <script src="/js/analytics.js"></script>
+  <script src="/js/field-score.js?v=20260828-closing-score"></script>
   <script>
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js').catch(() => {});
+      navigator.serviceWorker.register('/sw-field-signals.js').catch(() => {});
     }
   </script>
+  </div>
 </body>
 </html>
