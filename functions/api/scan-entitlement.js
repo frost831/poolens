@@ -105,6 +105,18 @@ export async function onRequestPost({ request, env }) {
   return json(request, { ok: true, token, activateUrl, entitlement: record });
 }
 
+export async function onRequestGet({ request, env }) {
+  const access = hasAdminAccess(request, env);
+  if (!access.ok) return json(request, { ok: false, error: access.error }, access.status);
+
+  return json(request, {
+    ok: true,
+    endpoint: 'scan-entitlement',
+    methods: ['POST', 'OPTIONS'],
+    message: 'Use POST with a valid admin secret to issue a signed scan entitlement.',
+  });
+}
+
 export async function onRequestOptions({ request }) {
   return new Response(null, { status: 204, headers: corsHeaders(request) });
 }
