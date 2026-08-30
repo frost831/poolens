@@ -227,18 +227,18 @@
     .operator-chip span { display:block; color:#64748b; font-size:10.5px; font-weight:700; line-height:1.28; }
     .operator-result { margin-top:10px; }
     .operator-alert { background:#fffbeb; border:1px solid #fde68a; border-radius:9px; padding:10px; color:#92400e; font-size:11px; line-height:1.45; font-weight:750; }
-    .role-picker { position:fixed; inset:0; z-index:1000; background:linear-gradient(145deg,#082f49,#0f172a 58%,#134e4a); padding:22px; display:none; align-items:center; justify-content:center; }
+    .role-picker { position:fixed; inset:0; z-index:1000; background:linear-gradient(145deg,#071827,#0f172a 58%,#0f766e); padding:22px; display:none; align-items:center; justify-content:center; }
     .role-picker.active { display:flex; }
-    .role-card { width:min(720px,100%); background:#ffffff; border-radius:16px; padding:18px; box-shadow:0 30px 80px rgba(2,6,23,.36); }
-    .role-card h1 { color:#0f172a; font-size:28px; line-height:1.05; font-weight:950; margin-bottom:8px; }
+    .role-card { width:min(720px,100%); max-height:calc(100vh - 44px); overflow:auto; background:#ffffff; border-radius:14px; padding:18px; box-shadow:0 30px 80px rgba(2,6,23,.36); display:flex; flex-direction:column; }
+    .role-card h1 { color:#0f172a; font-size:28px; line-height:1.05; font-weight:950; margin-bottom:8px; letter-spacing:0; }
     .role-card p { color:#475569; font-size:14px; line-height:1.45; margin-bottom:14px; }
-    .role-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(132px,1fr)); gap:10px; }
-    .role-choice { min-height:118px; background:#f8fafc; border:1px solid #dbe8ef; border-radius:12px; padding:13px; text-align:left; cursor:pointer; box-shadow:var(--field-shadow-tight); }
-    .role-choice strong { display:block; color:#075985; font-size:16px; line-height:1.1; font-weight:950; margin-bottom:8px; }
-    .role-choice span { display:block; color:#475569; font-size:12px; line-height:1.35; font-weight:750; }
-    .role-choice.primary { background:#e0f2fe; border-color:#7dd3fc; }
-    .role-preferences { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:0 0 14px; }
-    .role-pref-card { background:#f8fafc; border:1px solid #dbe8ef; border-radius:12px; padding:10px; }
+    .role-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(132px,1fr)); gap:10px; order:1; }
+    .role-choice { min-height:98px; background:#f8fafc; border:1px solid #dbe8ef; border-radius:9px; padding:13px; text-align:left; cursor:pointer; box-shadow:var(--field-shadow-tight); }
+    .role-choice strong { display:block; color:#075985; font-size:15px; line-height:1.1; font-weight:950; margin-bottom:7px; }
+    .role-choice span { display:block; color:#475569; font-size:11.5px; line-height:1.3; font-weight:750; }
+    .role-choice.primary { background:#e6fffb; border-color:#5eead4; border-left:4px solid #0f766e; }
+    .role-preferences { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin:12px 0 0; order:2; }
+    .role-pref-card { background:#f8fafc; border:1px solid #dbe8ef; border-radius:9px; padding:9px; }
     .role-pref-card strong { display:block; color:#0f172a; font-size:12px; font-weight:950; margin-bottom:7px; }
     .role-pref-row { display:flex; flex-wrap:wrap; gap:6px; }
     .role-pref-row button { min-height:36px; background:#ffffff; border:1px solid #cbd5e1; color:#334155; border-radius:999px; padding:7px 10px; font-size:11px; font-weight:900; cursor:pointer; }
@@ -300,9 +300,10 @@
     .facility-packet pre { white-space:pre-wrap; word-break:break-word; background:#0f172a; color:#e0f2fe; border-radius:10px; padding:11px; font-size:11px; line-height:1.45; margin:10px 0; }
     @media (max-width: 560px) {
       .role-picker { align-items:flex-start; overflow-y:auto; padding:10px; }
-      .role-card { margin:0 auto; border-radius:12px; padding:14px; }
+      .role-card { margin:0 auto; border-radius:10px; padding:14px; }
       .role-grid, .facility-toolbar, .facility-lanes, .role-preferences, .role-next-grid, .role-next-actions { grid-template-columns:1fr; }
       .role-card h1 { font-size:24px; }
+      .role-choice { min-height:82px; }
       .role-nudge-actions { grid-template-columns:repeat(3,1fr); }
       .field-score-actions { grid-template-columns:repeat(2,1fr); }
       .field-score-widget { bottom:82px; }
@@ -675,9 +676,9 @@
 
   <section id="role-picker" class="role-picker" aria-label="Choose SplashLens mode">
     <div class="role-card">
-      <p style="color:#0284c7;font-size:10px;font-weight:950;letter-spacing:.12em;text-transform:uppercase;margin-bottom:7px;">Choose your front door</p>
-      <h1>Who are you today?</h1>
-      <p>SplashLens keeps every tool available. This just chooses the first workflow you see.</p>
+      <p style="color:#0284c7;font-size:10px;font-weight:950;letter-spacing:.12em;text-transform:uppercase;margin-bottom:7px;">Pick the stop</p>
+      <h1>What are you trying to finish?</h1>
+      <p>Choose the closest lane. Every tool stays available.</p>
       <div class="role-preferences" aria-label="First-use preferences">
         <div class="role-pref-card">
           <strong>Language</strong>
@@ -696,11 +697,11 @@
         </div>
       </div>
       <div class="role-grid">
-        <button type="button" class="role-choice primary" onclick="setSplashLensRole('tech', { persist: true })"><strong>Service Tech</strong><span>PartSnap, codes, route notes, dosing, and proof packets first.</span></button>
-        <button type="button" class="role-choice" onclick="setSplashLensRole('facility', { persist: true })"><strong>Facility / CPO</strong><span>Daily checks, contamination response, basic proof, and support packets.</span></button>
-        <button type="button" class="role-choice" onclick="setSplashLensRole('counter', { persist: true })"><strong>Counter / Distributor</strong><span>Part, model, and vendor packet workflows without CRM clutter.</span></button>
-        <button type="button" class="role-choice" onclick="setSplashLensRole('trainer', { persist: true })"><strong>Trainer</strong><span>Apprentice prompts, CPO scenarios, and proof-first field lessons.</span></button>
-        <button type="button" class="role-choice" onclick="setSplashLensRole('homeowner', { persist: true })"><strong>Homeowner</strong><span>Plain-language notes, volume, dosing basics, and when to call a pro.</span></button>
+        <button type="button" class="role-choice primary" onclick="setSplashLensRole('tech', { persist: true })"><strong>Service Tech</strong><span>PartSnap, codes, dosing, route notes, and job proof.</span></button>
+        <button type="button" class="role-choice" onclick="setSplashLensRole('facility', { persist: true })"><strong>Facility / CPO</strong><span>Daily checks, contamination, basic proof, and help packets.</span></button>
+        <button type="button" class="role-choice" onclick="setSplashLensRole('counter', { persist: true })"><strong>Counter</strong><span>Part, model, photo, and proof before ordering.</span></button>
+        <button type="button" class="role-choice" onclick="setSplashLensRole('trainer', { persist: true })"><strong>Trainer</strong><span>Short lessons from real field stops.</span></button>
+        <button type="button" class="role-choice" onclick="setSplashLensRole('homeowner', { persist: true })"><strong>Homeowner</strong><span>Plain notes, basic math, and when to call a pro.</span></button>
       </div>
     </div>
   </section>
