@@ -232,6 +232,10 @@
     .role-card { width:min(720px,100%); max-height:calc(100vh - 44px); overflow:auto; background:#ffffff; border-radius:14px; padding:18px; box-shadow:0 30px 80px rgba(2,6,23,.36); display:flex; flex-direction:column; }
     .role-card h1 { color:#0f172a; font-size:28px; line-height:1.05; font-weight:950; margin-bottom:8px; letter-spacing:0; }
     .role-card p { color:#475569; font-size:14px; line-height:1.45; margin-bottom:14px; }
+    .role-network-strip { display:grid; grid-template-columns:repeat(3,1fr); gap:7px; margin:0 0 12px; }
+    .role-network-chip { min-height:54px; border:1px solid #dbe8ef; border-radius:9px; background:#f8fafc; padding:8px; }
+    .role-network-chip strong { display:block; color:#0f172a; font-size:12px; font-weight:950; line-height:1.1; margin-bottom:4px; }
+    .role-network-chip span { display:block; color:#64748b; font-size:10px; font-weight:800; line-height:1.25; }
     .role-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(132px,1fr)); gap:10px; order:1; }
     .role-choice { min-height:98px; background:#f8fafc; border:1px solid #dbe8ef; border-radius:9px; padding:13px; text-align:left; cursor:pointer; box-shadow:var(--field-shadow-tight); }
     .role-choice strong { display:block; color:#075985; font-size:15px; line-height:1.1; font-weight:950; margin-bottom:7px; }
@@ -301,7 +305,7 @@
     @media (max-width: 560px) {
       .role-picker { align-items:flex-start; overflow-y:auto; padding:10px; }
       .role-card { margin:0 auto; border-radius:10px; padding:14px; }
-      .role-grid, .facility-toolbar, .facility-lanes, .role-preferences, .role-next-grid, .role-next-actions { grid-template-columns:1fr; }
+      .role-grid, .facility-toolbar, .facility-lanes, .role-preferences, .role-next-grid, .role-next-actions, .role-network-strip { grid-template-columns:1fr; }
       .role-card h1 { font-size:24px; }
       .role-choice { min-height:82px; }
       .role-nudge-actions { grid-template-columns:repeat(3,1fr); }
@@ -431,6 +435,9 @@
     .marketing-primary, .marketing-secondary { border-radius:8px; min-height:48px; padding:0 18px; font-size:15px; font-weight:950; cursor:pointer; }
     .marketing-primary { border:0; background:#0284c7; color:#ffffff; box-shadow:0 10px 26px rgba(2,132,199,.22); }
     .marketing-secondary { background:#ffffff; color:#0369a1; border:1px solid #b9d9e8; box-shadow:0 1px 2px rgba(15,23,42,.06); }
+    .marketing-network-strip { max-width:660px; display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin:0 0 16px; }
+    .marketing-network-strip span { display:inline-flex; align-items:center; min-height:30px; border-radius:999px; padding:5px 10px; background:#dcfce7; color:#166534; border:1px solid #86efac; font-size:10px; font-weight:950; text-transform:uppercase; letter-spacing:.06em; }
+    .marketing-network-strip p { flex:1 1 320px; color:#475569; font-size:12px; line-height:1.35; font-weight:800; margin:0; }
     .marketing-proof { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; max-width:620px; }
     .marketing-proof div { border:1px solid #dbe8ef; background:#ffffff; border-radius:8px; padding:12px; }
     .marketing-proof strong { display:block; color:#0f172a; font-size:14px; font-weight:950; margin-bottom:4px; }
@@ -468,6 +475,7 @@
       .marketing-hero { padding:28px 18px 20px; }
       .marketing-copy h1 { font-size:46px; }
       .marketing-copy p { font-size:16px; }
+      .marketing-network-strip { display:grid; grid-template-columns:1fr; }
       .marketing-proof { grid-template-columns:1fr; }
       .marketing-outcomes { grid-template-columns:1fr 1fr; }
       .marketing-actions { display:grid; grid-template-columns:1fr; }
@@ -570,17 +578,20 @@
     <div class="marketing-hero">
       <div class="marketing-copy">
         <h1>Get off the pad faster.</h1>
-        <p>Identify the part, capture the stop, build the packet, and get back to the next job without rewriting everything after dinner.</p>
+        <p>Identify the thing in your hand, save the proof, and send a clean next move to the boss, counter, customer, trainer, or facility contact.</p>
+        <div class="marketing-network-strip" aria-label="Verified Field Network">
+          <span>Verified Field Network</span>
+          <p>Free lookup now. Paid team and partner layers only unlock when proof needs saving, review, training, or verified partner language.</p>
+        </div>
         <div class="marketing-actions">
           <button id="continue-field-task" type="button" class="marketing-primary" style="display:none" onclick="continueLastFieldTask()">Continue last field task</button>
           <button type="button" class="marketing-primary" onclick="enterSplashLensApp('scan','parts')">Try PartSnap</button>
           <button type="button" class="marketing-secondary" onclick="enterSplashLensApp('errors')">Open Field Tools</button>
         <button type="button" class="marketing-secondary" onclick="enterSplashLensApp('errors','search')">Look Up Codes</button>
-        <button type="button" class="marketing-secondary" onclick="setSplashLensRole('trainer', { persist: true, source: 'marketing_hero' })">Open Learning OS</button>
         </div>
         <div class="marketing-outcomes" aria-label="Choose a SplashLens workflow">
           <button type="button" class="marketing-outcome" onclick="enterSplashLensApp('scan','parts')"><b>01</b><strong>ID part</strong><span>photo + proof</span></button>
-          <button type="button" class="marketing-outcome" onclick="enterSplashLensApp('report')"><b>02</b><strong>Save proof</strong><span>passport</span></button>
+          <button type="button" class="marketing-outcome" onclick="enterSplashLensApp('report')"><b>02</b><strong>Save proof</strong><span>photos + notes</span></button>
           <button type="button" class="marketing-outcome" onclick="setSplashLensRole('facility', { persist: true })"><b>03</b><strong>Facility</strong><span>CPO path</span></button>
           <button type="button" class="marketing-outcome" onclick="enterSplashLensApp('route')"><b>04</b><strong>Smart pad</strong><span>robots + controls</span></button>
           <button type="button" class="marketing-outcome" onclick="quickServiceNote();enterSplashLensApp('report')"><b>05</b><strong>Voice note</strong><span>talk + save</span></button>
@@ -588,9 +599,9 @@
           <button type="button" class="marketing-outcome" onclick="setSplashLensRole('trainer', { persist: true, source: 'marketing_outcome' })"><b>07</b><strong>Train</strong><span>real stops</span></button>
         </div>
         <div class="marketing-proof">
-          <div><strong>PartSnap</strong><span>Possible part families, missing proof, callback risk, and clean escalation.</span></div>
-          <div><strong>Service Proof OS</strong><span>Photos, readings, notes, summaries, and saved stop history.</span></div>
-          <div><strong>Learning OS</strong><span>Real PartSnap misses and proof packets become five-minute field lessons.</span></div>
+          <div><strong>PartSnap</strong><span>Possible part families, missing proof, why it might come back, and a clean handoff.</span></div>
+          <div><strong>Job proof</strong><span>Photos, readings, notes, customer-safe summaries, and saved stop history.</span></div>
+          <div><strong>Training cards</strong><span>Real PartSnap misses and proof packets become five-minute field lessons.</span></div>
         </div>
       </div>
 
@@ -610,11 +621,11 @@
             <div class="preview-card"><h3>Missing proof</h3><p>Model plate, size, vendor cross-check.</p></div>
           </div>
           <div class="preview-card">
-            <h3>Senior-tech packet</h3>
+            <h3>Team or vendor note</h3>
             <p>Copy one clean handoff with symptoms, proof, missing evidence, and what to verify before selling or replacing.</p>
           </div>
           <div class="preview-card">
-            <h3>Service Proof Passport</h3>
+            <h3>Saved job trail</h3>
             <p>Save the stop so next visit has the equipment context, not a mystery photo buried in texts.</p>
           </div>
         </div>
@@ -679,6 +690,11 @@
       <p style="color:#0284c7;font-size:10px;font-weight:950;letter-spacing:.12em;text-transform:uppercase;margin-bottom:7px;">Pick the stop</p>
       <h1>What are you trying to finish?</h1>
       <p>Choose the closest lane. Every tool stays available.</p>
+      <div class="role-network-strip" aria-label="SplashLens fast workflow">
+        <div class="role-network-chip"><strong>Identify it</strong><span>Part, code, spa pack, robot, light, or smart pad.</span></div>
+        <div class="role-network-chip"><strong>Prove it</strong><span>Photos, readings, labels, and missing checks.</span></div>
+        <div class="role-network-chip"><strong>Send it</strong><span>Clean note for customer, boss, counter, or trainer.</span></div>
+      </div>
       <div class="role-preferences" aria-label="First-use preferences">
         <div class="role-pref-card">
           <strong>Language</strong>

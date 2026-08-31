@@ -4,6 +4,7 @@ import { test } from 'node:test';
 
 const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
 const fieldScore = readFileSync(new URL('../js/field-score.js', import.meta.url), 'utf8');
+const marketingGate = html.match(/<section id="marketing-gate"[\s\S]*?<div id="app-shell"/)?.[0] || '';
 
 test('field score widget is present and loaded after analytics', () => {
   assert.match(html, /id="field-score-widget"/);
@@ -37,4 +38,24 @@ test('field score stays field friendly and avoids unsafe rendering', () => {
 test('homepage promise matches field technician positioning', () => {
   assert.match(html, /Get off the pad faster\./);
   assert.doesNotMatch(html, /<h1>Proof-first pool work\.<\/h1>/);
+});
+
+test('first-run marketing screen sells the verified field network in plain field language', () => {
+  assert.match(marketingGate, /Verified Field Network/);
+  assert.match(marketingGate, /Identify the thing in your hand/);
+  assert.match(marketingGate, /Free lookup now/);
+  assert.match(marketingGate, /Paid team and partner layers only unlock/);
+  assert.match(marketingGate, /Job proof/);
+  assert.match(marketingGate, /Training cards/);
+  assert.match(marketingGate, /why it might come back/);
+  assert.match(marketingGate, /Saved job trail/);
+  assert.doesNotMatch(marketingGate, /Service Proof OS/);
+  assert.doesNotMatch(marketingGate, /Learning OS/);
+});
+
+test('role picker keeps the field workflow obvious before tool depth', () => {
+  assert.match(html, /aria-label="SplashLens fast workflow"/);
+  assert.match(html, /<strong>Identify it<\/strong><span>Part, code, spa pack, robot, light, or smart pad\.<\/span>/);
+  assert.match(html, /<strong>Prove it<\/strong><span>Photos, readings, labels, and missing checks\.<\/span>/);
+  assert.match(html, /<strong>Send it<\/strong><span>Clean note for customer, boss, counter, or trainer\.<\/span>/);
 });
