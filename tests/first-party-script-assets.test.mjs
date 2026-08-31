@@ -9,6 +9,7 @@ const html = readFileSync(join(root, 'index.html'), 'utf8');
 const manifest = readFileSync(join(root, 'manifest.json'), 'utf8');
 const androidWebManifest = readFileSync(join(root, 'android-twa', 'app', 'src', 'main', 'res', 'raw', 'web_app_manifest.json'), 'utf8');
 const llms = readFileSync(join(root, 'llms.txt'), 'utf8');
+const appSource = readFileSync(join(root, 'js', 'app.js'), 'utf8');
 
 test('all first-party scripts referenced by index.html exist as JavaScript files', () => {
   const scripts = [...html.matchAll(/<script[^>]+src="([^"]+)"/g)]
@@ -50,4 +51,16 @@ test('public app metadata keeps field-entry claims conservative', () => {
   assert.match(manifest, /230\+ pool and spa field reference entries/);
   assert.match(androidWebManifest, /230\+ pool and spa field reference entries/);
   assert.match(llms, /230\+ pool and spa field entries/);
+});
+
+test('PartSnap result feedback loop turns outcomes into product-learning signals', () => {
+  assert.match(appSource, /function renderPartSnapFeedbackTrap/);
+  assert.match(appSource, /Did this PartSnap result help\?/);
+  assert.match(appSource, /function capturePartSnapOutcome/);
+  assert.match(appSource, /partsnap_result_feedback/);
+  assert.match(appSource, /needs correction/);
+  assert.match(appSource, /missing info/);
+  assert.match(appSource, /savePartSnapReviewTicket/);
+  assert.match(appSource, /showFieldReferralPrompt\('partsnap_result_feedback'\)/);
+  assert.match(appSource, /showValueIdentityPrompt\('partsnap_result_feedback'\)/);
 });

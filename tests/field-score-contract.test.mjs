@@ -61,3 +61,9 @@ test('role picker keeps the field workflow obvious before tool depth', () => {
   assert.match(html, /<strong>Prove it<\/strong><span>Photos, readings, labels, and missing checks\.<\/span>/);
   assert.match(html, /<strong>Send it<\/strong><span>Clean note for customer, boss, counter, or trainer\.<\/span>/);
 });
+
+test('report workflow uses plain-language proof wording for techs', () => {
+  assert.match(html, /aria-label="Job Proof Trail"/);
+  assert.match(html, /Save the stop so nobody has to guess later/);
+  assert.doesNotMatch(html, /aria-label="Service Proof OS"/);
+});

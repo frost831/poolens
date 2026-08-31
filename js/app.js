@@ -8171,6 +8171,7 @@ function renderPartsSnapResult(ai, result, status) {
       ${verificationNotes ? `<p style="color:#fbbf24;font-size:12px;font-weight:600;margin-bottom:10px;">Check: ${verificationNotes}</p>` : ''}
       ${showGuidedRetry ? renderPartSnapGuidedRetry(_lastPartSnapResult, ladder, risk, missingProof) : ''}
       ${renderPartSnapFastWorkflow(_lastPartSnapResult, corpusCandidates, ladder, missingProof)}
+      ${renderPartSnapFeedbackTrap(_lastPartSnapResult, corpusCandidates, ladder, missingProof, risk)}
       ${renderPartSnapPrimaryAction(risk, missingProof.length ? missingProof : ladder.missing)}
       ${renderPartSnapProofSnapshot(ladder, risk, visibleEvidence, missingProof)}
       ${renderPartConfidenceLadder(ladder)}
@@ -8213,6 +8214,69 @@ function renderPartsSnapResult(ai, result, status) {
     description,
     missingProof: missingProof.length ? missingProof : ladder.missing,
   });
+}
+
+function renderPartSnapFeedbackTrap(ai = {}, candidates = [], ladder = {}, missingProof = [], risk = {}) {
+  const corpusStatus = ai.corpusStatus?.label || (candidates.length ? 'source-backed family' : 'AI-only');
+  return `
+    <div style="background:#ffffff;border:1px solid #bae6fd;border-left:4px solid #0284c7;border-radius:10px;padding:11px;margin:10px 0;">
+      <p style="color:#0369a1;font-size:10px;font-weight:950;text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px;">Train SplashLens</p>
+      <p style="color:#0f172a;font-size:13px;font-weight:950;line-height:1.25;margin-bottom:4px;">Did this PartSnap result help?</p>
+      <p style="color:#64748b;font-size:11px;line-height:1.35;margin-bottom:9px;">One tap tells us whether this should become a stronger source-backed card. Status: ${escHtml(corpusStatus)}.</p>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:7px;">
+        <button onclick="capturePartSnapOutcome('helpful')" style="background:#dcfce7;color:#166534;border:1px solid #86efac;border-radius:9px;padding:10px 5px;font-size:11px;font-weight:950;cursor:pointer;">Helpful</button>
+        <button onclick="capturePartSnapOutcome('saved_time')" style="background:#e0f2fe;color:#075985;border:1px solid #7dd3fc;border-radius:9px;padding:10px 5px;font-size:11px;font-weight:950;cursor:pointer;">Saved time</button>
+        <button onclick="capturePartSnapOutcome('wrong')" style="background:#fee2e2;color:#991b1b;border:1px solid #fecaca;border-radius:9px;padding:10px 5px;font-size:11px;font-weight:950;cursor:pointer;">Wrong</button>
+        <button onclick="capturePartSnapOutcome('missing')" style="background:#fff7ed;color:#9a3412;border:1px solid #fed7aa;border-radius:9px;padding:10px 5px;font-size:11px;font-weight:950;cursor:pointer;">Missing</button>
+      </div>
+    </div>`;
+}
+
+function capturePartSnapOutcome(outcome = 'helpful') {
+  const ai = _lastPartSnapResult || {};
+  const visibleEvidence = Array.isArray(ai.visibleEvidence) ? ai.visibleEvidence.filter(Boolean).slice(0, 4) : [];
+  const missingProof = Array.isArray(ai.missingProof) ? ai.missingProof.filter(Boolean).slice(0, 4) : [];
+  const summary = [ai.manufacturer, ai.component, ai.model || ai.partNumber].filter(Boolean).join(' / ') || 'PartSnap result';
+  const needsReview = outcome === 'wrong' || outcome === 'missing';
+  const ticketId = `feedback-${Date.now().toString(36)}`;
+  trackSplashLensEvent('partsnap_result_feedback', {
+    outcome,
+    confidence: ai.confidence || 'unknown',
+    category: ai.category || ai.component || 'unknown',
+    corpus_status: ai.corpusStatus?.label || (Array.isArray(ai.corpusCandidates) && ai.corpusCandidates.length ? 'source-backed candidates' : 'ai-only'),
+    proof_visible_count: visibleEvidence.length,
+    proof_missing_count: missingProof.length,
+    result_summary: summary,
+    review_ticket_id: needsReview ? ticketId : '',
+  });
+  if (needsReview) {
+    savePartSnapReviewTicket({
+      id: ticketId,
+      createdAt: new Date().toLocaleString(),
+      status: outcome === 'wrong' ? 'needs correction' : 'missing info',
+      summary: `${outcome === 'wrong' ? 'Wrong result' : 'Missing info'} - ${summary}`,
+    });
+    const panel = document.getElementById('partsnap-feedback-panel');
+    if (panel) {
+      panel.innerHTML = `
+        <div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;padding:12px;margin:4px 0 16px;">
+          <p style="color:#9a3412;font-size:13px;font-weight:950;margin-bottom:4px;">Saved to review queue</p>
+          <p style="color:#92400e;font-size:11px;line-height:1.4;margin-bottom:9px;">Ticket ${escHtml(ticketId)} is saved on this device. Add what you know so SplashLens can train the next card around the miss.</p>
+          <button onclick="renderMysteryPartForm()" style="width:100%;background:#0f766e;color:#fff;border:0;border-radius:9px;padding:10px;font-size:12px;font-weight:950;cursor:pointer;">Add correction details</button>
+        </div>`;
+    }
+    return;
+  }
+  const panel = document.getElementById('partsnap-feedback-panel');
+  if (panel) {
+    panel.innerHTML = `
+      <div style="background:#ecfdf5;border:1px solid #6ee7b7;border-radius:10px;padding:12px;margin:4px 0 16px;">
+        <p style="color:#065f46;font-size:13px;font-weight:950;margin-bottom:4px;">Got it. That helps tune SplashLens.</p>
+        <p style="color:#047857;font-size:11px;line-height:1.4;margin-bottom:9px;">If this saved time, send the same starting point to another tech, senior tech, or parts counter.</p>
+        <button onclick="showFieldReferralPrompt('partsnap_result_feedback')" style="width:100%;background:#0369a1;color:#fff;border:0;border-radius:9px;padding:10px;font-size:12px;font-weight:950;cursor:pointer;">Share the useful path</button>
+      </div>`;
+  }
+  showValueIdentityPrompt('partsnap_result_feedback');
 }
 
 function shouldShowPartSnapGuidedRetry(ai = {}, candidates = [], ladder = {}, risk = {}, visibleEvidence = [], missingProof = []) {
