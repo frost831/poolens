@@ -41,6 +41,8 @@ test('homepage promise matches field technician positioning', () => {
 });
 
 test('first-run marketing screen sells the verified field network in plain field language', () => {
+  assert.match(marketingGate, /<img src="\/icons\/icon-192\.png" alt="" aria-hidden="true">/);
+  assert.doesNotMatch(marketingGate, /<span class="marketing-mark">SL<\/span>/);
   assert.match(marketingGate, /Verified Field Network/);
   assert.match(marketingGate, /Identify the thing in your hand/);
   assert.match(marketingGate, /Free lookup now/);

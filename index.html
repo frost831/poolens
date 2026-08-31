@@ -425,6 +425,7 @@
     .marketing-nav { min-height:64px; padding:14px 18px; display:flex; align-items:center; justify-content:space-between; gap:16px; border-bottom:1px solid #dbe8ef; background:#ffffff; position:sticky; top:0; z-index:60; }
     .marketing-brand { display:flex; align-items:center; gap:10px; color:#0f172a; font-weight:950; letter-spacing:0; }
     .marketing-mark { width:34px; height:34px; border-radius:8px; background:#0369a1; display:grid; place-items:center; color:#ffffff; font-size:14px; font-weight:950; }
+    .marketing-mark img { width:100%; height:100%; border-radius:8px; display:block; object-fit:cover; }
     .marketing-nav-actions { display:flex; align-items:center; gap:8px; }
     .marketing-link { border:0; background:transparent; color:#0369a1; font-weight:900; font-size:13px; cursor:pointer; padding:9px 8px; }
     .marketing-open { border:0; background:#0f766e; color:#ffffff; border-radius:8px; min-height:38px; padding:0 14px; font-size:13px; font-weight:950; cursor:pointer; }
@@ -565,7 +566,7 @@
 
   <section id="marketing-gate" class="marketing-gate" aria-label="SplashLens introduction">
     <nav class="marketing-nav">
-      <div class="marketing-brand"><span class="marketing-mark">SL</span><span>SplashLens</span></div>
+      <div class="marketing-brand"><span class="marketing-mark"><img src="/icons/icon-192.png" alt="" aria-hidden="true"></span><span>SplashLens</span></div>
       <div class="marketing-nav-actions">
         <button type="button" class="marketing-link" onclick="enterSplashLensApp('scan','parts')">PartSnap</button>
         <button type="button" class="marketing-link" onclick="enterSplashLensApp('errors')">Codes</button>
