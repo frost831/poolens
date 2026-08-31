@@ -1,6 +1,6 @@
 ﻿# SplashLens App
 
-> Free-core, offline-first PWA field reference tool for pool service technicians. 500+ error codes, chemical dosing calculators, online AI scanner support (error codes, parts ID, test-strip triage), SLAM multi-day tracker, filter guides, checklists, and route tracking. No account required. Manual tools work offline after first load; AI scanner requires internet.
+> Free-core, offline-first PWA field reference tool for pool service technicians. 230+ pool and spa field entries, chemical dosing calculators, online AI scanner support (error codes, parts ID, test-strip triage), SLAM multi-day tracker, filter guides, checklists, and route tracking. No account required. Manual tools work offline after first load; AI scanner requires internet.
 
 ## App URL
 
@@ -9,7 +9,7 @@ https://app.splashlens.com
 ## What This App Does
 
 SplashLens is a Progressive Web App that pool service technicians use poolside to:
-- Look up equipment error codes (Hayward, Pentair, Jandy, Maytronics/Dolphin, Polaris, Aiper, Raypak, IntelliFlo, AquaCal, Sta-Rite, Waterway, Beatbot, Betta â€” 13 brands, 500+ codes)
+- Look up pool and spa equipment reference entries (Hayward, Pentair, Jandy, Maytronics/Dolphin, Polaris, Aiper, Raypak, IntelliFlo, AquaCal, Sta-Rite, Waterway, Beatbot, Betta, spa and swim spa hardware lanes)
 - Calculate chemical doses (FC, pH, alkalinity, calcium, CYA, salt, SLAM)
 - Identify pool parts by camera using AI (PartSnap)
 - Read test strips via AI camera scan
