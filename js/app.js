@@ -4909,7 +4909,7 @@ function poolFieldIntel(pool) {
     readings: readings.length,
     callbackRisk: {
       level,
-      label: level === 'high' ? 'High Callback Risk' : level === 'medium' ? 'Watch Next Visit' : 'Clean History',
+      label: level === 'high' ? 'High Repeat Issue Watch' : level === 'medium' ? 'Watch Next Visit' : 'Clean History',
     },
   };
 }
