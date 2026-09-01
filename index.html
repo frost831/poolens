@@ -1414,7 +1414,7 @@
     </div>
 
     <!-- SCAN TAB -->
-    <div id="tab-scan" class="tab-panel" style="padding:0;background:#0f172a;min-height:calc(100vh - 120px);">
+    <div id="tab-scan" class="tab-panel" style="padding:0 0 calc(184px + env(safe-area-inset-bottom));background:#0f172a;min-height:calc(100vh - 120px);">
       <!-- Mode bar -->
       <div id="scan-mode-bar" style="display:flex;background:#1e293b;border-bottom:1px solid #334155;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;">
         <button id="scan-mode-camera" onclick="setScanMode('camera')" style="flex:1;min-width:68px;padding:10px 4px;background:#0284c7;color:#fff;border:none;cursor:pointer;font-size:10px;font-weight:700;letter-spacing:.02em;transition:background .15s;">ERRORS</button>
@@ -1563,7 +1563,7 @@
   <script src="/js/field-score.js?v=20260828-closing-score"></script>
   <script>
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw-field-signals.js').catch(() => {});
+      navigator.serviceWorker.register('/sw.js').catch(() => {});
     }
   </script>
   </div>

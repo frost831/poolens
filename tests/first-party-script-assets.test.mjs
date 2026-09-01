@@ -10,6 +10,7 @@ const manifest = readFileSync(join(root, 'manifest.json'), 'utf8');
 const androidWebManifest = readFileSync(join(root, 'android-twa', 'app', 'src', 'main', 'res', 'raw', 'web_app_manifest.json'), 'utf8');
 const llms = readFileSync(join(root, 'llms.txt'), 'utf8');
 const appSource = readFileSync(join(root, 'js', 'app.js'), 'utf8');
+const serviceWorker = readFileSync(join(root, 'sw.js'), 'utf8');
 
 test('all first-party scripts referenced by index.html exist as JavaScript files', () => {
   const scripts = [...html.matchAll(/<script[^>]+src="([^"]+)"/g)]
@@ -21,6 +22,23 @@ test('all first-party scripts referenced by index.html exist as JavaScript files
 
   for (const script of scripts) {
     assert.ok(existsSync(join(root, script)), `${script} is referenced but missing`);
+  }
+});
+
+test('service worker registration and precache use existing app assets', () => {
+  const registrations = [...html.matchAll(/serviceWorker\.register\('([^']+)'\)/g)].map((match) => match[1]);
+  assert.deepEqual(registrations, ['/sw.js']);
+
+  for (const asset of registrations) {
+    assert.ok(existsSync(join(root, asset.replace(/^\//, ''))), `${asset} is registered but missing`);
+  }
+
+  const scripts = [...html.matchAll(/<script[^>]+src="([^"]+)"/g)]
+    .map((match) => match[1])
+    .filter((src) => src.startsWith('/js/'));
+
+  for (const script of scripts) {
+    assert.match(serviceWorker, new RegExp(script.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')), `${script} is not precached`);
   }
 });
 

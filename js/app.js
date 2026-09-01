@@ -6663,6 +6663,14 @@ function deletePartSnapFieldStop(id) {
 
 // ── Camera ──────────────────────────────────
 
+function revealNoCameraFallback(noCam, vWrap) {
+  if (vWrap) vWrap.style.display = 'none';
+  if (!noCam) return;
+  noCam.style.display = 'block';
+  noCam.style.scrollMarginBottom = 'calc(184px + env(safe-area-inset-bottom))';
+  setTimeout(() => noCam.scrollIntoView({ block: 'nearest', behavior: 'smooth' }), 60);
+}
+
 function getPartSnapReviewTickets() {
   try {
     const tickets = JSON.parse(localStorage.getItem(PARTSNAP_REVIEW_KEY) || '[]');
@@ -6722,8 +6730,7 @@ function startCamera() {
   const vWrap  = document.getElementById('scan-viewfinder-wrap');
   if (!video) return;
   if (!navigator.mediaDevices?.getUserMedia) {
-    if (vWrap)  vWrap.style.display = 'none';
-    if (noCam)  noCam.style.display = 'block';
+    revealNoCameraFallback(noCam, vWrap);
     return;
   }
   // Don't restart if already streaming
@@ -6742,8 +6749,7 @@ function startCamera() {
       if (noCam)  noCam.style.display = 'none';
     })
     .catch(() => {
-      if (vWrap)  vWrap.style.display = 'none';
-      if (noCam)  noCam.style.display = 'block';
+      revealNoCameraFallback(noCam, vWrap);
     });
 }
 

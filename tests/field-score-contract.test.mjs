@@ -4,6 +4,7 @@ import { test } from 'node:test';
 
 const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
 const fieldScore = readFileSync(new URL('../js/field-score.js', import.meta.url), 'utf8');
+const appSource = readFileSync(new URL('../js/app.js', import.meta.url), 'utf8');
 const marketingGate = html.match(/<section id="marketing-gate"[\s\S]*?<div id="app-shell"/)?.[0] || '';
 
 test('field score widget is present and loaded after analytics', () => {
@@ -33,6 +34,14 @@ test('field score stays field friendly and avoids unsafe rendering', () => {
   assert.match(fieldScore, /textContent/);
   assert.match(fieldScore, /20 \* 60 \* 1000/);
   assert.match(fieldScore, /maxlength="500"|safeText\(noteInput\.value, 500\)/);
+});
+
+test('field score does not interrupt first-run or scanner entry clicks', () => {
+  assert.match(fieldScore, /closest\('#role-picker'\)/);
+  assert.match(fieldScore, /closest\('#marketing-gate'\)/);
+  assert.doesNotMatch(fieldScore, /tab_'\s*\+/);
+  assert.doesNotMatch(fieldScore, /scanner_mode_selected/);
+  assert.doesNotMatch(fieldScore, /partsnap\|look up\|lookup/);
 });
 
 test('homepage promise matches field technician positioning', () => {
@@ -66,4 +75,11 @@ test('report workflow uses plain-language proof wording for techs', () => {
   assert.match(html, /aria-label="Job Proof Trail"/);
   assert.match(html, /Save the stop so nobody has to guess later/);
   assert.doesNotMatch(html, /aria-label="Service Proof OS"/);
+});
+
+test('scanner tab keeps fallback content above fixed mobile nav', () => {
+  assert.match(html, /id="tab-scan"[^>]+padding:0 0 calc\(184px \+ env\(safe-area-inset-bottom\)\)/);
+  assert.match(appSource, /function revealNoCameraFallback/);
+  assert.match(appSource, /scrollMarginBottom = 'calc\(184px \+ env\(safe-area-inset-bottom\)\)'/);
+  assert.match(appSource, /scrollIntoView\(\{ block: 'nearest', behavior: 'smooth' \}\)/);
 });

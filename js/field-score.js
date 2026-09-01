@@ -171,13 +171,13 @@
     var text = safeText(target.textContent, 80).toLowerCase();
     var href = target.getAttribute && target.getAttribute('href');
 
+    if (target.closest('#role-picker') || target.closest('#marketing-gate')) return;
+
     if (target.classList.contains('nav-btn')) {
-      delayedPrompt('tab_' + safeText(id.replace(/^nav-/, ''), 40), 'opened_app_tool', 'bottom_nav');
       return;
     }
 
     if (id.indexOf('scan-mode-') === 0) {
-      delayedPrompt('scan_' + safeText(id.replace(/^scan-mode-/, ''), 40), 'scanner_mode_selected', 'scan_mode');
       return;
     }
 
@@ -186,7 +186,7 @@
       return;
     }
 
-    if (/partsnap|look up|lookup|proof packet|save to pool history|share report|customer summary|vendor packet|calculate dose|start workflow|open field tools/.test(text)) {
+    if (/proof packet|save to pool history|share report|customer summary|vendor packet|calculate dose/.test(text)) {
       delayedPrompt('workflow_' + safeText(text, 48).replace(/\s+/g, '_'), text, 'workflow_button');
     }
   }, true);

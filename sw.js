@@ -1,5 +1,16 @@
-const CACHE = 'splashlens-v3';
-const ASSETS = ['/', '/index.html', '/js/errors.js', '/js/data.js', '/js/app.js', '/favicon.svg', '/manifest.json'];
+const CACHE = 'splashlens-v4';
+const ASSETS = [
+  '/',
+  '/index.html',
+  '/js/errors.js',
+  '/js/data.js?v=20260823-closing-season-mode',
+  '/js/app.js?v=20260823-closing-season-mode',
+  '/js/field-signals.js?v=20260728-field-signals',
+  '/js/analytics.js',
+  '/js/field-score.js?v=20260828-closing-score',
+  '/favicon.svg',
+  '/manifest.json'
+];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)));
