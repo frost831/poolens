@@ -215,21 +215,21 @@ window.SPLASHLENS_MONETIZATION_LANES = {
       guardrail: "Search links are for price checking; verify model, dimensions, and current parts diagram before ordering."
     },
     {
-      name: "Service Proof Pro",
+      name: "Saved Job Pro",
       planKey: "service_proof_pro_monthly",
       availability: "pilot",
       price: "$19/mo — request access",
       buyer: "Solo techs who want proof they can find later",
-      includes: ["Save each pool's photos, readings, notes, and repair history", "Plain-English summary you can send to the customer", "One-tap packet for a boss, senior tech, or vendor", "Spot repeat issues before they become callbacks"],
+      includes: ["Save each pool's photos, readings, notes, and repair history", "Plain-English summary you can send to the customer", "One-tap job details for a boss, senior tech, or supplier", "Spot repeat issues before they come back on you"],
       guardrail: "Built for cleaner documentation without becoming a full CRM."
     },
     {
-      name: "Team / Facility Plans",
+      name: "Team Field View",
       planKey: "team_proof_os_monthly",
       availability: "pilot",
       price: "$99/mo — company setup",
       buyer: "Owners, facilities, CPOs, and training groups",
-      includes: ["See what your techs used, searched, and missed", "Reports with your company name on them", "Daily check and incident workflows for CPOs and facilities", "Team-level searched/missed reports"],
+      includes: ["See what your techs used, searched, and missed", "Reports with your company name on them", "Daily check and incident workflows for CPOs and facilities", "Team searched/missed reports in plain language"],
       guardrail: "Exports support existing CRMs; SplashLens is not a billing replacement."
     },
     {
@@ -393,7 +393,7 @@ window.CLOSING_CHECKLIST = [
   { phase:"6. Callback and insurance-ready documentation", steps:[
     "Create the customer-safe closing summary before driving away: what was done, what was not done, and what still needs monitoring.",
     "Attach photos of water level, equipment pad, drain plugs, plugs/gizmos, cover, chemistry, and unusual conditions.",
-    "Mark callback risk if any proof is missing, weather is changing fast, equipment would not drain, or the customer declined a recommended step.",
+    "Mark repeat-issue watch items if any proof is missing, weather is changing fast, equipment would not drain, or the customer declined a recommended step.",
     "If a dispute, freeze claim, or insurance conversation happens later, use the proof packet as documentation support only; it is not a coverage guarantee.",
     "Save the closing packet to Pool History so the opening crew can find plug locations, issue notes, and spring follow-ups.",
     "Schedule the spring/opening reminder or follow-up repair while the account details are still fresh."

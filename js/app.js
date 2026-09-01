@@ -28,7 +28,7 @@ const LOCALIZED_HEAD = {
   },
   es: {
     title: 'SplashLens - Referencia de campo para piscinas y PartSnap',
-    description: 'SplashLens es una app gratuita, sin cuenta, para técnicos de piscinas, spas y swim spas con PartSnap, asistencia para identificar piezas, rutas de prueba, códigos de equipo, calculadoras de dosis, notas de voz, Facility Assist y Service Proof Passport.',
+    description: 'SplashLens es una app gratuita, sin cuenta, para técnicos de piscinas, spas y swim spas con PartSnap, asistencia para identificar piezas, rutas de prueba, códigos de equipo, calculadoras de dosis, notas de voz, Facility Assist e historial de trabajo guardado.',
   },
 };
 const LOCALIZED_TEXT = {
@@ -88,7 +88,7 @@ const LOCALIZED_TEXT = {
     'display / plate': 'pantalla / placa',
     'brand / symptom': 'marca / síntoma',
     'pool math': 'cálculo piscina',
-    'Possible part families, missing proof, callback risk, and clean escalation.': 'Familias posibles de pieza, prueba faltante, riesgo de regreso y escalación limpia.',
+    'Possible part families, missing proof, repeat issue watch, and clean send-out.': 'Familias posibles de pieza, prueba faltante, aviso de problema repetido y envio limpio.',
     'Photos, readings, notes, summaries, and saved stop history.': 'Fotos, lecturas, notas, resúmenes e historial guardado de la visita.',
     'Bigger taps, shorter paths, voice notes, and fewer after-hours rewrites.': 'Botones grandes, rutas cortas, notas de voz y menos reescritura fuera de horario.',
     'PartSnap result packet': 'Paquete de resultado PartSnap',
@@ -101,7 +101,7 @@ const LOCALIZED_TEXT = {
     'Model plate, size, vendor cross-check.': 'Placa de modelo, tamaño y verificación con proveedor.',
     'Senior-tech packet': 'Paquete para técnico senior',
     'Copy one clean handoff with symptoms, proof, missing evidence, and what to verify before selling or replacing.': 'Copia un traspaso limpio con síntomas, prueba, evidencia faltante y qué verificar antes de vender o reemplazar.',
-    'Service Proof Passport': 'Pasaporte de prueba de servicio',
+    'Saved Job History': 'Historial de trabajo guardado',
     'Save the stop so next visit has the equipment context, not a mystery photo buried in texts.': 'Guarda la visita para que la próxima tenga contexto del equipo, no una foto perdida en mensajes.',
     'Identify the part.': 'Identifica la pieza.',
     'Use PartSnap for seals, lids, grids, cells, valves, robot parts, lights, boards, sensors, and the stuff nobody wants to guess at.': 'Usa PartSnap para sellos, tapas, grids, celdas, válvulas, piezas de robot, luces, tarjetas, sensores y lo que nadie quiere adivinar.',
@@ -137,8 +137,8 @@ const LOCALIZED_TEXT = {
     'senior / vendor': 'senior / proveedor',
     'PartSnap + Connected Pool Network': 'PartSnap + Red de piscina conectada',
     'Photo, label, proof checklist, senior/vendor packet.': 'Foto, etiqueta, lista de prueba y paquete para senior/proveedor.',
-    'Service Proof OS': 'Sistema de prueba de servicio',
-    'Turn this stop into a Service Proof Passport.': 'Convierte esta visita en un Pasaporte de prueba de servicio.',
+    'Job proof tools': 'Herramientas de prueba de trabajo',
+    'Turn this stop into saved job history.': 'Convierte esta visita en historial de trabajo guardado.',
     'ERRORS': 'CODIGOS',
     'STRIP': 'TIRA',
     'LOOKUP': 'BUSCAR',
@@ -1234,7 +1234,7 @@ function seedReportFromFacilityPacket(packetId) {
   validateReportProof({ quiet: true });
   saveReportDraft();
   renderProofWorkflowOutput(
-    'Facility packet moved into Service Proof Passport',
+    'Facility packet moved into saved job history',
     'This packet is now a local draft passport. Review the proof, add any missing readings/photos, then save it to pool history or share a senior-tech packet.',
     '<div class="brain-grid"><button type="button" class="brain-action green" onclick="saveReportToPoolHistory()">Save Passport</button><button type="button" class="brain-action secondary" onclick="createServiceProofShareLink()">Share packet</button></div>'
   );
@@ -1817,8 +1817,8 @@ function startServiceProofWorkflow(kind = 'visit') {
     setReportValueAndNotify('rpt-equip', 'PartSnap / scanner workflow started. Verify possible match against model plate, manual, and qualified tech judgment.', { force: false });
     setReportCheck('rpt-proof-equipment', false);
     renderProofWorkflowOutput(
-      'PartSnap to Passport',
-      'Start with the part or code, then save the proof into a customer record before ordering. The packet should show what is known, what is missing, and who needs to verify it.',
+      'PartSnap to saved job note',
+      'Start with the part or code, then save the proof into a customer record before ordering. The note should show what is known, what is missing, and who needs to verify it.',
       `<div class="brain-grid"><button type="button" class="brain-action green" onclick="showTab('scan');setTimeout(()=>setScanMode('parts'),80)">Open PartSnap</button><button type="button" class="brain-action secondary" onclick="createServiceProofShareLink()">Build packet</button></div>`
     );
     focusReportField('rpt-photo-proof');
@@ -1829,12 +1829,12 @@ function startServiceProofWorkflow(kind = 'visit') {
     setReportValueAndNotify('rpt-review-to', 'Customer / owner / spring opening crew', { force: false });
     setReportValueAndNotify('rpt-work', 'Completed closing-season proof workflow: chemistry recorded, visible equipment checked, winterization proof captured, and follow-up risks documented.', { force: false });
     setReportValueAndNotify('rpt-photo-proof', `Closing proof needed: ${(proof.proofPhotos || []).join(', ') || 'water level, equipment pad, drain plugs, winter plugs, cover, and unusual conditions.'}`, { force: false });
-    setReportValueAndNotify('rpt-issue-note', `Callback risk check: ${(proof.callbackFlags || []).slice(0, 6).join(', ') || 'missing drain-plug proof, unclear cover proof, hard-freeze forecast, or declined work.'}`, { force: false });
+    setReportValueAndNotify('rpt-issue-note', `Repeat issue check: ${(proof.callbackFlags || []).slice(0, 6).join(', ') || 'missing drain-plug proof, unclear cover proof, hard-freeze forecast, or declined work.'}`, { force: false });
     setReportValueAndNotify('rpt-customer-summary', 'Pool was closed and documented for the season. Photos and notes show the visible work completed today, open items, and any customer-approved or declined follow-up. This record supports future review but does not replace the exact equipment manual, local code, or qualified judgment.', { force: false });
     setReportCheck('rpt-proof-summary', true);
     renderProofWorkflowOutput(
       'Closing Season Proof Packet',
-      proof.promise || 'Document water level, equipment pad, drain plugs, winter plugs, cover details, and any callback risks before leaving the property.',
+      proof.promise || 'Document water level, equipment pad, drain plugs, winter plugs, cover details, and any repeat-issue risks before leaving the property.',
       `<div class="brain-grid">
         <button type="button" class="brain-action green" onclick="switchClType('closing');showTab('guide')">Open closing checklist</button>
         <button type="button" class="brain-action secondary" onclick="createServiceProofShareLink()">Build proof packet</button>
@@ -1850,8 +1850,8 @@ function startServiceProofWorkflow(kind = 'visit') {
     setReportValueAndNotify('rpt-customer-summary', 'Water was tested and the visit was documented. Any repair or part decisions still need label, manual, and qualified service verification.', { force: false });
     setReportCheck('rpt-proof-summary', true);
     renderProofWorkflowOutput(
-      'Regular visit passport',
-      'Capture readings first, dictate the work note, generate the customer-safe summary, then save the passport to the pool history.',
+      'Regular visit job note',
+      'Capture readings first, dictate the work note, generate the customer-safe summary, then save it to the pool history.',
       '<div class="brain-grid"><button type="button" class="brain-action green" onclick="generateServiceProofSummary()">Generate summary</button><button type="button" class="brain-action secondary" onclick="saveReportDraft()">Save draft</button></div>'
     );
     focusReportField('rpt-fc');
@@ -3683,7 +3683,7 @@ function copyServiceTrustPortalPreview() {
   const pool = findPoolForReport();
   const flags = reportProofRiskFlags(passport, pool);
   const text = [
-    `SplashLens Service Proof Passport`,
+    `SplashLens saved job history`,
     `Customer: ${passport.customer}`,
     `Visit: ${passport.visitType} on ${passport.date}`,
     reportReadingSummary() ? `Readings: ${reportReadingSummary()}` : '',
@@ -3836,7 +3836,7 @@ function copyRouteNote() {
     passport.proof?.customerSummary ? `Customer summary: ${passport.proof.customerSummary}` : '',
     passport.recommendations ? `Next recommendation: ${passport.recommendations}` : '',
     proof.complete ? 'Proof status: ready' : `Proof missing: ${proof.missing.join(', ')}`,
-    flags.length ? `Callback risk flags: ${flags.join(' | ')}` : '',
+    flags.length ? `Repeat issue flags: ${flags.join(' | ')}` : '',
   ].filter(Boolean).join('\n');
   copyTextToClipboard(text, 'Route note copied.');
   trackSplashLensEvent('service_proof_route_note_copied', {
@@ -3849,7 +3849,7 @@ function copyRouteNote() {
 const SERVICE_PROOF_FAQ = [
   {
     keys: ['crm', 'jobber', 'skimmer', 'pool brain', 'replace'],
-    answer: 'SplashLens Service Proof OS is meant to sit beside your CRM first. Use your CRM for scheduling, invoices, and customer records. Use SplashLens for proof, field memory, PartSnap, customer-safe summaries, and trend flags.'
+    answer: 'SplashLens job proof tools are meant to sit beside your CRM first. Use your CRM for scheduling, invoices, and customer records. Use SplashLens for proof, field memory, PartSnap, customer-safe summaries, and trend flags.'
   },
   {
     keys: ['customer', 'homeowner', 'summary', 'explain'],
@@ -3865,15 +3865,15 @@ const SERVICE_PROOF_FAQ = [
   },
   {
     keys: ['price', 'paid', 'subscription'],
-    answer: 'The free app stays useful: lookup, basic PartSnap, calculators, and Facility Assist stay open. Paid lanes should be Service Proof Pro for solo techs, Team Proof OS for service companies, Facility/CPO pilots, distributor counter mode, training partner modules, and partner-verified manufacturer cards.'
+    answer: 'The free app stays useful: lookup, basic PartSnap, calculators, and Facility Assist stay open. Paid lanes are Saved Job Pro for solo techs, Team Field View for service companies, Facility/CPO pilots, distributor counter mode, training partner modules, and partner-verified manufacturer cards.'
   },
   {
     keys: ['trend', 'callback', 'risk', 'repeat'],
-    answer: 'Trend flags look for incomplete proof, repeated symptoms, repeated equipment categories, water-quality drift, and high-risk hardware like heaters, electrical, lights, covers, and automation.'
+    answer: 'Repeat issue flags look for incomplete proof, repeated symptoms, repeated equipment categories, water-quality drift, and high-risk hardware like heaters, electrical, lights, covers, and automation.'
   },
   {
     keys: ['facility', 'cpo', 'apartment', 'swim school'],
-    answer: 'Facility users should start with Facility Assist for daily checks, contamination events, dose records, equipment proof, and escalation packets. Service Proof Passport stores the longer history.'
+    answer: 'Facility users should start with Facility Assist for daily checks, contamination events, dose records, equipment proof, and help packets. Saved job history keeps the longer record.'
   }
 ];
 
@@ -3881,7 +3881,7 @@ function serviceProofAssistantAnswer(query) {
   const q = String(query || '').toLowerCase();
   const hit = SERVICE_PROOF_FAQ.find(item => item.keys.some(key => q.includes(key)));
   if (hit) return hit.answer;
-  return 'Start with the visit workflow: capture readings, add photo/proof names, dictate a tech note, generate the homeowner summary, preview the trust portal, then save the Service Proof Passport. Keep repair language cautious until model numbers, manuals, and qualified checks are verified.';
+  return 'Start with the visit workflow: capture readings, add photo/proof names, dictate a tech note, generate the homeowner summary, preview the customer note, then save the job history. Keep repair language cautious until model numbers, manuals, and qualified checks are verified.';
 }
 
 function renderServiceProofAssistant() {
@@ -3899,7 +3899,7 @@ function renderServiceProofAssistant() {
         <button type="button" class="brain-action" onclick="answerServiceProofAssistant()" style="padding:10px 12px;">Ask</button>
       </div>
       <div style="display:flex;gap:6px;overflow-x:auto;margin-bottom:10px;">
-        ${['CRM fit','Customer summary','Proof photos','AI chat','Callback risk','Facility workflow'].map(q => `<button type="button" class="brain-chip primary" onclick="askServiceProofAssistant('${escAttr(q)}')">${escHtml(q)}</button>`).join('')}
+        ${['CRM fit','Customer summary','Proof photos','AI chat','Repeat issues','Facility workflow'].map(q => `<button type="button" class="brain-chip primary" onclick="askServiceProofAssistant('${escAttr(q)}')">${escHtml(q)}</button>`).join('')}
       </div>
       <div id="proof-assistant-answer" class="info-box">Pick a chip or ask a question.</div>
     </section>`;
@@ -4833,7 +4833,7 @@ function renderPoolDetail(id) {
 
     <hr class="section-div">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-      <p style="color:#0369a1;font-weight:900;font-size:15px;">Service Proof Passports</p>
+      <p style="color:#0369a1;font-weight:900;font-size:15px;">Saved Job Notes</p>
       <button onclick="loadReportFromPool('${id}');showTab('report')" style="background:#ecfeff;border:1px solid #67e8f9;color:#0e7490;font-size:12px;font-weight:800;padding:6px 12px;border-radius:6px;cursor:pointer;">+ New Report</button>
     </div>
     <div id="service-passports-${id}">
@@ -5124,7 +5124,7 @@ function buildPoolCRMPacket(pool) {
     `Profile: ${[pool.gallons ? `${pool.gallons} gal` : '', pool.type, pool.sanitizer, pool.filter].filter(Boolean).join(' | ') || 'Not set'}`,
     pool.heater ? `Primary equipment note: ${pool.heater}` : '',
     '',
-    `Callback risk: ${intel.callbackRisk.label}`,
+    `Repeat issue watch: ${intel.callbackRisk.label}`,
     trendFlags.length ? `Trend flags: ${trendFlags.join(' | ')}` : '',
     next.date || next.note ? `Next visit: ${[next.date, next.note].filter(Boolean).join(' - ')}` : 'Next visit: Not set',
     '',
@@ -5639,7 +5639,7 @@ function renderTechRadarPanel() {
     <section class="brain-card dark" aria-label="New Tech Radar">
       <p style="color:#7dd3fc;font-size:10px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;margin-bottom:4px;">New Tech Radar</p>
       <h2 style="font-size:21px;line-height:1.06;font-weight:950;margin:0 0 6px;color:#fff;">PartSnap + Connected Pool Network</h2>
-      <p style="color:#cbd5e1;font-size:12px;line-height:1.45;">Track the fast-moving stuff: robots, smart automation, lights, heat pumps, covers, sensors, feeders, and chemical controllers. Use it to capture proof, spot callback risk, and build safer escalation packets.</p>
+      <p style="color:#cbd5e1;font-size:12px;line-height:1.45;">Track the fast-moving stuff: robots, smart automation, lights, heat pumps, covers, sensors, feeders, and chemical controllers. Use it to capture proof, spot repeat issues, and build safer send-out notes.</p>
       <div class="brain-grid" style="margin-top:10px;">
         <span class="brain-pill ready" style="justify-content:center;">Daily data adds</span>
         <span class="brain-pill ready" style="justify-content:center;">Weekly field cards</span>
@@ -5996,7 +5996,7 @@ function runRouteBrain() {
     <section class="brain-card">
       <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px;">
         <h3>Field Plan</h3>
-        <span class="brain-pill ${riskClass}">${risk.level} callback risk</span>
+        <span class="brain-pill ${riskClass}">${risk.level} repeat issue watch</span>
       </div>
       ${risk.missing.length ? `<div class="warn-box" style="margin-bottom:10px;">Missing before this is proof-ready: ${escHtml(risk.missing.join(', '))}</div>` : `<div class="info-box" style="margin-bottom:10px;">Proof path looks complete enough to document and escalate if needed.</div>`}
       <p><strong>Customer-safe summary:</strong> ${escHtml(customer)}</p>
@@ -6508,11 +6508,11 @@ function renderCounterSamplePacket() {
     <div style="margin:12px 0 16px;background:#f8fafc;border:1px solid #99f6e4;border-left:4px solid #0f766e;border-radius:14px;padding:14px;">
       <p style="color:#0f766e;font-size:10px;font-weight:950;letter-spacing:.12em;text-transform:uppercase;margin-bottom:6px;">Counter sample - no live fitment</p>
       <h3 style="color:#0f172a;font-size:19px;font-weight:950;line-height:1.08;margin-bottom:7px;">Walk-in pump lid packet</h3>
-      <p style="color:#475569;font-size:12px;line-height:1.45;margin-bottom:10px;">Use this sample to show how SplashLens slows down a risky sale: possible family, missing proof, callback risk, and vendor questions before anyone orders.</p>
+      <p style="color:#475569;font-size:12px;line-height:1.45;margin-bottom:10px;">Use this sample to show how SplashLens slows down a risky sale: possible family, missing proof, repeat issue watch, and supplier questions before anyone orders.</p>
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:10px;">
         <div style="background:#ecfeff;border:1px solid #67e8f9;border-radius:9px;padding:9px;"><b style="display:block;color:#0e7490;font-size:12px;">Visible</b><span style="display:block;color:#475569;font-size:11px;margin-top:4px;">lid profile, molded ribs</span></div>
         <div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:9px;padding:9px;"><b style="display:block;color:#92400e;font-size:12px;">Missing</b><span style="display:block;color:#475569;font-size:11px;margin-top:4px;">pump model plate, diameter</span></div>
-        <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:9px;padding:9px;"><b style="display:block;color:#991b1b;font-size:12px;">Risk</b><span style="display:block;color:#475569;font-size:11px;margin-top:4px;">medium callback risk</span></div>
+        <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:9px;padding:9px;"><b style="display:block;color:#991b1b;font-size:12px;">Watch</b><span style="display:block;color:#475569;font-size:11px;margin-top:4px;">medium repeat issue watch</span></div>
       </div>
       <div style="background:#0f172a;border-radius:10px;padding:11px;margin-bottom:10px;">
         <p style="color:#94a3b8;font-size:10px;font-weight:950;text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Vendor packet</p>
@@ -6532,7 +6532,7 @@ function copyCounterSamplePacket() {
     'Possible family: pump lid / strainer cover',
     'Visible proof: lid profile, molded ribs',
     'Missing proof: pump model plate, lid outside diameter, union size, current parts diagram',
-    'Risk: medium callback risk until proof improves',
+    'Watch: medium repeat issue watch until proof improves',
     'Language: do not confirm fitment or order until manufacturer diagram and model proof agree.',
   ].join('\n');
   navigator.clipboard?.writeText(text);
@@ -8604,7 +8604,7 @@ function partSnapProofPacketTemplates(ai = {}) {
       title: 'Chemical Controller',
       match: ['orp', 'ph', 'probe', 'chemical', 'controller', 'feed', 'stenner', 'rola', 'cat', 'chemtrol'],
       proof: ['manual water test', 'controller screen', 'probe age', 'calibration standard/date', 'flow cell photo', 'tank/tablet level', 'feed tube and injection fitting'],
-      hold: 'Automation readings that disagree with manual testing are high callback risk.'
+      hold: 'Automation readings that disagree with manual testing need a high repeat-issue watch.'
     },
     {
       key: 'aop_ozone_uv',
@@ -8686,7 +8686,7 @@ function partSnapCallbackRisk(ai = {}, ladder = {}, visibleEvidence = [], missin
   const level = score >= 6 ? 'high' : score >= 3 ? 'medium' : 'low';
   return {
     level,
-    label: `${level.toUpperCase()} CALLBACK RISK`,
+    label: `${level.toUpperCase()} REPEAT ISSUE WATCH`,
     color: level === 'high' ? '#dc2626' : level === 'medium' ? '#d97706' : '#16a34a',
     reasons: reasons.slice(0, 4),
     missing: missingProof.length ? missingProof : (ladder.missing || []).slice(0, 4),
@@ -8699,7 +8699,7 @@ function renderPartSnapCallbackRisk(risk) {
   return `
     <div style="background:#020617;border:1px solid ${risk.color};border-radius:8px;padding:10px;margin:10px 0;">
       <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px;">
-        <p style="color:#e2e8f0;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.06em;">Callback Risk Score</p>
+        <p style="color:#e2e8f0;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.06em;">Repeat Issue Watch</p>
         <span style="background:${risk.color};color:#fff;border-radius:999px;padding:2px 8px;font-size:9px;font-weight:950;">${risk.level.toUpperCase()}</span>
       </div>
       <p style="color:#94a3b8;font-size:11px;line-height:1.4;margin-bottom:6px;">${reasons.map(escHtml).join(' ')}</p>
@@ -8709,10 +8709,10 @@ function renderPartSnapCallbackRisk(risk) {
 
 function renderPartSnapPartnerCards(ai = {}) {
   const cards = [
-    ['counter', 'Senior Tech / Vendor Packet', 'Ready', 'One tap packet with proof, missing evidence, risk, and exact questions for a senior tech, distributor, or vendor.'],
+    ['counter', 'Send to Boss / Supplier', 'Ready', 'One tap note with proof, missing evidence, repeat-issue watch, and exact questions for a senior tech, distributor, or vendor.'],
     ['verified', 'Partner-Verified Card', 'Ready for partner', 'A manufacturer, distributor, trainer, or vendor intake card for official docs, failure points, model aliases, and required proof language.'],
     ['training', 'Training Scenario Card', 'Ready', 'Turns the result into a 5-minute apprentice lesson with student task, proof checklist, and answer key.'],
-    ['passport', 'Service Proof Passport', 'Ready', 'Save the part result into a customer/pool history so callbacks and reorders have field proof attached.'],
+    ['passport', 'Saved Job History', 'Ready', 'Save the part result into a customer/pool history so repeat problems and reorders have field proof attached.'],
   ];
   return `
     <div style="margin:10px 0;background:#0f172a;border:1px solid #334155;border-radius:8px;padding:10px;">
@@ -8734,10 +8734,10 @@ function renderPartSnapPartnerCards(ai = {}) {
 function openPartSnapPartnerCard(type) {
   const panel = document.getElementById('partsnap-feedback-panel');
   const title = {
-    counter: 'Senior Tech / Vendor Packet',
+    counter: 'Send to Boss / Supplier',
     verified: 'Partner-Verified Card Intake',
     training: 'Training Scenario Card',
-    passport: 'Service Proof Passport',
+    passport: 'Saved Job History',
   }[type] || 'Partner Card';
   trackSplashLensEvent('partsnap_partner_card_opened', { card: type, confidence: (_lastPartSnapResult || {}).confidence || 'unknown' });
   if (!panel) return;
@@ -8782,7 +8782,7 @@ function partSnapPartnerCardText(type) {
       'SplashLens 5-minute PartSnap training card',
       '',
       `Scenario: A tech found ${ai.component || 'a mystery pool part'} with ${ai.confidence || 'unknown'} confidence.`,
-      `Callback risk: ${risk.level}`,
+      `Repeat issue watch: ${risk.level}`,
       '',
       'Student task:',
       '1. Name what proof is visible.',
@@ -8797,10 +8797,10 @@ function partSnapPartnerCardText(type) {
   }
   if (type === 'passport') {
     return [
-      'Service Proof Passport note',
+      'Saved job history note',
       '',
       `Saved item: ${[ai.manufacturer, ai.component, ai.model || ai.partNumber].filter(Boolean).join(' / ') || 'PartSnap result'}`,
-      `Callback risk: ${risk.level}`,
+      `Repeat issue watch: ${risk.level}`,
       `Before ordering: ${risk.missing.length ? risk.missing.join(', ') : 'verify against current manufacturer parts diagram'}`,
       '',
       base,
@@ -8864,20 +8864,20 @@ function savePartSnapToPool() {
     panel.innerHTML = `
       <div style="background:#fff7ed;border:1px solid #fdba74;border-radius:12px;padding:12px;margin:4px 0 16px;">
         <p style="color:#9a3412;font-size:13px;font-weight:900;margin-bottom:5px;">Create a saved pool first</p>
-        <p style="color:#7c2d12;font-size:12px;line-height:1.4;margin-bottom:10px;">PartSnap proof saves into Service Proof Passport so the tech can find it later by customer.</p>
+        <p style="color:#7c2d12;font-size:12px;line-height:1.4;margin-bottom:10px;">PartSnap proof saves into job history so the tech can find it later by customer.</p>
         <button onclick="showTab('pools')" style="width:100%;background:#0f766e;color:#fff;border:none;border-radius:10px;padding:10px;font-size:12px;font-weight:900;cursor:pointer;">Go to Pools</button>
       </div>`;
     return;
   }
   panel.innerHTML = `
     <div style="background:#ffffff;border:1px solid #bae6fd;border-radius:12px;padding:12px;margin:4px 0 16px;">
-      <p style="color:#0f172a;font-size:14px;font-weight:950;margin-bottom:5px;">Save PartSnap to Service Proof Passport</p>
-      <p style="color:#64748b;font-size:12px;line-height:1.4;margin-bottom:10px;">Attach this result to a customer record with the proof, callback risk, and vendor packet.</p>
+      <p style="color:#0f172a;font-size:14px;font-weight:950;margin-bottom:5px;">Save PartSnap to job history</p>
+      <p style="color:#64748b;font-size:12px;line-height:1.4;margin-bottom:10px;">Attach this result to a customer record with the proof, repeat-issue watch, and supplier note.</p>
       <label class="field-label" for="partsnap-save-pool">Saved pool</label>
       <select id="partsnap-save-pool" style="width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:8px;margin-bottom:10px;">
         ${pools.map(p => `<option value="${escHtml(p.id)}">${escHtml([p.name, p.address].filter(Boolean).join(' - ') || 'Saved pool')}</option>`).join('')}
       </select>
-      <button onclick="confirmPartSnapSaveToPool()" style="width:100%;background:#0284c7;color:#fff;border:none;border-radius:10px;padding:11px;font-size:13px;font-weight:900;cursor:pointer;">Save Proof Passport</button>
+      <button onclick="confirmPartSnapSaveToPool()" style="width:100%;background:#0284c7;color:#fff;border:none;border-radius:10px;padding:11px;font-size:13px;font-weight:900;cursor:pointer;">Save Job Note</button>
       <p id="partsnap-save-status" style="color:#64748b;font-size:11px;text-align:center;margin-top:8px;"></p>
     </div>`;
 }
@@ -8933,7 +8933,7 @@ function confirmPartSnapSaveToPool() {
     model: ai.model || ai.partNumber || '',
     visibleLabel: visibleEvidence.join('; '),
     symptom: ai.replacementNotes || ai.description || 'Part identification',
-    confidence: `${ai.confidence || 'unknown'} / ${risk.level} callback risk`,
+    confidence: `${ai.confidence || 'unknown'} / ${risk.level} repeat issue watch`,
     savedAt: new Date().toISOString(),
   });
   if (pool.equipmentTree.length > 50) pool.equipmentTree = pool.equipmentTree.slice(-50);
