@@ -7,7 +7,8 @@ Date: 2026-09-01
 - App repo: `C:\Users\sales\Documents\Codex\splashlens-proof-gate-20260830\app`
 - GitHub: `https://github.com/frost831/poolens.git`
 - Branch: `master`
-- Latest app commit to pull: `92b9d66`
+- Required app code commit in history: `92b9d66`
+- Latest repo commit may be newer because this handoff file is committed after the app-code change.
 - Site repo: `C:\Users\sales\Documents\Codex\splashlens-proof-gate-20260830\site`
 - Site GitHub: `https://github.com/frost831/poolens-site.git`
 - Latest site commit already deployed: `38ceabb`
@@ -56,7 +57,7 @@ git pull --ff-only origin master
 git rev-parse --short HEAD
 ```
 
-Expected short SHA: `92b9d66`.
+Expected result: the latest `master` commit is present locally, and `git log --oneline -5` includes app-code commit `92b9d66` or a later commit containing it.
 
 2. Open `SplashLens.xcodeproj`.
 
@@ -106,4 +107,3 @@ Android can be built on PC, but if Mac is handling store proof too:
 - `https://app.splashlens.com/api/checkout?plan=monthly` returns HTTP 302 to `checkout.stripe.com`, confirming first-party Stripe Checkout Session mode.
 - Site owner stats route exposes the new `Conversion Funnel` panel.
 - Site and app security headers are present.
-
