@@ -28,6 +28,8 @@ test('app API routes expose protected stats and server-side amplitude config as 
   assert.match(statsEndpoint, /export async function onRequestGet/);
   assert.match(statsEndpoint, /Unauthorized/);
   assert.match(statsEndpoint, /EXTERNAL_EVENT_FILTER/);
+  assert.match(statsEndpoint, /amplitude_readiness_smoke/);
+  assert.match(statsEndpoint, /release_gate_live_custom_domain/);
   assert.match(statsEndpoint, /headless/);
   assert.match(statsEndpoint, /suspectNonSplashLensPaymentRows/);
 });
