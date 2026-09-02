@@ -1,3 +1,5 @@
+import { amplitudeEnabled, forwardEventToAmplitude } from '../_shared/amplitude.mjs';
+
 const ALLOWED_ORIGINS = new Set([
   'https://app.splashlens.com',
   'https://splashlens.com',
@@ -23,6 +25,44 @@ function clean(value, max = 160) {
 
 function plainObject(value) {
   return value && typeof value === 'object' && !Array.isArray(value) ? value : {};
+}
+
+function normalizeIdentityProps(props, source) {
+  const knownEmail = clean(props.known_email || props.contact_email || props.email || props.e || props.sl_email, 180).toLowerCase();
+  const leadId = clean(props.lead_id || props.contact_id || props.recipient_id || props.prospect_id || props.referral_id, 120);
+  return {
+    ...props,
+    client_id: clean(props.client_id || props.clientId || props.anon_device_id, 120),
+    session_id: clean(props.session_id || props.sessionId, 160),
+    known_email: knownEmail,
+    known_name: clean(props.known_name || props.contact_name || props.name || [props.first_name, props.last_name].filter(Boolean).join(' '), 140),
+    known_company: clean(props.known_company || props.company || props.organization || props.org || props.account, 160),
+    known_role: clean(props.known_role || props.role || props.audience || props.persona || props.splashlens_role, 80),
+    lead_id: leadId,
+    pilot_id: clean(props.pilot_id || props.pilot, 80),
+    participant_id: clean(props.participant_id || props.participant, 80),
+    identity_source: clean(props.identity_source || props.attribution_source || source || 'app', 80),
+    identity_confidence: clean(knownEmail ? 'provided-email' : leadId ? 'tracked-link' : props.identity_confidence || '', 40),
+  };
+}
+
+function isInternalNoise({ event, source, path, userAgent, props }) {
+  const ua = String(userAgent || '').toLowerCase();
+  const src = String(source || '').toLowerCase();
+  const eventPath = String(path || '').toLowerCase();
+  const queryMarkers = [
+    'utm_source=qa',
+    'utm_medium=playwright',
+    'codex',
+    'amplitude-readiness',
+    'growth-plan',
+    'verify=',
+  ];
+  const internalSource = ['qa', 'codex', 'codex_smoke', 'launch-gate-test'].includes(src);
+  const internalUa = ua.includes('headless') || ua.includes('bot') || ua.includes('crawler') || ua.includes('spider') || ua.includes('preview') || ua.includes('compatible; meta-externalagent');
+  const internalPath = eventPath.startsWith('/test/') || queryMarkers.some((marker) => eventPath.includes(marker));
+  const synthetic = props.demo === true || props.demo === 'true' || props.test === true || props.test === 'true' || props.synthetic === true || props.synthetic === 'true';
+  return event === 'session_heartbeat' && (internalSource || internalUa || internalPath || synthetic);
 }
 
 async function ensureEventsTable(db) {
@@ -58,15 +98,20 @@ export async function onRequestPost({ request, env }) {
     return new Response(JSON.stringify({ ok: false, error: 'Event name required' }), { status: 400, headers });
   }
 
-  const props = Object.assign({}, plainObject(body.props), plainObject(body.properties));
-  const path = clean(body.path || props.path, 300);
-  const plan = clean(body.plan || props.plan, 80);
-  const mode = clean(body.mode || props.mode || props.displayMode, 80);
-  const source = clean(body.source || props.source || 'app', 80);
+  const rawProps = Object.assign({}, plainObject(body.props), plainObject(body.properties));
+  const path = clean(body.path || rawProps.path, 300);
+  const plan = clean(body.plan || rawProps.plan, 80);
+  const mode = clean(body.mode || rawProps.mode || rawProps.displayMode, 80);
+  const source = clean(body.source || rawProps.source || 'app', 80);
+  const props = normalizeIdentityProps(rawProps, source);
   const referrer = clean(request.headers.get('Referer') || body.referrer || props.referrer, 500);
   const userAgent = clean(request.headers.get('User-Agent'), 300);
   const country = clean(request.cf && request.cf.country, 10);
   const propsJson = JSON.stringify(props).slice(0, 2400);
+
+  if (isInternalNoise({ event, source, path, userAgent, props })) {
+    return new Response(JSON.stringify({ ok: true, stored: false, skipped: 'internal_heartbeat_noise' }), { status: 202, headers });
+  }
 
   if (!env.SUBSCRIBERS_DB) {
     return new Response(JSON.stringify({ ok: true, stored: false, warning: 'Event accepted without DB binding' }), { status: 202, headers });
@@ -79,7 +124,22 @@ export async function onRequestPost({ request, env }) {
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
     ).bind(event, source, path, plan, mode, propsJson, userAgent, referrer, country).run();
 
-    return new Response(JSON.stringify({ ok: true, stored: true }), { status: 200, headers });
+    const amplitude = await forwardEventToAmplitude(env, {
+      correlationId: crypto.randomUUID(),
+      event,
+      source,
+      path,
+      plan,
+      mode,
+      createdAt: new Date().toISOString(),
+    }, props);
+
+    return new Response(JSON.stringify({
+      ok: true,
+      stored: true,
+      amplitudeQueued: Boolean(amplitude.sent),
+      amplitudeConfigured: amplitudeEnabled(env),
+    }), { status: 200, headers });
   } catch (error) {
     console.error('SplashLens app event capture error:', error);
     return new Response(JSON.stringify({ ok: false, error: 'Database error' }), { status: 500, headers });

@@ -38,6 +38,29 @@ function cleanPlan(session) {
   return String(session?.metadata?.plan || session?.metadata?.product || 'PartSnap Pro').trim().slice(0, 100);
 }
 
+function allowedPaymentLinkIds(env) {
+  return String(env.SPLASHLENS_STRIPE_PAYMENT_LINK_IDS || env.SPLASHLENS_STRIPE_ALLOWED_PAYMENT_LINKS || '')
+    .split(',')
+    .map((value) => value.trim())
+    .filter(Boolean);
+}
+
+function isSplashLensCheckoutSession(session, env) {
+  const metadata = session?.metadata || {};
+  const subscriptionMetadata = session?.subscription_data?.metadata || {};
+  const product = String(metadata.product || subscriptionMetadata.product || '').toLowerCase();
+  const feature = String(metadata.feature || subscriptionMetadata.feature || '').toLowerCase();
+  const plan = cleanPlan(session).toLowerCase();
+  const paymentLink = String(session?.payment_link || '').trim();
+  const allowedLinks = allowedPaymentLinkIds(env);
+
+  if (product === 'splashlens') return true;
+  if (feature === 'scanner' && /partsnap|splashlens/.test(plan)) return true;
+  if (/partsnap|splashlens/.test(plan) && product !== 'cora') return true;
+  if (paymentLink && allowedLinks.includes(paymentLink)) return true;
+  return false;
+}
+
 function isPaidSession(session, eventType) {
   return (
     eventType === 'checkout.session.async_payment_succeeded' ||
@@ -184,6 +207,15 @@ export async function onRequestPost({ request, env }) {
   if (!ACCEPTED_EVENTS.has(event.type)) return json({ ok: true, ignored: true, event: String(event.type || '') });
 
   const session = event?.data?.object;
+  if (!isSplashLensCheckoutSession(session, env)) {
+    return json({
+      ok: true,
+      ignored: true,
+      event: event.type,
+      reason: 'non_splashlens_checkout_session',
+      plan: cleanPlan(session),
+    });
+  }
   if (!isPaidSession(session, event.type)) {
     return json({ ok: true, ignored: true, event: event.type, reason: 'checkout_not_paid' });
   }

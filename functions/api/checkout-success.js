@@ -54,6 +54,29 @@ function cleanPlan(session) {
   return 'PartSnap Pro';
 }
 
+function allowedPaymentLinkIds(env) {
+  return String(env.SPLASHLENS_STRIPE_PAYMENT_LINK_IDS || env.SPLASHLENS_STRIPE_ALLOWED_PAYMENT_LINKS || '')
+    .split(',')
+    .map((value) => value.trim())
+    .filter(Boolean);
+}
+
+function isSplashLensCheckoutSession(session, env) {
+  const metadata = session?.metadata || {};
+  const subscriptionMetadata = session?.subscription_data?.metadata || {};
+  const product = String(metadata.product || subscriptionMetadata.product || '').toLowerCase();
+  const feature = String(metadata.feature || subscriptionMetadata.feature || '').toLowerCase();
+  const plan = cleanPlan(session).toLowerCase();
+  const paymentLink = String(session?.payment_link || '').trim();
+  const allowedLinks = allowedPaymentLinkIds(env);
+
+  if (product === 'splashlens') return true;
+  if (feature === 'scanner' && /partsnap|splashlens/.test(plan)) return true;
+  if (/partsnap|splashlens/.test(plan) && product !== 'cora') return true;
+  if (paymentLink && allowedLinks.includes(paymentLink)) return true;
+  return false;
+}
+
 async function signToken(secret, payload) {
   const payloadPart = base64UrlEncode(textEncoder.encode(JSON.stringify(payload)));
   const signed = `${TOKEN_PREFIX}.${payloadPart}`;
@@ -126,6 +149,9 @@ export async function onRequestGet({ request, env }) {
   const session = await stripeGet(`checkout/sessions/${encodeURIComponent(sessionId)}`, env);
   if (!session) {
     return html('<h1>SplashLens checkout</h1><p>Checkout lookup is not configured yet. Contact support for activation.</p>', 503);
+  }
+  if (!isSplashLensCheckoutSession(session, env)) {
+    return html('<h1>SplashLens checkout</h1><p>This checkout session is not a SplashLens PartSnap Pro purchase. Contact support if this looks wrong.</p>', 403);
   }
   if (!isPaid(session)) {
     return html('<h1>SplashLens checkout</h1><p>Payment is not complete yet. Refresh after Stripe finishes processing.</p>', 402);

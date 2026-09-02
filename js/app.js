@@ -6402,6 +6402,7 @@ const PARTSNAP_YEARLY_LINK = '/api/checkout?plan=yearly';
 const PARTSNAP_RESTORE_ENDPOINT = '/api/restore-entitlement';
 const SPLASHLENS_EVENT_ENDPOINT = '/api/events';
 const PARTSNAP_FEEDBACK_ENDPOINT = '/api/partsnap-feedback';
+const SPLASHLENS_HEARTBEAT_INTERVAL_MS = 120000;
 const PARTSNAP_REVIEW_KEY = 'splashlens-partsnap-review-tickets';
 const STORE_SHELL_KEY = 'sl_store_shell_mode';
 const ATTRIBUTION_KEY = 'splashlens-attribution-v1';
@@ -7669,6 +7670,7 @@ function showScanLimitModal(result, status) {
 }
 
 function trackSplashLensEvent(name, props = {}) {
+  if (isInternalAnalyticsSession(name, props)) return;
   const clientId = getScanClientId();
   const attribution = getSplashLensAttribution();
   const identity = getSplashLensIdentityProfile();
@@ -7800,12 +7802,41 @@ function initProductIntelligenceTracking() {
   trackSplashLensEvent('app_tab_view', { tab: PRODUCT_INTELLIGENCE.currentTab, previous_tab: '' });
   window.setInterval(() => {
     if (document.visibilityState === 'visible') flushProductEngagement('interval');
-  }, 30000);
+  }, SPLASHLENS_HEARTBEAT_INTERVAL_MS);
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'hidden') flushProductEngagement('hidden');
     else PRODUCT_INTELLIGENCE.activeStartedAt = Date.now();
   });
   window.addEventListener('pagehide', () => endProductIntelligenceSession('pagehide'), { once: true });
+}
+
+function isInternalAnalyticsSession(name, props = {}) {
+  if (name !== 'session_heartbeat') return false;
+  try {
+    const ua = String(navigator.userAgent || '').toLowerCase();
+    const href = String(window.location.href || '').toLowerCase();
+    const source = String(props.source || new URLSearchParams(window.location.search).get('utm_source') || '').toLowerCase();
+    const medium = String(new URLSearchParams(window.location.search).get('utm_medium') || '').toLowerCase();
+    return (
+      navigator.webdriver === true ||
+      ua.includes('headless') ||
+      ua.includes('bot') ||
+      ua.includes('crawler') ||
+      ua.includes('spider') ||
+      href.includes('/test/') ||
+      href.includes('codex') ||
+      href.includes('amplitude-readiness') ||
+      href.includes('growth-plan') ||
+      href.includes('verify=') ||
+      source === 'qa' ||
+      source === 'codex' ||
+      medium === 'playwright' ||
+      props.test === true ||
+      props.synthetic === true
+    );
+  } catch {
+    return false;
+  }
 }
 
 function initReturnFieldTask() {
