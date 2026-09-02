@@ -57,7 +57,7 @@ SplashLens Field Tools
 
 Short description, 80-character limit:
 
-Pool tech codes, dosing, service notes, and scanner assistance.
+FreeCore pool tech app: codes, dosing, notes, 3 PartSnap scans/month.
 
 Full description:
 
