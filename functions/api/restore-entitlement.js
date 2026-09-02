@@ -77,7 +77,7 @@ async function createTokenFromRecord(email, record, env) {
   const now = Math.floor(Date.now() / 1000);
   return signToken(secret, {
     sub: email,
-    plan: String(record.plan || 'PartSnap Pro').slice(0, 100),
+    plan: String(record.plan || 'SplashLens Pro').slice(0, 100),
     scopes: Array.isArray(record.scopes) && record.scopes.length ? record.scopes : ['scan'],
     source: 'restore_entitlement',
     iat: now,
@@ -113,7 +113,7 @@ export async function onRequestPost({ request, env }) {
     activateUrl: `https://app.splashlens.com/?tab=scan&scan_token=${encodeURIComponent(token)}`,
     entitlement: {
       subject: email,
-      plan: String(record.plan || 'PartSnap Pro').slice(0, 100),
+      plan: String(record.plan || 'SplashLens Pro').slice(0, 100),
       scopes: Array.isArray(record.scopes) ? record.scopes : ['scan'],
     },
   });

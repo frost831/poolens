@@ -212,7 +212,8 @@ const FIELD_CHALLENGE_STARTED_KEY = 'splashlens-field-challenge-started-v1';
 const FIELD_CHALLENGE_COMPLETED_KEY = 'splashlens-field-challenge-completed-v1';
 const FIELD_REFERRAL_PROMPT_KEY = 'splashlens-field-referral-prompt-v1';
 const FIELD_IDENTITY_PROMPT_KEY = 'splashlens-field-identity-prompt-v1';
-const SPLASHLENS_ROLES = ['tech', 'facility', 'counter', 'trainer', 'homeowner'];
+const FIELD_SAVE_ACCOUNT_KEY = 'splashlens-free-save-profile-v1';
+const SPLASHLENS_ROLES = ['tech', 'facility', 'counter', 'trainer'];
 let facilitySessionMode = '';
 let facilityForcedMode = false;
 let activeFacilityConfig = null;
@@ -758,7 +759,11 @@ function initSplashLensPersonaMode() {
     return;
   }
   revealSplashLensApp();
-  showRolePicker();
+  showTab('errors');
+  trackSplashLensEvent('field_home_opened_without_role_gate', {
+    default_role: 'tech',
+    role_picker_deferred: true,
+  });
 }
 
 function showRolePicker(manual = false) {
@@ -799,7 +804,7 @@ function normalizeSplashLensRole(role) {
   if (value === 'apprentice' || value === 'education' || value === 'teacher') return 'trainer';
   if (value === 'operator' || value === 'cpo') return 'facility';
   if (value === 'distributor' || value === 'vendor' || value === 'counter') return 'counter';
-  if (value === 'owner' || value === 'consumer') return 'homeowner';
+  if (value === 'owner') return 'tech';
   return SPLASHLENS_ROLES.includes(value) ? value : '';
 }
 
@@ -815,7 +820,6 @@ function setSplashLensRole(role, options = {}) {
   document.body.classList.toggle('facility-tools-hidden', cleanRole === 'facility');
   document.body.classList.toggle('trainer-mode', cleanRole === 'trainer');
   document.body.classList.toggle('counter-mode', cleanRole === 'counter');
-  document.body.classList.toggle('homeowner-mode', cleanRole === 'homeowner');
   if (cleanRole === 'facility') {
     renderFacilityHome();
     trackFacilityEvent('wizard_open', { lane: '', role: cleanRole, forced: facilityForcedMode });
@@ -833,12 +837,6 @@ function setSplashLensRole(role, options = {}) {
       setTimeout(() => {
         setScanMode('parts');
         renderCounterSamplePacket();
-      }, 120);
-    } else if (cleanRole === 'homeowner') {
-      showTab('volume');
-      setTimeout(() => {
-        document.getElementById('turn-vol')?.focus();
-        renderRoleNextAction(cleanRole);
       }, 120);
     } else {
       showTab('errors');
@@ -889,18 +887,6 @@ const ROLE_NEXT_ACTIONS = {
       ['Use real part', '', "openLivePartSnap()"],
       ['Facility scenario', '', "renderFieldLearningOS('facility')"],
       ['Proof review', '', "renderFieldLearningOS('proof')"],
-    ],
-  },
-  homeowner: {
-    kicker: 'Homeowner-safe mode',
-    title: 'Get a basic answer, then know when to call a pro.',
-    body: 'Start with volume or a simple service note. Technical repair tools stay out of the way until you choose them.',
-    payoff: 'Goal: clarity without pretending to diagnose.',
-    actions: [
-      ['Pool volume', 'primary', "showTab('volume');setTimeout(()=>document.getElementById('turn-vol')?.focus(),80)"],
-      ['Basic dose math', '', "showTab('dosing')"],
-      ['Prepare pro note', '', "showTab('report');quickServiceNote()"],
-      ['Show pro tools', '', "document.body.classList.remove('homeowner-mode');showTab('errors')"],
     ],
   },
 };
@@ -1989,14 +1975,18 @@ function renderVerifiedProofNetwork() {
           ${(plan.includes || []).map(item => `<li>${escHtml(item)}</li>`).join('')}
         </ul>
         <p style="color:#0f766e;font-size:11px;line-height:1.45;font-weight:850;margin-top:6px;"><strong>Trust boundary:</strong> ${escHtml(plan.guardrail || network.trustBoundary || '')}</p>
-        ${plan.planKey && plan.planKey !== 'free_core' ? `<button type="button" class="brain-action green" style="width:100%;margin-top:8px;" onclick="openSplashLensPaidLane('${escHtml(plan.planKey)}','${escHtml(plan.name)}')">${plan.availability === 'self_serve' ? 'Start paid plan' : plan.availability === 'partner' ? 'Request partner discussion' : 'Request access'}</button>` : ''}
+        ${plan.planKey === 'free_save_profile'
+          ? `<button type="button" class="brain-action green" style="width:100%;margin-top:8px;" onclick="ensureFieldSaveAccount('pricing_catalog')">Create free save profile</button>`
+          : plan.planKey && plan.planKey !== 'free_core'
+            ? `<button type="button" class="brain-action green" style="width:100%;margin-top:8px;" onclick="openSplashLensPaidLane('${escHtml(plan.planKey)}','${escHtml(plan.name)}')">${plan.availability === 'self_serve' ? 'Start paid plan' : 'Request Teams access'}</button>`
+            : ''}
       </div>
     </details>
   `).join('');
   renderProofWorkflowOutput(
     'SplashLens Verified Proof Network',
     network.promise || 'Free lookup first. Paid when the work needs to be saved, shared, reported, or reviewed.',
-    `<div style="margin-top:10px;">${cards}</div><div class="brain-grid" style="margin-top:10px;"><a class="brain-action green" href="mailto:hello@splashlens.com?subject=SplashLens%20Service%20Proof%20Pro%20access" onclick="trackSplashLensEvent('upgrade_interest_click',{plan:'service_proof_pro_network'})" style="text-align:center;text-decoration:none;">Request Proof Pro</a><a class="brain-action secondary" href="mailto:hello@splashlens.com?subject=SplashLens%20Verified%20Proof%20Network" onclick="trackSplashLensEvent('partner_interest_click',{lane:'verified_proof_network'})" style="text-align:center;text-decoration:none;">Talk partner lane</a></div>`
+    `<div style="margin-top:10px;">${cards}</div><div class="brain-grid" style="margin-top:10px;"><button type="button" class="brain-action green" onclick="ensureFieldSaveAccount('verified_proof_network')" style="text-align:center;text-decoration:none;">Create save profile</button><a class="brain-action secondary" href="mailto:hello@splashlens.com?subject=SplashLens%20Teams%20access" onclick="trackSplashLensEvent('team_interest_click',{lane:'verified_proof_network'})" style="text-align:center;text-decoration:none;">Talk Teams</a></div>`
   );
   trackSplashLensEvent('verified_proof_network_viewed', { plans: plans.length });
 }
@@ -2047,6 +2037,61 @@ async function openSplashLensPaidLane(planKey, label) {
     const body = encodeURIComponent(`Hi Joshua,\n\nI want to talk about ${safeLabel} for SplashLens.\n\nEmail: ${email}\n\nTalk Soon,`);
     window.location.href = `mailto:hello@splashlens.com?subject=${subject}&body=${body}`;
   }
+}
+
+function getFieldSaveAccount() {
+  try {
+    const account = JSON.parse(localStorage.getItem(FIELD_SAVE_ACCOUNT_KEY) || 'null');
+    if (account && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(account.email || ''))) return account;
+  } catch {}
+  return null;
+}
+
+function ensureFieldSaveAccount(feature = 'saved_job') {
+  const existing = getFieldSaveAccount();
+  if (existing) {
+    rememberSplashLensIdentity({
+      email: existing.email,
+      company: existing.company || '',
+      role: getSplashLensRole() || 'tech',
+    }, 'free_save_profile_returning');
+    return true;
+  }
+
+  const wantsProfile = window.confirm(
+    'Lookup stays free. To save job history on this device, create a free SplashLens save profile now?'
+  );
+  if (!wantsProfile) {
+    trackSplashLensEvent('free_save_profile_gate_dismissed', { feature });
+    return false;
+  }
+
+  const email = String(window.prompt('Email for your free SplashLens save profile:') || '').trim().toLowerCase();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    window.alert('Enter a valid email before saving job history.');
+    trackSplashLensEvent('free_save_profile_invalid_email', { feature });
+    return false;
+  }
+
+  const name = String(window.prompt('Your name (optional):') || '').trim().slice(0, 80);
+  const company = String(window.prompt('Company (optional):') || '').trim().slice(0, 120);
+  const profile = {
+    email,
+    name,
+    company,
+    createdAt: new Date().toISOString(),
+    sourceFeature: feature,
+    role: getSplashLensRole() || 'tech',
+  };
+  localStorage.setItem(FIELD_SAVE_ACCOUNT_KEY, JSON.stringify(profile));
+  rememberSplashLensIdentity({ email, name, company, role: profile.role }, 'free_save_profile_created');
+  trackSplashLensEvent('free_save_profile_created', {
+    feature,
+    role: profile.role,
+    company_provided: Boolean(company),
+    name_provided: Boolean(name),
+  });
+  return true;
 }
 
 let activeVoiceNote = null;
@@ -3865,7 +3910,7 @@ const SERVICE_PROOF_FAQ = [
   },
   {
     keys: ['price', 'paid', 'subscription'],
-    answer: 'The free app stays useful: lookup, basic PartSnap, calculators, and Facility Assist stay open. Paid lanes are Saved Job Pro for solo techs, Team Field View for service companies, Facility/CPO pilots, distributor counter mode, training partner modules, and partner-verified manufacturer cards.'
+    answer: 'The free app stays useful: lookup, basic PartSnap, calculators, checklists, and Facility Assist stay open. A free save profile lets a tech start saving job context on this device. SplashLens Pro is the paid web lane for unlimited scanner use and saved job memory. Teams is for owners who want crew visibility and company reporting. Partner/manufacturer/training ideas are handled through direct discussion, not self-serve checkout.'
   },
   {
     keys: ['trend', 'callback', 'risk', 'repeat'],
@@ -4161,6 +4206,8 @@ function findPoolForReport() {
 }
 
 function saveReportToPoolHistory() {
+  if (!ensureFieldSaveAccount('service_report_saved')) return;
+
   const proof = validateReportProof({ quiet: true });
   if (!proof.complete && !confirm(`Stop proof is incomplete: ${proof.missing.join(', ')}. Save anyway?`)) return;
 
@@ -6392,7 +6439,7 @@ let _flashOn       = false;
 let _flashTrack    = null;
 let _lastPartSnapResult = null;
 
-const SCAN_LIMIT_FREE = 10;
+const SCAN_LIMIT_FREE = 3;
 const SCAN_USAGE_KEY = 'pl_scans_month';
 const SCAN_PRO_KEY = 'sl_partsnap_pro_local';
 const SCAN_ENTITLEMENT_TOKEN_KEY = 'sl_scan_entitlement_token';
@@ -6425,7 +6472,7 @@ function updateAIStatusBar() {
     dot.style.background   = '#16a34a';
     label.textContent      = getScanEntitlementToken()
       ? 'SIGNED SCANNER ACCESS READY'
-      : isPartSnapPro() ? 'PARTSNAP PRO READY' : `AI READY - ${Math.max(0, SCAN_LIMIT_FREE - usage.count)} FREE SCANS LEFT`;
+      : isPartSnapPro() ? 'SPLASHLENS PRO READY' : `AI READY - ${Math.max(0, SCAN_LIMIT_FREE - usage.count)} FREE SCANS LEFT`;
     label.style.color      = '#4ade80';
   } else {
     dot.style.background   = '#64748b';
@@ -7104,7 +7151,7 @@ function requestNativePartSnapPurchase(plan = 'monthly') {
   if (result) {
     result.innerHTML = `<div style="background:#1e293b;border:1px solid #334155;border-radius:14px;padding:18px;text-align:center;border-left:4px solid #0284c7;">
       <p style="color:#f1f5f9;font-size:16px;font-weight:900;margin-bottom:6px;">Native billing is not available in this build yet.</p>
-      <p style="color:#94a3b8;font-size:12px;line-height:1.5;">Update SplashLens from the store when the PartSnap Pro native billing build is approved. Manual tools remain free.</p>
+      <p style="color:#94a3b8;font-size:12px;line-height:1.5;">Update SplashLens from the store when the SplashLens Pro native billing build is approved. Manual tools remain free.</p>
       <button onclick="setScanMode('lookup');document.getElementById('scan-result').innerHTML=''" style="margin-top:12px;background:#0284c7;color:#fff;border:0;border-radius:10px;padding:11px 14px;font-size:12px;font-weight:800;cursor:pointer;width:100%;">Use Manual Lookup</button>
     </div>`;
   }
@@ -7611,7 +7658,7 @@ async function restorePartSnapPro() {
   try {
     if (result) {
       result.innerHTML = `<div style="background:#0f172a;border:1px solid #334155;border-radius:12px;padding:16px;text-align:center;">
-        <p style="color:#e2e8f0;font-size:14px;font-weight:900;">Checking PartSnap Pro access...</p>
+        <p style="color:#e2e8f0;font-size:14px;font-weight:900;">Checking SplashLens Pro access...</p>
       </div>`;
     }
     const response = await fetch(PARTSNAP_RESTORE_ENDPOINT, {
@@ -7632,7 +7679,7 @@ async function restorePartSnapPro() {
     if (result) {
       result.innerHTML = `<div style="background:#450a0a;border:1px solid #dc2626;border-radius:12px;padding:18px;text-align:center;">
         <p style="color:#fecaca;font-size:15px;font-weight:900;margin-bottom:6px;">Could not restore yet</p>
-        <p style="color:#fee2e2;font-size:12px;line-height:1.5;">${escHtml(error.message || 'Contact hello@splashlens.com for help restoring PartSnap Pro.')}</p>
+        <p style="color:#fee2e2;font-size:12px;line-height:1.5;">${escHtml(error.message || 'Contact hello@splashlens.com for help restoring SplashLens Pro.')}</p>
         <button onclick="setScanMode('parts')" style="margin-top:12px;background:#dc2626;color:#fff;border:0;border-radius:10px;padding:10px 12px;font-size:12px;font-weight:900;cursor:pointer;">Back to PartSnap</button>
       </div>`;
     }
@@ -7658,10 +7705,10 @@ function showScanLimitModal(result, status) {
     result.innerHTML = `
       <div style="background:#1e293b;border:1px solid #7c3aed;border-radius:14px;padding:18px;margin:0 0 14px;text-align:center;border-left:4px solid #7c3aed;">
         <p style="color:#f1f5f9;font-size:19px;font-weight:900;margin-bottom:6px;">You've used ${usage.count} of ${SCAN_LIMIT_FREE} free AI scans this month.</p>
-        <p style="color:#94a3b8;font-size:13px;line-height:1.5;margin-bottom:14px;">Manual code lookup, dosing, reports, filters, and checklists stay free. Upgrade PartSnap Pro for unlimited web scanner access.</p>
+        <p style="color:#94a3b8;font-size:13px;line-height:1.5;margin-bottom:14px;">Manual code lookup, dosing, reports, filters, and checklists stay free. Upgrade SplashLens Pro for unlimited web scanner access and saved job memory.</p>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
-          <a href="${PARTSNAP_MONTHLY_LINK}" target="_blank" rel="noopener" onclick="trackSplashLensEvent('upgrade_click',{plan:'monthly'})" style="background:#0284c7;color:#fff;text-decoration:none;border-radius:10px;padding:12px 8px;font-size:13px;font-weight:900;">$4.99 / mo</a>
-          <a href="${PARTSNAP_YEARLY_LINK}" target="_blank" rel="noopener" onclick="trackSplashLensEvent('upgrade_click',{plan:'yearly'})" style="background:#16a34a;color:#fff;text-decoration:none;border-radius:10px;padding:12px 8px;font-size:13px;font-weight:900;">$39 / yr</a>
+          <a href="${PARTSNAP_MONTHLY_LINK}" target="_blank" rel="noopener" onclick="trackSplashLensEvent('upgrade_click',{plan:'monthly'})" style="background:#0284c7;color:#fff;text-decoration:none;border-radius:10px;padding:12px 8px;font-size:13px;font-weight:900;">$29 / mo</a>
+          <a href="${PARTSNAP_YEARLY_LINK}" target="_blank" rel="noopener" onclick="trackSplashLensEvent('upgrade_click',{plan:'yearly'})" style="background:#16a34a;color:#fff;text-decoration:none;border-radius:10px;padding:12px 8px;font-size:13px;font-weight:900;">$249 / yr</a>
         </div>
         <button onclick="restorePartSnapPro()" style="width:100%;background:#334155;color:#e2e8f0;border:0;border-radius:10px;padding:10px 8px;font-size:12px;font-weight:900;cursor:pointer;">Restore Pro from checkout email</button>
         <p style="color:#64748b;font-size:10px;line-height:1.4;margin-top:10px;">After web checkout, use the signed activation link. If browser storage is cleared, restore with the checkout email. Store builds remain free-core until native billing is added.</p>
@@ -7952,12 +7999,12 @@ async function callAIScan(canvas, mode, result, status) {
         trackSplashLensEvent('scan_entitlement_rejected', { mode, status: res.status, error: payload.error || '' });
         if (result) {
           result.innerHTML = `<div style="background:#450a0a;border:1px solid #dc2626;border-radius:12px;padding:18px;text-align:center;">
-            <p style="color:#fecaca;font-size:16px;font-weight:900;margin-bottom:6px;">PartSnap Pro needs restore</p>
+            <p style="color:#fecaca;font-size:16px;font-weight:900;margin-bottom:6px;">SplashLens Pro needs restore</p>
             <p style="color:#fee2e2;font-size:12px;line-height:1.5;margin-bottom:12px;">${escHtml(payload.error || 'Your paid scanner access could not be verified on this device.')}</p>
             <button onclick="restorePartSnapPro()" style="width:100%;background:#dc2626;color:#fff;border:0;border-radius:10px;padding:11px 8px;font-size:12px;font-weight:900;cursor:pointer;">Restore from checkout email</button>
           </div>`;
         }
-        if (status) status.textContent = 'PARTSNAP PRO RESTORE NEEDED';
+        if (status) status.textContent = 'SPLASHLENS PRO RESTORE NEEDED';
         return;
       }
       throw new Error(payload.error || `HTTP ${res.status}`);
@@ -8386,6 +8433,8 @@ function getPartSnapFieldStops() {
 }
 
 function savePartSnapFieldStop() {
+  if (!ensureFieldSaveAccount('partsnap_field_stop_saved')) return;
+
   const ai = _lastPartSnapResult || {};
   const visibleEvidence = Array.isArray(ai.visibleEvidence) ? ai.visibleEvidence.filter(Boolean).slice(0, 4) : [];
   const missingProof = Array.isArray(ai.missingProof) ? ai.missingProof.filter(Boolean).slice(0, 4) : [];
@@ -8435,12 +8484,12 @@ function renderPostValueUpgradeOffer() {
   trackSplashLensEvent('post_value_upgrade_shown', { feature: 'unlimited_partsnap', placement: 'field_stop_saved' });
   return `
     <div style="background:#0f172a;border:1px solid #334155;border-radius:10px;padding:12px;margin:0 0 16px;">
-      <p style="color:#7dd3fc;font-size:10px;font-weight:950;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;">PartSnap Pro</p>
+      <p style="color:#7dd3fc;font-size:10px;font-weight:950;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;">SplashLens Pro</p>
       <p style="color:#f8fafc;font-size:13px;font-weight:950;margin-bottom:4px;">Need PartSnap throughout the route?</p>
-      <p style="color:#94a3b8;font-size:11px;line-height:1.4;margin-bottom:9px;">The free app includes 10 AI scans each month. Pro unlocks unlimited web scanner access. Code lookup, dosing, notes, and core field tools stay free.</p>
+      <p style="color:#94a3b8;font-size:11px;line-height:1.4;margin-bottom:9px;">The free app includes 3 AI scans each month. Pro unlocks unlimited web scanner access, saved job memory, customer-safe summaries, and boss/counter packets. Code lookup, dosing, notes, and core field tools stay free.</p>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;">
-        <a href="${PARTSNAP_MONTHLY_LINK}" target="_blank" rel="noopener" onclick="trackPostValueUpgrade('monthly')" style="background:#0284c7;color:#fff;text-decoration:none;text-align:center;border-radius:8px;padding:10px 7px;font-size:11px;font-weight:950;">$4.99 monthly</a>
-        <a href="${PARTSNAP_YEARLY_LINK}" target="_blank" rel="noopener" onclick="trackPostValueUpgrade('yearly')" style="background:#16a34a;color:#fff;text-decoration:none;text-align:center;border-radius:8px;padding:10px 7px;font-size:11px;font-weight:950;">$39 yearly</a>
+        <a href="${PARTSNAP_MONTHLY_LINK}" target="_blank" rel="noopener" onclick="trackPostValueUpgrade('monthly')" style="background:#0284c7;color:#fff;text-decoration:none;text-align:center;border-radius:8px;padding:10px 7px;font-size:11px;font-weight:950;">$29 monthly</a>
+        <a href="${PARTSNAP_YEARLY_LINK}" target="_blank" rel="noopener" onclick="trackPostValueUpgrade('yearly')" style="background:#16a34a;color:#fff;text-decoration:none;text-align:center;border-radius:8px;padding:10px 7px;font-size:11px;font-weight:950;">$249 yearly</a>
       </div>
     </div>`;
 }
@@ -8914,6 +8963,8 @@ function savePartSnapToPool() {
 }
 
 function confirmPartSnapSaveToPool() {
+  if (!ensureFieldSaveAccount('partsnap_saved_to_pool')) return;
+
   const poolId = document.getElementById('partsnap-save-pool')?.value;
   const status = document.getElementById('partsnap-save-status');
   const pools = getPools();

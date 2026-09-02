@@ -31,7 +31,7 @@ test('Stripe webhook endpoint verifies signed checkout completion before storing
 test('checkout success refuses non-SplashLens Stripe sessions before issuing scanner access', () => {
   assert.match(checkout, /metadata\[product\]', 'splashlens'/);
   assert.match(checkout, /metadata\[feature\]', 'scanner'/);
-  assert.match(fs.readFileSync(new URL('../functions/api/checkout-success.js', import.meta.url), 'utf8'), /This checkout session is not a SplashLens PartSnap Pro purchase/);
+  assert.match(fs.readFileSync(new URL('../functions/api/checkout-success.js', import.meta.url), 'utf8'), /This checkout session is not a SplashLens Pro purchase/);
 });
 
 test('paid restore endpoint exists for the app restore button', () => {

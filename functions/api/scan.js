@@ -7,7 +7,7 @@
 
 const CLAUDE_API = 'https://api.anthropic.com/v1/messages';
 const DEFAULT_ORIGIN = 'https://app.splashlens.com';
-const FREE_SCAN_LIMIT = 10;
+const FREE_SCAN_LIMIT = 3;
 const ENTITLED_SCAN_LIMIT = 500;
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 const MAX_IMAGE_BASE64_CHARS = Math.ceil(MAX_IMAGE_BYTES / 3) * 4;

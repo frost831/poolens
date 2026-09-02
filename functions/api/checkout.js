@@ -10,10 +10,20 @@ const PRICE_IDS = {
   annual: 'price_1TbAp825fqLun6cVoVG0wqQl',
 };
 
+function paymentLinkForPlan(env, plan) {
+  const yearly = plan === 'yearly' || plan === 'annual';
+  return String(
+    yearly
+      ? env.SPLASHLENS_STRIPE_LINK_YEARLY_PRO || env.SPLASHLENS_STRIPE_LINK_YEARLY || LINKS.yearly
+      : env.SPLASHLENS_STRIPE_LINK_MONTHLY_PRO || env.SPLASHLENS_STRIPE_LINK_MONTHLY || LINKS.monthly
+  ).trim();
+}
+
 function priceForPlan(env, plan) {
   const key = plan === 'yearly' || plan === 'annual' ? 'YEARLY' : 'MONTHLY';
   return String(
-    env[`SPLASHLENS_STRIPE_PRICE_${key}`]
+    env[`SPLASHLENS_STRIPE_PRICE_${key}_PRO`]
+      || env[`SPLASHLENS_STRIPE_PRICE_${key}`]
       || env[`STRIPE_PRICE_${key}`]
       || PRICE_IDS[plan]
       || PRICE_IDS.monthly,
@@ -36,7 +46,7 @@ async function createCheckoutSession(request, env, plan) {
   params.set('cancel_url', `${origin}/?checkout=cancelled&plan=${encodeURIComponent(plan)}`);
   params.set('metadata[product]', 'splashlens');
   params.set('metadata[feature]', 'scanner');
-  params.set('metadata[plan]', plan === 'yearly' || plan === 'annual' ? 'PartSnap Pro Annual' : 'PartSnap Pro Monthly');
+  params.set('metadata[plan]', plan === 'yearly' || plan === 'annual' ? 'SplashLens Pro Annual' : 'SplashLens Pro Monthly');
   params.set('subscription_data[metadata][product]', 'splashlens');
   params.set('subscription_data[metadata][feature]', 'scanner');
   params.set('subscription_data[metadata][plan]', params.get('metadata[plan]'));
@@ -63,9 +73,36 @@ async function createCheckoutSession(request, env, plan) {
 export async function onRequestGet({ request, env }) {
   const url = new URL(request.url);
   const plan = (url.searchParams.get('plan') || 'monthly').toLowerCase();
+  if (url.searchParams.has('catalog')) {
+    const stripeReady = Boolean(env.STRIPE_SECRET_KEY);
+    return Response.json({
+      product: 'splashlens',
+      plans: [
+        {
+          key: 'partsnap_pro_monthly',
+          label: 'SplashLens Pro Monthly',
+          priceLabel: '$29/month target',
+          checkoutConfigured: stripeReady || Boolean(paymentLinkForPlan(env, 'monthly')),
+        },
+        {
+          key: 'partsnap_pro_yearly',
+          label: 'SplashLens Pro Annual',
+          priceLabel: '$249/year target',
+          checkoutConfigured: stripeReady || Boolean(paymentLinkForPlan(env, 'yearly')),
+        },
+        {
+          key: 'team_proof_os_monthly',
+          label: 'SplashLens Teams',
+          priceLabel: '$149/company/month target',
+          checkoutConfigured: false,
+        },
+      ],
+    }, { headers: { 'Cache-Control': 'no-store' } });
+  }
+
   const sessionUrl = await createCheckoutSession(request, env, plan);
   if (sessionUrl) return Response.redirect(sessionUrl, 302);
 
-  const target = LINKS[plan] || LINKS.monthly;
+  const target = paymentLinkForPlan(env, plan);
   return Response.redirect(target, 302);
 }

@@ -194,79 +194,42 @@ window.SPLASHLENS_TECH_RADAR = {
 };
 
 window.SPLASHLENS_MONETIZATION_LANES = {
-  promise: "Free lookup first. Pay only when you need more scanner use, saved proof, team reporting, facility records, or real partner-reviewed cards.",
-  trustBoundary: "Manual lookup, basic PartSnap, calculators, Facility Assist, and cautious reference language stay useful without an account. Paid lanes add capacity or business workflows; they do not create diagnosis, fitment, warranty, or partner guarantees.",
+  promise: "Free lookup first. Pay only when SplashLens starts saving work you want to keep, share, or manage across the crew.",
+  trustBoundary: "Manual lookup, basic PartSnap, calculators, Facility Assist, and cautious reference language stay useful without an account. Paid lanes add capacity and saved job workflows; they do not create diagnosis, fitment, warranty, or partner guarantees.",
   plans: [
     {
-      name: "Free Field App",
+      name: "Free, No Account",
       planKey: "free_core",
       price: "$0",
       buyer: "Pool and spa techs who need a field answer now",
-      includes: ["Equipment code lookup", "Basic PartSnap", "Calculators", "Facility Assist", "Offline manual tools after first load"],
+      includes: ["Equipment code and symptom lookup", "Basic PartSnap with 3 AI scans monthly", "Dosing, volume, turnover, and filter calculators", "Opening, closing, weekly, and monthly checklists", "Offline manual tools after first load"],
       guardrail: "No diagnosis, fitment, warranty, or official partner claim."
     },
     {
-      name: "PartSnap Pro",
+      name: "Free Save Profile",
+      planKey: "free_save_profile",
+      price: "$0",
+      buyer: "Techs who want to save the first few jobs by customer",
+      includes: ["Everything in free", "Save first 5 jobs on this device", "Capture customer, pool, and equipment context", "Attach PartSnap proof to a saved job", "Create cleaner notes before you leave the stop"],
+      guardrail: "Local device save profile only. Cloud sync and team controls require a paid/team lane."
+    },
+    {
+      name: "SplashLens Pro",
       planKey: "partsnap_pro_monthly",
       availability: "self_serve",
-      price: "$4.99/mo or $39/yr",
-      buyer: "Techs who use PartSnap or Error Scan a lot",
-      includes: ["More online PartSnap and Error Scan usage", "Proof checklist before ordering or escalating", "Local distributor/SCP-style verification first, online price-check links second", "Scanner activation and restore flow"],
+      price: "$29/mo or $249/yr target",
+      buyer: "Solo techs who want unlimited scanning and job memory",
+      includes: ["Everything in free", "Unlimited web PartSnap and Error Scan usage", "Unlimited saved jobs on this device", "Customer-safe summaries", "Boss/counter packets", "Repeat Issue Watch"],
       guardrail: "Search links are for price checking; verify model, dimensions, and current parts diagram before ordering."
     },
     {
-      name: "Saved Job Pro",
-      planKey: "service_proof_pro_monthly",
-      availability: "pilot",
-      price: "$19/mo — request access",
-      buyer: "Solo techs who want proof they can find later",
-      includes: ["Save each pool's photos, readings, notes, and repair history", "Plain-English summary you can send to the customer", "One-tap job details for a boss, senior tech, or supplier", "Spot repeat issues before they come back on you"],
-      guardrail: "Built for cleaner documentation without becoming a full CRM."
-    },
-    {
-      name: "Team Field View",
+      name: "Teams",
       planKey: "team_proof_os_monthly",
       availability: "pilot",
-      price: "$99/mo — company setup",
-      buyer: "Owners, facilities, CPOs, and training groups",
-      includes: ["See what your techs used, searched, and missed", "Reports with your company name on them", "Daily check and incident workflows for CPOs and facilities", "Team searched/missed reports in plain language"],
+      price: "$149/company/mo target",
+      buyer: "Owners who want field visibility without replacing their route app",
+      includes: ["Everything in Pro", "See what techs used, searched, and missed", "Company name on customer summaries and job packets", "Daily check and incident workflows for facility customers", "Team searched/missed reports in plain language"],
       guardrail: "Exports support existing CRMs; SplashLens is not a billing replacement."
-    },
-    {
-      name: "Facility / CPO Pilot",
-      planKey: "facility_cpo_pilot_monthly",
-      availability: "pilot",
-      price: "Request facility access",
-      buyer: "Facilities and training groups",
-      includes: ["Daily checks", "Contamination event workflow", "Dose logs", "Escalation packets", "Staff handoff records"],
-      guardrail: "Local code, facility policy, and CPO/trainer guidance still control."
-    },
-    {
-      name: "Verified Manufacturer Cards",
-      planKey: "verified_manufacturer_cards_monthly",
-      availability: "partner",
-      price: "Not self-serve — partner discussion",
-      buyer: "Manufacturers and expert vendors that want field language shown correctly",
-      includes: ["Partner-reviewed field cards", "Required proof photos", "Warranty-safe wording", "Preferred escalation steps"],
-      guardrail: "Only marked partner-verified after written partner review/approval."
-    },
-    {
-      name: "Distributor / Counter Mode",
-      planKey: "distributor_counter_mode_monthly",
-      availability: "partner",
-      price: "Not self-serve — partner discussion",
-      buyer: "Parts counters and distributors",
-      includes: ["Required model plate prompts", "Second photo workflow", "Symptom/code capture", "Wrong-order prevention packet"],
-      guardrail: "Possible match and missing proof, never guaranteed fit."
-    },
-    {
-      name: "Field Learning OS",
-      planKey: "training_partner_layer_monthly",
-      availability: "partner",
-      price: "Not self-serve — partner discussion",
-      buyer: "Pool schools and instructors",
-      includes: ["5-minute field lessons from PartSnap misses", "Proof-based quizzes", "CPO scenario workflows", "Senior-review practice packets", "Partner-reviewed lesson cards"],
-      guardrail: "No official training alignment unless agreed in writing."
     }
   ]
 };

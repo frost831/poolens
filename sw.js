@@ -1,10 +1,10 @@
-const CACHE = 'splashlens-v5-northstar-funnel';
+const CACHE = 'splashlens-v6-pro-funnel';
 const ASSETS = [
   '/',
   '/index.html',
   '/js/errors.js',
-  '/js/data.js?v=20260901-northstar-funnel',
-  '/js/app.js?v=20260901-northstar-funnel',
+  '/js/data.js?v=20260902-pro-funnel',
+  '/js/app.js?v=20260902-pro-funnel',
   '/js/field-signals.js?v=20260728-field-signals',
   '/js/analytics.js',
   '/js/field-score.js?v=20260828-closing-score',

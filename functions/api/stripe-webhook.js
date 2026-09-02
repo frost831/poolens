@@ -35,7 +35,7 @@ function cleanSubject(session) {
 }
 
 function cleanPlan(session) {
-  return String(session?.metadata?.plan || session?.metadata?.product || 'PartSnap Pro').trim().slice(0, 100);
+  return String(session?.metadata?.plan || session?.metadata?.product || 'SplashLens Pro').trim().slice(0, 100);
 }
 
 function allowedPaymentLinkIds(env) {

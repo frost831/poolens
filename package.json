@@ -4,6 +4,6 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "node --test tests/field-score-contract.test.mjs tests/first-party-script-assets.test.mjs tests/events-endpoint-contract.test.mjs tests/scan-entitlement-boundary.test.mjs tests/stripe-payment-boundary.test.mjs"
+    "test": "node --test tests/field-score-contract.test.mjs tests/first-party-script-assets.test.mjs tests/events-endpoint-contract.test.mjs tests/scan-entitlement-boundary.test.mjs tests/stripe-payment-boundary.test.mjs tests/northstar-funnel-copy.test.mjs"
   }
 }

@@ -276,11 +276,6 @@
     .field-score-actions button:hover, .field-score-actions button:focus-visible { border-color:#0284c7; background:#e0f2fe; outline:none; }
     .field-score-note { width:100%; margin-top:9px; min-height:58px; resize:vertical; border:1px solid #dbe8ef; border-radius:9px; padding:9px; color:#0f172a; font:inherit; font-size:13px; }
     .field-score-note::placeholder { color:#64748b; }
-    .homeowner-mode nav[aria-label="SplashLens field tools"] .nav-btn { display:none; }
-    .homeowner-mode nav[aria-label="SplashLens field tools"] #nav-volume,
-    .homeowner-mode nav[aria-label="SplashLens field tools"] #nav-dosing,
-    .homeowner-mode nav[aria-label="SplashLens field tools"] #nav-guide,
-    .homeowner-mode nav[aria-label="SplashLens field tools"] #nav-report { display:flex; }
     .facility-home { display:none; padding:14px; }
     .facility-mode .facility-home { display:block; }
     .facility-mode.facility-tools-hidden main .tab-panel, .facility-mode.facility-tools-hidden nav[aria-label="SplashLens field tools"] { display:none !important; }
@@ -718,7 +713,6 @@
         <button type="button" class="role-choice" onclick="setSplashLensRole('facility', { persist: true })"><strong>Facility / CPO</strong><span>Daily checks, contamination, basic proof, and help packets.</span></button>
         <button type="button" class="role-choice" onclick="setSplashLensRole('counter', { persist: true })"><strong>Counter</strong><span>Part, model, photo, and proof before ordering.</span></button>
         <button type="button" class="role-choice" onclick="setSplashLensRole('trainer', { persist: true })"><strong>Trainer</strong><span>Short lessons from real field stops.</span></button>
-        <button type="button" class="role-choice" onclick="setSplashLensRole('homeowner', { persist: true })"><strong>Homeowner</strong><span>Plain notes, basic math, and when to call a pro.</span></button>
       </div>
     </div>
   </section>
@@ -754,7 +748,6 @@
         <button type="button" onclick="setSplashLensRole('facility', { persist: true, source: 'nudge' })">CPO</button>
         <button type="button" onclick="setSplashLensRole('counter', { persist: true, source: 'nudge' })">Counter</button>
         <button type="button" onclick="setSplashLensRole('trainer', { persist: true, source: 'nudge' })">Trainer</button>
-        <button type="button" onclick="setSplashLensRole('homeowner', { persist: true, source: 'nudge' })">Homeowner</button>
       </div>
     </div>
   </aside>
@@ -1556,8 +1549,8 @@
   </nav>
 
   <script src="/js/errors.js"></script>
-  <script src="/js/data.js?v=20260901-northstar-funnel"></script>
-  <script src="/js/app.js?v=20260901-northstar-funnel"></script>
+  <script src="/js/data.js?v=20260902-pro-funnel"></script>
+  <script src="/js/app.js?v=20260902-pro-funnel"></script>
   <script type="module" src="/js/field-signals.js?v=20260728-field-signals"></script>
   <script src="/js/analytics.js"></script>
   <script src="/js/field-score.js?v=20260828-closing-score"></script>
