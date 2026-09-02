@@ -12,7 +12,7 @@
 - Current public site: `https://splashlens.com`; fallback Pages host: `https://poolens-site.pages.dev`.
 - Use `500+ error codes` in public-facing copy until the database count is automatically measured and updated.
 - The online AI scanner is live, but production must keep server-side scan metering enabled. Do not rely only on browser localStorage limits.
-- PartSnap Pro web checkout exists through Stripe Payment Links. Account-based paid entitlement is not production-grade yet.
+- Splash Lens Pro Unlimited web checkout exists through Stripe Payment Links. Account-based paid entitlement is not production-grade yet.
 - Route Ready is a planned training layer collecting free pilot interest. Do not describe certificates, verification, or completed modules as already built.
 - Older PoolLens Pro / PoolLens Learn language below is legacy planning context, not the active launch claim.
 
@@ -26,7 +26,7 @@ The app is live at app.splashlens.com, with poolens.pages.dev as the Cloudflare 
 
 The business model is a four-tier stack built on top of a free product that will never be paywalled:
 
-- **PartSnap** — camera-to-part-ID AI lookup with affiliate buy links and a $4.99/month unlimited tier
+- **Splash Lens Pro Unlimited** — camera-to-part-ID AI lookup with affiliate buy links and a $29/month or $249/year target paid tier
 - **PoolLens Pro** — visit photo logging, customer PDF reports, multi-tech team accounts at $19.99/month
 - **PoolLens Learn** — new technician training module licensed B2B at $49–299/employee or $299/year/company
 - **Manufacturer API** — error code database licensing and white-label deals at $5K–25K/year per partner
@@ -93,7 +93,7 @@ The app is a single-page PWA with 9 fully functional tabs. All features work off
 - No native app store listing (Play Store / App Store) — currently browser-install only
 - No backend/accounts — all data is local to the device
 - AI vision calls are live online through `/api/scan`; production must keep `ANTHROPIC_API_KEY` and server-side metering configured.
-- PartSnap Pro web checkout exists through Stripe Payment Links. Account-based paid entitlement is not production-grade yet; store wrappers must stay free-core unless native billing is added.
+- Splash Lens Pro Unlimited web checkout exists through Stripe Payment Links. Account-based paid entitlement is not production-grade yet; store wrappers must stay FreeCore unless native billing is added.
 - No multi-device sync — pool profiles and routes live in localStorage only
 
 ---
@@ -150,9 +150,9 @@ Key characteristics of the market:
 - SLAM calculator, all chemistry tools, all error codes, filter reference, checklists, pool profiles, route management, visit reports
 - This is the moat. Never charge for it. Any paywall on the core tool destroys distribution and trust.
 
-**Tier 2 — PartSnap ($4.99/month or $39/year)**
+**Tier 2 — Splash Lens Pro Unlimited ($29/month or $249/year target)**
 - AI vision lookup: point camera at unknown part → get manufacturer, part number, compatible models, buy links
-- Free users get 10 lookups/month (enough to evaluate, not enough to rely on)
+- FreeCore users get 3 PartSnap app scans/month (enough to evaluate, not enough to rely on)
 - Paid users get unlimited lookups
 - Affiliate revenue on buy links (Amazon Associates 3–5%, pool supply affiliates 4–8%)
 
@@ -178,7 +178,7 @@ Assumptions: 200,000 US pool service techs, 5% overall adoption rate = 10,000 ac
 
 | Revenue Stream | Subscribers/Units | Monthly Rate | Annual Revenue |
 |---|---|---|---|
-| PartSnap Pro | 5,000 techs | $4.99/month | $299,400 |
+| Splash Lens Pro Unlimited | 5,000 techs | $29/month | $1,740,000 |
 | PoolLens Pro | 500 techs | $19.99/month | $119,940 |
 | Training Licenses | 100 companies | $299/year | $29,900 |
 | Affiliate Revenue | 1,000 orders/month | 5% × $50 avg order | $30,000 |
@@ -191,7 +191,7 @@ These projections require zero paid acquisition if organic distribution via the 
 
 ### Unit Economics
 
-**PartSnap Pro ($4.99/month):**
+**Splash Lens Pro Unlimited ($29/month target):**
 - AI cost per scan: $0.003–$0.015 (Claude Haiku)
 - At 100 scans/month per paid user: $0.30–$1.50/month in API costs
 - Gross margin: 70–94%
@@ -216,7 +216,7 @@ These projections require zero paid acquisition if organic distribution via the 
 **Must-do before any monetization:**
 1. Deploy Cloudflare Worker at `/api/scan` (PartSnap backend)
 2. Set up Anthropic API key in Cloudflare Worker environment
-3. Build Stripe payment integration (PartSnap Pro checkout)
+3. Build Stripe payment integration (Splash Lens Pro Unlimited checkout)
 4. Add usage tracking for free-tier scan limits (10/month)
 5. Submit to Google Play Store (PWA / TWA wrapper) for visibility
 6. Submit to Apple App Store (PWA wrapper via Capacitor or similar)
@@ -233,7 +233,7 @@ These projections require zero paid acquisition if organic distribution via the 
 - Part ID response: manufacturer, part number, description, compatible models, Amazon/PoolParts/PoolSupplyWorld links
 - Stripe payment wall at scan limit
 - Affiliate link tracking (Amazon Associates tag, pool supply affiliate codes)
-- Free 10 scans/month enforced via localStorage + optional account
+- FreeCore 3 scans/month enforced via localStorage + optional account
 
 **Marketing push:**
 - Product Hunt launch
@@ -385,9 +385,9 @@ Respond in JSON:
 | Growth (10,000 users) | 50,000 | $0.015/scan max | $750 |
 | Scale (50,000 users) | 150,000 | $0.015/scan max | $2,250 |
 
-At 5,000 PartSnap Pro subscribers ($4.99/month = $24,950/month revenue), API costs at scale ($2,250/month) represent a 9% cost-of-goods. That's an acceptable COGS for a 91% gross margin SaaS product.
+At 5,000 Splash Lens Pro Unlimited subscribers ($29/month = $145,000/month revenue), API costs at scale ($2,250/month) represent about a 1.6% cost-of-goods. That's an acceptable COGS for a high-margin SaaS product.
 
-Free tier (10 scans/month) is economically defensible. At 10,000 free users × 10 scans = 100,000 scans/month max = $1,500/month in API costs, offset by affiliate revenue and conversion to paid.
+FreeCore scanner access (3 scans/month) is economically defensible. At 10,000 free users × 3 scans = 30,000 scans/month max = $450/month in API costs, offset by affiliate revenue and conversion to paid.
 
 ### Business Case
 
@@ -398,7 +398,7 @@ The affiliate revenue alone can partially offset the API cost. A tech identifies
 **What has to happen before PartSnap monetizes:**
 1. Cloudflare Worker deployed at `/api/scan`
 2. Anthropic API key provisioned and set as a secret in Cloudflare
-3. Stripe integration live with PartSnap Pro product ($4.99/month or $39/year)
+3. Stripe integration live with Splash Lens Pro Unlimited product ($29/month or $249/year target)
 4. Amazon Associates account approved and tag embedded in buy links
 5. Pool supply affiliate programs applied to: PoolParts.com, PoolSupplyWorld, InTheSwim
 6. Frontend scan limit enforcement (localStorage counter for free users)
@@ -577,7 +577,7 @@ The single highest-leverage action that's not done. Browser-install only limits 
 |---|---|---|
 | P0 | Deploy Cloudflare Worker at `/api/scan` | 2 days |
 | P0 | Provision Anthropic API key + add to Worker env | 1 hour |
-| P0 | Integrate Stripe: PartSnap Pro product ($4.99/mo, $39/yr) | 2 days |
+| P0 | Integrate Stripe: Splash Lens Pro Unlimited product ($29/mo, $249/yr target) | 2 days |
 | P0 | Build free scan limit tracking (localStorage counter) | 1 day |
 | P1 | Submit to Google Play Store (TWA wrapper) | 1 week |
 | P1 | Apply for Amazon Associates and pool supply affiliate programs | 2 hours |
@@ -636,11 +636,11 @@ The single highest-leverage action that's not done. Browser-install only limits 
 
 - [ ] Cloudflare Worker created and deployed at poolens.pages.dev/api/scan
 - [ ] `ANTHROPIC_API_KEY` added as a Cloudflare Worker secret
-- [ ] Stripe account created, PartSnap Pro product configured
+- [ ] Stripe account created, Splash Lens Pro Unlimited product configured
 - [ ] `STRIPE_SECRET_KEY` added as a Cloudflare Worker secret (for subscription validation)
 - [ ] Frontend scan tab updated: sends base64 image + mode to /api/scan, renders JSON response
 - [ ] localStorage scan counter implemented (key: `pl_scans_month`, resets on month rollover)
-- [ ] Scan limit modal: "You've used 10 of 10 free scans this month. Upgrade to PartSnap Pro for unlimited."
+- [ ] Scan limit modal: "You've used 3 of 3 free scans this month. Upgrade to Splash Lens Pro Unlimited for unlimited."
 - [ ] Stripe checkout link embedded in upgrade modal
 - [ ] Amazon Associates account approved (can take 1–7 days)
 - [ ] Buy links formatted with affiliate tag: `amazon.com/s?k=pentair+impeller+79301800&tag=YOUR_TAG`

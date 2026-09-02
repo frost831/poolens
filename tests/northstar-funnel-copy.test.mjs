@@ -17,13 +17,13 @@ test('first open goes straight to field workflow instead of forcing persona pick
 test('free scan allowance is three in browser and server code', () => {
   assert.match(app, /const SCAN_LIMIT_FREE = 3;/);
   assert.match(scan, /const FREE_SCAN_LIMIT = 3;/);
-  assert.match(app, /The free app includes 3 AI scans each month/);
+  assert.match(app, /The FreeCore app includes 3 PartSnap app scans a month/);
 });
 
 test('pricing catalog uses the simplified North Star plan ladder', () => {
   assert.match(data, /Free, No Account/);
   assert.match(data, /Free Save Profile/);
-  assert.match(data, /SplashLens Pro/);
+  assert.match(data, /Splash Lens Pro Unlimited/);
   assert.match(data, /\$29\/mo or \$249\/yr target/);
   assert.match(data, /Teams/);
   assert.doesNotMatch(data, /Saved Job Pro/);
@@ -39,10 +39,10 @@ test('saving job history requires a free save profile signal', () => {
   assert.match(app, /ensureFieldSaveAccount\('partsnap_saved_to_pool'\)/);
 });
 
-test('checkout exposes a JSON catalog and SplashLens Pro metadata', () => {
+test('checkout exposes a JSON catalog and Splash Lens Pro Unlimited metadata', () => {
   assert.match(checkout, /url\.searchParams\.has\('catalog'\)/);
-  assert.match(checkout, /SplashLens Pro Monthly/);
-  assert.match(checkout, /SplashLens Pro Annual/);
+  assert.match(checkout, /Splash Lens Pro Unlimited Monthly/);
+  assert.match(checkout, /Splash Lens Pro Unlimited Annual/);
   assert.match(checkout, /SPLASHLENS_STRIPE_PRICE_\$\{key\}_PRO/);
   assert.match(checkout, /SPLASHLENS_STRIPE_LINK_MONTHLY_PRO/);
 });

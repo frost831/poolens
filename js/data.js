@@ -194,7 +194,7 @@ window.SPLASHLENS_TECH_RADAR = {
 };
 
 window.SPLASHLENS_MONETIZATION_LANES = {
-  promise: "Free lookup first. Pay only when SplashLens starts saving work you want to keep, share, or manage across the crew.",
+  promise: "FreeCore first: lookup, field tools, and 3 PartSnap app scans a month before any paid lane.",
   trustBoundary: "Manual lookup, basic PartSnap, calculators, Facility Assist, and cautious reference language stay useful without an account. Paid lanes add capacity and saved job workflows; they do not create diagnosis, fitment, warranty, or partner guarantees.",
   plans: [
     {
@@ -202,7 +202,7 @@ window.SPLASHLENS_MONETIZATION_LANES = {
       planKey: "free_core",
       price: "$0",
       buyer: "Pool and spa techs who need a field answer now",
-      includes: ["Equipment code and symptom lookup", "Basic PartSnap with 3 AI scans monthly", "Dosing, volume, turnover, and filter calculators", "Opening, closing, weekly, and monthly checklists", "Offline manual tools after first load"],
+      includes: ["Equipment code and symptom lookup", "Basic PartSnap with 3 app scans a month", "Dosing, volume, turnover, and filter calculators", "Opening, closing, weekly, and monthly checklists", "Offline manual tools after first load"],
       guardrail: "No diagnosis, fitment, warranty, or official partner claim."
     },
     {
@@ -214,12 +214,12 @@ window.SPLASHLENS_MONETIZATION_LANES = {
       guardrail: "Local device save profile only. Cloud sync and team controls require a paid/team lane."
     },
     {
-      name: "SplashLens Pro",
+      name: "Splash Lens Pro Unlimited",
       planKey: "partsnap_pro_monthly",
       availability: "self_serve",
       price: "$29/mo or $249/yr target",
-      buyer: "Solo techs who want unlimited scanning and job memory",
-      includes: ["Everything in free", "Unlimited web PartSnap and Error Scan usage", "Unlimited saved jobs on this device", "Customer-safe summaries", "Boss/counter packets", "Repeat Issue Watch"],
+      buyer: "Solo techs who want unlimited scanner use and job memory",
+      includes: ["Everything in FreeCore", "Unlimited PartSnap and Error Scan usage where paid access is available", "Unlimited saved jobs on this device", "Customer-safe summaries", "Boss/counter packets", "Repeat Issue Watch"],
       guardrail: "Search links are for price checking; verify model, dimensions, and current parts diagram before ordering."
     },
     {

@@ -10,12 +10,12 @@ https://app.splashlens.com/?store=ios
 
 SplashLens should be submitted as a free utility/reference wrapper around the SplashLens PWA.
 
-Do not submit paid entitlement, unlimited AI, Route Ready certificate, manufacturer endorsement, or guaranteed diagnosis claims until native billing, production metering, and certificate verification are actually built.
+Do not submit paid entitlement, unqualified free/native unlimited scanning, Route Ready certificate, manufacturer endorsement, or guaranteed diagnosis claims until native billing, production metering, and certificate verification are actually built.
 
 ## Apple Lane
 
 - App name: SplashLens Field Tools
-- Subtitle: Pool tech codes and notes
+- Subtitle: 3 PartSnap scans/month
 - Existing ASC bundle ID used for upload: com.splashlens.app
 - Suggested future/account namespace from packet: com.belowzeromedia.splashlens
 - SKU: splashlens-ios-2026
@@ -33,7 +33,7 @@ The existing App Store Connect app record is `com.splashlens.app`. The suggested
 
 ## Product Promise
 
-SplashLens is a pool-service field reference app for technicians who need fast lookup, job notes, and lightweight field tools.
+SplashLens is a FreeCore pool-service field reference app for technicians who need fast lookup, PartSnap help, job notes, and lightweight field tools.
 
 Built promises:
 
@@ -41,7 +41,8 @@ Built promises:
 - Chemical dosing calculators and service math.
 - Service notes and report-style field records.
 - Filter guides, checklists, and offline app shell after first load.
-- Optional online AI scanner for equipment displays, pool parts, and test strips.
+- 3 included PartSnap app scans a month for optional online scanner assistance.
+- Splash Lens Pro Unlimited as the paid scanner-capacity and saved-job-memory lane where paid access is available.
 
 Careful promises:
 
@@ -51,7 +52,7 @@ Careful promises:
 
 Do not promise:
 
-- Unlimited AI scanning.
+- Unqualified free/native unlimited scanning claims.
 - Completed training certificates.
 - Manufacturer endorsement.
 - Guaranteed diagnosis, repair, or chemical safety.

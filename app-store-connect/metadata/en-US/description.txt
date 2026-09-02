@@ -1,13 +1,17 @@
-SplashLens is a pool-service field reference app for technicians who need fast lookup, service math, notes, and lightweight field tools.
+SplashLens is a FreeCore pool and spa field app for technicians who need quick lookup, PartSnap help, service math, notes, and saved field context.
 
 Use SplashLens to:
 
-- Search pool equipment error codes and symptoms
+- Search pool equipment codes and symptoms
+- Identify parts with PartSnap prompts and verification steps
+- Use 3 included PartSnap app scans each month
 - Calculate common chemical dosing adjustments
-- Build service notes and report-style field records
+- Build service notes and saved job history
 - Check filter guides, service checklists, and manual reference tools
-- Use optional online AI scan assistance for equipment displays, pool parts, and test strips
+- Use optional online scan assistance for equipment displays, pool parts, and test strips
 
-Manual lookup, calculators, notes, filters, and checklists are designed for field use and can work from the app shell after first load. Online AI scan features require internet access and are assistance only. Always verify AI scan output against equipment manuals, calibrated tests, label directions, and professional field judgment.
+FreeCore access keeps manual lookup, calculators, notes, filters, checklists, Facility Assist, and 3 PartSnap app scans a month available for field use. Splash Lens Pro Unlimited adds unlimited scanner use and saved job memory where paid access is available. Native store mode keeps direct web checkout calls to action hidden.
 
-SplashLens does not guarantee diagnosis, repair, chemical safety, manufacturer support, or training certification.
+Online scan features require internet access and are assistance only. Always verify scan output, part fit, code lookup, dosing math, and job notes against equipment manuals, model numbers, calibrated tests, label directions, and qualified field judgment.
+
+SplashLens does not guarantee diagnosis, repair, chemical safety, manufacturer support, part fit, or training certification.

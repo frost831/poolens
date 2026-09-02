@@ -46,7 +46,7 @@ async function createCheckoutSession(request, env, plan) {
   params.set('cancel_url', `${origin}/?checkout=cancelled&plan=${encodeURIComponent(plan)}`);
   params.set('metadata[product]', 'splashlens');
   params.set('metadata[feature]', 'scanner');
-  params.set('metadata[plan]', plan === 'yearly' || plan === 'annual' ? 'SplashLens Pro Annual' : 'SplashLens Pro Monthly');
+  params.set('metadata[plan]', plan === 'yearly' || plan === 'annual' ? 'Splash Lens Pro Unlimited Annual' : 'Splash Lens Pro Unlimited Monthly');
   params.set('subscription_data[metadata][product]', 'splashlens');
   params.set('subscription_data[metadata][feature]', 'scanner');
   params.set('subscription_data[metadata][plan]', params.get('metadata[plan]'));
@@ -80,13 +80,13 @@ export async function onRequestGet({ request, env }) {
       plans: [
         {
           key: 'partsnap_pro_monthly',
-          label: 'SplashLens Pro Monthly',
+          label: 'Splash Lens Pro Unlimited Monthly',
           priceLabel: '$29/month target',
           checkoutConfigured: stripeReady || Boolean(paymentLinkForPlan(env, 'monthly')),
         },
         {
           key: 'partsnap_pro_yearly',
-          label: 'SplashLens Pro Annual',
+          label: 'Splash Lens Pro Unlimited Annual',
           priceLabel: '$249/year target',
           checkoutConfigured: stripeReady || Boolean(paymentLinkForPlan(env, 'yearly')),
         },

@@ -53,8 +53,8 @@ If `STRIPE_SECRET_KEY` is missing, `/api/checkout` falls back to the existing St
 
 Current Stripe catalog IDs:
 
-- Monthly PartSnap Pro: `price_1TbAp725fqLun6cVz5lhOiiS`
-- Annual PartSnap Pro: `price_1TbAp825fqLun6cVoVG0wqQl`
+- Monthly Splash Lens Pro Unlimited: `price_1TbAp725fqLun6cVz5lhOiiS`
+- Annual Splash Lens Pro Unlimited: `price_1TbAp825fqLun6cVoVG0wqQl`
 
 Admin issuance shape:
 
@@ -63,4 +63,4 @@ $body = @{ email = "buyer@example.com"; plan = "SplashLens Scanner Pro"; ttlDays
 Invoke-RestMethod -Method POST -Uri "https://app.splashlens.com/api/scan-entitlement" -Headers @{ "X-SplashLens-Admin-Secret" = $env:SPLASHLENS_ENTITLEMENT_ADMIN_SECRET } -ContentType "application/json" -Body $body
 ```
 
-Store wrapper submissions must use free-core mode unless native billing is added.
+Store wrapper submissions must use FreeCore mode unless native billing is added.

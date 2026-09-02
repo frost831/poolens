@@ -35,7 +35,7 @@ function cleanSubject(session) {
 }
 
 function cleanPlan(session) {
-  return String(session?.metadata?.plan || session?.metadata?.product || 'SplashLens Pro').trim().slice(0, 100);
+  return String(session?.metadata?.plan || session?.metadata?.product || 'Splash Lens Pro Unlimited').trim().slice(0, 100);
 }
 
 function allowedPaymentLinkIds(env) {

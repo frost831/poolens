@@ -13,4 +13,4 @@ Before submission, verify:
 - Privacy and support links are reachable.
 - Any AI scan result uses verification language and does not claim guaranteed diagnosis.
 
-Initial build should be free-core. Do not attach App Store in-app purchases unless native billing, server-side entitlement verification, restore purchases, and scan metering are production-ready.
+Initial build should be FreeCore. Do not attach App Store in-app purchases unless native billing, server-side entitlement verification, restore purchases, and scan metering are production-ready.

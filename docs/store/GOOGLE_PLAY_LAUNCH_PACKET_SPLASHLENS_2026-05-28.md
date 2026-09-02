@@ -10,7 +10,7 @@ Scope: Google Play launch packet for the current SplashLens pool-service field a
 - Marketing URL: `https://splashlens.com`
 - Privacy URL: `https://app.splashlens.com/privacy`
 - Support URL: `https://app.splashlens.com`
-- Current product promise: free-core field reference app for pool service technicians. Search equipment error codes, calculate chemical doses, create service notes, use filter/checklist references, and optionally use online scanner workflows for displays, parts, and test strips.
+- Current product promise: FreeCore field reference app for pool service technicians. Search equipment codes, calculate chemical doses, create service notes, use filter/checklist references, and use 3 included PartSnap app scans a month for optional scanner workflows.
 - Important legacy warning: `github-projects/splashlens` contains an older Unity AR pool-visualizer/dealer-sales concept. Do not use that AR/dealer copy, screenshots, or build lane for the current pool-tech PWA/scanner Play launch.
 
 ## Play Console Execution Update - 2026-05-28
@@ -61,11 +61,11 @@ Pool tech codes, dosing, service notes, and scanner assistance.
 
 Full description:
 
-SplashLens is a free field reference app for pool service technicians who need fast answers at the equipment pad.
+SplashLens is a FreeCore field reference app for pool service technicians who need fast answers at the equipment pad.
 
-Use SplashLens to search pool equipment error codes, estimate chemical doses from values you enter, draft service notes, review filter and maintenance checklists, and use optional online scanner workflows for equipment displays, pool parts, and test strips.
+Use SplashLens to search pool equipment codes, estimate chemical doses from values you enter, draft service notes, review filter and maintenance checklists, and use 3 included PartSnap app scans a month for optional online scanner workflows.
 
-Core tools are free and do not require an account. Manual lookup, calculators, notes, filters, and checklists are designed for field use and can work from the app shell after first load. Online scanner features require internet access and are user-initiated.
+FreeCore tools do not require an account. Manual lookup, calculators, notes, filters, checklists, Facility Assist, and 3 PartSnap app scans a month are designed for field use. Manual tools can work from the app shell after first load. Online scanner features require internet access and are user-initiated. Splash Lens Pro Unlimited is the paid scanner-capacity and saved-job-memory lane where paid access is available.
 
 What SplashLens helps with:
 
@@ -73,7 +73,7 @@ What SplashLens helps with:
 - Chemical dosing calculators based on user-entered readings
 - Service notes and visit-report drafting
 - Filter guides, maintenance checklists, and poolside references
-- Optional online scanner assistance for displays, parts, and test strips
+- 3 included PartSnap app scans a month for optional scanner assistance
 
 Important field-use note:
 
@@ -83,7 +83,9 @@ SplashLens provides reference assistance only. AI scanner output must be verifie
 
 Allowed claims for this Play launch:
 
-- Free pool-service field reference app.
+- FreeCore pool-service field reference app.
+- 3 included PartSnap app scans a month.
+- Splash Lens Pro Unlimited as a paid scanner-capacity and saved-job-memory lane where paid access is available.
 - No account required for core use.
 - Manual tools can work offline after first load.
 - Error-code lookup and reference workflows.
@@ -98,8 +100,8 @@ Avoid these claims until the app actually supports them in the submitted native 
 - Guaranteed diagnosis, repair, or chemical safety.
 - Official manufacturer support, endorsement, or certification.
 - Replacing calibrated testing, equipment manuals, SDS/label directions, or professional judgment.
-- Unlimited AI scanning in the native app.
-- Native paid subscriptions, paid unlocks, or PartSnap Pro entitlement inside the Play build unless Google Play Billing or an approved external-purchase flow is implemented.
+- Unqualified free/native unlimited scanning claims.
+- Native paid subscriptions, paid unlocks, or Splash Lens Pro Unlimited entitlement inside the Play build unless Google Play Billing or an approved external-purchase flow is implemented.
 - Completed Route Ready certification or training credentials.
 - AR pool design/dealer proposal features from the legacy Unity repo.
 

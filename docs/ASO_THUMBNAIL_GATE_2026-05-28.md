@@ -17,7 +17,7 @@ Do not submit App Store / Google Play screenshots until this pass is complete.
 
 ## Required Store Position
 
-SplashLens is the pool service field rescue app for the equipment pad. Store builds stay free-core unless native billing is added. Web PartSnap Pro checkout and signed scanner activation must not be presented as native paid unlocks.
+SplashLens is the pool service field rescue app for the equipment pad. Store builds stay FreeCore unless native billing is added. Web Splash Lens Pro Unlimited checkout and signed scanner activation must not be presented as native paid unlocks.
 
 ## Required Output On Mac
 

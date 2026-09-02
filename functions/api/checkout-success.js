@@ -51,7 +51,7 @@ function cleanSubject(session) {
 function cleanPlan(session) {
   const metadataPlan = String(session?.metadata?.plan || '').trim();
   if (metadataPlan) return metadataPlan.slice(0, 80);
-  return 'SplashLens Pro';
+  return 'Splash Lens Pro Unlimited';
 }
 
 function allowedPaymentLinkIds(env) {
@@ -151,7 +151,7 @@ export async function onRequestGet({ request, env }) {
     return html('<h1>SplashLens checkout</h1><p>Checkout lookup is not configured yet. Contact support for activation.</p>', 503);
   }
   if (!isSplashLensCheckoutSession(session, env)) {
-    return html('<h1>SplashLens checkout</h1><p>This checkout session is not a SplashLens Pro purchase. Contact support if this looks wrong.</p>', 403);
+    return html('<h1>SplashLens checkout</h1><p>This checkout session is not a Splash Lens Pro Unlimited purchase. Contact support if this looks wrong.</p>', 403);
   }
   if (!isPaid(session)) {
     return html('<h1>SplashLens checkout</h1><p>Payment is not complete yet. Refresh after Stripe finishes processing.</p>', 402);

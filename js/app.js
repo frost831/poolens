@@ -1946,7 +1946,7 @@ function renderVerifiedProofNetwork() {
   showTab('report');
   if (isStoreShellMode()) {
     renderProofWorkflowOutput(
-      'SplashLens free-core native build',
+      'SplashLens FreeCore native build',
       'Manual lookup, basic PartSnap, calculators, Facility Assist, saved drafts, and customer-safe proof summaries remain available without account or payment.',
       `<div class="brain-grid" style="margin-top:10px;">
         <button type="button" class="brain-action green" onclick="startServiceProofWorkflow('visit')">Build proof</button>
@@ -1997,7 +1997,7 @@ async function openSplashLensPaidLane(planKey, label) {
   trackSplashLensEvent('paid_lane_click', { plan_key: safePlan, label: safeLabel });
   if (isStoreShellMode()) {
     trackSplashLensEvent('store_paid_lane_blocked', { plan_key: safePlan, label: safeLabel, store: getStoreShellMode() });
-    window.alert('This native store build is free-core. Web subscriptions and paid pilots are not offered inside the app.');
+    window.alert('This native store build is FreeCore. Web subscriptions and paid pilots are not offered inside the app.');
     return;
   }
   try {
@@ -3910,7 +3910,7 @@ const SERVICE_PROOF_FAQ = [
   },
   {
     keys: ['price', 'paid', 'subscription'],
-    answer: 'The free app stays useful: lookup, basic PartSnap, calculators, checklists, and Facility Assist stay open. A free save profile lets a tech start saving job context on this device. SplashLens Pro is the paid web lane for unlimited scanner use and saved job memory. Teams is for owners who want crew visibility and company reporting. Partner/manufacturer/training ideas are handled through direct discussion, not self-serve checkout.'
+    answer: 'The FreeCore app stays useful: lookup, basic PartSnap, calculators, checklists, Facility Assist, and 3 PartSnap app scans a month stay open. A free save profile lets a tech start saving job context on this device. Splash Lens Pro Unlimited is the paid lane for unlimited scanner use and saved job memory where paid access is available. Teams is for owners who want crew visibility and company reporting. Partner/manufacturer/training ideas are handled through direct discussion, not self-serve checkout.'
   },
   {
     keys: ['trend', 'callback', 'risk', 'repeat'],
@@ -6472,7 +6472,7 @@ function updateAIStatusBar() {
     dot.style.background   = '#16a34a';
     label.textContent      = getScanEntitlementToken()
       ? 'SIGNED SCANNER ACCESS READY'
-      : isPartSnapPro() ? 'SPLASHLENS PRO READY' : `AI READY - ${Math.max(0, SCAN_LIMIT_FREE - usage.count)} FREE SCANS LEFT`;
+      : isPartSnapPro() ? 'PRO UNLIMITED READY' : `AI READY - ${Math.max(0, SCAN_LIMIT_FREE - usage.count)} FREE SCANS LEFT`;
     label.style.color      = '#4ade80';
   } else {
     dot.style.background   = '#64748b';
@@ -7151,7 +7151,7 @@ function requestNativePartSnapPurchase(plan = 'monthly') {
   if (result) {
     result.innerHTML = `<div style="background:#1e293b;border:1px solid #334155;border-radius:14px;padding:18px;text-align:center;border-left:4px solid #0284c7;">
       <p style="color:#f1f5f9;font-size:16px;font-weight:900;margin-bottom:6px;">Native billing is not available in this build yet.</p>
-      <p style="color:#94a3b8;font-size:12px;line-height:1.5;">Update SplashLens from the store when the SplashLens Pro native billing build is approved. Manual tools remain free.</p>
+      <p style="color:#94a3b8;font-size:12px;line-height:1.5;">Update SplashLens from the store when the Splash Lens Pro Unlimited native billing build is approved. Manual tools remain free.</p>
       <button onclick="setScanMode('lookup');document.getElementById('scan-result').innerHTML=''" style="margin-top:12px;background:#0284c7;color:#fff;border:0;border-radius:10px;padding:11px 14px;font-size:12px;font-weight:800;cursor:pointer;width:100%;">Use Manual Lookup</button>
     </div>`;
   }
@@ -7658,7 +7658,7 @@ async function restorePartSnapPro() {
   try {
     if (result) {
       result.innerHTML = `<div style="background:#0f172a;border:1px solid #334155;border-radius:12px;padding:16px;text-align:center;">
-        <p style="color:#e2e8f0;font-size:14px;font-weight:900;">Checking SplashLens Pro access...</p>
+        <p style="color:#e2e8f0;font-size:14px;font-weight:900;">Checking Splash Lens Pro Unlimited access...</p>
       </div>`;
     }
     const response = await fetch(PARTSNAP_RESTORE_ENDPOINT, {
@@ -7679,7 +7679,7 @@ async function restorePartSnapPro() {
     if (result) {
       result.innerHTML = `<div style="background:#450a0a;border:1px solid #dc2626;border-radius:12px;padding:18px;text-align:center;">
         <p style="color:#fecaca;font-size:15px;font-weight:900;margin-bottom:6px;">Could not restore yet</p>
-        <p style="color:#fee2e2;font-size:12px;line-height:1.5;">${escHtml(error.message || 'Contact hello@splashlens.com for help restoring SplashLens Pro.')}</p>
+        <p style="color:#fee2e2;font-size:12px;line-height:1.5;">${escHtml(error.message || 'Contact hello@splashlens.com for help restoring Splash Lens Pro Unlimited.')}</p>
         <button onclick="setScanMode('parts')" style="margin-top:12px;background:#dc2626;color:#fff;border:0;border-radius:10px;padding:10px 12px;font-size:12px;font-weight:900;cursor:pointer;">Back to PartSnap</button>
       </div>`;
     }
@@ -7705,13 +7705,13 @@ function showScanLimitModal(result, status) {
     result.innerHTML = `
       <div style="background:#1e293b;border:1px solid #7c3aed;border-radius:14px;padding:18px;margin:0 0 14px;text-align:center;border-left:4px solid #7c3aed;">
         <p style="color:#f1f5f9;font-size:19px;font-weight:900;margin-bottom:6px;">You've used ${usage.count} of ${SCAN_LIMIT_FREE} free AI scans this month.</p>
-        <p style="color:#94a3b8;font-size:13px;line-height:1.5;margin-bottom:14px;">Manual code lookup, dosing, reports, filters, and checklists stay free. Upgrade SplashLens Pro for unlimited web scanner access and saved job memory.</p>
+        <p style="color:#94a3b8;font-size:13px;line-height:1.5;margin-bottom:14px;">Manual code lookup, dosing, reports, filters, and checklists stay free. Upgrade Splash Lens Pro Unlimited for unlimited scanner access and saved job memory where paid access is available.</p>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
           <a href="${PARTSNAP_MONTHLY_LINK}" target="_blank" rel="noopener" onclick="trackSplashLensEvent('upgrade_click',{plan:'monthly'})" style="background:#0284c7;color:#fff;text-decoration:none;border-radius:10px;padding:12px 8px;font-size:13px;font-weight:900;">$29 / mo</a>
           <a href="${PARTSNAP_YEARLY_LINK}" target="_blank" rel="noopener" onclick="trackSplashLensEvent('upgrade_click',{plan:'yearly'})" style="background:#16a34a;color:#fff;text-decoration:none;border-radius:10px;padding:12px 8px;font-size:13px;font-weight:900;">$249 / yr</a>
         </div>
         <button onclick="restorePartSnapPro()" style="width:100%;background:#334155;color:#e2e8f0;border:0;border-radius:10px;padding:10px 8px;font-size:12px;font-weight:900;cursor:pointer;">Restore Pro from checkout email</button>
-        <p style="color:#64748b;font-size:10px;line-height:1.4;margin-top:10px;">After web checkout, use the signed activation link. If browser storage is cleared, restore with the checkout email. Store builds remain free-core until native billing is added.</p>
+        <p style="color:#64748b;font-size:10px;line-height:1.4;margin-top:10px;">After web checkout, use the signed activation link. If browser storage is cleared, restore with the checkout email. Store builds remain FreeCore until native billing is added.</p>
       </div>`;
   }
 }
@@ -7999,7 +7999,7 @@ async function callAIScan(canvas, mode, result, status) {
         trackSplashLensEvent('scan_entitlement_rejected', { mode, status: res.status, error: payload.error || '' });
         if (result) {
           result.innerHTML = `<div style="background:#450a0a;border:1px solid #dc2626;border-radius:12px;padding:18px;text-align:center;">
-            <p style="color:#fecaca;font-size:16px;font-weight:900;margin-bottom:6px;">SplashLens Pro needs restore</p>
+        <p style="color:#fecaca;font-size:16px;font-weight:900;margin-bottom:6px;">Splash Lens Pro Unlimited needs restore</p>
             <p style="color:#fee2e2;font-size:12px;line-height:1.5;margin-bottom:12px;">${escHtml(payload.error || 'Your paid scanner access could not be verified on this device.')}</p>
             <button onclick="restorePartSnapPro()" style="width:100%;background:#dc2626;color:#fff;border:0;border-radius:10px;padding:11px 8px;font-size:12px;font-weight:900;cursor:pointer;">Restore from checkout email</button>
           </div>`;
@@ -8484,9 +8484,9 @@ function renderPostValueUpgradeOffer() {
   trackSplashLensEvent('post_value_upgrade_shown', { feature: 'unlimited_partsnap', placement: 'field_stop_saved' });
   return `
     <div style="background:#0f172a;border:1px solid #334155;border-radius:10px;padding:12px;margin:0 0 16px;">
-      <p style="color:#7dd3fc;font-size:10px;font-weight:950;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;">SplashLens Pro</p>
+      <p style="color:#7dd3fc;font-size:10px;font-weight:950;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;">Splash Lens Pro Unlimited</p>
       <p style="color:#f8fafc;font-size:13px;font-weight:950;margin-bottom:4px;">Need PartSnap throughout the route?</p>
-      <p style="color:#94a3b8;font-size:11px;line-height:1.4;margin-bottom:9px;">The free app includes 3 AI scans each month. Pro unlocks unlimited web scanner access, saved job memory, customer-safe summaries, and boss/counter packets. Code lookup, dosing, notes, and core field tools stay free.</p>
+      <p style="color:#94a3b8;font-size:11px;line-height:1.4;margin-bottom:9px;">The FreeCore app includes 3 PartSnap app scans a month. Pro Unlimited unlocks unlimited scanner access, saved job memory, customer-safe summaries, and boss/counter packets where paid access is available. Code lookup, dosing, notes, and core field tools stay free.</p>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;">
         <a href="${PARTSNAP_MONTHLY_LINK}" target="_blank" rel="noopener" onclick="trackPostValueUpgrade('monthly')" style="background:#0284c7;color:#fff;text-decoration:none;text-align:center;border-radius:8px;padding:10px 7px;font-size:11px;font-weight:950;">$29 monthly</a>
         <a href="${PARTSNAP_YEARLY_LINK}" target="_blank" rel="noopener" onclick="trackPostValueUpgrade('yearly')" style="background:#16a34a;color:#fff;text-decoration:none;text-align:center;border-radius:8px;padding:10px 7px;font-size:11px;font-weight:950;">$249 yearly</a>

@@ -26,4 +26,4 @@ Set these before production scan launch:
 
 ## Blockers
 
-- Native billing is not implemented. Keep store wrapper free-core until billing/entitlements are added.
+- Native billing is not implemented. Keep store wrapper FreeCore until billing/entitlements are added.

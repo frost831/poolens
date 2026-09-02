@@ -31,11 +31,9 @@ Use plain field language in App Store Connect and Google Play:
 
 - Primary line: `Get off the pad faster.`
 - Core value: `Identify the part. Check the code. Prove the visit.`
-- Free-core claim: `Free pool and spa field reference app with optional paid add-ons.`
+- FreeCore claim: `FreeCore app with 3 PartSnap app scans a month.`
 - Paid feature language:
-  - `PartSnap Pro`
-  - `Saved Job Pro`
-  - `Team Field View`
+  - `Splash Lens Pro Unlimited`
   - `Facility Assist`
   - `Repeat Issue Watch`
 - Avoid using these older terms in screenshots, metadata, or review notes:
@@ -78,7 +76,7 @@ Expected result: the latest `master` commit is present locally, and `git log --o
 5. If submitting a new iOS build, increment build number from `7` to the next unused App Store Connect build number, archive, upload, and submit with this review note:
 
 ```text
-SplashLens is a free pool and spa field reference app for equipment/code lookup, PartSnap part-reference workflows, calculators, notes, and Facility Assist. The app is not a diagnostic replacement and asks users to verify against manuals, model numbers, and qualified judgment. Store mode hides direct web checkout calls to action.
+SplashLens is a FreeCore pool and spa field reference app for equipment/code lookup, PartSnap part-reference workflows, calculators, notes, Facility Assist, and 3 PartSnap app scans a month. Splash Lens Pro Unlimited is the paid scanner-capacity and saved-job-memory lane where paid access is available. The app is not a diagnostic replacement and asks users to verify against manuals, model numbers, and qualified judgment. Store mode hides direct web checkout calls to action.
 ```
 
 ## Android / Play Tasks

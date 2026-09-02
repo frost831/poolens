@@ -10,7 +10,7 @@ The SplashLens field app now has a safer `/api/scan` posture for production:
 - production fail-closed behavior when server-side scan metering is missing
 - optional Cloudflare Rate Limiting binding
 - optional Cloudflare KV monthly scan metering
-- clearer free-core and store-wrapper copy around PartSnap Pro
+- clearer FreeCore and store-wrapper copy around Splash Lens Pro Unlimited
 
 ## Required Cloudflare Bindings
 
@@ -25,7 +25,7 @@ If `SCAN_USAGE_KV` is missing in production, `/api/scan` returns `503` instead o
 
 ## Store Wrapper Boundary
 
-The native app-store wrapper must stay free-core unless native billing is added. Do not tell Apple or Google that account-based entitlement or subscription sync exists yet.
+The native app-store wrapper must stay FreeCore unless native billing is added. Do not tell Apple or Google that account-based entitlement or subscription sync exists yet.
 
 ## Verification
 

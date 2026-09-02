@@ -1,7 +1,7 @@
-SplashLens is a free utility/reference wrapper around the SplashLens PWA at https://app.splashlens.com/?store=ios.
+SplashLens is a FreeCore pool and spa field reference wrapper around the SplashLens PWA at https://app.splashlens.com/?store=ios.
 
-No account is required for core use. Manual lookup, calculators, notes, filters, and checklists work from the app shell after first load. Camera/photo access is user-initiated and only used for the optional AI scanner. Online AI scan features require internet access.
+No account is required for core use. Manual lookup, calculators, notes, filters, checklists, Facility Assist, and 3 PartSnap app scans a month are available from the app shell. Camera/photo access is user-initiated and only used for optional online scanner assistance.
 
-Store wrapper mode is intended to stay free-core and must not show direct Stripe checkout or web-subscription CTAs. AI scan output is assistance only and should be verified against equipment manuals, calibrated tests, label directions, and professional field judgment.
+Splash Lens Pro Unlimited is the paid scanner-capacity and saved-job-memory lane where paid access is available. Store wrapper mode must not show direct Stripe checkout or web-subscription CTAs. Scan output is assistance only and should be verified against equipment manuals, model numbers, calibrated tests, label directions, and professional field judgment.
 
-This build does not include native paid entitlements, unlimited AI scanning, completed training certificates, manufacturer endorsement, or guaranteed diagnosis claims.
+This build does not include completed training certificates, manufacturer endorsement, guaranteed diagnosis claims, or unqualified free/native unlimited scanning claims.

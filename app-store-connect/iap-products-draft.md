@@ -13,6 +13,6 @@ Native paid products require all of the following before public submission:
 
 Potential future products:
 
-- `splashlens_partsnap_monthly`
-- `splashlens_partsnap_annual`
+- `splash_lens_pro_unlimited_monthly`
+- `splash_lens_pro_unlimited_annual`
 - `splashlens_scan_pack_25`

@@ -8,9 +8,11 @@ Allowed:
 - Field notes
 - Optional scanner assistance with verification
 - Offline/manual utility after first load
+- FreeCore app with 3 PartSnap app scans a month
+- Splash Lens Pro Unlimited as a paid scanner-capacity and saved-job-memory lane
 
 Blocked:
-- Unlimited AI scanning
+- Unqualified free/native unlimited scanning claims
 - Manufacturer endorsement
 - Guaranteed diagnosis or repair
 - Paid native unlocks without IAP/entitlements

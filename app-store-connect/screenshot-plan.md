@@ -27,5 +27,5 @@ Use 6.7-inch iPhone screenshots first. Add other sizes only if App Store Connect
 - Completed certificate claims.
 - Official manufacturer status.
 - Paid native subscription unlocks.
-- Unlimited AI scanning.
+- Unqualified free/native unlimited scanning claims.
 - Guaranteed diagnosis, repair, or chemical safety.
