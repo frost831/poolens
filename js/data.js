@@ -194,24 +194,24 @@ window.SPLASHLENS_TECH_RADAR = {
 };
 
 window.SPLASHLENS_MONETIZATION_LANES = {
-  promise: "FreeCore first: lookup, field tools, and 3 PartSnap app scans a month before any paid lane.",
-  trustBoundary: "Manual lookup, basic PartSnap, calculators, Facility Assist, and cautious reference language stay useful without an account. Paid lanes add capacity and saved job workflows; they do not create diagnosis, fitment, warranty, or partner guarantees.",
+  promise: "Free lookup first. Create a free profile for AI scans and saved work. Pay only when you need unlimited scanner use, history, or team visibility.",
+  trustBoundary: "Manual lookup, calculators, Facility Assist, and cautious reference language stay useful without an account. AI scanner workflows require a free profile so scan usage and field misses are not anonymous. Paid lanes add capacity and saved job workflows; they do not create diagnosis, fitment, warranty, or partner guarantees.",
   plans: [
     {
-      name: "Free, No Account",
+      name: "Free to Start",
       planKey: "free_core",
       price: "$0",
       buyer: "Pool and spa techs who need a field answer now",
-      includes: ["Equipment code and symptom lookup", "Basic PartSnap with 3 app scans a month", "Dosing, volume, turnover, and filter calculators", "Opening, closing, weekly, and monthly checklists", "Offline manual tools after first load"],
+      includes: ["Equipment code and symptom lookup", "Dosing, volume, turnover, and filter calculators", "Opening, closing, weekly, and monthly checklists", "Offline manual tools after first load", "Free profile unlocks 3 AI scans monthly"],
       guardrail: "No diagnosis, fitment, warranty, or official partner claim."
     },
     {
-      name: "Free Save Profile",
+      name: "Free Field Profile",
       planKey: "free_save_profile",
       price: "$0",
-      buyer: "Techs who want to save the first few jobs by customer",
-      includes: ["Everything in free", "Save first 5 jobs on this device", "Capture customer, pool, and equipment context", "Attach PartSnap proof to a saved job", "Create cleaner notes before you leave the stop"],
-      guardrail: "Local device save profile only. Cloud sync and team controls require a paid/team lane."
+      buyer: "Techs who want PartSnap trials and a way for SplashLens to follow up on misses",
+      includes: ["Everything in free", "3 AI scans monthly tied to your email", "Save first 5 jobs on this device", "Capture customer, pool, and equipment context", "Attach PartSnap proof to a saved job", "Create cleaner notes before you leave the stop"],
+      guardrail: "Free profile captures identity and local job memory. Cloud sync and team controls require a paid/team lane."
     },
     {
       name: "Splash Lens Pro Unlimited",

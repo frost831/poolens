@@ -151,6 +151,26 @@ function getClientKey(request, body) {
   return `anon:${ip}:${ua.slice(0, 80)}`;
 }
 
+function clean(value, max = 160) {
+  return String(value || '').replace(/[\u0000-\u001f\u007f]/g, '').trim().slice(0, max);
+}
+
+function normalizeEmail(value) {
+  const email = clean(value, 180).toLowerCase();
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ? email : '';
+}
+
+function getFreeProfileEmail(body) {
+  return normalizeEmail(
+    body.free_profile_email ||
+    body.profileEmail ||
+    body.known_email ||
+    body.email ||
+    body.sl_email ||
+    '',
+  );
+}
+
 function truthy(value) {
   return /^(1|true|yes)$/i.test(String(value || '').trim());
 }
@@ -271,6 +291,96 @@ function secondsUntilNextMonth() {
   return Math.max(60, Math.ceil((nextMonth.getTime() - now.getTime()) / 1000));
 }
 
+async function recordFreeProfileScanUse(request, env, body, email, mode, usage) {
+  if (!env.SUBSCRIBERS_DB || !email) return;
+  const name = clean(body.known_name || body.free_profile_name || body.name, 140);
+  const company = clean(body.known_company || body.free_profile_company || body.company, 160);
+  const role = clean(body.known_role || body.free_profile_role || body.role || 'tech', 80);
+  const clientId = clean(body.clientId || body.client_id || body.deviceId, 120);
+  const path = clean(body.path || '', 300);
+  const referrer = clean(request.headers.get('Referer'), 500);
+  const userAgent = clean(request.headers.get('User-Agent'), 300);
+  const country = clean(request.cf && request.cf.country, 10);
+
+  try {
+    await env.SUBSCRIBERS_DB.prepare(
+      `CREATE TABLE IF NOT EXISTS free_profiles (
+        email TEXT PRIMARY KEY,
+        name TEXT,
+        company TEXT,
+        role TEXT,
+        source_feature TEXT,
+        first_client_id TEXT,
+        last_client_id TEXT,
+        first_path TEXT,
+        last_path TEXT,
+        user_agent TEXT,
+        referrer TEXT,
+        country TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )`
+    ).run();
+    await env.SUBSCRIBERS_DB.prepare(
+      `CREATE TABLE IF NOT EXISTS events (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        event TEXT NOT NULL,
+        source TEXT,
+        path TEXT,
+        plan TEXT,
+        mode TEXT,
+        props TEXT,
+        user_agent TEXT,
+        referrer TEXT,
+        country TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )`
+    ).run();
+    await env.SUBSCRIBERS_DB.prepare(
+      `INSERT INTO free_profiles (
+        email, name, company, role, source_feature, first_client_id, last_client_id, first_path, last_path, user_agent, referrer, country
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ON CONFLICT(email) DO UPDATE SET
+        name = CASE WHEN excluded.name != '' THEN excluded.name ELSE free_profiles.name END,
+        company = CASE WHEN excluded.company != '' THEN excluded.company ELSE free_profiles.company END,
+        role = CASE WHEN excluded.role != '' THEN excluded.role ELSE free_profiles.role END,
+        source_feature = excluded.source_feature,
+        last_client_id = excluded.last_client_id,
+        last_path = excluded.last_path,
+        user_agent = excluded.user_agent,
+        referrer = excluded.referrer,
+        country = excluded.country,
+        updated_at = CURRENT_TIMESTAMP`
+    ).bind(email, name, company, role, `scan_${mode}`, clientId, clientId, path, path, userAgent, referrer, country).run();
+    await env.SUBSCRIBERS_DB.prepare(
+      `INSERT INTO events (event, source, path, plan, mode, props, user_agent, referrer, country)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+    ).bind(
+      'free_profile_scan_used',
+      'app',
+      path,
+      'free_profile',
+      mode,
+      JSON.stringify({
+        known_email: email,
+        known_name: name,
+        known_company: company,
+        known_role: role,
+        client_id: clientId,
+        usage_count: usage?.count || 0,
+        usage_limit: usage?.limit || FREE_SCAN_LIMIT,
+        identity_source: 'free_scan_profile',
+        identity_confidence: 'provided-email',
+      }).slice(0, 2400),
+      userAgent,
+      referrer,
+      country,
+    ).run();
+  } catch (error) {
+    console.error('SplashLens free profile scan record error:', error);
+  }
+}
+
 async function enforceUsageQuota(request, env, headers, key, limit, source, upgradePath) {
   const limiter = env.SCAN_RATE_LIMITER || env.RATE_LIMITER;
 
@@ -364,11 +474,24 @@ async function enforceScanAccess(request, env, headers, body) {
     };
   }
 
+  const freeProfileEmail = getFreeProfileEmail(body);
+  if (!freeProfileEmail) {
+    return {
+      ok: false,
+      response: json({
+        error: 'Create a free SplashLens profile before using AI scans.',
+        profileRequired: true,
+        limit: FREE_SCAN_LIMIT,
+        upgrade: '/api/checkout?plan=monthly',
+      }, 401, headers),
+    };
+  }
+
   return enforceUsageQuota(
     request,
     env,
     headers,
-    getClientKey(request, body),
+    `free_profile:${freeProfileEmail}`,
     FREE_SCAN_LIMIT,
     'free_metered',
     '/api/checkout?plan=monthly',
@@ -433,6 +556,7 @@ export async function onRequestPost({ request, env }) {
 
   const meter = await enforceScanAccess(request, env, headers, body);
   if (!meter.ok) return meter.response;
+  await recordFreeProfileScanUse(request, env, body, getFreeProfileEmail(body), mode, meter.usage);
 
   try {
     const apiRes = await fetch(CLAUDE_API, {

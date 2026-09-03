@@ -6,6 +6,7 @@ const eventsEndpoint = readFileSync(new URL('../functions/api/events.js', import
 const amplitudeConfig = readFileSync(new URL('../functions/api/amplitude-config.js', import.meta.url), 'utf8');
 const amplitudeShared = readFileSync(new URL('../functions/_shared/amplitude.mjs', import.meta.url), 'utf8');
 const statsEndpoint = readFileSync(new URL('../functions/api/stats.js', import.meta.url), 'utf8');
+const freeProfileEndpoint = readFileSync(new URL('../functions/api/free-profile.js', import.meta.url), 'utf8');
 const wrangler = readFileSync(new URL('../wrangler.toml', import.meta.url), 'utf8');
 
 test('events endpoint accepts app analytics payload shapes', () => {
@@ -41,6 +42,15 @@ test('events endpoint normalizes identity and suppresses internal heartbeat nois
   assert.match(eventsEndpoint, /identity_confidence/);
   assert.match(eventsEndpoint, /internal_heartbeat_noise/);
   assert.match(eventsEndpoint, /forwardEventToAmplitude/);
+});
+
+test('free scanner profile endpoint captures durable identity before AI usage', () => {
+  assert.match(freeProfileEndpoint, /CREATE TABLE IF NOT EXISTS free_profiles/);
+  assert.match(freeProfileEndpoint, /email TEXT PRIMARY KEY/);
+  assert.match(freeProfileEndpoint, /Valid email required for free scanner profile/);
+  assert.match(freeProfileEndpoint, /free_scan_profile_captured/);
+  assert.match(freeProfileEndpoint, /SUBSCRIBERS_DB/);
+  assert.match(freeProfileEndpoint, /ON CONFLICT\(email\) DO UPDATE/);
 });
 
 test('app wrangler config declares the shared SplashLens events database binding', () => {

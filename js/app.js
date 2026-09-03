@@ -24,11 +24,11 @@ const LANGUAGE_LABELS = { en: 'English', es: 'Español' };
 const LOCALIZED_HEAD = {
   en: {
     title: 'SplashLens - Pool Service Field Reference and PartSnap',
-    description: 'SplashLens is a free no-account field reference app for pool, spa, hot tub, and swim spa service techs with PartSnap part identification assistance, Connected Pool Network troubleshooting, robot cleaner references, Balboa, Gecko, Waterway NEO, swim current, GFCI, sanitizer, pool equipment codes, dosing calculators, voice notes, checklists, and route tools.',
+    description: 'SplashLens is a free-to-start field reference app for pool, spa, hot tub, and swim spa service techs with PartSnap part identification assistance, Connected Pool Network troubleshooting, robot cleaner references, Balboa, Gecko, Waterway NEO, swim current, GFCI, sanitizer, pool equipment codes, dosing calculators, voice notes, checklists, and route tools.',
   },
   es: {
     title: 'SplashLens - Referencia de campo para piscinas y PartSnap',
-    description: 'SplashLens es una app gratuita, sin cuenta, para técnicos de piscinas, spas y swim spas con PartSnap, asistencia para identificar piezas, rutas de prueba, códigos de equipo, calculadoras de dosis, notas de voz, Facility Assist e historial de trabajo guardado.',
+    description: 'SplashLens es una app gratuita para empezar, para técnicos de piscinas, spas y swim spas con PartSnap, asistencia para identificar piezas, rutas de prueba, códigos de equipo, calculadoras de dosis, notas de voz, Facility Assist e historial de trabajo guardado.',
   },
 };
 const LOCALIZED_TEXT = {
@@ -1947,7 +1947,7 @@ function renderVerifiedProofNetwork() {
   if (isStoreShellMode()) {
     renderProofWorkflowOutput(
       'SplashLens FreeCore native build',
-      'Manual lookup, basic PartSnap, calculators, Facility Assist, saved drafts, and customer-safe proof summaries remain available without account or payment.',
+      'Manual lookup, calculators, Facility Assist, saved drafts, and customer-safe proof summaries remain free to start. AI scanner workflows require a free field profile so scan usage and misses are tied to a real contact.',
       `<div class="brain-grid" style="margin-top:10px;">
         <button type="button" class="brain-action green" onclick="startServiceProofWorkflow('visit')">Build proof</button>
         <button type="button" class="brain-action secondary" onclick="renderFieldLearningOS('proof')">Proof Review</button>
@@ -2047,19 +2047,67 @@ function getFieldSaveAccount() {
   return null;
 }
 
+async function syncFieldSaveProfile(profile, feature = 'saved_job') {
+  if (!navigator.onLine || !profile?.email) return false;
+  try {
+    const response = await fetch(SPLASHLENS_FREE_PROFILE_ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...getLanguageHeaders() },
+      body: JSON.stringify(withLanguageMetadata({
+        email: profile.email,
+        name: profile.name || '',
+        company: profile.company || '',
+        role: profile.role || getSplashLensRole() || 'tech',
+        feature,
+        sourceFeature: profile.sourceFeature || feature,
+        clientId: getScanClientId(),
+        path: `${window.location.pathname}${window.location.search}`,
+      })),
+    });
+    const payload = await response.json().catch(() => ({}));
+    const next = {
+      ...profile,
+      serverCaptured: Boolean(response.ok && payload.ok),
+      serverCaptureLastTriedAt: new Date().toISOString(),
+      serverCaptureStatus: response.ok && payload.ok ? 'stored' : String(payload.error || response.status || 'failed'),
+    };
+    localStorage.setItem(FIELD_SAVE_ACCOUNT_KEY, JSON.stringify(next));
+    if (next.serverCaptured) {
+      trackSplashLensEvent('free_save_profile_server_synced', {
+        feature,
+        role: next.role || getSplashLensRole() || 'tech',
+      });
+    }
+    return next.serverCaptured;
+  } catch {
+    const next = {
+      ...profile,
+      serverCaptured: false,
+      serverCaptureLastTriedAt: new Date().toISOString(),
+      serverCaptureStatus: 'network_error',
+    };
+    localStorage.setItem(FIELD_SAVE_ACCOUNT_KEY, JSON.stringify(next));
+    return false;
+  }
+}
+
 function ensureFieldSaveAccount(feature = 'saved_job') {
   const existing = getFieldSaveAccount();
   if (existing) {
     rememberSplashLensIdentity({
       email: existing.email,
+      name: existing.name || '',
       company: existing.company || '',
       role: getSplashLensRole() || 'tech',
     }, 'free_save_profile_returning');
+    syncFieldSaveProfile(existing, feature).catch(() => {});
     return true;
   }
 
   const wantsProfile = window.confirm(
-    'Lookup stays free. To save job history on this device, create a free SplashLens save profile now?'
+    feature.startsWith('scan_gate')
+      ? `Manual lookup stays free. Create a free SplashLens profile to unlock ${SCAN_LIMIT_FREE} AI scans this month and let us follow up on misses?`
+      : 'Manual lookup stays free. Create a free SplashLens profile to save job history and proof on this device?'
   );
   if (!wantsProfile) {
     trackSplashLensEvent('free_save_profile_gate_dismissed', { feature });
@@ -2068,7 +2116,7 @@ function ensureFieldSaveAccount(feature = 'saved_job') {
 
   const email = String(window.prompt('Email for your free SplashLens save profile:') || '').trim().toLowerCase();
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    window.alert('Enter a valid email before saving job history.');
+    window.alert('Enter a valid email before using AI scans or saving job history.');
     trackSplashLensEvent('free_save_profile_invalid_email', { feature });
     return false;
   }
@@ -2085,12 +2133,45 @@ function ensureFieldSaveAccount(feature = 'saved_job') {
   };
   localStorage.setItem(FIELD_SAVE_ACCOUNT_KEY, JSON.stringify(profile));
   rememberSplashLensIdentity({ email, name, company, role: profile.role }, 'free_save_profile_created');
+  syncFieldSaveProfile(profile, feature).catch(() => {});
   trackSplashLensEvent('free_save_profile_created', {
     feature,
     role: profile.role,
     company_provided: Boolean(company),
     name_provided: Boolean(name),
   });
+  return true;
+}
+
+async function ensureFreeScanProfile(mode = 'ai_scan', result = null, status = null) {
+  if (isPartSnapPro()) return true;
+  let profile = getFieldSaveAccount();
+  const feature = `scan_gate_${mode}`;
+
+  if (!profile && !ensureFieldSaveAccount(feature)) {
+    if (status) status.textContent = 'FREE PROFILE REQUIRED FOR AI SCAN';
+    if (result) {
+      result.innerHTML = `
+        <div style="background:#0f172a;border:1px solid #334155;border-left:4px solid #14b8a6;border-radius:14px;padding:18px;margin:0 0 14px;text-align:center;">
+          <p style="color:#ccfbf1;font-size:10px;font-weight:950;letter-spacing:.1em;text-transform:uppercase;margin-bottom:6px;">Free to start</p>
+          <p style="color:#f8fafc;font-size:18px;font-weight:950;line-height:1.15;margin-bottom:8px;">Create a free profile before AI scanning.</p>
+          <p style="color:#94a3b8;font-size:13px;line-height:1.5;margin-bottom:14px;">Manual lookup, calculators, guides, and checklists stay open. PartSnap, Error Scan, and Strip Scan include ${SCAN_LIMIT_FREE} free AI scans each month after profile capture so SplashLens can follow up on real misses.</p>
+          <button type="button" onclick="ensureFieldSaveAccount('${escAttr(feature)}');updateAIStatusBar()" style="width:100%;background:#14b8a6;color:#042f2e;border:0;border-radius:10px;padding:12px 10px;font-size:13px;font-weight:950;cursor:pointer;">Create free profile</button>
+        </div>`;
+    }
+    trackSplashLensEvent('free_scan_profile_required', { mode, feature });
+    return false;
+  }
+
+  profile = getFieldSaveAccount();
+  if (!profile) return false;
+  rememberSplashLensIdentity({
+    email: profile.email,
+    name: profile.name || '',
+    company: profile.company || '',
+    role: profile.role || getSplashLensRole() || 'tech',
+  }, 'free_scan_profile');
+  await syncFieldSaveProfile(profile, feature);
   return true;
 }
 
@@ -3910,7 +3991,7 @@ const SERVICE_PROOF_FAQ = [
   },
   {
     keys: ['price', 'paid', 'subscription'],
-    answer: 'The FreeCore app stays useful: lookup, basic PartSnap, calculators, checklists, Facility Assist, and 3 PartSnap app scans a month stay open. A free save profile lets a tech start saving job context on this device. Splash Lens Pro Unlimited is the paid lane for unlimited scanner use and saved job memory where paid access is available. Teams is for owners who want crew visibility and company reporting. Partner/manufacturer/training ideas are handled through direct discussion, not self-serve checkout.'
+    answer: 'The FreeCore app stays useful: manual lookup, calculators, checklists, and Facility Assist stay open. A free field profile unlocks 3 monthly AI scans and lets a tech start saving job context on this device. Splash Lens Pro Unlimited is the paid lane for unlimited scanner use and saved job memory where paid access is available. Teams is for owners who want crew visibility and company reporting. Partner/manufacturer/training ideas are handled through direct discussion, not self-serve checkout.'
   },
   {
     keys: ['trend', 'callback', 'risk', 'repeat'],
@@ -6448,6 +6529,7 @@ const PARTSNAP_MONTHLY_LINK = '/api/checkout?plan=monthly';
 const PARTSNAP_YEARLY_LINK = '/api/checkout?plan=yearly';
 const PARTSNAP_RESTORE_ENDPOINT = '/api/restore-entitlement';
 const SPLASHLENS_EVENT_ENDPOINT = '/api/events';
+const SPLASHLENS_FREE_PROFILE_ENDPOINT = '/api/free-profile';
 const PARTSNAP_FEEDBACK_ENDPOINT = '/api/partsnap-feedback';
 const SPLASHLENS_HEARTBEAT_INTERVAL_MS = 120000;
 const PARTSNAP_REVIEW_KEY = 'splashlens-partsnap-review-tickets';
@@ -6469,10 +6551,11 @@ function updateAIStatusBar() {
   if (!dot || !label) return;
   if (navigator.onLine) {
     const usage = getScanUsage();
+    const hasFreeProfile = Boolean(getFieldSaveAccount());
     dot.style.background   = '#16a34a';
     label.textContent      = getScanEntitlementToken()
       ? 'SIGNED SCANNER ACCESS READY'
-      : isPartSnapPro() ? 'PRO UNLIMITED READY' : `AI READY - ${Math.max(0, SCAN_LIMIT_FREE - usage.count)} FREE SCANS LEFT`;
+      : isPartSnapPro() ? 'PRO UNLIMITED READY' : hasFreeProfile ? `AI READY - ${Math.max(0, SCAN_LIMIT_FREE - usage.count)} PROFILE SCANS LEFT` : `FREE PROFILE UNLOCKS ${SCAN_LIMIT_FREE} AI SCANS`;
     label.style.color      = '#4ade80';
   } else {
     dot.style.background   = '#64748b';
@@ -6825,7 +6908,7 @@ function stopCamera() {
   }
 }
 
-function captureAndAnalyze() {
+async function captureAndAnalyze() {
   const video  = document.getElementById('scan-video');
   const canvas = document.getElementById('scan-canvas');
   const status = document.getElementById('scan-camera-status');
@@ -6843,6 +6926,8 @@ function captureAndAnalyze() {
 
   // AI-first path: call CF Worker when online
   if (navigator.onLine) {
+    const aiMode = isPartsScan ? 'parts_snap' : isStripScan ? 'test_strip' : 'error_code';
+    if (!(await ensureFreeScanProfile(aiMode, result, status))) return;
     if (!canUseAIScan()) {
       showScanLimitModal(result, status);
       return;
@@ -6865,7 +6950,6 @@ function captureAndAnalyze() {
         });
       }
     }
-    const aiMode = isPartsScan ? 'parts_snap' : isStripScan ? 'test_strip' : 'error_code';
     callAIScan(canvas, aiMode, result, status);
     return;
   }
@@ -7614,7 +7698,7 @@ function trackReferralLandingOpen() {
 }
 
 function canUseAIScan() {
-  return isPartSnapPro() || getScanUsage().count < SCAN_LIMIT_FREE;
+  return isPartSnapPro() || (Boolean(getFieldSaveAccount()) && getScanUsage().count < SCAN_LIMIT_FREE);
 }
 
 function syncScanUsageFromServer(serverUsage) {
@@ -7695,7 +7779,7 @@ function showScanLimitModal(result, status) {
       result.innerHTML = `
         <div style="background:#1e293b;border:1px solid #334155;border-radius:14px;padding:18px;margin:0 0 14px;text-align:center;border-left:4px solid #0284c7;">
           <p style="color:#f1f5f9;font-size:19px;font-weight:900;margin-bottom:6px;">You've used ${usage.count} of ${SCAN_LIMIT_FREE} free AI scans this month.</p>
-          <p style="color:#94a3b8;font-size:13px;line-height:1.5;margin-bottom:14px;">Manual code lookup, dosing, reports, filters, and checklists stay free. Paid upgrades are not offered inside this native store build.</p>
+          <p style="color:#94a3b8;font-size:13px;line-height:1.5;margin-bottom:14px;">Manual code lookup, dosing, reports, filters, and checklists stay free. Your free profile keeps scanner usage tied to you instead of disposable browser storage. Paid upgrades are not offered inside this native store build.</p>
           <button onclick="setScanMode('lookup');document.getElementById('scan-result').innerHTML=''" style="background:#334155;color:#fff;border:0;border-radius:10px;padding:11px 14px;font-size:12px;font-weight:800;cursor:pointer;width:100%;">Use Manual Lookup</button>
         </div>`;
     }
@@ -7705,7 +7789,7 @@ function showScanLimitModal(result, status) {
     result.innerHTML = `
       <div style="background:#1e293b;border:1px solid #7c3aed;border-radius:14px;padding:18px;margin:0 0 14px;text-align:center;border-left:4px solid #7c3aed;">
         <p style="color:#f1f5f9;font-size:19px;font-weight:900;margin-bottom:6px;">You've used ${usage.count} of ${SCAN_LIMIT_FREE} free AI scans this month.</p>
-        <p style="color:#94a3b8;font-size:13px;line-height:1.5;margin-bottom:14px;">Manual code lookup, dosing, reports, filters, and checklists stay free. Upgrade Splash Lens Pro Unlimited for unlimited scanner access and saved job memory where paid access is available.</p>
+        <p style="color:#94a3b8;font-size:13px;line-height:1.5;margin-bottom:14px;">Manual code lookup, dosing, reports, filters, and checklists stay free. Your free profile keeps scanner usage tied to you. Upgrade Splash Lens Pro Unlimited for unlimited scanner access and saved job memory where paid access is available.</p>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
           <a href="${PARTSNAP_MONTHLY_LINK}" target="_blank" rel="noopener" onclick="trackSplashLensEvent('upgrade_click',{plan:'monthly'})" style="background:#0284c7;color:#fff;text-decoration:none;border-radius:10px;padding:12px 8px;font-size:13px;font-weight:900;">$29 / mo</a>
           <a href="${PARTSNAP_YEARLY_LINK}" target="_blank" rel="noopener" onclick="trackSplashLensEvent('upgrade_click',{plan:'yearly'})" style="background:#16a34a;color:#fff;text-decoration:none;border-radius:10px;padding:12px 8px;font-size:13px;font-weight:900;">$249 / yr</a>
@@ -7964,6 +8048,10 @@ async function callAIScan(canvas, mode, result, status) {
     if (entitlementToken) headers['X-SplashLens-Entitlement-Token'] = entitlementToken;
     const partSnapRecovery = mode === 'parts_snap' ? getPartSnapRecoveryContext() : null;
     const identity = getSplashLensIdentityProfile();
+    const fieldProfile = getFieldSaveAccount() || {};
+    const knownEmail = identity.known_email || fieldProfile.email || '';
+    const knownCompany = identity.known_company || fieldProfile.company || '';
+    const knownRole = identity.known_role || fieldProfile.role || getSplashLensRole() || '';
     const res = await fetch('/api/scan', {
       method:  'POST',
       headers,
@@ -7972,19 +8060,29 @@ async function callAIScan(canvas, mode, result, status) {
         mode,
         clientId: getScanClientId(),
         store_shell: getStoreShellMode() || '',
-        known_email: identity.known_email || '',
-        known_company: identity.known_company || '',
-        known_role: identity.known_role || '',
+        known_email: knownEmail,
+        known_name: identity.known_name || fieldProfile.name || '',
+        known_company: knownCompany,
+        known_role: knownRole,
+        free_profile_email: fieldProfile.email || knownEmail,
+        free_profile_company: fieldProfile.company || knownCompany,
+        free_profile_role: fieldProfile.role || knownRole,
         lead_id: identity.lead_id || '',
         pilot_id: identity.pilot_id || '',
         participant_id: identity.participant_id || '',
-        identity_source: identity.identity_source || '',
-        identity_confidence: identity.identity_confidence || '',
+        identity_source: identity.identity_source || (fieldProfile.email ? 'free_scan_profile' : ''),
+        identity_confidence: identity.identity_confidence || (fieldProfile.email ? 'provided-email' : ''),
         partSnapRecovery,
       })),
     });
     const payload = await res.json().catch(() => ({}));
     if (!res.ok) {
+      if (payload.profileRequired) {
+        localStorage.removeItem(FIELD_SAVE_ACCOUNT_KEY);
+        trackSplashLensEvent('scan_profile_required_server', { mode, limit: payload.limit || SCAN_LIMIT_FREE });
+        await ensureFreeScanProfile(mode, result, status);
+        return;
+      }
       if (res.status === 429 && /free scan limit/i.test(payload.error || '')) {
         syncScanUsageFromServer({ source: 'free_metered', count: payload.limit || SCAN_LIMIT_FREE });
         trackSplashLensEvent('scan_limit_reached_server', { mode, limit: payload.limit || SCAN_LIMIT_FREE, upgrade: payload.upgrade || '' });
@@ -8486,7 +8584,7 @@ function renderPostValueUpgradeOffer() {
     <div style="background:#0f172a;border:1px solid #334155;border-radius:10px;padding:12px;margin:0 0 16px;">
       <p style="color:#7dd3fc;font-size:10px;font-weight:950;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;">Splash Lens Pro Unlimited</p>
       <p style="color:#f8fafc;font-size:13px;font-weight:950;margin-bottom:4px;">Need PartSnap throughout the route?</p>
-      <p style="color:#94a3b8;font-size:11px;line-height:1.4;margin-bottom:9px;">The FreeCore app includes 3 PartSnap app scans a month. Pro Unlimited unlocks unlimited scanner access, saved job memory, customer-safe summaries, and boss/counter packets where paid access is available. Code lookup, dosing, notes, and core field tools stay free.</p>
+      <p style="color:#94a3b8;font-size:11px;line-height:1.4;margin-bottom:9px;">A free field profile includes 3 AI scans each month. Pro Unlimited unlocks unlimited scanner access, saved job memory, customer-safe summaries, and boss/counter packets where paid access is available. Code lookup, dosing, notes, and core field tools stay free to start.</p>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;">
         <a href="${PARTSNAP_MONTHLY_LINK}" target="_blank" rel="noopener" onclick="trackPostValueUpgrade('monthly')" style="background:#0284c7;color:#fff;text-decoration:none;text-align:center;border-radius:8px;padding:10px 7px;font-size:11px;font-weight:950;">$29 monthly</a>
         <a href="${PARTSNAP_YEARLY_LINK}" target="_blank" rel="noopener" onclick="trackPostValueUpgrade('yearly')" style="background:#16a34a;color:#fff;text-decoration:none;text-align:center;border-radius:8px;padding:10px 7px;font-size:11px;font-weight:950;">$249 yearly</a>
