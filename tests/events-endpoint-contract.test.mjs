@@ -8,6 +8,7 @@ const amplitudeShared = readFileSync(new URL('../functions/_shared/amplitude.mjs
 const statsEndpoint = readFileSync(new URL('../functions/api/stats.js', import.meta.url), 'utf8');
 const freeProfileEndpoint = readFileSync(new URL('../functions/api/free-profile.js', import.meta.url), 'utf8');
 const accountEndpoint = readFileSync(new URL('../functions/api/account.js', import.meta.url), 'utf8');
+const teamEndpoint = readFileSync(new URL('../functions/api/team.js', import.meta.url), 'utf8');
 const wrangler = readFileSync(new URL('../wrangler.toml', import.meta.url), 'utf8');
 
 test('events endpoint accepts app analytics payload shapes', () => {
@@ -72,6 +73,23 @@ test('account endpoint requires a signed passwordless account token', () => {
   assert.match(accountEndpoint, /user_accounts/);
   assert.match(accountEndpoint, /freeScanUsage/);
   assert.match(accountEndpoint, /recentEvents/);
+});
+
+test('team endpoint supports protected team workspaces and member invites', () => {
+  assert.match(teamEndpoint, /\/api\/team/);
+  assert.match(teamEndpoint, /const ACCOUNT_TOKEN_PREFIX = 'sl_account_v1'/);
+  assert.match(teamEndpoint, /X-SplashLens-Account-Token/);
+  assert.match(teamEndpoint, /CREATE TABLE IF NOT EXISTS teams/);
+  assert.match(teamEndpoint, /CREATE TABLE IF NOT EXISTS team_members/);
+  assert.match(teamEndpoint, /CREATE TABLE IF NOT EXISTS team_invites/);
+  assert.match(teamEndpoint, /team_workspace_created/);
+  assert.match(teamEndpoint, /team_workspace_archived/);
+  assert.match(teamEndpoint, /team_member_invited/);
+  assert.match(teamEndpoint, /team_member_joined/);
+  assert.match(teamEndpoint, /SENDGRID_API_KEY/);
+  assert.match(teamEndpoint, /Only team owners or admins can invite members/);
+  assert.match(teamEndpoint, /already an active team member/);
+  assert.match(teamEndpoint, /Only the team owner can archive this workspace/);
 });
 
 test('app wrangler config declares the shared SplashLens events database binding', () => {

@@ -8,6 +8,8 @@ const shell = fs.readFileSync(new URL('../index.html', import.meta.url), 'utf8')
 const scan = fs.readFileSync(new URL('../functions/api/scan.js', import.meta.url), 'utf8');
 const checkout = fs.readFileSync(new URL('../functions/api/checkout.js', import.meta.url), 'utf8');
 const account = fs.readFileSync(new URL('../functions/api/account.js', import.meta.url), 'utf8');
+const team = fs.readFileSync(new URL('../functions/api/team.js', import.meta.url), 'utf8');
+const sw = fs.readFileSync(new URL('../sw.js', import.meta.url), 'utf8');
 
 test('first open goes straight to field workflow instead of forcing persona picker', () => {
   assert.match(app, /field_home_opened_without_role_gate/);
@@ -45,6 +47,7 @@ test('saving job history requires a free save profile signal', () => {
   assert.match(app, /const FREE_PROFILE_TOKEN_KEY = 'splashlens-free-profile-token-v1'/);
   assert.match(app, /const ACCOUNT_TOKEN_KEY = 'splashlens-account-token-v1'/);
   assert.match(app, /const SPLASHLENS_ACCOUNT_ENDPOINT = '\/api\/account'/);
+  assert.match(app, /const SPLASHLENS_TEAM_ENDPOINT = '\/api\/team'/);
   assert.match(app, /function ensureFieldSaveAccount/);
   assert.match(app, /const SPLASHLENS_FREE_PROFILE_ENDPOINT = '\/api\/free-profile'/);
   assert.match(app, /requestFreeProfileCode/);
@@ -53,16 +56,28 @@ test('saving job history requires a free save profile signal', () => {
   assert.match(app, /X-SplashLens-Account-Token/);
   assert.match(app, /captureAccountSessionFromUrl/);
   assert.match(app, /openSplashLensAccount/);
+  assert.match(app, /createSplashLensTeamWorkspace/);
+  assert.match(app, /inviteSplashLensTeamMember/);
+  assert.match(app, /acceptSplashLensTeamInvite/);
+  assert.match(app, /Team workspace/);
   assert.match(app, /free_profile_token: freeProfileToken/);
   assert.match(app, /account_token: accountToken/);
   assert.match(scan, /const PROFILE_TOKEN_PREFIX = 'sl_profile_v1'/);
   assert.match(scan, /const ACCOUNT_TOKEN_PREFIX = 'sl_account_v1'/);
   assert.match(account, /const ACCOUNT_TOKEN_PREFIX = 'sl_account_v1'/);
+  assert.match(team, /const ACCOUNT_TOKEN_PREFIX = 'sl_account_v1'/);
+  assert.match(team, /CREATE TABLE IF NOT EXISTS team_members/);
   assert.match(app, /free_save_profile_created/);
   assert.match(app, /free_save_profile_server_synced/);
   assert.match(app, /ensureFieldSaveAccount\('service_report_saved'\)/);
   assert.match(app, /ensureFieldSaveAccount\('partsnap_field_stop_saved'\)/);
   assert.match(app, /ensureFieldSaveAccount\('partsnap_saved_to_pool'\)/);
+});
+
+test('service worker cache version ships the newest account bundle', () => {
+  assert.match(shell, /app\.js\?v=20260903-team-workspace/);
+  assert.match(sw, /splashlens-v7-team-workspace/);
+  assert.match(sw, /app\.js\?v=20260903-team-workspace/);
 });
 
 test('checkout exposes a JSON catalog and Splash Lens Pro Unlimited metadata', () => {

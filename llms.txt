@@ -1,6 +1,6 @@
 ﻿# SplashLens App
 
-> Free-core, offline-first PWA field reference tool for pool service technicians. 230+ pool and spa field entries, chemical dosing calculators, online AI scanner support (error codes, parts ID, test-strip triage), SLAM multi-day tracker, filter guides, checklists, and route tracking. Manual field tools work without sign-in after first load; online AI scanner workflows require internet and a verified SplashLens email session.
+> Free-core, offline-first PWA field reference tool for pool service technicians. 230+ pool and spa field entries, chemical dosing calculators, online AI scanner support (error codes, parts ID, test-strip triage), SLAM multi-day tracker, filter guides, checklists, route tracking, passwordless email accounts, and lightweight team workspaces. Manual field tools work without sign-in after first load; online AI scanner workflows require internet and a verified SplashLens email session.
 
 ## App URL
 

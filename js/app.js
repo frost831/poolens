@@ -216,6 +216,7 @@ const FIELD_SAVE_ACCOUNT_KEY = 'splashlens-free-save-profile-v1';
 const FREE_PROFILE_TOKEN_KEY = 'splashlens-free-profile-token-v1';
 const ACCOUNT_TOKEN_KEY = 'splashlens-account-token-v1';
 const SPLASHLENS_ACCOUNT_ENDPOINT = '/api/account';
+const SPLASHLENS_TEAM_ENDPOINT = '/api/team';
 const SPLASHLENS_ROLES = ['tech', 'facility', 'counter', 'trainer'];
 let facilitySessionMode = '';
 let facilityForcedMode = false;
@@ -2165,6 +2166,113 @@ async function fetchSplashLensAccountSnapshot() {
   return payload;
 }
 
+async function splashLensTeamRequest(body = null) {
+  const profile = getFieldSaveAccount();
+  const accountToken = profile?.accountToken || localStorage.getItem(ACCOUNT_TOKEN_KEY) || '';
+  if (!accountToken) throw new Error('Verify your SplashLens email before using team workspaces.');
+  const options = body
+    ? {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-SplashLens-Account-Token': accountToken, ...getLanguageHeaders() },
+        body: JSON.stringify(body),
+      }
+    : {
+        method: 'GET',
+        headers: { 'X-SplashLens-Account-Token': accountToken, ...getLanguageHeaders() },
+      };
+  const response = await fetch(SPLASHLENS_TEAM_ENDPOINT, options);
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok || !payload.ok) throw new Error(payload.error || 'Team workspace could not be loaded.');
+  return payload;
+}
+
+async function createSplashLensTeamWorkspace() {
+  const profile = getFieldSaveAccount();
+  const defaultName = profile?.company || profile?.name || 'SplashLens Team';
+  const name = String(window.prompt('Team/workspace name:', defaultName) || '').trim();
+  if (!name) return;
+  try {
+    await splashLensTeamRequest({ action: 'create_team', name });
+    trackSplashLensEvent('team_workspace_create_clicked', { has_company_name: Boolean(profile?.company) });
+    openSplashLensAccount();
+  } catch (error) {
+    window.alert(error.message || 'SplashLens could not create that team workspace.');
+  }
+}
+
+async function inviteSplashLensTeamMember(teamId, teamName = '') {
+  const email = String(window.prompt(`Invite tech email${teamName ? ` for ${teamName}` : ''}:`) || '').trim().toLowerCase();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    if (email) window.alert('Enter a valid invite email.');
+    return;
+  }
+  const role = String(window.prompt('Role: member or admin', 'member') || 'member').trim().toLowerCase();
+  try {
+    const payload = await splashLensTeamRequest({ action: 'invite_member', teamId, email, role });
+    trackSplashLensEvent('team_member_invite_clicked', { team_id: teamId, email_sent: Boolean(payload.emailSent), role });
+    window.alert(payload.emailSent ? 'Invite sent from SplashLens.' : `Invite saved. Email did not send automatically: ${payload.emailError || 'unknown email issue'}`);
+    openSplashLensAccount();
+  } catch (error) {
+    window.alert(error.message || 'SplashLens could not send that team invite.');
+  }
+}
+
+async function acceptSplashLensTeamInvite(inviteId = '') {
+  try {
+    await splashLensTeamRequest({ action: 'accept_invite', inviteId });
+    trackSplashLensEvent('team_invite_accept_clicked', { invite_id: inviteId || 'latest' });
+    openSplashLensAccount();
+  } catch (error) {
+    window.alert(error.message || 'SplashLens could not accept that invite.');
+  }
+}
+
+function renderSplashLensTeamSection(teamPayload = {}) {
+  const teams = Array.isArray(teamPayload.teams) ? teamPayload.teams : [];
+  const invites = Array.isArray(teamPayload.pendingInvites) ? teamPayload.pendingInvites : [];
+  const inviteHtml = invites.length ? `
+    <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:11px;margin-bottom:10px;">
+      <p style="color:#92400e;font-size:10px;font-weight:950;text-transform:uppercase;letter-spacing:.08em;margin-bottom:7px;">Pending invite</p>
+      ${invites.slice(0, 3).map((invite) => `
+        <div style="display:flex;justify-content:space-between;gap:8px;align-items:center;border-top:1px solid #fde68a;padding:8px 0 0;margin-top:8px;">
+          <div>
+            <strong style="display:block;color:#451a03;font-size:13px;">${escHtml(invite.teamName || 'SplashLens team')}</strong>
+            <span style="display:block;color:#92400e;font-size:11px;">Role: ${escHtml(invite.role || 'member')}</span>
+          </div>
+          <button type="button" onclick="acceptSplashLensTeamInvite('${escAttr(invite.id || '')}')" style="border:0;border-radius:8px;background:#f59e0b;color:#451a03;font-size:11px;font-weight:950;padding:9px 10px;cursor:pointer;">Accept</button>
+        </div>`).join('')}
+    </div>` : '';
+  const teamHtml = teams.length ? `
+    ${teams.slice(0, 4).map((team) => {
+      const canInvite = ['owner', 'admin'].includes(String(team.role || '').toLowerCase());
+      return `
+        <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:11px;margin-bottom:8px;">
+          <div style="display:flex;justify-content:space-between;gap:8px;align-items:center;">
+            <div>
+              <strong style="display:block;color:#0f172a;font-size:14px;">${escHtml(team.name || 'SplashLens Team')}</strong>
+              <span style="display:block;color:#64748b;font-size:11px;">${escHtml(team.role || 'member')} workspace</span>
+            </div>
+            ${canInvite ? `<button type="button" onclick="inviteSplashLensTeamMember('${escAttr(team.id || '')}','${escAttr(team.name || 'team')}')" style="border:1px solid #0369a1;border-radius:8px;background:#fff;color:#0369a1;font-size:11px;font-weight:950;padding:9px 10px;cursor:pointer;">Invite</button>` : ''}
+          </div>
+        </div>`;
+    }).join('')}` : `
+    <p style="color:#64748b;font-size:12px;line-height:1.45;margin-bottom:10px;">Create a team workspace when you want techs tied to the same proof and scanner layer. This is the foundation for Team Proof OS.</p>`;
+
+  return `
+    <div style="background:#ecfdf5;border:1px solid #bbf7d0;border-radius:12px;padding:13px;margin-bottom:12px;">
+      <div style="display:flex;justify-content:space-between;gap:10px;align-items:start;margin-bottom:10px;">
+        <div>
+          <p style="color:#047857;font-size:10px;font-weight:950;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;">Team workspace</p>
+          <strong style="display:block;color:#064e3b;font-size:15px;">Crew accounts without a heavy CRM.</strong>
+        </div>
+        <button type="button" onclick="createSplashLensTeamWorkspace()" style="border:0;border-radius:9px;background:#047857;color:#fff;font-size:11px;font-weight:950;padding:10px 11px;cursor:pointer;">Create</button>
+      </div>
+      ${inviteHtml}
+      ${teamHtml}
+      <p style="color:#047857;font-size:10px;line-height:1.35;margin:8px 0 0;">Team invites require the invited tech to verify the same email before joining. That keeps workspace access tied to a real account session.</p>
+    </div>`;
+}
+
 function removeAccountLoginParams() {
   try {
     const url = new URL(window.location.href);
@@ -2230,6 +2338,10 @@ async function openSplashLensAccount() {
 
   try {
     const payload = await fetchSplashLensAccountSnapshot();
+    const teamPayload = await splashLensTeamRequest().catch((error) => {
+      trackSplashLensEvent('team_workspace_snapshot_failed', { error: String(error.message || error).slice(0, 120) });
+      return { teams: [], pendingInvites: [], unavailable: true };
+    });
     const account = payload.account || {};
     const scanner = payload.scanner || {};
     const remaining = Math.max(0, Number(scanner.limit || SCAN_LIMIT_FREE) - Number(scanner.count || 0));
@@ -2259,6 +2371,7 @@ async function openSplashLensAccount() {
           <strong style="display:block;color:#f8fafc;font-size:14px;margin-bottom:4px;">What this unlocks</strong>
           <p style="color:#cbd5e1;font-size:12px;line-height:1.5;margin:0;">Your free scanner allowance is now tied to this verified email, not just browser storage. Manual lookup stays open; Pro unlocks extended scanner and saved proof workflows where paid access is available.</p>
         </div>
+        ${renderSplashLensTeamSection(teamPayload)}
         ${(payload.recentEvents || []).length ? `
           <p style="color:#0f172a;font-size:12px;font-weight:950;margin-bottom:7px;">Recent account activity</p>
           ${(payload.recentEvents || []).slice(0, 6).map((event) => `
