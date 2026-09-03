@@ -213,6 +213,7 @@ const FIELD_CHALLENGE_COMPLETED_KEY = 'splashlens-field-challenge-completed-v1';
 const FIELD_REFERRAL_PROMPT_KEY = 'splashlens-field-referral-prompt-v1';
 const FIELD_IDENTITY_PROMPT_KEY = 'splashlens-field-identity-prompt-v1';
 const FIELD_SAVE_ACCOUNT_KEY = 'splashlens-free-save-profile-v1';
+const FREE_PROFILE_TOKEN_KEY = 'splashlens-free-profile-token-v1';
 const SPLASHLENS_ROLES = ['tech', 'facility', 'counter', 'trainer'];
 let facilitySessionMode = '';
 let facilityForcedMode = false;
@@ -2042,18 +2043,33 @@ async function openSplashLensPaidLane(planKey, label) {
 function getFieldSaveAccount() {
   try {
     const account = JSON.parse(localStorage.getItem(FIELD_SAVE_ACCOUNT_KEY) || 'null');
-    if (account && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(account.email || ''))) return account;
+    if (account && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(account.email || ''))) {
+      const token = account.profileToken || localStorage.getItem(FREE_PROFILE_TOKEN_KEY) || '';
+      return token ? { ...account, profileToken: token } : account;
+    }
   } catch {}
   return null;
 }
 
 async function syncFieldSaveProfile(profile, feature = 'saved_job') {
   if (!navigator.onLine || !profile?.email) return false;
+  if (!profile.profileToken) return false;
+  return true;
+}
+
+function isVerifiedFieldProfile(profile) {
+  if (!profile?.email || !String(profile.profileToken || '').startsWith('sl_profile_v1.')) return false;
+  const expiresAt = Date.parse(profile.tokenExpiresAt || profile.profileTokenExpiresAt || '');
+  return !Number.isFinite(expiresAt) || expiresAt > Date.now() + 60000;
+}
+
+async function requestFreeProfileCode(profile, feature = 'scan_gate') {
   try {
     const response = await fetch(SPLASHLENS_FREE_PROFILE_ENDPOINT, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...getLanguageHeaders() },
       body: JSON.stringify(withLanguageMetadata({
+        action: 'request_code',
         email: profile.email,
         name: profile.name || '',
         company: profile.company || '',
@@ -2065,29 +2081,61 @@ async function syncFieldSaveProfile(profile, feature = 'saved_job') {
       })),
     });
     const payload = await response.json().catch(() => ({}));
+    if (!response.ok || !payload.ok) throw new Error(payload.error || 'Could not send verification code.');
+    trackSplashLensEvent('free_scan_profile_code_requested', {
+      feature,
+      role: profile.role || getSplashLensRole() || 'tech',
+      email_sent: Boolean(payload.emailSent),
+    });
+    return payload;
+  } catch (error) {
+    trackSplashLensEvent('free_scan_profile_code_request_failed', { feature, error: String(error.message || error).slice(0, 120) });
+    throw error;
+  }
+}
+
+async function verifyFreeProfileCode(profile, code, feature = 'scan_gate') {
+  try {
+    const response = await fetch(SPLASHLENS_FREE_PROFILE_ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...getLanguageHeaders() },
+      body: JSON.stringify(withLanguageMetadata({
+        action: 'verify_code',
+        email: profile.email,
+        code,
+        name: profile.name || '',
+        company: profile.company || '',
+        role: profile.role || getSplashLensRole() || 'tech',
+        feature,
+        sourceFeature: profile.sourceFeature || feature,
+        clientId: getScanClientId(),
+        path: `${window.location.pathname}${window.location.search}`,
+      })),
+    });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok || !payload.ok || !payload.profileToken) throw new Error(payload.error || 'Verification failed.');
     const next = {
       ...profile,
-      serverCaptured: Boolean(response.ok && payload.ok),
+      profileToken: payload.profileToken,
+      tokenExpiresAt: payload.tokenExpiresAt || '',
+      serverCaptured: true,
+      verified: true,
+      verifiedAt: new Date().toISOString(),
       serverCaptureLastTriedAt: new Date().toISOString(),
-      serverCaptureStatus: response.ok && payload.ok ? 'stored' : String(payload.error || response.status || 'failed'),
+      serverCaptureStatus: 'verified',
     };
+    localStorage.setItem(FREE_PROFILE_TOKEN_KEY, payload.profileToken);
     localStorage.setItem(FIELD_SAVE_ACCOUNT_KEY, JSON.stringify(next));
-    if (next.serverCaptured) {
-      trackSplashLensEvent('free_save_profile_server_synced', {
+    rememberSplashLensIdentity({ email: next.email, name: next.name, company: next.company, role: next.role }, 'free_scan_profile_verified');
+    trackSplashLensEvent('free_save_profile_server_synced', {
         feature,
         role: next.role || getSplashLensRole() || 'tech',
+        verified: true,
       });
-    }
-    return next.serverCaptured;
+    return next;
   } catch {
-    const next = {
-      ...profile,
-      serverCaptured: false,
-      serverCaptureLastTriedAt: new Date().toISOString(),
-      serverCaptureStatus: 'network_error',
-    };
-    localStorage.setItem(FIELD_SAVE_ACCOUNT_KEY, JSON.stringify(next));
-    return false;
+    trackSplashLensEvent('free_scan_profile_verification_failed', { feature });
+    throw new Error('SplashLens could not verify that code. Try again or request a new one.');
   }
 }
 
@@ -2154,9 +2202,9 @@ async function ensureFreeScanProfile(mode = 'ai_scan', result = null, status = n
       result.innerHTML = `
         <div style="background:#0f172a;border:1px solid #334155;border-left:4px solid #14b8a6;border-radius:14px;padding:18px;margin:0 0 14px;text-align:center;">
           <p style="color:#ccfbf1;font-size:10px;font-weight:950;letter-spacing:.1em;text-transform:uppercase;margin-bottom:6px;">Free to start</p>
-          <p style="color:#f8fafc;font-size:18px;font-weight:950;line-height:1.15;margin-bottom:8px;">Create a free profile before AI scanning.</p>
-          <p style="color:#94a3b8;font-size:13px;line-height:1.5;margin-bottom:14px;">Manual lookup, calculators, guides, and checklists stay open. PartSnap, Error Scan, and Strip Scan include ${SCAN_LIMIT_FREE} free AI scans each month after profile capture so SplashLens can follow up on real misses.</p>
-          <button type="button" onclick="ensureFieldSaveAccount('${escAttr(feature)}');updateAIStatusBar()" style="width:100%;background:#14b8a6;color:#042f2e;border:0;border-radius:10px;padding:12px 10px;font-size:13px;font-weight:950;cursor:pointer;">Create free profile</button>
+          <p style="color:#f8fafc;font-size:18px;font-weight:950;line-height:1.15;margin-bottom:8px;">Verify a free profile before AI scanning.</p>
+          <p style="color:#94a3b8;font-size:13px;line-height:1.5;margin-bottom:14px;">Manual lookup, calculators, guides, and checklists stay open. PartSnap, Error Scan, and Strip Scan include ${SCAN_LIMIT_FREE} free AI scans each month after email verification so SplashLens can follow up on real misses.</p>
+          <button type="button" onclick="ensureFreeScanProfile('${escAttr(mode)}').then(updateAIStatusBar)" style="width:100%;background:#14b8a6;color:#042f2e;border:0;border-radius:10px;padding:12px 10px;font-size:13px;font-weight:950;cursor:pointer;">Verify free profile</button>
         </div>`;
     }
     trackSplashLensEvent('free_scan_profile_required', { mode, feature });
@@ -2165,6 +2213,42 @@ async function ensureFreeScanProfile(mode = 'ai_scan', result = null, status = n
 
   profile = getFieldSaveAccount();
   if (!profile) return false;
+  if (!isVerifiedFieldProfile(profile)) {
+    if (!navigator.onLine) {
+      if (status) status.textContent = 'INTERNET REQUIRED TO VERIFY FREE PROFILE';
+      if (result) {
+        result.innerHTML = `<div style="background:#450a0a;border:1px solid #dc2626;border-radius:12px;padding:16px;text-align:center;">
+          <p style="color:#fecaca;font-size:16px;font-weight:900;margin-bottom:6px;">Verify your free profile online first.</p>
+          <p style="color:#fee2e2;font-size:12px;line-height:1.5;">Manual lookup still works offline. AI scans need one email-code verification so free scan limits and product feedback attach to a real contact.</p>
+        </div>`;
+      }
+      trackSplashLensEvent('free_scan_profile_verification_offline', { mode, feature });
+      return false;
+    }
+
+    try {
+      await requestFreeProfileCode(profile, feature);
+      window.alert(`SplashLens emailed a 6-digit scanner code to ${profile.email}.`);
+      const code = String(window.prompt(`Enter the 6-digit SplashLens code sent to ${profile.email}:`) || '').trim();
+      if (!/^\d{6}$/.test(code)) {
+        trackSplashLensEvent('free_scan_profile_verification_dismissed', { mode, feature });
+        if (status) status.textContent = 'EMAIL VERIFICATION REQUIRED';
+        return false;
+      }
+      profile = await verifyFreeProfileCode(profile, code, feature);
+      trackSplashLensEvent('free_scan_profile_verification_completed', { mode, feature });
+    } catch (error) {
+      if (status) status.textContent = 'EMAIL VERIFICATION NEEDED';
+      if (result) {
+        result.innerHTML = `<div style="background:#451a03;border:1px solid #f59e0b;border-radius:12px;padding:16px;text-align:center;">
+          <p style="color:#fed7aa;font-size:16px;font-weight:900;margin-bottom:6px;">SplashLens could not verify that profile yet.</p>
+          <p style="color:#ffedd5;font-size:12px;line-height:1.5;margin-bottom:12px;">${escHtml(error.message || 'Request a fresh code and try again.')}</p>
+          <button type="button" onclick="ensureFreeScanProfile('${escAttr(mode)}').then(updateAIStatusBar)" style="width:100%;background:#f59e0b;color:#451a03;border:0;border-radius:10px;padding:11px 8px;font-size:12px;font-weight:900;cursor:pointer;">Try verification again</button>
+        </div>`;
+      }
+      return false;
+    }
+  }
   rememberSplashLensIdentity({
     email: profile.email,
     name: profile.name || '',
@@ -8049,6 +8133,8 @@ async function callAIScan(canvas, mode, result, status) {
     const partSnapRecovery = mode === 'parts_snap' ? getPartSnapRecoveryContext() : null;
     const identity = getSplashLensIdentityProfile();
     const fieldProfile = getFieldSaveAccount() || {};
+    const freeProfileToken = fieldProfile.profileToken || localStorage.getItem(FREE_PROFILE_TOKEN_KEY) || '';
+    if (freeProfileToken) headers['X-SplashLens-Profile-Token'] = freeProfileToken;
     const knownEmail = identity.known_email || fieldProfile.email || '';
     const knownCompany = identity.known_company || fieldProfile.company || '';
     const knownRole = identity.known_role || fieldProfile.role || getSplashLensRole() || '';
@@ -8065,6 +8151,7 @@ async function callAIScan(canvas, mode, result, status) {
         known_company: knownCompany,
         known_role: knownRole,
         free_profile_email: fieldProfile.email || knownEmail,
+        free_profile_token: freeProfileToken,
         free_profile_company: fieldProfile.company || knownCompany,
         free_profile_role: fieldProfile.role || knownRole,
         lead_id: identity.lead_id || '',
@@ -8078,7 +8165,18 @@ async function callAIScan(canvas, mode, result, status) {
     const payload = await res.json().catch(() => ({}));
     if (!res.ok) {
       if (payload.profileRequired) {
-        localStorage.removeItem(FIELD_SAVE_ACCOUNT_KEY);
+        localStorage.removeItem(FREE_PROFILE_TOKEN_KEY);
+        const savedProfile = getFieldSaveAccount();
+        if (savedProfile?.email) {
+          const { profileToken, tokenExpiresAt, profileTokenExpiresAt, verified, verifiedAt, ...retryProfile } = savedProfile;
+          localStorage.setItem(FIELD_SAVE_ACCOUNT_KEY, JSON.stringify({
+            ...retryProfile,
+            serverCaptureStatus: 'verification_required',
+            serverCaptureLastTriedAt: new Date().toISOString(),
+          }));
+        } else {
+          localStorage.removeItem(FIELD_SAVE_ACCOUNT_KEY);
+        }
         trackSplashLensEvent('scan_profile_required_server', { mode, limit: payload.limit || SCAN_LIMIT_FREE });
         await ensureFreeScanProfile(mode, result, status);
         return;

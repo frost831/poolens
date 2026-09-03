@@ -20,8 +20,12 @@ test('free scan allowance is three in browser and server code', () => {
   assert.match(app, /A free field profile includes 3 AI scans each month/);
   assert.match(app, /ensureFreeScanProfile\(aiMode, result, status\)/);
   assert.match(scan, /Create a free SplashLens profile before using AI scans/);
+  assert.match(scan, /Verify your free SplashLens profile email before using AI scans/);
+  assert.match(scan, /verificationRequired: true/);
   assert.match(scan, /`free_profile:\$\{freeProfileEmail\}`/);
   assert.match(scan, /free_profile_scan_used/);
+  assert.match(scan, /refundUsageQuota/);
+  assert.match(scan, /publicUsage\(meter\.usage\)/);
 });
 
 test('pricing catalog uses the simplified North Star plan ladder', () => {
@@ -37,8 +41,14 @@ test('pricing catalog uses the simplified North Star plan ladder', () => {
 
 test('saving job history requires a free save profile signal', () => {
   assert.match(app, /const FIELD_SAVE_ACCOUNT_KEY = 'splashlens-free-save-profile-v1'/);
+  assert.match(app, /const FREE_PROFILE_TOKEN_KEY = 'splashlens-free-profile-token-v1'/);
   assert.match(app, /function ensureFieldSaveAccount/);
   assert.match(app, /const SPLASHLENS_FREE_PROFILE_ENDPOINT = '\/api\/free-profile'/);
+  assert.match(app, /requestFreeProfileCode/);
+  assert.match(app, /verifyFreeProfileCode/);
+  assert.match(app, /X-SplashLens-Profile-Token/);
+  assert.match(app, /free_profile_token: freeProfileToken/);
+  assert.match(scan, /const PROFILE_TOKEN_PREFIX = 'sl_profile_v1'/);
   assert.match(app, /free_save_profile_created/);
   assert.match(app, /free_save_profile_server_synced/);
   assert.match(app, /ensureFieldSaveAccount\('service_report_saved'\)/);

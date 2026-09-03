@@ -14,6 +14,7 @@ const MAX_IMAGE_BASE64_CHARS = Math.ceil(MAX_IMAGE_BYTES / 3) * 4;
 const LOCAL_FALLBACK_LIMIT = 4;
 const LOCAL_FALLBACK_WINDOW_MS = 60 * 60 * 1000;
 const ENTITLEMENT_TOKEN_PREFIX = 'sl_scan_v1';
+const PROFILE_TOKEN_PREFIX = 'sl_profile_v1';
 const textEncoder = new TextEncoder();
 
 const ALLOWED_ORIGINS = new Set([
@@ -131,7 +132,7 @@ function corsHeaders(request, env) {
   return {
     'Access-Control-Allow-Origin': allowOrigin,
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Headers': 'Content-Type, X-SplashLens-Profile-Token, X-SplashLens-Entitlement-Token',
     'Access-Control-Max-Age': '86400',
     'Vary': 'Origin',
     'Content-Type': 'application/json',
@@ -180,6 +181,11 @@ function entitlementSecret(env) {
   return secret.length >= 32 ? secret : '';
 }
 
+function profileSecret(env) {
+  const secret = String(env.SPLASHLENS_PROFILE_SECRET || env.SPLASHLENS_ENTITLEMENT_SECRET || env.SCAN_ENTITLEMENT_SECRET || '').trim();
+  return secret.length >= 32 ? secret : '';
+}
+
 function entitlementTokenFromRequest(request, body) {
   const headerToken = request.headers.get('x-splashlens-entitlement-token')?.trim();
   if (headerToken) return headerToken;
@@ -189,6 +195,12 @@ function entitlementTokenFromRequest(request, body) {
   if (bearer.startsWith(`${ENTITLEMENT_TOKEN_PREFIX}.`)) return bearer;
 
   return typeof body.entitlementToken === 'string' ? body.entitlementToken.trim() : '';
+}
+
+function profileTokenFromRequest(request, body) {
+  const headerToken = request.headers.get('x-splashlens-profile-token')?.trim();
+  if (headerToken) return headerToken;
+  return typeof body.free_profile_token === 'string' ? body.free_profile_token.trim() : '';
 }
 
 async function verifyEntitlementToken(request, env, body) {
@@ -231,6 +243,42 @@ async function verifyEntitlementToken(request, env, body) {
     subject: String(payload.sub).slice(0, 120),
     plan: String(payload.plan || 'SplashLens Premium').slice(0, 80),
   };
+}
+
+async function verifyProfileToken(request, env, body, email) {
+  const token = profileTokenFromRequest(request, body);
+  if (!token) {
+    return { ok: false, status: 401, error: 'Verify your free SplashLens profile email before using AI scans.' };
+  }
+
+  const secret = profileSecret(env);
+  if (!secret) {
+    return { ok: false, status: 503, error: 'Free profile verification is not configured.' };
+  }
+
+  const parts = token.split('.');
+  if (parts.length !== 3 || parts[0] !== PROFILE_TOKEN_PREFIX) {
+    return { ok: false, status: 401, error: 'Free profile verification token is invalid.' };
+  }
+
+  const signed = `${parts[0]}.${parts[1]}`;
+  const expected = await hmacSha256(secret, signed);
+  if (!constantTimeEqual(parts[2], expected)) {
+    return { ok: false, status: 401, error: 'Free profile verification token is invalid.' };
+  }
+
+  const payload = parseEntitlementPayload(parts[1]);
+  if (!payload || payload.exp <= Math.floor(Date.now() / 1000)) {
+    return { ok: false, status: 401, error: 'Free profile verification expired. Verify your email again.' };
+  }
+  if (String(payload.sub || '').toLowerCase() !== email) {
+    return { ok: false, status: 401, error: 'Free profile token does not match this email.' };
+  }
+  if (!scopeAllowed(payload.scopes, 'free_scan')) {
+    return { ok: false, status: 403, error: 'Free profile token does not include scanner access.' };
+  }
+
+  return { ok: true, subject: email };
 }
 
 function parseEntitlementPayload(value) {
@@ -413,7 +461,7 @@ async function enforceUsageQuota(request, env, headers, key, limit, source, upgr
       };
     }
     await env.SCAN_USAGE_KV.put(usageKey, String(current + 1), { expirationTtl: secondsUntilNextMonth() });
-    return { ok: true, usage: { count: current + 1, limit, source } };
+    return { ok: true, usage: { count: current + 1, previousCount: current, limit, source, usageKey } };
   }
 
   const production = isProductionRequest(request, env);
@@ -438,7 +486,35 @@ async function enforceUsageQuota(request, env, headers, key, limit, source, upgr
   }
   bucket.count += 1;
   localScanWindow.set(key, bucket);
-  return { ok: true, usage: { count: bucket.count, limit: LOCAL_FALLBACK_LIMIT, source: 'local' } };
+  return { ok: true, usage: { count: bucket.count, previousCount: bucket.count - 1, limit: LOCAL_FALLBACK_LIMIT, source: 'local', localKey: key } };
+}
+
+async function refundUsageQuota(env, usage) {
+  if (!usage || typeof usage !== 'object') return;
+
+  if (usage.usageKey && env.SCAN_USAGE_KV && typeof env.SCAN_USAGE_KV.get === 'function' && typeof env.SCAN_USAGE_KV.put === 'function') {
+    const current = Number(await env.SCAN_USAGE_KV.get(usage.usageKey)) || 0;
+    if (current === Number(usage.count || 0)) {
+      await env.SCAN_USAGE_KV.put(usage.usageKey, String(Math.max(0, Number(usage.previousCount || 0))), { expirationTtl: secondsUntilNextMonth() });
+    }
+    return;
+  }
+
+  if (usage.localKey && localScanWindow.has(usage.localKey)) {
+    const bucket = localScanWindow.get(usage.localKey);
+    bucket.count = Math.max(0, Number(bucket.count || 0) - 1);
+    localScanWindow.set(usage.localKey, bucket);
+  }
+}
+
+function publicUsage(usage) {
+  const payload = {
+    count: Number(usage?.count || 0),
+    limit: Number(usage?.limit || FREE_SCAN_LIMIT),
+    source: clean(usage?.source || 'unknown', 60),
+  };
+  if (usage?.plan) payload.plan = clean(usage.plan, 80);
+  return payload;
 }
 
 async function enforceScanAccess(request, env, headers, body) {
@@ -484,6 +560,20 @@ async function enforceScanAccess(request, env, headers, body) {
         limit: FREE_SCAN_LIMIT,
         upgrade: '/api/checkout?plan=monthly',
       }, 401, headers),
+    };
+  }
+
+  const profile = await verifyProfileToken(request, env, body, freeProfileEmail);
+  if (!profile.ok) {
+    return {
+      ok: false,
+      response: json({
+        error: profile.error,
+        profileRequired: true,
+        verificationRequired: true,
+        limit: FREE_SCAN_LIMIT,
+        upgrade: '/api/checkout?plan=monthly',
+      }, profile.status || 401, headers),
     };
   }
 
@@ -556,7 +646,6 @@ export async function onRequestPost({ request, env }) {
 
   const meter = await enforceScanAccess(request, env, headers, body);
   if (!meter.ok) return meter.response;
-  await recordFreeProfileScanUse(request, env, body, getFreeProfileEmail(body), mode, meter.usage);
 
   try {
     const apiRes = await fetch(CLAUDE_API, {
@@ -582,6 +671,7 @@ export async function onRequestPost({ request, env }) {
     if (!apiRes.ok) {
       const err = await apiRes.text();
       console.error('Anthropic API error:', apiRes.status, err);
+      await refundUsageQuota(env, meter.usage);
       return json({ error: 'AI service error', status: apiRes.status }, 502, headers);
     }
 
@@ -593,12 +683,15 @@ export async function onRequestPost({ request, env }) {
       const jsonMatch = text.match(/\{[\s\S]*\}/);
       parsed = jsonMatch ? JSON.parse(jsonMatch[0]) : JSON.parse(text);
     } catch {
+      await refundUsageQuota(env, meter.usage);
       return json({ error: 'AI response parse failed', raw: text.slice(0, 200) }, 502, headers);
     }
 
-    return json({ ok: true, mode, result: parsed, usage: meter.usage }, 200, headers);
+    await recordFreeProfileScanUse(request, env, body, getFreeProfileEmail(body), mode, meter.usage);
+    return json({ ok: true, mode, result: parsed, usage: publicUsage(meter.usage) }, 200, headers);
   } catch (err) {
     console.error('Scan worker error:', err);
+    await refundUsageQuota(env, meter.usage).catch(() => {});
     return json({ error: 'Internal error' }, 500, headers);
   }
 }

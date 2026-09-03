@@ -44,11 +44,18 @@ test('events endpoint normalizes identity and suppresses internal heartbeat nois
   assert.match(eventsEndpoint, /forwardEventToAmplitude/);
 });
 
-test('free scanner profile endpoint captures durable identity before AI usage', () => {
+test('free scanner profile endpoint verifies durable identity before AI usage', () => {
   assert.match(freeProfileEndpoint, /CREATE TABLE IF NOT EXISTS free_profiles/);
+  assert.match(freeProfileEndpoint, /CREATE TABLE IF NOT EXISTS free_profile_verifications/);
   assert.match(freeProfileEndpoint, /email TEXT PRIMARY KEY/);
   assert.match(freeProfileEndpoint, /Valid email required for free scanner profile/);
-  assert.match(freeProfileEndpoint, /free_scan_profile_captured/);
+  assert.match(freeProfileEndpoint, /SENDGRID_API_KEY/);
+  assert.match(freeProfileEndpoint, /Your SplashLens free scanner code/);
+  assert.match(freeProfileEndpoint, /free_scan_profile_code_sent/);
+  assert.match(freeProfileEndpoint, /free_scan_profile_verified/);
+  assert.match(freeProfileEndpoint, /profileToken/);
+  assert.match(freeProfileEndpoint, /sl_profile_v1/);
+  assert.match(freeProfileEndpoint, /verified_at/);
   assert.match(freeProfileEndpoint, /SUBSCRIBERS_DB/);
   assert.match(freeProfileEndpoint, /ON CONFLICT\(email\) DO UPDATE/);
 });
