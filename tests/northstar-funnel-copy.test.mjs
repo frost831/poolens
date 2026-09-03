@@ -7,6 +7,7 @@ const data = fs.readFileSync(new URL('../js/data.js', import.meta.url), 'utf8');
 const shell = fs.readFileSync(new URL('../index.html', import.meta.url), 'utf8');
 const scan = fs.readFileSync(new URL('../functions/api/scan.js', import.meta.url), 'utf8');
 const checkout = fs.readFileSync(new URL('../functions/api/checkout.js', import.meta.url), 'utf8');
+const account = fs.readFileSync(new URL('../functions/api/account.js', import.meta.url), 'utf8');
 
 test('first open goes straight to field workflow instead of forcing persona picker', () => {
   assert.match(app, /field_home_opened_without_role_gate/);
@@ -42,13 +43,21 @@ test('pricing catalog uses the simplified North Star plan ladder', () => {
 test('saving job history requires a free save profile signal', () => {
   assert.match(app, /const FIELD_SAVE_ACCOUNT_KEY = 'splashlens-free-save-profile-v1'/);
   assert.match(app, /const FREE_PROFILE_TOKEN_KEY = 'splashlens-free-profile-token-v1'/);
+  assert.match(app, /const ACCOUNT_TOKEN_KEY = 'splashlens-account-token-v1'/);
+  assert.match(app, /const SPLASHLENS_ACCOUNT_ENDPOINT = '\/api\/account'/);
   assert.match(app, /function ensureFieldSaveAccount/);
   assert.match(app, /const SPLASHLENS_FREE_PROFILE_ENDPOINT = '\/api\/free-profile'/);
   assert.match(app, /requestFreeProfileCode/);
   assert.match(app, /verifyFreeProfileCode/);
   assert.match(app, /X-SplashLens-Profile-Token/);
+  assert.match(app, /X-SplashLens-Account-Token/);
+  assert.match(app, /captureAccountSessionFromUrl/);
+  assert.match(app, /openSplashLensAccount/);
   assert.match(app, /free_profile_token: freeProfileToken/);
+  assert.match(app, /account_token: accountToken/);
   assert.match(scan, /const PROFILE_TOKEN_PREFIX = 'sl_profile_v1'/);
+  assert.match(scan, /const ACCOUNT_TOKEN_PREFIX = 'sl_account_v1'/);
+  assert.match(account, /const ACCOUNT_TOKEN_PREFIX = 'sl_account_v1'/);
   assert.match(app, /free_save_profile_created/);
   assert.match(app, /free_save_profile_server_synced/);
   assert.match(app, /ensureFieldSaveAccount\('service_report_saved'\)/);

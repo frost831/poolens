@@ -1,7 +1,9 @@
 const DEFAULT_ORIGIN = 'https://app.splashlens.com';
 const PROFILE_TOKEN_PREFIX = 'sl_profile_v1';
+const ACCOUNT_TOKEN_PREFIX = 'sl_account_v1';
 const VERIFICATION_TTL_SECONDS = 10 * 60;
 const PROFILE_TOKEN_TTL_SECONDS = 180 * 24 * 60 * 60;
+const ACCOUNT_TOKEN_TTL_SECONDS = 180 * 24 * 60 * 60;
 const textEncoder = new TextEncoder();
 
 const ALLOWED_ORIGINS = new Set([
@@ -87,19 +89,27 @@ function base64UrlEncode(bytes) {
   return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
 }
 
-async function signProfileToken(secret, email) {
+async function signToken(secret, email, prefix, scopes, source, ttlSeconds) {
   const now = Math.floor(Date.now() / 1000);
   const payload = {
     sub: email,
-    scopes: ['free_scan'],
-    source: 'free_profile_email_verification',
+    scopes,
+    source,
     iat: now,
-    exp: now + PROFILE_TOKEN_TTL_SECONDS,
+    exp: now + ttlSeconds,
   };
   const payloadPart = base64UrlEncode(textEncoder.encode(JSON.stringify(payload)));
-  const signed = `${PROFILE_TOKEN_PREFIX}.${payloadPart}`;
+  const signed = `${prefix}.${payloadPart}`;
   const signature = await hmacSha256(secret, signed);
   return { token: `${signed}.${signature}`, expiresAt: new Date(payload.exp * 1000).toISOString() };
+}
+
+async function signProfileToken(secret, email) {
+  return signToken(secret, email, PROFILE_TOKEN_PREFIX, ['free_scan'], 'free_profile_email_verification', PROFILE_TOKEN_TTL_SECONDS);
+}
+
+async function signAccountToken(secret, email) {
+  return signToken(secret, email, ACCOUNT_TOKEN_PREFIX, ['account', 'free_scan'], 'passwordless_email_verification', ACCOUNT_TOKEN_TTL_SECONDS);
 }
 
 async function ensureFreeProfilesTable(db) {
@@ -140,6 +150,29 @@ async function ensureProfileVerificationTable(db) {
       path TEXT,
       attempts INTEGER DEFAULT 0,
       expires_at DATETIME NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )`
+  ).run();
+}
+
+async function ensureUserAccountsTable(db) {
+  await db.prepare(
+    `CREATE TABLE IF NOT EXISTS user_accounts (
+      email TEXT PRIMARY KEY,
+      name TEXT,
+      company TEXT,
+      role TEXT,
+      source_feature TEXT,
+      first_client_id TEXT,
+      last_client_id TEXT,
+      first_path TEXT,
+      last_path TEXT,
+      user_agent TEXT,
+      referrer TEXT,
+      country TEXT,
+      verified_at DATETIME,
+      account_token_last_issued_at DATETIME,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )`
@@ -187,6 +220,7 @@ async function sendVerificationEmail(env, email, code) {
   if (!apiKey) return { sent: false, error: 'SENDGRID_API_KEY is not configured.' };
 
   const from = parseSender(env.SENDGRID_FROM || env.SPLASHLENS_EMAIL_FROM || 'hello@splashlens.com');
+  const loginUrl = `https://app.splashlens.com/?sl_login_email=${encodeURIComponent(email)}&sl_login_code=${encodeURIComponent(code)}`;
   const response = await fetch('https://api.sendgrid.com/v3/mail/send', {
     method: 'POST',
     headers: {
@@ -205,6 +239,9 @@ async function sendVerificationEmail(env, email, code) {
           code,
           '',
           'It expires in 10 minutes.',
+          '',
+          'Or open this sign-in link on the same device:',
+          loginUrl,
           '',
           'Manual lookup, calculators, guides, and checklists stay free to start. This code verifies the email used for free AI scans so scan limits and field misses are tied to a real contact.',
           '',
@@ -236,6 +273,7 @@ async function requestCode({ request, env, headers, body, email, props }) {
 
   await ensureFreeProfilesTable(env.SUBSCRIBERS_DB);
   await ensureProfileVerificationTable(env.SUBSCRIBERS_DB);
+  await ensureUserAccountsTable(env.SUBSCRIBERS_DB);
   await env.SUBSCRIBERS_DB.prepare(
     `INSERT INTO free_profile_verifications (email, code_hash, name, company, role, source_feature, client_id, path, attempts, expires_at)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, ?)
@@ -310,7 +348,8 @@ async function verifyCode({ request, env, headers, body, email, props }) {
   const referrer = clean(request.headers.get('Referer') || body.referrer || props.referrer, 500);
   const userAgent = clean(request.headers.get('User-Agent'), 300);
   const country = clean(request.cf && request.cf.country, 10);
-  const signed = await signProfileToken(secret, email);
+  const signedProfile = await signProfileToken(secret, email);
+  const signedAccount = await signAccountToken(secret, email);
 
   await env.SUBSCRIBERS_DB.prepare(
     `INSERT INTO free_profiles (
@@ -330,6 +369,25 @@ async function verifyCode({ request, env, headers, body, email, props }) {
       profile_token_last_issued_at = CURRENT_TIMESTAMP,
       updated_at = CURRENT_TIMESTAMP`
   ).bind(email, name, company, role, sourceFeature, clientId, clientId, path, path, userAgent, referrer, country).run();
+  await ensureUserAccountsTable(env.SUBSCRIBERS_DB);
+  await env.SUBSCRIBERS_DB.prepare(
+    `INSERT INTO user_accounts (
+      email, name, company, role, source_feature, first_client_id, last_client_id, first_path, last_path, user_agent, referrer, country, verified_at, account_token_last_issued_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+    ON CONFLICT(email) DO UPDATE SET
+      name = CASE WHEN excluded.name != '' THEN excluded.name ELSE user_accounts.name END,
+      company = CASE WHEN excluded.company != '' THEN excluded.company ELSE user_accounts.company END,
+      role = CASE WHEN excluded.role != '' THEN excluded.role ELSE user_accounts.role END,
+      source_feature = excluded.source_feature,
+      last_client_id = excluded.last_client_id,
+      last_path = excluded.last_path,
+      user_agent = excluded.user_agent,
+      referrer = excluded.referrer,
+      country = excluded.country,
+      verified_at = CURRENT_TIMESTAMP,
+      account_token_last_issued_at = CURRENT_TIMESTAMP,
+      updated_at = CURRENT_TIMESTAMP`
+  ).bind(email, name, company, role, sourceFeature, clientId, clientId, path, path, userAgent, referrer, country).run();
   await env.SUBSCRIBERS_DB.prepare('DELETE FROM free_profile_verifications WHERE email = ?').bind(email).run();
   await logProfileEvent(env.SUBSCRIBERS_DB, request, 'free_scan_profile_verified', path, {
     known_email: email,
@@ -347,8 +405,10 @@ async function verifyCode({ request, env, headers, body, email, props }) {
     stored: true,
     verified: true,
     email,
-    profileToken: signed.token,
-    tokenExpiresAt: signed.expiresAt,
+    profileToken: signedProfile.token,
+    tokenExpiresAt: signedProfile.expiresAt,
+    accountToken: signedAccount.token,
+    accountTokenExpiresAt: signedAccount.expiresAt,
   }, 200, headers);
 }
 

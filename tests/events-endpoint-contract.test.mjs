@@ -7,6 +7,7 @@ const amplitudeConfig = readFileSync(new URL('../functions/api/amplitude-config.
 const amplitudeShared = readFileSync(new URL('../functions/_shared/amplitude.mjs', import.meta.url), 'utf8');
 const statsEndpoint = readFileSync(new URL('../functions/api/stats.js', import.meta.url), 'utf8');
 const freeProfileEndpoint = readFileSync(new URL('../functions/api/free-profile.js', import.meta.url), 'utf8');
+const accountEndpoint = readFileSync(new URL('../functions/api/account.js', import.meta.url), 'utf8');
 const wrangler = readFileSync(new URL('../wrangler.toml', import.meta.url), 'utf8');
 
 test('events endpoint accepts app analytics payload shapes', () => {
@@ -54,10 +55,23 @@ test('free scanner profile endpoint verifies durable identity before AI usage', 
   assert.match(freeProfileEndpoint, /free_scan_profile_code_sent/);
   assert.match(freeProfileEndpoint, /free_scan_profile_verified/);
   assert.match(freeProfileEndpoint, /profileToken/);
+  assert.match(freeProfileEndpoint, /accountToken/);
+  assert.match(freeProfileEndpoint, /sl_account_v1/);
+  assert.match(freeProfileEndpoint, /user_accounts/);
   assert.match(freeProfileEndpoint, /sl_profile_v1/);
   assert.match(freeProfileEndpoint, /verified_at/);
   assert.match(freeProfileEndpoint, /SUBSCRIBERS_DB/);
   assert.match(freeProfileEndpoint, /ON CONFLICT\(email\) DO UPDATE/);
+});
+
+test('account endpoint requires a signed passwordless account token', () => {
+  assert.match(accountEndpoint, /GET \/api\/account/);
+  assert.match(accountEndpoint, /const ACCOUNT_TOKEN_PREFIX = 'sl_account_v1'/);
+  assert.match(accountEndpoint, /X-SplashLens-Account-Token/);
+  assert.match(accountEndpoint, /scopeAllowed\(payload\.scopes, 'account'\)/);
+  assert.match(accountEndpoint, /user_accounts/);
+  assert.match(accountEndpoint, /freeScanUsage/);
+  assert.match(accountEndpoint, /recentEvents/);
 });
 
 test('app wrangler config declares the shared SplashLens events database binding', () => {

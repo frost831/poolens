@@ -15,6 +15,7 @@ const LOCAL_FALLBACK_LIMIT = 4;
 const LOCAL_FALLBACK_WINDOW_MS = 60 * 60 * 1000;
 const ENTITLEMENT_TOKEN_PREFIX = 'sl_scan_v1';
 const PROFILE_TOKEN_PREFIX = 'sl_profile_v1';
+const ACCOUNT_TOKEN_PREFIX = 'sl_account_v1';
 const textEncoder = new TextEncoder();
 
 const ALLOWED_ORIGINS = new Set([
@@ -132,7 +133,7 @@ function corsHeaders(request, env) {
   return {
     'Access-Control-Allow-Origin': allowOrigin,
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, X-SplashLens-Profile-Token, X-SplashLens-Entitlement-Token',
+    'Access-Control-Allow-Headers': 'Content-Type, X-SplashLens-Profile-Token, X-SplashLens-Account-Token, X-SplashLens-Entitlement-Token',
     'Access-Control-Max-Age': '86400',
     'Vary': 'Origin',
     'Content-Type': 'application/json',
@@ -198,8 +199,11 @@ function entitlementTokenFromRequest(request, body) {
 }
 
 function profileTokenFromRequest(request, body) {
+  const accountToken = request.headers.get('x-splashlens-account-token')?.trim();
+  if (accountToken) return accountToken;
   const headerToken = request.headers.get('x-splashlens-profile-token')?.trim();
   if (headerToken) return headerToken;
+  if (typeof body.account_token === 'string') return body.account_token.trim();
   return typeof body.free_profile_token === 'string' ? body.free_profile_token.trim() : '';
 }
 
@@ -257,7 +261,7 @@ async function verifyProfileToken(request, env, body, email) {
   }
 
   const parts = token.split('.');
-  if (parts.length !== 3 || parts[0] !== PROFILE_TOKEN_PREFIX) {
+  if (parts.length !== 3 || ![PROFILE_TOKEN_PREFIX, ACCOUNT_TOKEN_PREFIX].includes(parts[0])) {
     return { ok: false, status: 401, error: 'Free profile verification token is invalid.' };
   }
 
