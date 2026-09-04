@@ -16,7 +16,7 @@ if (Test-Path $deploy) {
 
 New-Item -ItemType Directory -Force -Path $deploy | Out-Null
 
-foreach ($file in @("index.html", "landing.html", "manifest.json", "favicon.svg", "robots.txt", "llms.txt", "sw.js", "_headers")) {
+foreach ($file in @("index.html", "landing.html", "privacy.html", "manifest.json", "favicon.svg", "robots.txt", "llms.txt", "sw.js", "_headers")) {
   $source = Join-Path $root $file
   if (Test-Path $source) {
     Copy-Item -LiteralPath $source -Destination $deploy -Force

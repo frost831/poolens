@@ -93,8 +93,37 @@ export async function onRequestGet({ request, env }) {
         {
           key: 'team_proof_os_monthly',
           label: 'SplashLens Teams',
-          priceLabel: '$149/company/month target',
+          priceLabel: '$149/company/month pilot target',
           checkoutConfigured: false,
+          requestAccessConfigured: true,
+        },
+        {
+          key: 'facility_cpo_pilot',
+          label: 'Facility / CPO Mode',
+          priceLabel: 'pilot access',
+          checkoutConfigured: false,
+          requestAccessConfigured: true,
+        },
+        {
+          key: 'verified_manufacturer_cards',
+          label: 'Verified Manufacturer Cards',
+          priceLabel: 'partner pricing',
+          checkoutConfigured: false,
+          requestAccessConfigured: true,
+        },
+        {
+          key: 'distributor_counter_mode',
+          label: 'Distributor / Counter Mode',
+          priceLabel: 'partner pricing',
+          checkoutConfigured: false,
+          requestAccessConfigured: true,
+        },
+        {
+          key: 'field_learning_os',
+          label: 'Field Learning OS',
+          priceLabel: 'training partner pricing',
+          checkoutConfigured: false,
+          requestAccessConfigured: true,
         },
       ],
     }, { headers: { 'Cache-Control': 'no-store' } });

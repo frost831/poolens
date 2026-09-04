@@ -55,9 +55,8 @@ function isSplashLensCheckoutSession(session, env) {
   const allowedLinks = allowedPaymentLinkIds(env);
 
   if (product === 'splashlens') return true;
-  if (feature === 'scanner' && /partsnap|splashlens/.test(plan)) return true;
-  if (/partsnap|splashlens/.test(plan) && product !== 'cora') return true;
   if (paymentLink && allowedLinks.includes(paymentLink)) return true;
+  if (!product && feature === 'scanner' && /partsnap|splashlens|splash lens/.test(plan)) return true;
   return false;
 }
 
@@ -180,8 +179,71 @@ async function storeEntitlement(session, eventType, env) {
       )`,
     ).run();
     await env.SUBSCRIBERS_DB.prepare(
+      `CREATE TABLE IF NOT EXISTS commercial_entitlements (
+        id TEXT PRIMARY KEY,
+        email TEXT NOT NULL,
+        team_id TEXT,
+        lane TEXT NOT NULL,
+        plan TEXT NOT NULL,
+        status TEXT DEFAULT 'active',
+        source TEXT,
+        stripe_session_id TEXT,
+        stripe_customer_id TEXT,
+        current_period_end DATETIME,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )`,
+    ).run();
+    await env.SUBSCRIBERS_DB.prepare(
+      `CREATE TABLE IF NOT EXISTS audit_records (
+        id TEXT PRIMARY KEY,
+        actor_email TEXT,
+        action TEXT NOT NULL,
+        target_type TEXT,
+        target_id TEXT,
+        payload TEXT,
+        user_agent TEXT,
+        referrer TEXT,
+        country TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )`,
+    ).run();
+    await env.SUBSCRIBERS_DB.prepare(
       'INSERT INTO payment_events (event_type, stripe_session_id, subject, plan) VALUES (?, ?, ?, ?)',
     ).bind(eventType, payload.stripeSessionId, subject, payload.plan).run();
+    await env.SUBSCRIBERS_DB.prepare(
+      `INSERT INTO commercial_entitlements (id, email, lane, plan, status, source, stripe_session_id, stripe_customer_id, current_period_end)
+       VALUES (?, ?, 'pro', ?, 'active', 'stripe_webhook', ?, ?, ?)
+       ON CONFLICT(id) DO UPDATE SET
+         email = excluded.email,
+         plan = excluded.plan,
+         status = 'active',
+         source = 'stripe_webhook',
+         stripe_customer_id = excluded.stripe_customer_id,
+         current_period_end = excluded.current_period_end,
+         updated_at = CURRENT_TIMESTAMP`,
+    ).bind(
+      `stripe:${payload.stripeSessionId || subject}`,
+      subject,
+      payload.plan,
+      payload.stripeSessionId,
+      payload.stripeCustomerId,
+      record.expiresAt,
+    ).run();
+    await env.SUBSCRIBERS_DB.prepare(
+      `INSERT INTO audit_records (id, actor_email, action, target_type, target_id, payload)
+       VALUES (?, ?, 'stripe_entitlement_activated', 'commercial_entitlement', ?, ?)`,
+    ).bind(
+      `audit_${crypto.randomUUID()}`,
+      subject,
+      `stripe:${payload.stripeSessionId || subject}`,
+      JSON.stringify({
+        event_type: eventType,
+        plan: payload.plan,
+        stripe_session_id: payload.stripeSessionId,
+        stripe_customer_id: payload.stripeCustomerId,
+      }).slice(0, 2400),
+    ).run();
   }
 
   return { ok: true, subject, tokenCreated: true };

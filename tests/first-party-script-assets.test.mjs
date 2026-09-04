@@ -11,6 +11,7 @@ const androidWebManifest = readFileSync(join(root, 'android-twa', 'app', 'src', 
 const llms = readFileSync(join(root, 'llms.txt'), 'utf8');
 const appSource = readFileSync(join(root, 'js', 'app.js'), 'utf8');
 const serviceWorker = readFileSync(join(root, 'sw.js'), 'utf8');
+const deployScript = readFileSync(join(root, 'tools', 'deploy-poolens-web.ps1'), 'utf8');
 
 test('all first-party scripts referenced by index.html exist as JavaScript files', () => {
   const scripts = [...html.matchAll(/<script[^>]+src="([^"]+)"/g)]
@@ -69,6 +70,13 @@ test('public app metadata keeps field-entry claims conservative', () => {
   assert.match(manifest, /230\+ pool and spa field reference entries/);
   assert.match(androidWebManifest, /230\+ pool and spa field reference entries/);
   assert.match(llms, /230\+ pool and spa field entries/);
+});
+
+test('deploy package includes public disclosure and AI crawler files', () => {
+  assert.match(deployScript, /privacy\.html/);
+  assert.match(deployScript, /llms\.txt/);
+  assert.match(deployScript, /robots\.txt/);
+  assert.match(deployScript, /_headers/);
 });
 
 test('PartSnap result feedback loop turns outcomes into product-learning signals', () => {

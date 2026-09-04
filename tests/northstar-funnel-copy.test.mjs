@@ -9,6 +9,7 @@ const scan = fs.readFileSync(new URL('../functions/api/scan.js', import.meta.url
 const checkout = fs.readFileSync(new URL('../functions/api/checkout.js', import.meta.url), 'utf8');
 const account = fs.readFileSync(new URL('../functions/api/account.js', import.meta.url), 'utf8');
 const team = fs.readFileSync(new URL('../functions/api/team.js', import.meta.url), 'utf8');
+const commercial = fs.readFileSync(new URL('../functions/api/commercial.js', import.meta.url), 'utf8');
 const sw = fs.readFileSync(new URL('../sw.js', import.meta.url), 'utf8');
 
 test('first open goes straight to field workflow instead of forcing persona picker', () => {
@@ -75,9 +76,9 @@ test('saving job history requires a free save profile signal', () => {
 });
 
 test('service worker cache version ships the newest account bundle', () => {
-  assert.match(shell, /app\.js\?v=20260903-team-workspace/);
-  assert.match(sw, /splashlens-v7-team-workspace/);
-  assert.match(sw, /app\.js\?v=20260903-team-workspace/);
+  assert.match(shell, /app\.js\?v=20260904-commercial-scale/);
+  assert.match(sw, /splashlens-v8-commercial-scale/);
+  assert.match(sw, /app\.js\?v=20260904-commercial-scale/);
 });
 
 test('checkout exposes a JSON catalog and Splash Lens Pro Unlimited metadata', () => {
@@ -86,4 +87,22 @@ test('checkout exposes a JSON catalog and Splash Lens Pro Unlimited metadata', (
   assert.match(checkout, /Splash Lens Pro Unlimited Annual/);
   assert.match(checkout, /SPLASHLENS_STRIPE_PRICE_\$\{key\}_PRO/);
   assert.match(checkout, /SPLASHLENS_STRIPE_LINK_MONTHLY_PRO/);
+});
+
+test('account dashboard shows commercial lanes without pretending every lane is checkout-ready', () => {
+  assert.match(app, /const SPLASHLENS_COMMERCIAL_ENDPOINT = '\/api\/commercial'/);
+  assert.match(app, /splashLensCommercialRequest/);
+  assert.match(app, /renderSplashLensCommercialSection/);
+  assert.match(app, /requestSplashLensCommercialAccess/);
+  assert.match(app, /requestSplashLensPartnerCard/);
+  assert.match(app, /Free lookup first\. Pay when proof, teams, or partner workflows matter/);
+  assert.match(app, /Get Pro/);
+  assert.match(app, /Request team/);
+  assert.match(app, /Submit manufacturer \/ training card/);
+  assert.match(app, /saveSplashLensCommercialProof/);
+  assert.match(app, /service_report_saved_server/);
+  assert.match(app, /partsnap_proof_saved_server/);
+  assert.match(checkout, /requestAccessConfigured/);
+  assert.match(commercial, /pilot_request/);
+  assert.match(commercial, /partner_pilot/);
 });

@@ -1,6 +1,6 @@
 ﻿# SplashLens App
 
-> Free-core, offline-first PWA field reference tool for pool service technicians. 230+ pool and spa field entries, chemical dosing calculators, online AI scanner support (error codes, parts ID, test-strip triage), SLAM multi-day tracker, filter guides, checklists, route tracking, passwordless email accounts, and lightweight team workspaces. Manual field tools work without sign-in after first load; online AI scanner workflows require internet and a verified SplashLens email session.
+> Free-core, offline-first PWA field reference tool for pool service technicians. 230+ pool and spa field entries, chemical dosing calculators, online AI scanner support (error codes, parts ID, test-strip triage), SLAM multi-day tracker, filter guides, checklists, route tracking, passwordless email accounts, lightweight team workspaces, account-backed proof metadata, Pro scan entitlements, and pilot request paths for Facility/CPO Mode, Verified Manufacturer Cards, Distributor/Counter Mode, and Field Learning OS. Manual field tools work without sign-in after first load; online AI scanner workflows require internet and a verified SplashLens email session.
 
 ## App URL
 
@@ -17,6 +17,8 @@ SplashLens is a Progressive Web App that pool service technicians use poolside t
 - Reference filter procedures (sand, DE, cartridge)
 - Run opening, closing, weekly, and monthly service checklists
 - Track route progress for the day
+- Save account-backed proof metadata for PartSnap and service report workflows
+- Request team, facility/CPO, manufacturer-card, distributor/counter, and training partner pilot access
 
 Manual lookup, calculators, guides, checklists, and route tools work offline after the first load. AI camera scanning requires internet.
 
@@ -27,7 +29,7 @@ Three camera modes:
 2. PartSnap â€” aim at a pool part; AI attempts to identify manufacturer, model, OEM part number, and useful search terms
 3. Test Strip â€” aim at a wet test strip; AI estimates FC/pH/TA/CH/CYA ranges for field triage
 
-Backend: Cloudflare Pages Function to Anthropic Claude Haiku vision. Error-code scanning can fall back to browser TextDetector or manual entry offline; PartSnap and test-strip analysis require internet. AI scanner output is reference assistance only and should be verified against equipment manuals, calibrated tests, and field judgment.
+Backend: Cloudflare Pages Function to Anthropic Claude Haiku vision plus a source-backed corpus layer where available. Error-code scanning can fall back to browser TextDetector or manual entry offline; PartSnap and test-strip analysis require internet. AI scanner output is reference assistance only and should be verified against equipment manuals, calibrated tests, and field judgment.
 
 ## Marketing Site
 

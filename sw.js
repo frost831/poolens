@@ -1,10 +1,10 @@
-const CACHE = 'splashlens-v7-team-workspace';
+const CACHE = 'splashlens-v8-commercial-scale';
 const ASSETS = [
   '/',
   '/index.html',
   '/js/errors.js',
-  '/js/data.js?v=20260903-team-workspace',
-  '/js/app.js?v=20260903-team-workspace',
+  '/js/data.js?v=20260904-commercial-scale',
+  '/js/app.js?v=20260904-commercial-scale',
   '/js/field-signals.js?v=20260728-field-signals',
   '/js/analytics.js',
   '/js/field-score.js?v=20260828-closing-score',

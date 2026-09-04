@@ -217,6 +217,7 @@ const FREE_PROFILE_TOKEN_KEY = 'splashlens-free-profile-token-v1';
 const ACCOUNT_TOKEN_KEY = 'splashlens-account-token-v1';
 const SPLASHLENS_ACCOUNT_ENDPOINT = '/api/account';
 const SPLASHLENS_TEAM_ENDPOINT = '/api/team';
+const SPLASHLENS_COMMERCIAL_ENDPOINT = '/api/commercial';
 const SPLASHLENS_ROLES = ['tech', 'facility', 'counter', 'trainer'];
 let facilitySessionMode = '';
 let facilityForcedMode = false;
@@ -2186,6 +2187,162 @@ async function splashLensTeamRequest(body = null) {
   return payload;
 }
 
+async function splashLensCommercialRequest(body = null) {
+  const profile = getFieldSaveAccount();
+  const accountToken = profile?.accountToken || localStorage.getItem(ACCOUNT_TOKEN_KEY) || '';
+  if (!accountToken) throw new Error('Verify your SplashLens email before using paid or partner workflows.');
+  const options = body
+    ? {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-SplashLens-Account-Token': accountToken, ...getLanguageHeaders() },
+        body: JSON.stringify(body),
+      }
+    : {
+        method: 'GET',
+        headers: { 'X-SplashLens-Account-Token': accountToken, ...getLanguageHeaders() },
+      };
+  const response = await fetch(SPLASHLENS_COMMERCIAL_ENDPOINT, options);
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok || !payload.ok) throw new Error(payload.error || 'SplashLens commercial dashboard could not be loaded.');
+  return payload;
+}
+
+function commercialLaneLabel(lane = '') {
+  const labels = {
+    pro: 'Splash Lens Pro',
+    teams: 'Team Workspaces',
+    facility: 'Facility / CPO Mode',
+    manufacturer: 'Verified Manufacturer Cards',
+    distributor: 'Distributor / Counter Mode',
+    training: 'Field Learning OS',
+  };
+  return labels[String(lane || '').toLowerCase()] || 'SplashLens pilot';
+}
+
+async function requestSplashLensCommercialAccess(lane = 'pro') {
+  const profile = getFieldSaveAccount() || {};
+  const label = commercialLaneLabel(lane);
+  const notes = String(window.prompt(`What should SplashLens know about your ${label} use case?`, '') || '').trim().slice(0, 900);
+  try {
+    const payload = await splashLensCommercialRequest({
+      action: 'request_access',
+      lane,
+      name: profile.name || '',
+      company: profile.company || '',
+      role: profile.role || getSplashLensRole() || 'tech',
+      interest: label,
+      notes,
+      source: 'account_modal',
+    });
+    trackSplashLensEvent('commercial_access_request_clicked', { lane, notice_sent: Boolean(payload.noticeSent) });
+    window.alert(payload.noticeSent ? 'Request sent to SplashLens.' : 'Request saved. We will review it from the dashboard.');
+    openSplashLensAccount();
+  } catch (error) {
+    window.alert(error.message || 'SplashLens could not save that request.');
+  }
+}
+
+async function requestSplashLensPartnerCard() {
+  const profile = getFieldSaveAccount() || {};
+  const manufacturer = String(window.prompt('Manufacturer, brand, trainer, or distributor name:', profile.company || '') || '').trim().slice(0, 140);
+  if (!manufacturer) return;
+  const docUrl = String(window.prompt('Manual/support URL to review (optional):', '') || '').trim().slice(0, 480);
+  const proofLanguage = String(window.prompt('What proof should techs capture before ordering or escalating?', '') || '').trim().slice(0, 900);
+  try {
+    const payload = await splashLensCommercialRequest({
+      action: 'partner_card_request',
+      lane: 'manufacturer',
+      company: profile.company || manufacturer,
+      manufacturer,
+      docUrl,
+      proofLanguage,
+      source: 'account_modal_partner_card',
+    });
+    trackSplashLensEvent('partner_verified_card_request_clicked', { notice_sent: Boolean(payload.noticeSent) });
+    window.alert(payload.noticeSent ? 'Partner card request sent to SplashLens.' : 'Partner card request saved for review.');
+    openSplashLensAccount();
+  } catch (error) {
+    window.alert(error.message || 'SplashLens could not save that partner card request.');
+  }
+}
+
+async function saveSplashLensCommercialProof(passport = {}, context = {}) {
+  if (!hasAccountSession()) return { ok: false, skipped: 'account_session_missing' };
+  try {
+    return await splashLensCommercialRequest({
+      action: 'save_proof',
+      id: passport.id || `proof-${Date.now()}`,
+      workflow: passport.type || passport.visitType || context.workflow || 'field_stop',
+      customerLabel: passport.customer || passport.name || context.customerLabel || '',
+      summary: passport.proof?.customerSummary || passport.workPerformed || context.summary || '',
+      proofStatus: passport.proof?.complete ? 'complete' : 'needs_review',
+      riskLevel: passport.callbackRisk?.level || context.riskLevel || 'unknown',
+      payload: {
+        passport,
+        context,
+      },
+      source: context.source || 'app_proof_workflow',
+    });
+  } catch (error) {
+    trackSplashLensEvent('commercial_proof_save_failed', { error: String(error.message || error).slice(0, 120), workflow: context.workflow || passport.type || 'field_stop' });
+    return { ok: false, error: error.message || String(error) };
+  }
+}
+
+function renderSplashLensCommercialSection(commercialPayload = {}) {
+  const plans = Array.isArray(commercialPayload.plans) ? commercialPayload.plans : [];
+  const entitlements = Array.isArray(commercialPayload.entitlements) ? commercialPayload.entitlements : [];
+  const intakes = Array.isArray(commercialPayload.intakes) ? commercialPayload.intakes : [];
+  const proof = commercialPayload.proof || {};
+  const readiness = commercialPayload.readiness || {};
+  const activeEntitlement = entitlements.find((entitlement) => String(entitlement.status || '').toLowerCase() === 'active');
+  const pilotPlans = plans.filter((plan) => ['teams', 'facility', 'manufacturer', 'distributor', 'training'].includes(plan.lane));
+  const readinessChips = [
+    ['Account auth', readiness.accountAuth],
+    ['Scan meter', readiness.serverSideScanMetering],
+    ['Stripe hook', readiness.stripeWebhookConfigured],
+    ['Audit log', readiness.auditRecords],
+  ];
+  return `
+    <div style="background:#ffffff;border:1px solid #dbe8ef;border-radius:12px;padding:13px;margin-bottom:12px;">
+      <div style="display:flex;justify-content:space-between;gap:10px;align-items:start;margin-bottom:10px;">
+        <div>
+          <p style="color:#075985;font-size:10px;font-weight:950;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;">Paid lanes</p>
+          <strong style="display:block;color:#0f172a;font-size:15px;line-height:1.2;">Free lookup first. Pay when proof, teams, or partner workflows matter.</strong>
+        </div>
+        <span style="white-space:nowrap;border-radius:999px;background:${activeEntitlement ? '#dcfce7' : '#eff6ff'};color:${activeEntitlement ? '#166534' : '#075985'};font-size:10px;font-weight:950;padding:6px 8px;">${activeEntitlement ? 'PRO ACTIVE' : 'FREE'}</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
+        <div style="background:#f0fdfa;border:1px solid #99f6e4;border-radius:10px;padding:11px;">
+          <p style="color:#0f766e;font-size:10px;font-weight:950;text-transform:uppercase;letter-spacing:.08em;">Saved job proof</p>
+          <strong style="display:block;color:#0f172a;font-size:24px;line-height:1;margin-top:4px;">${Number(proof.total || 0)}</strong>
+          <span style="color:#64748b;font-size:11px;">${Number(proof.last30 || 0)} in last 30 days</span>
+        </div>
+        <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:11px;">
+          <p style="color:#475569;font-size:10px;font-weight:950;text-transform:uppercase;letter-spacing:.08em;">Open requests</p>
+          <strong style="display:block;color:#0f172a;font-size:24px;line-height:1;margin-top:4px;">${intakes.length}</strong>
+          <span style="color:#64748b;font-size:11px;">pilots, teams, partners</span>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:10px;">
+        <a href="/api/checkout?plan=monthly" onclick="trackSplashLensEvent('account_pro_checkout_clicked',{plan:'monthly'})" style="display:block;text-align:center;text-decoration:none;border-radius:9px;background:#0f766e;color:#fff;font-size:12px;font-weight:950;padding:11px 8px;">Get Pro</a>
+        <button type="button" onclick="requestSplashLensCommercialAccess('teams')" style="border:1px solid #0369a1;border-radius:9px;background:#fff;color:#0369a1;font-size:12px;font-weight:950;padding:11px 8px;cursor:pointer;">Request team</button>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin-bottom:10px;">
+        ${pilotPlans.map((plan) => `
+          <button type="button" onclick="requestSplashLensCommercialAccess('${escAttr(plan.lane)}')" style="text-align:left;border:1px solid #e2e8f0;border-radius:9px;background:#f8fafc;color:#0f172a;padding:10px;cursor:pointer;">
+            <strong style="display:block;font-size:12px;line-height:1.2;margin-bottom:4px;">${escHtml(plan.label || commercialLaneLabel(plan.lane))}</strong>
+            <span style="display:block;color:#64748b;font-size:10px;line-height:1.35;">${escHtml((plan.included || []).slice(0, 2).join(' + ') || 'request access')}</span>
+          </button>
+        `).join('')}
+      </div>
+      <button type="button" onclick="requestSplashLensPartnerCard()" style="width:100%;border:0;border-radius:9px;background:#0f172a;color:#e0f2fe;font-size:12px;font-weight:950;padding:11px 8px;cursor:pointer;margin-bottom:9px;">Submit manufacturer / training card</button>
+      <div style="display:flex;flex-wrap:wrap;gap:5px;">
+        ${readinessChips.map(([label, ready]) => `<span style="background:${ready ? '#dcfce7' : '#fee2e2'};color:${ready ? '#166534' : '#991b1b'};border-radius:999px;padding:5px 7px;font-size:9px;font-weight:950;">${escHtml(label)} ${ready ? 'ready' : 'needs config'}</span>`).join('')}
+      </div>
+    </div>`;
+}
+
 async function createSplashLensTeamWorkspace() {
   const profile = getFieldSaveAccount();
   const defaultName = profile?.company || profile?.name || 'SplashLens Team';
@@ -2342,6 +2499,10 @@ async function openSplashLensAccount() {
       trackSplashLensEvent('team_workspace_snapshot_failed', { error: String(error.message || error).slice(0, 120) });
       return { teams: [], pendingInvites: [], unavailable: true };
     });
+    const commercialPayload = await splashLensCommercialRequest().catch((error) => {
+      trackSplashLensEvent('commercial_snapshot_failed', { error: String(error.message || error).slice(0, 120) });
+      return { plans: [], entitlements: [], intakes: [], proof: {}, readiness: {} };
+    });
     const account = payload.account || {};
     const scanner = payload.scanner || {};
     const remaining = Math.max(0, Number(scanner.limit || SCAN_LIMIT_FREE) - Number(scanner.count || 0));
@@ -2371,6 +2532,7 @@ async function openSplashLensAccount() {
           <strong style="display:block;color:#f8fafc;font-size:14px;margin-bottom:4px;">What this unlocks</strong>
           <p style="color:#cbd5e1;font-size:12px;line-height:1.5;margin:0;">Your free scanner allowance is now tied to this verified email, not just browser storage. Manual lookup stays open; Pro unlocks extended scanner and saved proof workflows where paid access is available.</p>
         </div>
+        ${renderSplashLensCommercialSection(commercialPayload)}
         ${renderSplashLensTeamSection(teamPayload)}
         ${(payload.recentEvents || []).length ? `
           <p style="color:#0f172a;font-size:12px;font-weight:950;margin-bottom:7px;">Recent account activity</p>
@@ -2385,6 +2547,7 @@ async function openSplashLensAccount() {
       scans_used: Number(scanner.count || 0),
       scans_remaining: remaining,
       account_role: account.role || getSplashLensRole() || 'tech',
+      commercial_entitlements: Array.isArray(commercialPayload.entitlements) ? commercialPayload.entitlements.length : 0,
     });
   } catch (error) {
     wrap.innerHTML = `
@@ -4668,6 +4831,16 @@ function saveReportToPoolHistory() {
     proof_ready: proof.complete,
     pool_id: target.id,
     visit_type: passport.visitType,
+  });
+  saveSplashLensCommercialProof(passport, {
+    source: 'service_report_saved',
+    workflow: 'service_proof_passport',
+    customerLabel: target.name || '',
+    riskLevel: proof.complete ? 'low' : 'needs_review',
+  }).then((serverSave) => {
+    if (serverSave?.ok) {
+      trackSplashLensEvent('service_report_saved_server', { proof_id: passport.id || '', pool_id: target.id, proof_ready: proof.complete });
+    }
   });
   if (proof.complete) {
     trackSplashLensEvent('proof_ready_report_saved', { pool_id: target.id, visit_type: passport.visitType });
@@ -9487,6 +9660,16 @@ function confirmPartSnapSaveToPool() {
   if (pool.equipmentTree.length > 50) pool.equipmentTree = pool.equipmentTree.slice(-50);
   savePools(pools);
   trackSplashLensEvent('partsnap_saved_to_pool', { confidence: ai.confidence || 'unknown', risk: risk.level, pool_id: pool.id });
+  saveSplashLensCommercialProof(passport, {
+    source: 'partsnap_saved_to_pool',
+    workflow: 'partsnap_proof',
+    customerLabel: pool.name || '',
+    riskLevel: risk.level,
+  }).then((serverSave) => {
+    if (serverSave?.ok) {
+      trackSplashLensEvent('partsnap_proof_saved_server', { proof_id: passport.id, risk: risk.level });
+    }
+  });
   if (status) status.textContent = `Saved to ${pool.name}.`;
 }
 

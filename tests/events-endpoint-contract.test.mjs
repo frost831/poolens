@@ -9,6 +9,8 @@ const statsEndpoint = readFileSync(new URL('../functions/api/stats.js', import.m
 const freeProfileEndpoint = readFileSync(new URL('../functions/api/free-profile.js', import.meta.url), 'utf8');
 const accountEndpoint = readFileSync(new URL('../functions/api/account.js', import.meta.url), 'utf8');
 const teamEndpoint = readFileSync(new URL('../functions/api/team.js', import.meta.url), 'utf8');
+const commercialEndpoint = readFileSync(new URL('../functions/api/commercial.js', import.meta.url), 'utf8');
+const stripeWebhookEndpoint = readFileSync(new URL('../functions/api/stripe-webhook.js', import.meta.url), 'utf8');
 const wrangler = readFileSync(new URL('../wrangler.toml', import.meta.url), 'utf8');
 
 test('events endpoint accepts app analytics payload shapes', () => {
@@ -90,6 +92,37 @@ test('team endpoint supports protected team workspaces and member invites', () =
   assert.match(teamEndpoint, /Only team owners or admins can invite members/);
   assert.match(teamEndpoint, /already an active team member/);
   assert.match(teamEndpoint, /Only the team owner can archive this workspace/);
+});
+
+test('commercial endpoint exposes protected paid lanes, proof records, and partner intake', () => {
+  assert.match(commercialEndpoint, /\/api\/commercial/);
+  assert.match(commercialEndpoint, /const ACCOUNT_TOKEN_PREFIX = 'sl_account_v1'/);
+  assert.match(commercialEndpoint, /X-SplashLens-Account-Token/);
+  assert.match(commercialEndpoint, /PLAN_CATALOG/);
+  assert.match(commercialEndpoint, /Splash Lens Pro/);
+  assert.match(commercialEndpoint, /Team Workspaces/);
+  assert.match(commercialEndpoint, /Facility \/ CPO Mode/);
+  assert.match(commercialEndpoint, /Verified Manufacturer Cards/);
+  assert.match(commercialEndpoint, /Distributor \/ Counter Mode/);
+  assert.match(commercialEndpoint, /Field Learning OS/);
+  assert.match(commercialEndpoint, /CREATE TABLE IF NOT EXISTS commercial_entitlements/);
+  assert.match(commercialEndpoint, /CREATE TABLE IF NOT EXISTS commercial_intake/);
+  assert.match(commercialEndpoint, /CREATE TABLE IF NOT EXISTS service_proof_records/);
+  assert.match(commercialEndpoint, /CREATE TABLE IF NOT EXISTS partner_card_requests/);
+  assert.match(commercialEndpoint, /CREATE TABLE IF NOT EXISTS audit_records/);
+  assert.match(commercialEndpoint, /commercial_access_requested/);
+  assert.match(commercialEndpoint, /service_proof_record_saved_server/);
+  assert.match(commercialEndpoint, /partner_verified_card_requested/);
+  assert.match(commercialEndpoint, /commercial_rate:/);
+});
+
+test('stripe webhook only activates SplashLens entitlements with explicit product proof', () => {
+  assert.match(stripeWebhookEndpoint, /commercial_entitlements/);
+  assert.match(stripeWebhookEndpoint, /stripe_entitlement_activated/);
+  assert.match(stripeWebhookEndpoint, /allowedLinks\.includes\(paymentLink\)/);
+  assert.match(stripeWebhookEndpoint, /product === 'splashlens'/);
+  assert.match(stripeWebhookEndpoint, /!product && feature === 'scanner'/);
+  assert.doesNotMatch(stripeWebhookEndpoint, /product !== 'cora'/);
 });
 
 test('app wrangler config declares the shared SplashLens events database binding', () => {
