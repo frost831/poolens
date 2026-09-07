@@ -6,6 +6,7 @@ import { test } from 'node:test';
 
 const root = dirname(dirname(fileURLToPath(import.meta.url)));
 const html = readFileSync(join(root, 'index.html'), 'utf8');
+const dashboard = readFileSync(join(root, 'dashboard.html'), 'utf8');
 const manifest = readFileSync(join(root, 'manifest.json'), 'utf8');
 const androidWebManifest = readFileSync(join(root, 'android-twa', 'app', 'src', 'main', 'res', 'raw', 'web_app_manifest.json'), 'utf8');
 const llms = readFileSync(join(root, 'llms.txt'), 'utf8');
@@ -73,10 +74,25 @@ test('public app metadata keeps field-entry claims conservative', () => {
 });
 
 test('deploy package includes public disclosure and AI crawler files', () => {
+  assert.match(deployScript, /dashboard\.html/);
+  assert.match(deployScript, /owner-dashboard\.html/);
   assert.match(deployScript, /privacy\.html/);
   assert.match(deployScript, /llms\.txt/);
   assert.match(deployScript, /robots\.txt/);
   assert.match(deployScript, /_headers/);
+});
+
+test('owner dashboard is protected by admin secret and shows commercial operating tables', () => {
+  assert.match(dashboard, /SplashLens Owner Dashboard/);
+  assert.match(dashboard, /X-SplashLens-Stats-Secret/);
+  assert.match(dashboard, /\/api\/stats/);
+  assert.match(dashboard, /\/api\/admin/);
+  assert.match(dashboard, /Conversion Funnel/);
+  assert.match(dashboard, /Commercial Control Room/);
+  assert.match(dashboard, /Entitlements/);
+  assert.match(dashboard, /Team billing \/ seats/);
+  assert.match(dashboard, /Partner card requests/);
+  assert.match(dashboard, /Learning modules/);
 });
 
 test('PartSnap result feedback loop turns outcomes into product-learning signals', () => {

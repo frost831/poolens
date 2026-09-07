@@ -220,6 +220,19 @@ async function ensureCommercialTables(db) {
     )`,
   ).run();
   await db.prepare(
+    `CREATE TABLE IF NOT EXISTS team_billing (
+      team_id TEXT PRIMARY KEY,
+      plan TEXT DEFAULT 'pilot',
+      status TEXT DEFAULT 'pilot',
+      seat_limit INTEGER DEFAULT 3,
+      billing_email TEXT,
+      stripe_customer_id TEXT,
+      current_period_end DATETIME,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )`,
+  ).run();
+  await db.prepare(
     `CREATE TABLE IF NOT EXISTS commercial_intake (
       id TEXT PRIMARY KEY,
       email TEXT NOT NULL,
@@ -262,6 +275,37 @@ async function ensureCommercialTables(db) {
       doc_url TEXT,
       proof_language TEXT,
       status TEXT DEFAULT 'new',
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )`,
+  ).run();
+  await db.prepare(
+    `CREATE TABLE IF NOT EXISTS partner_verified_cards (
+      id TEXT PRIMARY KEY,
+      request_id TEXT,
+      company TEXT,
+      lane TEXT,
+      manufacturer TEXT,
+      doc_url TEXT,
+      proof_language TEXT,
+      status TEXT DEFAULT 'draft',
+      approved_by TEXT,
+      approved_at DATETIME,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )`,
+  ).run();
+  await db.prepare(
+    `CREATE TABLE IF NOT EXISTS learning_modules (
+      id TEXT PRIMARY KEY,
+      title TEXT NOT NULL,
+      lane TEXT,
+      audience TEXT,
+      source_proof_id TEXT,
+      body TEXT,
+      quiz_json TEXT,
+      status TEXT DEFAULT 'draft',
+      created_by TEXT,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )`,
@@ -442,7 +486,7 @@ async function snapshot(db, env, email) {
     WHERE email = ? AND status = 'saved'
   `, email);
   const recentProof = await safeAll(db, `
-    SELECT id, customer_label AS customerLabel, workflow, proof_status AS proofStatus, risk_level AS riskLevel, created_at AS createdAt
+    SELECT id, customer_label AS customerLabel, workflow, proof_status AS proofStatus, risk_level AS riskLevel, source, created_at AS createdAt
     FROM service_proof_records
     WHERE email = ? AND status = 'saved'
     ORDER BY created_at DESC
@@ -456,9 +500,10 @@ async function snapshot(db, env, email) {
     LIMIT 10
   `, email);
   const teams = await safeAll(db, `
-    SELECT t.id, t.name, tm.role, tm.status AS memberStatus, t.status
+    SELECT t.id, t.name, tm.role, tm.status AS memberStatus, t.status, tb.plan AS billingPlan, tb.status AS billingStatus, tb.seat_limit AS seatLimit
     FROM teams t
     JOIN team_members tm ON tm.team_id = t.id
+    LEFT JOIN team_billing tb ON tb.team_id = t.id
     WHERE tm.email = ? AND tm.status IN ('active', 'pending')
     ORDER BY t.created_at DESC
     LIMIT 10
@@ -478,6 +523,22 @@ async function snapshot(db, env, email) {
       last30: Number(proofStats.last30 || 0),
       recent: recentProof,
     },
+    learning: {
+      modules: await safeAll(db, `
+        SELECT id, title, lane, audience, status, created_at AS createdAt
+        FROM learning_modules
+        WHERE status IN ('published', 'pilot')
+        ORDER BY created_at DESC
+        LIMIT 12
+      `),
+    },
+    partnerCards: await safeAll(db, `
+      SELECT id, company, lane, manufacturer, status, approved_at AS approvedAt
+      FROM partner_verified_cards
+      WHERE status IN ('approved', 'pilot')
+      ORDER BY approved_at DESC, created_at DESC
+      LIMIT 12
+    `),
     intakes,
     teams,
     readiness: {
@@ -490,9 +551,45 @@ async function snapshot(db, env, email) {
       durableProofMetadata: true,
       r2ProofImages: Boolean(env.SPLASHLENS_PROOF_BUCKET || env.PROOF_BUCKET),
       auditRecords: true,
+      teamSeatLimits: true,
+      partnerApprovalWorkflow: true,
+      learningModuleRegistry: true,
     },
     northStar: 'Free field lookup plus paid proof, team, facility, manufacturer, distributor, and training workflows.',
   };
+}
+
+function proofBucket(env) {
+  return env.SPLASHLENS_PROOF_BUCKET || env.PROOF_BUCKET || null;
+}
+
+function parseDataUrl(value) {
+  const raw = String(value || '');
+  const match = raw.match(/^data:([^;,]+);base64,([A-Za-z0-9+/=]+)$/);
+  if (!match) return null;
+  const mime = clean(match[1], 100);
+  const binary = atob(match[2]);
+  const bytes = Uint8Array.from(binary, (char) => char.charCodeAt(0));
+  return { mime, bytes };
+}
+
+async function storeProofObject(env, auth, proofId, body) {
+  const bucket = proofBucket(env);
+  if (!bucket || typeof bucket.put !== 'function') return null;
+  const dataUrl = body.proofImageDataUrl || body.photoDataUrl || body.imageDataUrl || body.payload?.proofImageDataUrl || '';
+  const parsed = parseDataUrl(dataUrl);
+  if (!parsed || parsed.bytes.length > 5 * 1024 * 1024) return null;
+  const safeName = clean(body.fileName || body.photoName || 'proof-image', 80).replace(/[^a-z0-9._-]+/gi, '-');
+  const key = `service-proof/${auth.email.replace(/[^a-z0-9._-]+/gi, '_')}/${proofId}/${safeName}`;
+  await bucket.put(key, parsed.bytes, {
+    httpMetadata: { contentType: parsed.mime },
+    customMetadata: {
+      proofId,
+      email: auth.email,
+      source: clean(body.source || 'app_service_proof', 80),
+    },
+  });
+  return { key, mime: parsed.mime, bytes: parsed.bytes.length };
 }
 
 async function requireTeamAccess(db, email, teamId) {
@@ -544,6 +641,11 @@ async function saveProof(request, env, db, auth, body, headers) {
   const summary = clean(body.summary || body.customerSummary || body.note || '', 1200);
   const proofStatus = clean(body.proofStatus || body.status || 'saved', 60);
   const riskLevel = clean(body.riskLevel || body.risk || 'unknown', 60);
+  const object = await storeProofObject(env, auth, id, body);
+  const storedPayload = {
+    ...(body.payload && typeof body.payload === 'object' ? body.payload : body),
+    proofObject: object,
+  };
   await db.prepare(
     `INSERT INTO service_proof_records (id, email, team_id, customer_label, workflow, summary, proof_status, risk_level, source, payload, status)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'saved')
@@ -567,7 +669,7 @@ async function saveProof(request, env, db, auth, body, headers) {
     proofStatus,
     riskLevel,
     clean(body.source || 'app_service_proof', 80),
-    safeJson(body.payload || body, 3600),
+    safeJson(storedPayload, 3600),
   ).run();
   await logEvent(db, request, 'service_proof_record_saved_server', auth.email, workflow, { proof_id: id, workflow, proof_status: proofStatus, risk_level: riskLevel });
   await logAudit(db, request, auth.email, 'service_proof_record_saved', 'service_proof_record', id, { workflow, proofStatus, riskLevel, teamId });

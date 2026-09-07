@@ -48,8 +48,9 @@ Cloudflare Pages Functions:
 - `/api/account`: protected account snapshot.
 - `/api/team`: protected team workspace CRUD and invites.
 - `/api/commercial`: protected commercial control plane for entitlements, proof metadata, intake, partner card requests, readiness, and audit records.
+- `/api/admin`: protected owner control room API for entitlements, intake, proof records, partner cards, learning modules, audit records, and team billing.
 - `/api/checkout`: Stripe Checkout Session first, Payment Link fallback.
-- `/api/stripe-webhook`: signed Stripe webhook that activates Pro entitlements only for verified SplashLens metadata or allowlisted Payment Links.
+- `/api/stripe-webhook`: signed Stripe webhook that activates Pro entitlements only for verified SplashLens metadata or allowlisted Payment Links and records subscription/payment lifecycle events.
 - `/api/stats`: protected owner stats endpoint.
 - `/api/events`: event capture with internal heartbeat/headless filtering and Amplitude forwarding where configured.
 
@@ -65,6 +66,9 @@ D1 tables created on demand:
 - `commercial_intake`
 - `service_proof_records`
 - `partner_card_requests`
+- `partner_verified_cards`
+- `learning_modules`
+- `team_billing`
 - `payment_events`
 - `audit_records`
 - `events`
@@ -105,6 +109,8 @@ Acceptance proof:
 - `/api/checkout?plan=monthly` redirects to Stripe.
 - Signed Stripe webhook for a SplashLens session writes `payment_events`, `commercial_entitlements`, KV entitlement, and `audit_records`.
 - Non-SplashLens payment sessions are ignored.
+- Subscription, invoice failure, refund, and dispute webhook events update or record lifecycle status where Stripe customer/session identifiers are available.
+- Old `?rotation=flagship-audit-*` endpoints should be removed from Stripe Dashboard or have their signing secret added to `SPLASHLENS_STRIPE_WEBHOOK_SECRETS`. The code returns a 200 ignored response for that stale audit URL when the signature is invalid so Stripe does not keep treating the retired audit endpoint as a production outage.
 
 ## Email Wiring
 
@@ -137,6 +143,8 @@ Before store handoff or public push:
    - `https://app.splashlens.com/api/account` returns JSON 401 when unauthenticated.
    - `https://app.splashlens.com/api/team` returns JSON 401 when unauthenticated.
    - `https://app.splashlens.com/api/commercial` returns JSON 401 when unauthenticated.
+   - `https://app.splashlens.com/api/admin` returns JSON 401 when unauthenticated.
+   - `https://app.splashlens.com/dashboard` returns the owner dashboard shell.
    - `https://app.splashlens.com/api/checkout?catalog=1` returns JSON catalog.
    - `https://app.splashlens.com/api/checkout?plan=monthly` redirects to Stripe.
    - `https://app.splashlens.com` returns 200 and includes `20260904-commercial-scale`.
@@ -163,9 +171,8 @@ Plain English:
 
 These are not blockers for the current commercial deploy, but they are the next hardening moves before larger teams:
 
-- Add R2 proof image/object storage and retention controls.
-- Add admin owner dashboard views for `commercial_entitlements`, `service_proof_records`, `commercial_intake`, `partner_card_requests`, and `audit_records`.
-- Add subscription lifecycle handling for renewals, cancellations, disputes, and refunds.
-- Add organization billing seats and team role controls beyond owner/admin/member.
+- Bind `SPLASHLENS_PROOF_BUCKET`/`PROOF_BUCKET` in Cloudflare for actual R2 proof image/object storage and retention controls.
+- Reauthenticate the Stripe connector or use Stripe Dashboard to confirm all live endpoints are green, especially removing the stale `?rotation=flagship-audit-*` webhook endpoint.
+- Expand organization billing seats beyond the current pilot seat-limit control and owner/admin/member roles.
 - Add export jobs for CSV/PDF packets and weekly owner reports.
 - Move from D1 to Postgres only when D1 query volume, joins, reporting windows, or object relationships become limiting.

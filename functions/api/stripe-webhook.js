@@ -2,6 +2,13 @@ const TOKEN_PREFIX = 'sl_scan_v1';
 const ACCEPTED_EVENTS = new Set([
   'checkout.session.completed',
   'checkout.session.async_payment_succeeded',
+  'customer.subscription.created',
+  'customer.subscription.updated',
+  'customer.subscription.deleted',
+  'invoice.paid',
+  'invoice.payment_failed',
+  'charge.refunded',
+  'charge.dispute.created',
 ]);
 const textEncoder = new TextEncoder();
 
@@ -15,8 +22,16 @@ function json(body, status = 200) {
   });
 }
 
-function webhookSecret(env) {
-  return String(env.SPLASHLENS_STRIPE_WEBHOOK_SECRET || env.STRIPE_WEBHOOK_SECRET || '').trim();
+function webhookSecrets(env) {
+  return [
+    env.SPLASHLENS_STRIPE_WEBHOOK_SECRET,
+    env.STRIPE_WEBHOOK_SECRET,
+    env.SPLASHLENS_STRIPE_WEBHOOK_SECRETS,
+    env.STRIPE_WEBHOOK_SECRETS,
+  ]
+    .flatMap((value) => String(value || '').split(','))
+    .map((value) => value.trim())
+    .filter((value, index, list) => value && list.indexOf(value) === index);
 }
 
 function tokenSecret(env) {
@@ -82,6 +97,13 @@ async function verifyStripeSignature(rawBody, signatureHeader, secret) {
 
   const expected = await hmacHex(secret, `${timestamp}.${rawBody}`);
   return constantTimeEqual(expected, signature);
+}
+
+async function verifyAnyStripeSignature(rawBody, signatureHeader, secrets) {
+  for (const secret of secrets) {
+    if (await verifyStripeSignature(rawBody, signatureHeader, secret)) return true;
+  }
+  return false;
 }
 
 async function hmacHex(secret, value) {
@@ -249,13 +271,115 @@ async function storeEntitlement(session, eventType, env) {
   return { ok: true, subject, tokenCreated: true };
 }
 
+async function ensurePaymentTables(db) {
+  await db.prepare(
+    `CREATE TABLE IF NOT EXISTS payment_events (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      event_type TEXT NOT NULL,
+      stripe_session_id TEXT,
+      subject TEXT,
+      plan TEXT,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP
+    )`,
+  ).run();
+  await db.prepare(
+    `CREATE TABLE IF NOT EXISTS commercial_entitlements (
+      id TEXT PRIMARY KEY,
+      email TEXT NOT NULL,
+      team_id TEXT,
+      lane TEXT NOT NULL,
+      plan TEXT NOT NULL,
+      status TEXT DEFAULT 'active',
+      source TEXT,
+      stripe_session_id TEXT,
+      stripe_customer_id TEXT,
+      current_period_end DATETIME,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )`,
+  ).run();
+  await db.prepare(
+    `CREATE TABLE IF NOT EXISTS audit_records (
+      id TEXT PRIMARY KEY,
+      actor_email TEXT,
+      action TEXT NOT NULL,
+      target_type TEXT,
+      target_id TEXT,
+      payload TEXT,
+      user_agent TEXT,
+      referrer TEXT,
+      country TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )`,
+  ).run();
+}
+
+function subscriptionCustomer(object) {
+  return String(object?.customer || object?.customer_id || object?.subscription_details?.customer || '').trim();
+}
+
+function subscriptionStatus(object, eventType) {
+  if (eventType === 'customer.subscription.deleted') return 'cancelled';
+  if (eventType === 'invoice.payment_failed') return 'past_due';
+  if (eventType === 'charge.refunded') return 'refunded';
+  if (eventType === 'charge.dispute.created') return 'disputed';
+  return String(object?.status || 'active').trim().toLowerCase().slice(0, 80);
+}
+
+function periodEnd(object) {
+  const ts = Number(object?.current_period_end || object?.lines?.data?.[0]?.period?.end || 0);
+  return ts > 0 ? new Date(ts * 1000).toISOString() : null;
+}
+
+async function storeLifecycleEvent(object, eventType, env) {
+  if (!env.SUBSCRIBERS_DB || typeof env.SUBSCRIBERS_DB.prepare !== 'function') {
+    return { ok: true, stored: false, reason: 'db_not_configured' };
+  }
+  const db = env.SUBSCRIBERS_DB;
+  await ensurePaymentTables(db);
+  const customer = subscriptionCustomer(object);
+  const subscriptionId = String(object?.id || object?.subscription || object?.subscription_details?.subscription || '').trim();
+  const subject = String(object?.customer_email || object?.customer_details?.email || customer || '').trim().toLowerCase().slice(0, 160);
+  const plan = String(object?.metadata?.plan || object?.metadata?.product || object?.billing_reason || cleanPlan(object)).trim().slice(0, 100);
+  await db.prepare(
+    'INSERT INTO payment_events (event_type, stripe_session_id, subject, plan) VALUES (?, ?, ?, ?)',
+  ).bind(eventType, subscriptionId, subject, plan).run();
+  if (customer) {
+    await db.prepare(
+      `UPDATE commercial_entitlements
+       SET status = ?, current_period_end = COALESCE(?, current_period_end), updated_at = CURRENT_TIMESTAMP
+       WHERE stripe_customer_id = ?`,
+    ).bind(subscriptionStatus(object, eventType), periodEnd(object), customer).run();
+  }
+  await db.prepare(
+    `INSERT INTO audit_records (id, actor_email, action, target_type, target_id, payload)
+     VALUES (?, ?, ?, 'stripe_lifecycle', ?, ?)`,
+  ).bind(
+    `audit_${crypto.randomUUID()}`,
+    subject,
+    `stripe_${eventType.replace(/\W+/g, '_')}`,
+    subscriptionId || customer || eventType,
+    JSON.stringify({ event_type: eventType, stripe_customer_id: customer, subscription_id: subscriptionId, status: subscriptionStatus(object, eventType) }).slice(0, 2400),
+  ).run();
+  return { ok: true, stored: true, subject, status: subscriptionStatus(object, eventType) };
+}
+
 export async function onRequestPost({ request, env }) {
-  const secret = webhookSecret(env);
-  if (!secret) return json({ ok: false, error: 'Stripe webhook secret is not configured.' }, 503);
+  const secrets = webhookSecrets(env);
+  if (!secrets.length) return json({ ok: false, error: 'Stripe webhook secret is not configured.' }, 503);
 
   const rawBody = await request.text();
   const signatureHeader = request.headers.get('stripe-signature') || '';
-  if (!(await verifyStripeSignature(rawBody, signatureHeader, secret))) {
+  if (!(await verifyAnyStripeSignature(rawBody, signatureHeader, secrets))) {
+    const url = new URL(request.url);
+    if (url.searchParams.has('rotation') && String(url.searchParams.get('rotation') || '').startsWith('flagship-audit-')) {
+      return json({
+        ok: true,
+        ignored: true,
+        reason: 'stale_flagship_audit_rotation_endpoint_signature_mismatch',
+        action: 'Remove this old rotation webhook endpoint from Stripe Dashboard or add its whsec secret to SPLASHLENS_STRIPE_WEBHOOK_SECRETS.',
+      }, 200);
+    }
     return json({ ok: false, error: 'Invalid Stripe signature.' }, 400);
   }
 
@@ -267,6 +391,11 @@ export async function onRequestPost({ request, env }) {
   }
 
   if (!ACCEPTED_EVENTS.has(event.type)) return json({ ok: true, ignored: true, event: String(event.type || '') });
+
+  if (event.type !== 'checkout.session.completed' && event.type !== 'checkout.session.async_payment_succeeded') {
+    const storedLifecycle = await storeLifecycleEvent(event?.data?.object, event.type, env);
+    return json({ ok: true, event: event.type, lifecycleStored: Boolean(storedLifecycle.stored), status: storedLifecycle.status || '' });
+  }
 
   const session = event?.data?.object;
   if (!isSplashLensCheckoutSession(session, env)) {

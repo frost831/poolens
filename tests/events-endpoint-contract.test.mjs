@@ -6,6 +6,7 @@ const eventsEndpoint = readFileSync(new URL('../functions/api/events.js', import
 const amplitudeConfig = readFileSync(new URL('../functions/api/amplitude-config.js', import.meta.url), 'utf8');
 const amplitudeShared = readFileSync(new URL('../functions/_shared/amplitude.mjs', import.meta.url), 'utf8');
 const statsEndpoint = readFileSync(new URL('../functions/api/stats.js', import.meta.url), 'utf8');
+const adminEndpoint = readFileSync(new URL('../functions/api/admin.js', import.meta.url), 'utf8');
 const freeProfileEndpoint = readFileSync(new URL('../functions/api/free-profile.js', import.meta.url), 'utf8');
 const accountEndpoint = readFileSync(new URL('../functions/api/account.js', import.meta.url), 'utf8');
 const teamEndpoint = readFileSync(new URL('../functions/api/team.js', import.meta.url), 'utf8');
@@ -92,6 +93,10 @@ test('team endpoint supports protected team workspaces and member invites', () =
   assert.match(teamEndpoint, /Only team owners or admins can invite members/);
   assert.match(teamEndpoint, /already an active team member/);
   assert.match(teamEndpoint, /Only the team owner can archive this workspace/);
+  assert.match(teamEndpoint, /CREATE TABLE IF NOT EXISTS team_billing/);
+  assert.match(teamEndpoint, /seat_limit/);
+  assert.match(teamEndpoint, /Team seat limit reached/);
+  assert.match(teamEndpoint, /team_member_invite_blocked_seat_limit/);
 });
 
 test('commercial endpoint exposes protected paid lanes, proof records, and partner intake', () => {
@@ -114,6 +119,11 @@ test('commercial endpoint exposes protected paid lanes, proof records, and partn
   assert.match(commercialEndpoint, /service_proof_record_saved_server/);
   assert.match(commercialEndpoint, /partner_verified_card_requested/);
   assert.match(commercialEndpoint, /commercial_rate:/);
+  assert.match(commercialEndpoint, /team_billing/);
+  assert.match(commercialEndpoint, /partner_verified_cards/);
+  assert.match(commercialEndpoint, /learning_modules/);
+  assert.match(commercialEndpoint, /proofBucket/);
+  assert.match(commercialEndpoint, /SPLASHLENS_PROOF_BUCKET/);
 });
 
 test('stripe webhook only activates SplashLens entitlements with explicit product proof', () => {
@@ -122,7 +132,29 @@ test('stripe webhook only activates SplashLens entitlements with explicit produc
   assert.match(stripeWebhookEndpoint, /allowedLinks\.includes\(paymentLink\)/);
   assert.match(stripeWebhookEndpoint, /product === 'splashlens'/);
   assert.match(stripeWebhookEndpoint, /!product && feature === 'scanner'/);
+  assert.match(stripeWebhookEndpoint, /webhookSecrets/);
+  assert.match(stripeWebhookEndpoint, /SPLASHLENS_STRIPE_WEBHOOK_SECRETS/);
+  assert.match(stripeWebhookEndpoint, /customer\.subscription\.deleted/);
+  assert.match(stripeWebhookEndpoint, /invoice\.payment_failed/);
+  assert.match(stripeWebhookEndpoint, /charge\.dispute\.created/);
+  assert.match(stripeWebhookEndpoint, /stale_flagship_audit_rotation_endpoint_signature_mismatch/);
   assert.doesNotMatch(stripeWebhookEndpoint, /product !== 'cora'/);
+});
+
+test('admin endpoint exposes the owner commercial control room', () => {
+  assert.match(adminEndpoint, /\/api\/admin/);
+  assert.match(adminEndpoint, /SPLASHLENS_STATS_SECRET/);
+  assert.match(adminEndpoint, /commercial_entitlements/);
+  assert.match(adminEndpoint, /commercial_intake/);
+  assert.match(adminEndpoint, /service_proof_records/);
+  assert.match(adminEndpoint, /partner_verified_cards/);
+  assert.match(adminEndpoint, /learning_modules/);
+  assert.match(adminEndpoint, /team_billing/);
+  assert.match(adminEndpoint, /update_entitlement/);
+  assert.match(adminEndpoint, /update_team_billing/);
+  assert.match(adminEndpoint, /approve_partner_card/);
+  assert.match(adminEndpoint, /publish_learning_module/);
+  assert.match(adminEndpoint, /audit_records/);
 });
 
 test('app wrangler config declares the shared SplashLens events database binding', () => {

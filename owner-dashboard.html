@@ -1,0 +1,280 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SplashLens Owner Dashboard</title>
+  <meta name="robots" content="noindex,nofollow">
+  <link rel="icon" href="/favicon.svg">
+  <style>
+    :root {
+      --ink:#0f172a;
+      --muted:#64748b;
+      --line:#dbe8ef;
+      --soft:#f8fafc;
+      --blue:#0369a1;
+      --teal:#0f766e;
+      --red:#b91c1c;
+      --amber:#b45309;
+    }
+    * { box-sizing:border-box; }
+    body { margin:0; font-family:Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background:#eef7fb; color:var(--ink); }
+    header { background:#082f49; color:#fff; padding:18px 16px; border-bottom:4px solid #14b8a6; }
+    .wrap { width:min(1180px,100%); margin:0 auto; }
+    .top { display:flex; justify-content:space-between; align-items:center; gap:14px; }
+    h1 { margin:0; font-size:24px; line-height:1.05; letter-spacing:0; }
+    .sub { color:#bae6fd; margin:5px 0 0; font-size:13px; line-height:1.4; }
+    main { padding:16px; }
+    .gate { display:grid; grid-template-columns:1fr auto; gap:8px; margin:0 0 14px; background:#fff; border:1px solid var(--line); border-radius:10px; padding:12px; }
+    input, textarea, select { width:100%; border:1px solid #cbd5e1; border-radius:8px; padding:10px 11px; font:inherit; color:var(--ink); background:#fff; }
+    button { border:0; border-radius:8px; background:var(--blue); color:#fff; font-weight:900; padding:10px 12px; cursor:pointer; font:inherit; }
+    button.secondary { background:#fff; color:var(--blue); border:1px solid #bae6fd; }
+    button.warn { background:var(--amber); }
+    .grid { display:grid; gap:12px; }
+    .metrics { grid-template-columns:repeat(4,minmax(0,1fr)); }
+    .two { grid-template-columns:repeat(2,minmax(0,1fr)); }
+    .card { background:#fff; border:1px solid var(--line); border-radius:10px; padding:13px; box-shadow:0 10px 24px rgba(15,23,42,.06); }
+    .card.dark { background:#0f172a; border-color:#334155; color:#fff; }
+    .label { color:var(--muted); font-size:10px; text-transform:uppercase; letter-spacing:.08em; font-weight:950; }
+    .dark .label { color:#7dd3fc; }
+    .metric { font-size:28px; line-height:1; font-weight:950; margin:5px 0; }
+    .tiny { color:var(--muted); font-size:11px; line-height:1.35; }
+    .dark .tiny { color:#cbd5e1; }
+    .section-title { display:flex; justify-content:space-between; gap:10px; align-items:end; margin:18px 0 8px; }
+    h2 { font-size:17px; margin:0; line-height:1.15; }
+    table { width:100%; border-collapse:collapse; font-size:12px; }
+    th, td { text-align:left; border-bottom:1px solid #e2e8f0; padding:8px 6px; vertical-align:top; }
+    th { color:#475569; font-size:10px; text-transform:uppercase; letter-spacing:.05em; }
+    tr:last-child td { border-bottom:0; }
+    .pill { display:inline-flex; align-items:center; border-radius:999px; padding:3px 7px; background:#e0f2fe; color:#075985; font-size:10px; font-weight:950; white-space:nowrap; }
+    .pill.green { background:#dcfce7; color:#166534; }
+    .pill.red { background:#fee2e2; color:#991b1b; }
+    .pill.amber { background:#ffedd5; color:#9a3412; }
+    .actions { display:flex; flex-wrap:wrap; gap:7px; }
+    .form-row { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px; margin-top:9px; }
+    pre { white-space:pre-wrap; word-break:break-word; background:#020617; color:#dbeafe; border-radius:8px; padding:10px; font-size:11px; max-height:220px; overflow:auto; }
+    @media (max-width:800px) {
+      .top, .gate, .two, .metrics, .form-row { grid-template-columns:1fr; display:grid; }
+      h1 { font-size:21px; }
+      table { display:block; overflow:auto; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap top">
+      <div>
+        <h1>SplashLens Owner Dashboard</h1>
+        <p class="sub">Funnel, paid lanes, proof records, partner cards, learning modules, team seats.</p>
+      </div>
+      <a href="/" style="color:#ccfbf1;font-size:12px;font-weight:900;text-decoration:none;">Open app</a>
+    </div>
+  </header>
+  <main class="wrap">
+    <section class="gate" aria-label="Dashboard access">
+      <input id="secret" type="password" autocomplete="current-password" placeholder="Paste SplashLens stats/admin secret">
+      <button type="button" onclick="loadDashboard()">Load Dashboard</button>
+    </section>
+    <div id="status" class="tiny"></div>
+    <section class="grid metrics" id="metrics"></section>
+    <section class="section-title">
+      <h2>Conversion Funnel</h2>
+      <span class="tiny" id="generated"></span>
+    </section>
+    <section class="grid two">
+      <div class="card"><p class="label">Last 7 days</p><div id="funnel7"></div></div>
+      <div class="card"><p class="label">Last 30 days</p><div id="funnel30"></div></div>
+    </section>
+    <section class="section-title">
+      <h2>Commercial Control Room</h2>
+      <div class="actions">
+        <button type="button" class="secondary" onclick="seedLearningModule()">Publish learning module</button>
+      </div>
+    </section>
+    <section class="grid two">
+      <div class="card"><p class="label">Entitlements</p><div id="entitlements"></div></div>
+      <div class="card"><p class="label">Team billing / seats</p><div id="teamBilling"></div></div>
+      <div class="card"><p class="label">Access requests</p><div id="intake"></div></div>
+      <div class="card"><p class="label">Proof saved</p><div id="proof"></div></div>
+      <div class="card"><p class="label">Partner card requests</p><div id="partnerRequests"></div></div>
+      <div class="card"><p class="label">Approved partner cards</p><div id="partnerCards"></div></div>
+      <div class="card"><p class="label">Learning modules</p><div id="learning"></div></div>
+      <div class="card dark"><p class="label">Audit trail</p><div id="audit"></div></div>
+    </section>
+  </main>
+  <script>
+    const storageKey = 'splashlens-dashboard-secret-v1';
+    const secretInput = document.getElementById('secret');
+    secretInput.value = localStorage.getItem(storageKey) || '';
+
+    function esc(value) {
+      return String(value ?? '').replace(/[&<>"']/g, (ch) => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[ch]));
+    }
+
+    function secret() {
+      return secretInput.value.trim();
+    }
+
+    async function api(path, options = {}) {
+      const key = secret();
+      if (!key) throw new Error('Paste the SplashLens stats/admin secret first.');
+      localStorage.setItem(storageKey, key);
+      const response = await fetch(path, {
+        ...options,
+        headers: {
+          'Content-Type': 'application/json',
+          'X-SplashLens-Stats-Secret': key,
+          ...(options.headers || {}),
+        },
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok || !data.ok) throw new Error(data.error || `Request failed: ${response.status}`);
+      return data;
+    }
+
+    function metric(label, value, note = '') {
+      return `<article class="card"><p class="label">${esc(label)}</p><div class="metric">${esc(value)}</div><p class="tiny">${esc(note)}</p></article>`;
+    }
+
+    function table(rows, columns, empty = 'No rows yet.') {
+      if (!Array.isArray(rows) || !rows.length) return `<p class="tiny">${esc(empty)}</p>`;
+      return `<table><thead><tr>${columns.map((col) => `<th>${esc(col.label)}</th>`).join('')}</tr></thead><tbody>${rows.map((row) => `<tr>${columns.map((col) => `<td>${col.render ? col.render(row) : esc(row[col.key] || '')}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
+    }
+
+    function funnel(rows) {
+      return table(rows || [], [
+        { label:'Stage', key:'label' },
+        { label:'Count', key:'count' },
+        { label:'From previous', render:(r) => r.conversionFromPrevious == null ? '<span class="tiny">n/a</span>' : `<span class="pill">${esc(r.conversionFromPrevious)}%</span>` },
+      ]);
+    }
+
+    function statusPill(value) {
+      const normalized = String(value || '').toLowerCase();
+      const cls = ['active','approved','published','pilot','trialing','saved','complete'].includes(normalized) ? 'green' : ['cancelled','refunded','disputed','past_due'].includes(normalized) ? 'red' : 'amber';
+      return `<span class="pill ${cls}">${esc(value || 'unknown')}</span>`;
+    }
+
+    async function postAdmin(body) {
+      await api('/api/admin', { method:'POST', body:JSON.stringify(body) });
+      await loadDashboard();
+    }
+
+    function changeSeats(teamId, currentSeats) {
+      const seatLimit = Number(prompt('Seat limit:', currentSeats || 3));
+      if (!Number.isFinite(seatLimit) || seatLimit < 1) return;
+      const plan = prompt('Plan:', 'teams') || 'teams';
+      const status = prompt('Status:', 'pilot') || 'pilot';
+      postAdmin({ action:'update_team_billing', teamId, seatLimit, plan, status });
+    }
+
+    function changeEntitlement(id, currentStatus) {
+      const status = prompt('Entitlement status:', currentStatus || 'active');
+      if (!status) return;
+      postAdmin({ action:'update_entitlement', id, status });
+    }
+
+    function approvePartnerCard(request = {}) {
+      const proofLanguage = prompt('Approved proof language:', request.proofLanguage || '');
+      if (proofLanguage == null) return;
+      postAdmin({
+        action:'approve_partner_card',
+        requestId:request.id || '',
+        company:request.company || '',
+        manufacturer:request.manufacturer || request.company || '',
+        lane:request.lane || 'manufacturer',
+        docUrl:request.docUrl || '',
+        proofLanguage,
+      });
+    }
+
+    function seedLearningModule() {
+      const title = prompt('Module title:', 'Five-minute PartSnap proof check');
+      if (!title) return;
+      const body = prompt('Lesson body:', 'Capture the wide equipment photo, model plate, close-up marking, symptom, and what proof is still missing before ordering.');
+      postAdmin({
+        action:'publish_learning_module',
+        title,
+        lane:'field_learning',
+        audience:'pool_tech',
+        status:'pilot',
+        body:body || '',
+        quiz:[{ question:'What proof is needed before ordering?', answer:'Model plate, part marking, symptom, and fit verification.' }],
+      });
+    }
+
+    async function loadDashboard() {
+      const status = document.getElementById('status');
+      status.textContent = 'Loading SplashLens data...';
+      try {
+        const [stats, admin] = await Promise.all([api('/api/stats'), api('/api/admin')]);
+        const m = stats.metrics || {};
+        const t = admin.totals || {};
+        document.getElementById('metrics').innerHTML = [
+          metric('Events 30d', m.events30d || 0, 'Production-clean app events'),
+          metric('First actions 30d', m.firstActions30d || 0, 'Lookup, scan, challenge, Facility'),
+          metric('Useful results 30d', m.firstValues30d || 0, 'PartSnap, saved proof, summaries'),
+          metric('Checkout clicks 30d', m.checkoutClicks30d || 0, 'Upgrade intent'),
+          metric('Active entitlements', t.entitlementsActive || 0, `${t.entitlementsTotal || 0} total`),
+          metric('Open access requests', t.intakeOpen || 0, 'Teams, facility, partner, training'),
+          metric('Proof records 30d', t.proofLast30 || 0, 'Server-side proof metadata'),
+          metric('Team workspaces', t.teamWorkspaces || 0, 'Active teams'),
+        ].join('');
+        document.getElementById('generated').textContent = `Generated ${stats.generatedAt || admin.generatedAt || ''}`;
+        document.getElementById('funnel7').innerHTML = funnel(stats.funnel7d);
+        document.getElementById('funnel30').innerHTML = funnel(stats.funnel30d);
+        document.getElementById('entitlements').innerHTML = table(admin.recentEntitlements, [
+          { label:'Email', key:'email' },
+          { label:'Plan', key:'plan' },
+          { label:'Status', render:(r) => statusPill(r.status) },
+          { label:'Action', render:(r) => `<button class="secondary" onclick='changeEntitlement(${JSON.stringify(r.id)}, ${JSON.stringify(r.status)})'>Edit</button>` },
+        ]);
+        document.getElementById('teamBilling').innerHTML = table(admin.teamBilling, [
+          { label:'Team', key:'teamName' },
+          { label:'Plan', key:'plan' },
+          { label:'Seats', key:'seatLimit' },
+          { label:'Action', render:(r) => `<button class="secondary" onclick='changeSeats(${JSON.stringify(r.teamId)}, ${JSON.stringify(r.seatLimit)})'>Seats</button>` },
+        ]);
+        document.getElementById('intake').innerHTML = table(admin.recentIntake, [
+          { label:'Email', key:'email' },
+          { label:'Lane', key:'lane' },
+          { label:'Company', key:'company' },
+          { label:'Status', render:(r) => statusPill(r.status) },
+        ]);
+        document.getElementById('proof').innerHTML = table(admin.recentProof, [
+          { label:'Email', key:'email' },
+          { label:'Workflow', key:'workflow' },
+          { label:'Risk', render:(r) => statusPill(r.riskLevel) },
+          { label:'When', render:(r) => esc(String(r.createdAt || '').slice(0, 16)) },
+        ]);
+        document.getElementById('partnerRequests').innerHTML = table(admin.partnerRequests, [
+          { label:'Company', key:'company' },
+          { label:'Manufacturer', key:'manufacturer' },
+          { label:'Status', render:(r) => statusPill(r.status) },
+          { label:'Action', render:(r) => `<button class="secondary" onclick='approvePartnerCard(${JSON.stringify(r).replace(/'/g, '&#39;')})'>Approve</button>` },
+        ]);
+        document.getElementById('partnerCards').innerHTML = table(admin.partnerCards, [
+          { label:'Company', key:'company' },
+          { label:'Manufacturer', key:'manufacturer' },
+          { label:'Status', render:(r) => statusPill(r.status) },
+          { label:'Approved', render:(r) => esc(String(r.approvedAt || '').slice(0, 10)) },
+        ]);
+        document.getElementById('learning').innerHTML = table(admin.learning, [
+          { label:'Title', key:'title' },
+          { label:'Audience', key:'audience' },
+          { label:'Status', render:(r) => statusPill(r.status) },
+          { label:'When', render:(r) => esc(String(r.createdAt || '').slice(0, 10)) },
+        ]);
+        document.getElementById('audit').innerHTML = table(admin.audit, [
+          { label:'Action', key:'action' },
+          { label:'Target', key:'targetType' },
+          { label:'When', render:(r) => esc(String(r.createdAt || '').slice(0, 16)) },
+        ]);
+        status.textContent = 'Dashboard loaded.';
+      } catch (error) {
+        status.textContent = error.message || String(error);
+      }
+    }
+  </script>
+</body>
+</html>

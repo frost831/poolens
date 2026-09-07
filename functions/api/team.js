@@ -188,6 +188,19 @@ async function ensureTeamTables(db) {
     )`
   ).run();
   await db.prepare(
+    `CREATE TABLE IF NOT EXISTS team_billing (
+      team_id TEXT PRIMARY KEY,
+      plan TEXT DEFAULT 'pilot',
+      status TEXT DEFAULT 'pilot',
+      seat_limit INTEGER DEFAULT 3,
+      billing_email TEXT,
+      stripe_customer_id TEXT,
+      current_period_end DATETIME,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )`
+  ).run();
+  await db.prepare(
     `CREATE TABLE IF NOT EXISTS events (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       event TEXT NOT NULL,
@@ -274,9 +287,11 @@ async function sendInviteEmail(env, teamName, invitedEmail, invitedBy) {
 
 async function teamSnapshot(db, email) {
   const teams = await all(db, `
-    SELECT t.id, t.name, t.owner_email AS ownerEmail, t.status, tm.role, tm.status AS memberStatus, tm.joined_at AS joinedAt, t.created_at AS createdAt
+    SELECT t.id, t.name, t.owner_email AS ownerEmail, t.status, tm.role, tm.status AS memberStatus, tm.joined_at AS joinedAt, t.created_at AS createdAt,
+           tb.plan AS billingPlan, tb.status AS billingStatus, tb.seat_limit AS seatLimit
     FROM teams t
     JOIN team_members tm ON tm.team_id = t.id
+    LEFT JOIN team_billing tb ON tb.team_id = t.id
     WHERE tm.email = ? AND tm.status IN ('active', 'pending')
     ORDER BY t.created_at DESC
   `, email);
@@ -299,6 +314,11 @@ async function createTeam(request, env, db, auth, body, headers) {
     `INSERT INTO team_members (team_id, email, role, status, joined_at)
      VALUES (?, ?, 'owner', 'active', CURRENT_TIMESTAMP)
      ON CONFLICT(team_id, email) DO UPDATE SET role = 'owner', status = 'active', joined_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP`
+  ).bind(id, auth.email).run();
+  await db.prepare(
+    `INSERT INTO team_billing (team_id, plan, status, seat_limit, billing_email)
+     VALUES (?, 'pilot', 'pilot', 3, ?)
+     ON CONFLICT(team_id) DO NOTHING`
   ).bind(id, auth.email).run();
   await logEvent(db, request, 'team_workspace_created', auth.email, { action: 'create_team', team_id: id, team_name: name });
   return json({ ok: true, team: { id, name, ownerEmail: auth.email, role: 'owner', status: 'active' }, ...(await teamSnapshot(db, auth.email)) }, 200, headers);
@@ -324,6 +344,19 @@ async function inviteMember(request, env, db, auth, body, headers) {
   if (!team.id) return json({ ok: false, error: 'Team not found.' }, 404, headers);
   const existingMember = await first(db, 'SELECT status FROM team_members WHERE team_id = ? AND email = ?', teamId, email);
   if (existingMember.status === 'active') return json({ ok: false, error: 'That email is already an active team member.' }, 409, headers);
+  const billing = await first(db, 'SELECT seat_limit AS seatLimit, status FROM team_billing WHERE team_id = ?', teamId);
+  const seatLimit = Number(billing.seatLimit || 3);
+  const occupiedSeats = await first(db, `SELECT COUNT(*) AS value FROM team_members WHERE team_id = ? AND status IN ('active', 'pending')`, teamId);
+  if (seatLimit > 0 && Number(occupiedSeats.value || 0) >= seatLimit) {
+    await logEvent(db, request, 'team_member_invite_blocked_seat_limit', auth.email, {
+      action: 'invite_member',
+      team_id: teamId,
+      invited_email: email,
+      seat_limit: seatLimit,
+      occupied_seats: Number(occupiedSeats.value || 0),
+    });
+    return json({ ok: false, error: `Team seat limit reached (${seatLimit}). Request a larger team plan before inviting more techs.` }, 402, headers);
+  }
   const inviteId = `invite_${crypto.randomUUID()}`;
   const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
   await db.prepare(
