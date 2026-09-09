@@ -77,7 +77,7 @@ test('saving job history requires a free save profile signal', () => {
 
 test('service worker cache version ships the newest account bundle', () => {
   assert.match(shell, /app\.js\?v=20260904-commercial-scale/);
-  assert.match(sw, /splashlens-v8-commercial-scale/);
+  assert.match(sw, /splashlens-v9-foldable-field-layout/);
   assert.match(sw, /app\.js\?v=20260904-commercial-scale/);
 });
 

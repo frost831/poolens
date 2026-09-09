@@ -89,6 +89,8 @@
       --field-radius: 8px;
       --field-shadow: 0 1px 2px rgba(15,23,42,.06), 0 10px 24px rgba(15,23,42,.08);
       --field-shadow-tight: 0 1px 2px rgba(15,23,42,.08);
+      --foldable-pane-gap: 14px;
+      --foldable-pane-max: 560px;
     }
     body { background: var(--field-shell); color: var(--field-ink); font-family: system-ui, -apple-system, 'Segoe UI', sans-serif; -webkit-font-smoothing: antialiased; min-height: 100dvh; }
 
@@ -484,6 +486,59 @@
       .field-lane-strip { grid-template-columns:1fr 1fr; }
       .partsnap-steps { grid-template-columns:1fr 1fr; overflow:visible; }
       .partsnap-step:last-child { grid-column:1 / -1; min-height:58px; }
+    }
+    /* Foldable and compact tablet support: keep normal phones simple, but use opened screens as two field panes. */
+    @media (min-width: 760px) and (max-width: 1180px) and (min-height: 620px) and (pointer: coarse) {
+      body { background:linear-gradient(90deg,#e0f2fe 0%,#f8fbfd 50%,#eef8f6 100%); }
+      .marketing-gate { min-height:100dvh; }
+      .marketing-nav { position:sticky; top:0; padding-left:max(18px, env(safe-area-inset-left)); padding-right:max(18px, env(safe-area-inset-right)); }
+      .marketing-hero { max-width:1120px; grid-template-columns:minmax(0,.96fr) minmax(340px,.84fr); gap:var(--foldable-pane-gap); padding-left:max(18px, env(safe-area-inset-left)); padding-right:max(18px, env(safe-area-inset-right)); }
+      .marketing-copy h1 { font-size:clamp(50px,6vw,72px); max-width:660px; }
+      .marketing-copy p { font-size:17px; max-width:560px; }
+      .marketing-outcomes { grid-template-columns:repeat(5,minmax(84px,1fr)); max-width:none; }
+      .marketing-lanes { max-width:1120px; grid-template-columns:repeat(3,minmax(0,1fr)); padding-left:max(18px, env(safe-area-inset-left)); padding-right:max(18px, env(safe-area-inset-right)); }
+      .app-shell > header { padding-left:max(14px, env(safe-area-inset-left)); padding-right:max(14px, env(safe-area-inset-right)); }
+      main { max-width:1120px; margin:0 auto; padding-left:max(12px, env(safe-area-inset-left)); padding-right:max(12px, env(safe-area-inset-right)); }
+      .tab-panel.active { grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:var(--foldable-pane-gap); align-items:start; }
+      .tab-panel.active:not(#tab-scan) { display:grid; }
+      #tab-errors.active { grid-template-columns:minmax(300px,.86fr) minmax(340px,1.14fr); }
+      #tab-scan.active { padding-left:max(12px, env(safe-area-inset-left)); padding-right:max(12px, env(safe-area-inset-right)); }
+      .rescue-hero, .proof-command, .partsnap-hero-card, .operator-card, .route-ready-card, .tech-radar-card, .brain-card, .pool-form-panel, .pool-card, .result-wrap { break-inside:avoid; page-break-inside:avoid; }
+      .field-workflow, .partsnap-steps, .marketing-outcomes { overflow:visible; scrollbar-width:none; }
+      .field-workflow { grid-template-columns:repeat(5,minmax(86px,1fr)); }
+      .partsnap-steps { grid-template-columns:repeat(5,minmax(74px,1fr)); }
+      .proof-command-grid, .rescue-actions, .field-lane-strip, .rescue-strip, .tech-radar-grid, .operator-grid, .pump-decision-metrics { grid-template-columns:repeat(2,minmax(0,1fr)); }
+      .pool-reading-detail.open { grid-template-columns:repeat(3,minmax(0,1fr)); }
+      .field-signals-sheet { width:min(900px, calc(100vw - 32px)); }
+      .role-card { width:min(920px, calc(100vw - 32px)); }
+      .role-grid { grid-template-columns:repeat(3,minmax(0,1fr)); }
+      .role-preferences, .role-next-grid { grid-template-columns:1fr 1fr; }
+      .field-score-card, .role-nudge-card { width:min(680px, calc(100vw - 28px)); }
+      nav[aria-label="SplashLens field tools"] { padding-left:max(0px, env(safe-area-inset-left)); padding-right:max(0px, env(safe-area-inset-right)); }
+      .nav-btn { min-height:62px; }
+    }
+    @supports (width: env(viewport-segment-width 0 0)) {
+      @media (horizontal-viewport-segments: 2) {
+        :root { --foldable-pane-gap: max(18px, calc(env(viewport-segment-left 1 0) - env(viewport-segment-right 0 0) + 16px)); }
+        .marketing-hero, .tab-panel.active:not(#tab-scan), .role-next-grid { column-gap:var(--foldable-pane-gap); }
+        .marketing-preview, .field-signals-sheet, .role-card { max-width:calc(env(viewport-segment-width 0 0) + env(viewport-segment-width 1 0)); }
+      }
+    }
+    @media (min-width: 700px) and (max-width: 1180px) and (orientation: landscape) and (pointer: coarse) {
+      .marketing-hero { grid-template-columns:minmax(0,1fr) minmax(300px,.82fr); align-items:start; }
+      .preview-screen { min-height:360px; }
+      .tab-panel.active:not(#tab-scan) { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:var(--foldable-pane-gap); }
+      .role-card { max-height:calc(100dvh - 28px); }
+      .role-picker { align-items:flex-start; overflow:auto; }
+    }
+    @media (max-width: 430px) {
+      .marketing-copy h1 { font-size:42px; line-height:.95; }
+      .marketing-outcome, .workflow-chip, .rescue-action, .operator-chip, .field-lane-chip { min-height:72px; }
+      .brand-btn, .cat-pill, .brain-chip, .role-pref-row button, .field-signal-actions button { min-height:44px; }
+      .nav-btn { min-height:58px; padding:8px 2px calc(7px + env(safe-area-inset-bottom)); }
+      .nav-btn span { font-size:9.5px; letter-spacing:0; }
+      .preview-screen { padding:12px; }
+      .field-score-widget { left:8px; right:8px; }
     }
     .field-signal-header-actions { display:flex; align-items:center; gap:8px; }
     .field-signal-bell { width:38px; height:38px; border:1px solid rgba(255,255,255,.36); border-radius:8px; background:rgba(255,255,255,.15); color:#fff; display:grid; place-items:center; cursor:pointer; position:relative; }

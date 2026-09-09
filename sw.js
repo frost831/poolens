@@ -1,4 +1,4 @@
-const CACHE = 'splashlens-v8-commercial-scale';
+const CACHE = 'splashlens-v9-foldable-field-layout';
 const ASSETS = [
   '/',
   '/index.html',
