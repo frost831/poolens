@@ -82,6 +82,16 @@ test('deploy package includes public disclosure and AI crawler files', () => {
   assert.match(deployScript, /_headers/);
 });
 
+test('internal development tooling is blocked from public Pages routes', () => {
+  const toolsGuard = readFileSync(join(root, 'functions', 'tools', '[[path]].js'), 'utf8');
+  const testsGuard = readFileSync(join(root, 'functions', 'tests', '[[path]].js'), 'utf8');
+  for (const guard of [toolsGuard, testsGuard]) {
+    assert.match(guard, /status:\s*404/);
+    assert.match(guard, /X-Robots-Tag/);
+    assert.match(guard, /noindex,\s*nofollow/);
+  }
+});
+
 test('owner dashboard is protected by admin secret and shows commercial operating tables', () => {
   assert.match(dashboard, /SplashLens Owner Dashboard/);
   assert.match(dashboard, /X-SplashLens-Stats-Secret/);
