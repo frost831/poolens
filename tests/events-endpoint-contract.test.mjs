@@ -12,6 +12,7 @@ const accountEndpoint = readFileSync(new URL('../functions/api/account.js', impo
 const teamEndpoint = readFileSync(new URL('../functions/api/team.js', import.meta.url), 'utf8');
 const commercialEndpoint = readFileSync(new URL('../functions/api/commercial.js', import.meta.url), 'utf8');
 const stripeWebhookEndpoint = readFileSync(new URL('../functions/api/stripe-webhook.js', import.meta.url), 'utf8');
+const storeMetricsEndpoint = readFileSync(new URL('../functions/api/store-metrics.js', import.meta.url), 'utf8');
 const wrangler = readFileSync(new URL('../wrangler.toml', import.meta.url), 'utf8');
 
 test('events endpoint accepts app analytics payload shapes', () => {
@@ -34,10 +35,12 @@ test('app API routes expose protected stats and server-side amplitude config as 
   assert.match(statsEndpoint, /export async function onRequestGet/);
   assert.match(statsEndpoint, /Unauthorized/);
   assert.match(statsEndpoint, /EXTERNAL_EVENT_FILTER/);
+  assert.match(statsEndpoint, /'session_heartbeat'/);
   assert.match(statsEndpoint, /amplitude_readiness_smoke/);
   assert.match(statsEndpoint, /release_gate_live_custom_domain/);
   assert.match(statsEndpoint, /headless/);
   assert.match(statsEndpoint, /suspectNonSplashLensPaymentRows/);
+  assert.match(statsEndpoint, /foreignPaymentsByPlan/);
 });
 
 test('events endpoint normalizes identity and suppresses internal heartbeat noise', () => {
@@ -46,6 +49,8 @@ test('events endpoint normalizes identity and suppresses internal heartbeat nois
   assert.match(eventsEndpoint, /known_company/);
   assert.match(eventsEndpoint, /identity_confidence/);
   assert.match(eventsEndpoint, /internal_heartbeat_noise/);
+  assert.match(eventsEndpoint, /LOW_SIGNAL_EVENTS/);
+  assert.match(eventsEndpoint, /low_signal_engagement_event/);
   assert.match(eventsEndpoint, /forwardEventToAmplitude/);
 });
 
@@ -155,6 +160,20 @@ test('admin endpoint exposes the owner commercial control room', () => {
   assert.match(adminEndpoint, /approve_partner_card/);
   assert.match(adminEndpoint, /publish_learning_module/);
   assert.match(adminEndpoint, /audit_records/);
+});
+
+test('store metrics endpoint supports protected Apple and Google imports', () => {
+  assert.match(storeMetricsEndpoint, /\/api\/store-metrics/);
+  assert.match(storeMetricsEndpoint, /SPLASHLENS_STATS_SECRET/);
+  assert.match(storeMetricsEndpoint, /store_metric_imports/);
+  assert.match(storeMetricsEndpoint, /app_store/);
+  assert.match(storeMetricsEndpoint, /google_play/);
+  assert.match(storeMetricsEndpoint, /downloads/);
+  assert.match(storeMetricsEndpoint, /installs/);
+  assert.match(storeMetricsEndpoint, /product_page_views/);
+  assert.match(storeMetricsEndpoint, /store_listing_visitors/);
+  assert.match(storeMetricsEndpoint, /store_metrics_imported/);
+  assert.match(storeMetricsEndpoint, /Unauthorized/);
 });
 
 test('app wrangler config declares the shared SplashLens events database binding', () => {

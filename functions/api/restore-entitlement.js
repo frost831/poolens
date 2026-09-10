@@ -61,13 +61,35 @@ function base64UrlEncode(bytes) {
 }
 
 async function storedEntitlement(email, env) {
-  if (!env.SCAN_USAGE_KV || typeof env.SCAN_USAGE_KV.get !== 'function') return null;
-  const value = await env.SCAN_USAGE_KV.get(`entitlement:${email}`);
-  if (!value) return null;
-  try {
-    const parsed = JSON.parse(value);
-    if (parsed && typeof parsed === 'object') return parsed;
-  } catch {}
+  if (env.SCAN_USAGE_KV && typeof env.SCAN_USAGE_KV.get === 'function') {
+    const value = await env.SCAN_USAGE_KV.get(`entitlement:${email}`);
+    if (value) {
+      try {
+        const parsed = JSON.parse(value);
+        if (parsed && typeof parsed === 'object') return parsed;
+      } catch {}
+    }
+  }
+  if (env.SUBSCRIBERS_DB && typeof env.SUBSCRIBERS_DB.prepare === 'function') {
+    const row = await env.SUBSCRIBERS_DB.prepare(
+      `SELECT email, plan, source, stripe_session_id AS stripeSessionId, stripe_customer_id AS stripeCustomerId, current_period_end AS expiresAt
+       FROM commercial_entitlements
+       WHERE lower(email) = lower(?) AND status IN ('active','trialing','pilot')
+       ORDER BY updated_at DESC
+       LIMIT 1`,
+    ).bind(email).first();
+    if (row && row.email) {
+      return {
+        subject: email,
+        plan: row.plan || 'Splash Lens Pro Unlimited',
+        scopes: ['scan'],
+        source: row.source || 'commercial_entitlements',
+        stripeSessionId: row.stripeSessionId || '',
+        stripeCustomerId: row.stripeCustomerId || '',
+        expiresAt: row.expiresAt || '',
+      };
+    }
+  }
   return null;
 }
 

@@ -1,5 +1,7 @@
 import { amplitudeEnabled, forwardEventToAmplitude } from '../_shared/amplitude.mjs';
 
+const LOW_SIGNAL_EVENTS = new Set(['session_heartbeat']);
+
 const ALLOWED_ORIGINS = new Set([
   'https://app.splashlens.com',
   'https://splashlens.com',
@@ -124,15 +126,17 @@ export async function onRequestPost({ request, env }) {
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
     ).bind(event, source, path, plan, mode, propsJson, userAgent, referrer, country).run();
 
-    const amplitude = await forwardEventToAmplitude(env, {
-      correlationId: crypto.randomUUID(),
-      event,
-      source,
-      path,
-      plan,
-      mode,
-      createdAt: new Date().toISOString(),
-    }, props);
+    const amplitude = LOW_SIGNAL_EVENTS.has(event)
+      ? { sent: false, skipped: true, reason: 'low_signal_engagement_event' }
+      : await forwardEventToAmplitude(env, {
+          correlationId: crypto.randomUUID(),
+          event,
+          source,
+          path,
+          plan,
+          mode,
+          createdAt: new Date().toISOString(),
+        }, props);
 
     return new Response(JSON.stringify({
       ok: true,

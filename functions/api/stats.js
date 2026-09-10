@@ -12,7 +12,7 @@ const ALLOWED_ORIGINS = new Set([
 ]);
 
 const EXTERNAL_EVENT_FILTER = `
- AND COALESCE(event, '') NOT IN ('amplitude_readiness_smoke', 'growth_plan_smoke', 'audit_handoff_probe', 'codex_deploy_smoke', 'codex_launch_probe', 'codex_post_push_probe', 'command_center_probe', 'release_gate_live_custom_domain', 'release_gate_live_preview')
+ AND COALESCE(event, '') NOT IN ('session_heartbeat', 'amplitude_readiness_smoke', 'growth_plan_smoke', 'audit_handoff_probe', 'codex_deploy_smoke', 'codex_launch_probe', 'codex_post_push_probe', 'command_center_probe', 'release_gate_live_custom_domain', 'release_gate_live_preview')
  AND COALESCE(source, '') NOT IN ('qa', 'codex', 'codex_smoke', 'launch-gate-test')
  AND lower(COALESCE(user_agent, '')) NOT LIKE '%headless%'
  AND lower(COALESCE(user_agent, '')) NOT LIKE '%bot%'
@@ -58,7 +58,7 @@ const FUNNEL_STAGES = [
   {
     key: 'return_use',
     label: 'Return / continued use',
-    events: ['return_task_continued', 'session_started', 'session_heartbeat', 'app_tab_view', 'partsnap_field_stop_reopened'],
+    events: ['return_task_continued', 'session_started', 'app_tab_view', 'partsnap_field_stop_reopened'],
   },
   {
     key: 'checkout_intent',
@@ -137,8 +137,8 @@ async function funnelStageStats(db, days) {
 
 async function paymentStats(db) {
   const table = await first(db, `SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'payment_events'`);
-  if (!table.name) return { byPlan: [], splashlensCompleted: 0, suspectCompleted: 0 };
-  const byPlan = await all(db, `
+  if (!table.name) return { byPlan: [], foreignByPlan: [], splashlensCompleted: 0, suspectCompleted: 0 };
+  const allByPlan = await all(db, `
     SELECT event_type, COALESCE(plan, 'unknown') AS plan, COUNT(*) AS count,
       COUNT(DISTINCT stripe_session_id) AS stripeSessions,
       MIN(created_at) AS firstSeen,
@@ -147,13 +147,12 @@ async function paymentStats(db) {
     GROUP BY event_type, COALESCE(plan, 'unknown')
     ORDER BY count DESC, plan ASC
   `);
+  const byPlan = allByPlan.filter((row) => /partsnap|splashlens|splash lens/i.test(String(row.plan || '')));
+  const foreignByPlan = allByPlan.filter((row) => !/partsnap|splashlens|splash lens/i.test(String(row.plan || '')));
   const splashlensCompleted = byPlan
-    .filter((row) => /partsnap|splashlens/i.test(String(row.plan || '')))
     .reduce((sum, row) => sum + Number(row.count || 0), 0);
-  const suspectCompleted = byPlan
-    .filter((row) => !/partsnap|splashlens/i.test(String(row.plan || '')))
-    .reduce((sum, row) => sum + Number(row.count || 0), 0);
-  return { byPlan, splashlensCompleted, suspectCompleted };
+  const suspectCompleted = foreignByPlan.reduce((sum, row) => sum + Number(row.count || 0), 0);
+  return { byPlan, foreignByPlan, splashlensCompleted, suspectCompleted };
 }
 
 export async function onRequestGet({ request, env }) {
@@ -222,6 +221,7 @@ export async function onRequestGet({ request, env }) {
       topEvents30d,
       topPages30d,
       paymentsByPlan: payments.byPlan,
+      foreignPaymentsByPlan: payments.foreignByPlan,
     }, 200, headers);
   } catch (error) {
     console.error('Stats error:', error);

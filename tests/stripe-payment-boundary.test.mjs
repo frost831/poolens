@@ -38,6 +38,8 @@ test('paid restore endpoint exists for the app restore button', () => {
   assert.match(app, /const PARTSNAP_RESTORE_ENDPOINT = '\/api\/restore-entitlement'/);
   assert.match(restore, /export async function onRequestPost/);
   assert.match(restore, /SCAN_USAGE_KV\.get\(`entitlement:\$\{email\}`/);
+  assert.match(restore, /SUBSCRIBERS_DB/);
+  assert.match(restore, /commercial_entitlements/);
   assert.match(restore, /No paid SplashLens entitlement was found/);
   assert.match(restore, /scan_token/);
 });

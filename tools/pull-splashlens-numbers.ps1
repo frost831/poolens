@@ -1,6 +1,7 @@
 param(
   [string]$BaseUrl = "https://app.splashlens.com",
   [string]$Secret = $env:SPLASHLENS_STATS_SECRET,
+  [switch]$PromptForSecret,
   [switch]$Json
 )
 
@@ -17,13 +18,13 @@ function Convert-SecretToPlainText {
   }
 }
 
-if (-not $Secret) {
+if (-not $Secret -and $PromptForSecret) {
   $secure = Read-Host "Paste SplashLens stats/admin secret" -AsSecureString
   $Secret = Convert-SecretToPlainText -Secure $secure
 }
 
 if (-not $Secret) {
-  throw "A SplashLens stats/admin secret is required."
+  throw "SPLASHLENS_STATS_SECRET is not set. Set it for owner API pulls, run tools\run-field-intelligence-loop.mjs for read-only D1 fallback, or pass -PromptForSecret for a manual one-time pull."
 }
 
 $headers = @{
