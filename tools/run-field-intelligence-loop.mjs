@@ -193,6 +193,7 @@ function wranglerCommand() {
 
 function d1Rows(database, sql) {
   const wrangler = wranglerCommand();
+  const commandSql = String(sql).replace(/\s+/g, ' ').trim();
   const raw = execFileSync(wrangler.command, [
     ...wrangler.prefixArgs,
     'd1',
@@ -201,7 +202,7 @@ function d1Rows(database, sql) {
     '--remote',
     '--json',
     '--command',
-    sql,
+    commandSql,
   ], {
     encoding: 'utf8',
     stdio: ['ignore', 'pipe', 'pipe'],
