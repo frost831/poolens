@@ -93,6 +93,7 @@
     </section>
     <section class="grid two">
       <div class="card"><p class="label">Entitlements</p><div id="entitlements"></div></div>
+      <div class="card"><p class="label">Official store imports</p><div id="storeMetrics"></div></div>
       <div class="card"><p class="label">Team billing / seats</p><div id="teamBilling"></div></div>
       <div class="card"><p class="label">Access requests</p><div id="intake"></div></div>
       <div class="card"><p class="label">Proof saved</p><div id="proof"></div></div>
@@ -219,6 +220,7 @@
           metric('Open access requests', t.intakeOpen || 0, 'Teams, facility, partner, training'),
           metric('Proof records 30d', t.proofLast30 || 0, 'Server-side proof metadata'),
           metric('Team workspaces', t.teamWorkspaces || 0, 'Active teams'),
+          metric('Store import latest', stats.latestStoreMetricImportAt ? String(stats.latestStoreMetricImportAt).slice(0, 10) : 'none', 'Apple/Google official metrics'),
         ].join('');
         document.getElementById('generated').textContent = `Generated ${stats.generatedAt || admin.generatedAt || ''}`;
         document.getElementById('funnel7').innerHTML = funnel(stats.funnel7d);
@@ -229,6 +231,12 @@
           { label:'Status', render:(r) => statusPill(r.status) },
           { label:'Action', render:(r) => `<button class="secondary" onclick='changeEntitlement(${JSON.stringify(r.id)}, ${JSON.stringify(r.status)})'>Edit</button>` },
         ]);
+        document.getElementById('storeMetrics').innerHTML = table(stats.storeMetricImports, [
+          { label:'Store', key:'platform' },
+          { label:'Metric', key:'metric' },
+          { label:'Total', key:'value' },
+          { label:'Last', render:(r) => esc(String(r.lastDate || '').slice(0, 10)) },
+        ], 'No official Apple/Google exports imported yet.');
         document.getElementById('teamBilling').innerHTML = table(admin.teamBilling, [
           { label:'Team', key:'teamName' },
           { label:'Plan', key:'plan' },

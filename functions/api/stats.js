@@ -155,6 +155,19 @@ async function paymentStats(db) {
   return { byPlan, foreignByPlan, splashlensCompleted, suspectCompleted };
 }
 
+async function storeMetricStats(db) {
+  const table = await first(db, `SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'store_metric_imports'`);
+  if (!table.name) return { totals: [], latestImportAt: null };
+  const totals = await all(db, `
+    SELECT platform, metric, SUM(value) AS value, MIN(metric_date) AS firstDate, MAX(metric_date) AS lastDate
+    FROM store_metric_imports
+    GROUP BY platform, metric
+    ORDER BY platform ASC, metric ASC
+  `);
+  const latest = await first(db, `SELECT MAX(updated_at) AS latestImportAt FROM store_metric_imports`);
+  return { totals, latestImportAt: latest.latestImportAt || null };
+}
+
 export async function onRequestGet({ request, env }) {
   const headers = corsHeaders(request);
   if (!authOk(request, env)) return json({ ok: false, error: 'Unauthorized' }, 401, headers);
@@ -177,6 +190,7 @@ export async function onRequestGet({ request, env }) {
       funnel7d,
       funnel30d,
       payments,
+      storeMetrics,
     ] = await Promise.all([
       count(db, `SELECT COUNT(*) AS value FROM events WHERE created_at >= datetime('now', '-7 days') ${EXTERNAL_EVENT_FILTER}`),
       count(db, `SELECT COUNT(*) AS value FROM events WHERE created_at >= datetime('now', '-30 days') ${EXTERNAL_EVENT_FILTER}`),
@@ -184,7 +198,7 @@ export async function onRequestGet({ request, env }) {
       count(db, `SELECT COUNT(*) AS value FROM events WHERE event IN ('first_action_started','manual_code_search','ai_scan_started','service_proof_workflow_started','facility_workflow_action_selected','field_challenge_started') AND created_at >= datetime('now', '-30 days') ${EXTERNAL_EVENT_FILTER}`),
       count(db, `SELECT COUNT(*) AS value FROM events WHERE event IN ('first_value_completed','partsnap_result','service_report_saved','service_proof_summary_generated','service_proof_share_link_created','field_challenge_completed') AND created_at >= datetime('now', '-30 days') ${EXTERNAL_EVENT_FILTER}`),
       count(db, `SELECT COUNT(*) AS value FROM events WHERE event IN ('partsnap_result_feedback','field_feedback_quick_answered','field_feedback_submitted','field_score_feedback') AND created_at >= datetime('now', '-30 days') ${EXTERNAL_EVENT_FILTER}`),
-      count(db, `SELECT COUNT(*) AS value FROM events WHERE event = 'checkout_click' AND created_at >= datetime('now', '-30 days') ${EXTERNAL_EVENT_FILTER}`),
+      count(db, `SELECT COUNT(*) AS value FROM events WHERE event IN ('checkout_click','upgrade_click','post_value_upgrade_clicked','partsnap_pro_restore_requested','native_purchase_click','paid_lane_click','paid_lane_lead_captured') AND created_at >= datetime('now', '-30 days') ${EXTERNAL_EVENT_FILTER}`),
       count(db, `SELECT COUNT(*) AS value FROM subscribers`),
       count(db, `SELECT COUNT(*) AS value FROM partner_intake`),
       all(db, `SELECT event, COUNT(*) AS count FROM events WHERE created_at >= datetime('now', '-30 days') ${EXTERNAL_EVENT_FILTER} GROUP BY event ORDER BY count DESC LIMIT 15`),
@@ -192,6 +206,7 @@ export async function onRequestGet({ request, env }) {
       funnelStageStats(db, 7),
       funnelStageStats(db, 30),
       paymentStats(db),
+      storeMetricStats(db),
     ]);
 
     return json({
@@ -222,6 +237,8 @@ export async function onRequestGet({ request, env }) {
       topPages30d,
       paymentsByPlan: payments.byPlan,
       foreignPaymentsByPlan: payments.foreignByPlan,
+      storeMetricImports: storeMetrics.totals,
+      latestStoreMetricImportAt: storeMetrics.latestImportAt,
     }, 200, headers);
   } catch (error) {
     console.error('Stats error:', error);

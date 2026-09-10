@@ -76,9 +76,9 @@ test('saving job history requires a free save profile signal', () => {
 });
 
 test('service worker cache version ships the newest account bundle', () => {
-  assert.match(shell, /app\.js\?v=20260904-commercial-scale/);
-  assert.match(sw, /splashlens-v9-foldable-field-layout/);
-  assert.match(sw, /app\.js\?v=20260904-commercial-scale/);
+  assert.match(shell, /app\.js\?v=20260910-store-proof-partsnap-upgrade/);
+  assert.match(sw, /splashlens-v10-store-proof-partsnap-upgrade/);
+  assert.match(sw, /app\.js\?v=20260910-store-proof-partsnap-upgrade/);
 });
 
 test('checkout exposes a JSON catalog and Splash Lens Pro Unlimited metadata', () => {

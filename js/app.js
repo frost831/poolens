@@ -7062,7 +7062,7 @@ const IDENTITY_SESSION_KEY = 'splashlens-identity-session-v1';
 
 function initScanTab() {
   updateAIStatusBar();
-  setScanMode(_scanMode || 'camera');
+  setScanMode(_scanMode || 'parts');
   renderScanBrandFilter();
 }
 
@@ -8895,6 +8895,7 @@ function renderPartsSnapResult(ai, result, status) {
       ${showGuidedRetry ? renderPartSnapGuidedRetry(_lastPartSnapResult, ladder, risk, missingProof) : ''}
       ${renderPartSnapFastWorkflow(_lastPartSnapResult, corpusCandidates, ladder, missingProof)}
       ${renderPartSnapFeedbackTrap(_lastPartSnapResult, corpusCandidates, ladder, missingProof, risk)}
+      ${renderPartSnapResultUpgradeOffer('partsnap_result')}
       ${renderPartSnapPrimaryAction(risk, missingProof.length ? missingProof : ladder.missing)}
       ${renderPartSnapProofSnapshot(ladder, risk, visibleEvidence, missingProof)}
       ${renderPartConfidenceLadder(ladder)}
@@ -9127,15 +9128,34 @@ function renderPostValueUpgradeOffer() {
       <p style="color:#f8fafc;font-size:13px;font-weight:950;margin-bottom:4px;">Need PartSnap throughout the route?</p>
       <p style="color:#94a3b8;font-size:11px;line-height:1.4;margin-bottom:9px;">A free field profile includes 3 AI scans each month. Pro Unlimited unlocks unlimited scanner access, saved job memory, customer-safe summaries, and boss/counter packets where paid access is available. Code lookup, dosing, notes, and core field tools stay free to start.</p>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;">
-        <a href="${PARTSNAP_MONTHLY_LINK}" target="_blank" rel="noopener" onclick="trackPostValueUpgrade('monthly')" style="background:#0284c7;color:#fff;text-decoration:none;text-align:center;border-radius:8px;padding:10px 7px;font-size:11px;font-weight:950;">$29 monthly</a>
-        <a href="${PARTSNAP_YEARLY_LINK}" target="_blank" rel="noopener" onclick="trackPostValueUpgrade('yearly')" style="background:#16a34a;color:#fff;text-decoration:none;text-align:center;border-radius:8px;padding:10px 7px;font-size:11px;font-weight:950;">$249 yearly</a>
+        <a href="${PARTSNAP_MONTHLY_LINK}" target="_blank" rel="noopener" onclick="trackPostValueUpgrade('monthly','field_stop_saved')" style="background:#0284c7;color:#fff;text-decoration:none;text-align:center;border-radius:8px;padding:10px 7px;font-size:11px;font-weight:950;">$29 monthly</a>
+        <a href="${PARTSNAP_YEARLY_LINK}" target="_blank" rel="noopener" onclick="trackPostValueUpgrade('yearly','field_stop_saved')" style="background:#16a34a;color:#fff;text-decoration:none;text-align:center;border-radius:8px;padding:10px 7px;font-size:11px;font-weight:950;">$249 yearly</a>
       </div>
     </div>`;
 }
 
-function trackPostValueUpgrade(plan) {
-  trackSplashLensEvent('post_value_upgrade_clicked', { plan, feature: 'unlimited_partsnap', placement: 'field_stop_saved' });
-  trackSplashLensEvent('upgrade_click', { plan, feature: 'unlimited_partsnap', placement: 'field_stop_saved' });
+function renderPartSnapResultUpgradeOffer(placement = 'partsnap_result') {
+  if (isPartSnapPro() || isStoreShellMode()) return '';
+  const key = `splashlens-post-value-upgrade-${placement}-shown-at`;
+  const lastShownAt = Date.parse(localStorage.getItem(key) || '');
+  if (Number.isFinite(lastShownAt) && Date.now() - lastShownAt < 24 * 3600000) return '';
+  localStorage.setItem(key, new Date().toISOString());
+  trackSplashLensEvent('post_value_upgrade_shown', { feature: 'unlimited_partsnap', placement });
+  return `
+    <div style="background:#082f49;border:1px solid #0ea5e9;border-radius:10px;padding:12px;margin:10px 0;">
+      <p style="color:#7dd3fc;font-size:10px;font-weight:950;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;">Keep the route moving</p>
+      <p style="color:#f8fafc;font-size:13px;font-weight:950;margin-bottom:4px;">Use PartSnap on every weird part today.</p>
+      <p style="color:#bae6fd;font-size:11px;line-height:1.4;margin-bottom:9px;">Free profiles get 3 AI scans a month. Pro unlocks unlimited scanner use, saved job memory, customer-safe notes, and boss/counter packets where paid access is available.</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;">
+        <a href="${PARTSNAP_MONTHLY_LINK}" target="_blank" rel="noopener" onclick="trackPostValueUpgrade('monthly','${escAttr(placement)}')" style="background:#0ea5e9;color:#082f49;text-decoration:none;text-align:center;border-radius:8px;padding:10px 7px;font-size:11px;font-weight:950;">Go Pro $29</a>
+        <a href="${PARTSNAP_YEARLY_LINK}" target="_blank" rel="noopener" onclick="trackPostValueUpgrade('yearly','${escAttr(placement)}')" style="background:#22c55e;color:#052e16;text-decoration:none;text-align:center;border-radius:8px;padding:10px 7px;font-size:11px;font-weight:950;">Save yearly</a>
+      </div>
+    </div>`;
+}
+
+function trackPostValueUpgrade(plan, placement = 'partsnap_result') {
+  trackSplashLensEvent('post_value_upgrade_clicked', { plan, feature: 'unlimited_partsnap', placement });
+  trackSplashLensEvent('upgrade_click', { plan, feature: 'unlimited_partsnap', placement });
 }
 
 function renderPartSnapProofSnapshot(ladder = {}, risk = {}, visibleEvidence = [], missingProof = []) {

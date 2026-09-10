@@ -1,10 +1,10 @@
-const CACHE = 'splashlens-v9-foldable-field-layout';
+const CACHE = 'splashlens-v10-store-proof-partsnap-upgrade';
 const ASSETS = [
   '/',
   '/index.html',
   '/js/errors.js',
   '/js/data.js?v=20260904-commercial-scale',
-  '/js/app.js?v=20260904-commercial-scale',
+  '/js/app.js?v=20260910-store-proof-partsnap-upgrade',
   '/js/field-signals.js?v=20260728-field-signals',
   '/js/analytics.js',
   '/js/field-score.js?v=20260828-closing-score',
