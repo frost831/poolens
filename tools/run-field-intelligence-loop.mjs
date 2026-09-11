@@ -201,7 +201,7 @@ function wranglerCommand() {
 function d1Rows(database, sql) {
   const wrangler = wranglerCommand();
   const commandSql = String(sql).replace(/\s+/g, ' ').trim();
-  const raw = execFileSync(wrangler.command, [
+  const args = [
     ...wrangler.prefixArgs,
     'd1',
     'execute',
@@ -210,12 +210,27 @@ function d1Rows(database, sql) {
     '--json',
     '--command',
     commandSql,
-  ], {
-    encoding: 'utf8',
-    stdio: ['ignore', 'pipe', 'pipe'],
-    timeout: 30000,
-    windowsHide: true,
-  });
+  ];
+  let lastError = null;
+  let raw = '';
+  for (let attempt = 1; attempt <= 3; attempt += 1) {
+    try {
+      raw = execFileSync(wrangler.command, args, {
+        encoding: 'utf8',
+        stdio: ['ignore', 'pipe', 'pipe'],
+        timeout: 60000,
+        windowsHide: true,
+      });
+      lastError = null;
+      break;
+    } catch (error) {
+      lastError = error;
+    }
+  }
+  if (lastError) {
+    const stderr = String(lastError.stderr || '').replace(/\s+/g, ' ').trim();
+    throw new Error(stderr ? `D1 query failed after retries: ${stderr}` : `D1 query failed after retries for ${database}`);
+  }
   const parsed = JSON.parse(raw);
   if (!Array.isArray(parsed) || parsed[0]?.success !== true) {
     throw new Error(`D1 query failed for ${database}`);
