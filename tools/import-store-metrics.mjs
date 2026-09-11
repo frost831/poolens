@@ -145,6 +145,10 @@ function entriesFromCsv(text, source) {
 function wranglerCommand() {
   if (process.platform !== 'win32') return { command: 'npx', prefixArgs: ['wrangler'] };
   const appData = process.env.APPDATA || join(process.env.USERPROFILE || '', 'AppData', 'Roaming');
+  const wranglerJs = join(appData, 'npm', 'node_modules', 'wrangler', 'bin', 'wrangler.js');
+  if (existsSync(wranglerJs)) {
+    return { command: process.execPath, prefixArgs: [wranglerJs] };
+  }
   const globalWrangler = join(appData, 'npm', 'wrangler.ps1');
   if (existsSync(globalWrangler)) {
     return { command: 'powershell.exe', prefixArgs: ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', globalWrangler] };
