@@ -76,9 +76,9 @@ test('saving job history requires a free save profile signal', () => {
 });
 
 test('service worker cache version ships the newest account bundle', () => {
-  assert.match(shell, /app\.js\?v=20260914-field60-challenge/);
-  assert.match(sw, /splashlens-v11-field60-challenge/);
-  assert.match(sw, /app\.js\?v=20260914-field60-challenge/);
+  assert.match(shell, /app\.js\?v=20260914-closing-season-challenge/);
+  assert.match(sw, /splashlens-v12-closing-season-challenge/);
+  assert.match(sw, /app\.js\?v=20260914-closing-season-challenge/);
 });
 
 test('checkout exposes a JSON catalog and Splash Lens Pro Unlimited metadata', () => {

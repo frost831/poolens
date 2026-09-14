@@ -679,11 +679,15 @@ function enterSplashLensApp(tab = 'errors', mode) {
 
 function setFieldChallengeContext(path = 'partsnap', extra = {}) {
   const cleanPath = cleanAttributionValue(path || 'partsnap', 40) || 'partsnap';
+  const challengeType = cleanPath === 'closing'
+    ? 'closing_season'
+    : cleanAttributionValue(extra.challenge_type || 'activation', 40) || 'activation';
   const context = {
     field_challenge: 'field60',
     challenge_path: cleanPath,
     challenge_id: `field60-${Date.now().toString(36)}-${getScanClientId().slice(0, 6)}`,
-    challenge_type: 'activation',
+    challenge_type: challengeType,
+    season_campaign: cleanPath === 'closing' ? 'midwest_winddown_2026' : cleanAttributionValue(extra.season_campaign || '', 80),
     pilot_id: cleanAttributionValue(extra.pilot_id || '', 80),
     participant_id: cleanAttributionValue(extra.participant_id || '', 80),
     referral_id: cleanAttributionValue(extra.referral_id || '', 80),
@@ -701,6 +705,12 @@ function setFieldChallengeContext(path = 'partsnap', extra = {}) {
 function startFieldChallenge(path = 'partsnap') {
   const normalized = cleanAttributionValue(path || 'partsnap', 40) || 'partsnap';
   const context = setFieldChallengeContext(normalized);
+  if (normalized === 'closing') {
+    trackSplashLensEvent('closing_season_challenge_started', {
+      ...context,
+      source: 'homepage_challenge',
+    });
+  }
   trackSplashLensEvent('field_challenge_started', {
     ...context,
     source: 'homepage_challenge',
@@ -716,6 +726,12 @@ function startFieldChallenge(path = 'partsnap') {
     challenge_path: normalized,
     workflow_style: getWorkflowStyle(),
   });
+
+  if (normalized === 'closing') {
+    enterSplashLensApp('report');
+    setTimeout(() => startServiceProofWorkflow('closing'), 120);
+    return;
+  }
 
   if (normalized === 'code') {
     enterSplashLensApp('errors', 'search');
@@ -748,7 +764,25 @@ function initDeepLink() {
   const mode = params.get('mode');
   const workflow = params.get('workflow');
   const checklist = params.get('checklist');
+  const challenge = params.get('challenge');
+  const challengePath = cleanAttributionValue(params.get('challenge_path') || params.get('challengePath') || '', 40);
   const allowed = new Set(['errors', 'dosing', 'report', 'guide', 'pools', 'scan', 'volume', 'sand', 'route']);
+  if (challenge === 'field60' && challengePath) {
+    setFieldChallengeContext(challengePath, {
+      challenge_type: challengePath === 'closing' ? 'closing_season' : 'activation',
+      season_campaign: params.get('utm_campaign') || '',
+      pilot_id: params.get('pilot_id') || '',
+      participant_id: params.get('participant_id') || '',
+      referral_id: params.get('referral_id') || '',
+    });
+    trackSplashLensEvent('field_challenge_link_opened', {
+      challenge_path: challengePath,
+      challenge_type: challengePath === 'closing' ? 'closing_season' : 'activation',
+      utm_source: params.get('utm_source') || '',
+      utm_medium: params.get('utm_medium') || '',
+      utm_campaign: params.get('utm_campaign') || '',
+    });
+  }
   if (mode === 'facility') {
     setSplashLensRole('facility', { persist: false, forced: true });
     return;
@@ -768,6 +802,8 @@ function initDeepLink() {
     if (tab === 'guide' && checklist === 'closing') {
       setTimeout(() => switchClType('closing'), 120);
     }
+  } else if (challenge === 'field60' && challengePath === 'closing') {
+    setTimeout(() => startFieldChallenge('closing'), 120);
   }
 }
 

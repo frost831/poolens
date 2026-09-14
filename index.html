@@ -652,7 +652,8 @@
         </div>
         <div class="marketing-actions">
           <button id="continue-field-task" type="button" class="marketing-primary" style="display:none" onclick="continueLastFieldTask()">Continue last field task</button>
-          <button type="button" class="marketing-primary" onclick="startFieldChallenge('partsnap')">Try the 60-second field challenge</button>
+          <button type="button" class="marketing-primary" onclick="startFieldChallenge('closing')">Run closing-season check</button>
+          <button type="button" class="marketing-secondary" onclick="startFieldChallenge('partsnap')">Try the 60-second field challenge</button>
           <button type="button" class="marketing-secondary" onclick="enterSplashLensApp('errors')">Open Field Tools</button>
         </div>
         <div class="field-challenge-card" aria-label="60-second SplashLens field challenge">
@@ -668,6 +669,7 @@
             <button type="button" class="primary" onclick="startFieldChallenge('partsnap')"><b>01</b><strong>Photo a part</strong><span>PartSnap plus proof checklist.</span></button>
             <button type="button" class="blue" onclick="startFieldChallenge('code')"><b>02</b><strong>Look up a code</strong><span>Search brand, code, or symptom.</span></button>
             <button type="button" onclick="startFieldChallenge('equipment')"><b>03</b><strong>Pick equipment</strong><span>Pump, heater, salt, robot, light, spa.</span></button>
+            <button type="button" onclick="startFieldChallenge('closing')"><b>04</b><strong>Close season</strong><span>Proof before freeze and spring callbacks.</span></button>
           </div>
         </div>
         <div class="marketing-outcomes" aria-label="Choose a SplashLens workflow">
@@ -1636,10 +1638,10 @@
 
   <script src="/js/errors.js"></script>
   <script src="/js/data.js?v=20260904-commercial-scale"></script>
-  <script src="/js/app.js?v=20260914-field60-challenge"></script>
+  <script src="/js/app.js?v=20260914-closing-season-challenge"></script>
   <script type="module" src="/js/field-signals.js?v=20260728-field-signals"></script>
   <script src="/js/analytics.js"></script>
-  <script src="/js/field-score.js?v=20260914-field60-challenge"></script>
+  <script src="/js/field-score.js?v=20260914-closing-season-challenge"></script>
   <script>
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/sw.js').catch(() => {});

@@ -14,7 +14,7 @@ test('field score widget is present and loaded after analytics', () => {
   assert.match(html, /data-field-score="missing"/);
   assert.match(html, /data-field-score="wrong"/);
   assert.match(html, /\/js\/analytics\.js/);
-  assert.match(html, /\/js\/field-score\.js\?v=20260914-field60-challenge/);
+  assert.match(html, /\/js\/field-score\.js\?v=20260914-closing-season-challenge/);
   assert.ok(html.indexOf('/js/analytics.js') < html.indexOf('/js/field-score.js'));
 });
 
@@ -57,9 +57,13 @@ test('first screen runs a measurable 60-second field challenge', () => {
   assert.match(html, /startFieldChallenge\('partsnap'\)/);
   assert.match(html, /startFieldChallenge\('code'\)/);
   assert.match(html, /startFieldChallenge\('equipment'\)/);
+  assert.match(html, /startFieldChallenge\('closing'\)/);
   assert.match(appSource, /function startFieldChallenge/);
   assert.match(appSource, /field_challenge_started/);
   assert.match(appSource, /field_challenge_routed/);
+  assert.match(appSource, /closing_season_challenge_started/);
+  assert.match(appSource, /challenge_type: challengeType/);
+  assert.match(appSource, /startServiceProofWorkflow\('closing'\)/);
   assert.match(appSource, /field60_/);
   assert.match(appSource, /FIELD_CHALLENGE_CONTEXT_KEY/);
 });

@@ -1,13 +1,13 @@
-const CACHE = 'splashlens-v11-field60-challenge';
+const CACHE = 'splashlens-v12-closing-season-challenge';
 const ASSETS = [
   '/',
   '/index.html',
   '/js/errors.js',
   '/js/data.js?v=20260904-commercial-scale',
-  '/js/app.js?v=20260914-field60-challenge',
+  '/js/app.js?v=20260914-closing-season-challenge',
   '/js/field-signals.js?v=20260728-field-signals',
   '/js/analytics.js',
-  '/js/field-score.js?v=20260914-field60-challenge',
+  '/js/field-score.js?v=20260914-closing-season-challenge',
   '/favicon.svg',
   '/manifest.json'
 ];
