@@ -677,6 +677,71 @@ function enterSplashLensApp(tab = 'errors', mode) {
   }
 }
 
+function setFieldChallengeContext(path = 'partsnap', extra = {}) {
+  const cleanPath = cleanAttributionValue(path || 'partsnap', 40) || 'partsnap';
+  const context = {
+    field_challenge: 'field60',
+    challenge_path: cleanPath,
+    challenge_id: `field60-${Date.now().toString(36)}-${getScanClientId().slice(0, 6)}`,
+    challenge_type: 'activation',
+    pilot_id: cleanAttributionValue(extra.pilot_id || '', 80),
+    participant_id: cleanAttributionValue(extra.participant_id || '', 80),
+    referral_id: cleanAttributionValue(extra.referral_id || '', 80),
+    captured_at: new Date().toISOString(),
+  };
+  try {
+    sessionStorage.setItem(FIELD_CHALLENGE_CONTEXT_KEY, JSON.stringify(context));
+    localStorage.setItem(FIELD_CHALLENGE_CONTEXT_KEY, JSON.stringify(context));
+    sessionStorage.removeItem(FIELD_CHALLENGE_STARTED_KEY);
+    sessionStorage.removeItem(FIELD_CHALLENGE_COMPLETED_KEY);
+  } catch {}
+  return context;
+}
+
+function startFieldChallenge(path = 'partsnap') {
+  const normalized = cleanAttributionValue(path || 'partsnap', 40) || 'partsnap';
+  const context = setFieldChallengeContext(normalized);
+  trackSplashLensEvent('field_challenge_started', {
+    ...context,
+    source: 'homepage_challenge',
+  });
+  trackSplashLensEvent('field_challenge_routed', {
+    ...context,
+    route: normalized,
+    source: 'homepage_challenge',
+  });
+  trackSplashLensEvent('first_action_started', {
+    role: getSplashLensRole() || 'tech',
+    action: `field60_${normalized}`,
+    challenge_path: normalized,
+    workflow_style: getWorkflowStyle(),
+  });
+
+  if (normalized === 'code') {
+    enterSplashLensApp('errors', 'search');
+    setTimeout(() => {
+      const el = document.getElementById('error-search');
+      if (el && !el.value) el.placeholder = 'Type one real code, brand, or symptom';
+    }, 120);
+    return;
+  }
+
+  if (normalized === 'equipment') {
+    enterSplashLensApp('errors');
+    setTimeout(() => {
+      const el = document.getElementById('error-search');
+      if (el) {
+        el.placeholder = 'Search pump, heater, robot, salt, light, spa...';
+        el.focus();
+      }
+      document.getElementById('field-signal-inline')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }, 120);
+    return;
+  }
+
+  enterSplashLensApp('scan', 'parts');
+}
+
 function initDeepLink() {
   const params = new URLSearchParams(window.location.search);
   const tab = params.get('tab');
@@ -925,10 +990,12 @@ function renderRoleNextAction(role = getSplashLensRole()) {
 }
 
 function trackFirstActionStarted(role, action) {
+  const challenge = getFieldChallengeContext();
   trackSplashLensEvent('first_action_started', {
     role: normalizeSplashLensRole(role) || getSplashLensRole() || '',
     action,
     workflow_style: getWorkflowStyle(),
+    challenge_path: challenge.challenge_path || '',
   });
 }
 

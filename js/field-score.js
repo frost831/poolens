@@ -39,14 +39,28 @@
 
   function attribution() {
     var params = new URLSearchParams(window.location.search || '');
+    var challenge = currentChallenge();
     return {
       utm_source: safeText(params.get('utm_source'), 80),
       utm_medium: safeText(params.get('utm_medium'), 80),
       utm_campaign: safeText(params.get('utm_campaign'), 100),
       ref: safeText(params.get('ref'), 100),
-      challenge: safeText(params.get('challenge'), 80),
-      challenge_path: safeText(params.get('challenge_path'), 80)
+      challenge: safeText(params.get('challenge') || challenge.field_challenge, 80),
+      challenge_path: safeText(params.get('challenge_path') || challenge.challenge_path, 80)
     };
+  }
+
+  function currentChallenge() {
+    try {
+      var stored = window.sessionStorage.getItem('splashlens-field-challenge-context-v1') || window.localStorage.getItem('splashlens-field-challenge-context-v1');
+      if (!stored) return {};
+      var parsed = JSON.parse(stored);
+      var storedAt = Date.parse(parsed && parsed.captured_at || '');
+      if (!Number.isFinite(storedAt) || Date.now() - storedAt > 14 * 24 * 60 * 60 * 1000) return {};
+      return parsed || {};
+    } catch (error) {
+      return {};
+    }
   }
 
   function track(eventName, props) {
@@ -112,7 +126,7 @@
     var params = new URLSearchParams(window.location.search || '');
     if (safeStore('session', 'splashlens-field-score-' + action)) return false;
     var lastPrompt = Number(safeStore('local', 'splashlens-field-score-last-prompt-at') || 0);
-    var challengeRun = params.get('challenge') === 'field60';
+    var challengeRun = params.get('challenge') === 'field60' || currentChallenge().field_challenge === 'field60';
     return challengeRun || Date.now() - lastPrompt > throttleMs;
   }
 
@@ -194,8 +208,9 @@
   window.addEventListener('load', function () {
     init();
     var params = new URLSearchParams(window.location.search || '');
-    if (params.get('challenge') === 'field60') {
-      delayedPrompt('field60_return', params.get('challenge_path') || 'unknown', 'campaign', 4500);
+    var challenge = currentChallenge();
+    if (params.get('challenge') === 'field60' || challenge.field_challenge === 'field60') {
+      delayedPrompt('field60_return', params.get('challenge_path') || challenge.challenge_path || 'unknown', 'campaign', 4500);
     }
   });
 

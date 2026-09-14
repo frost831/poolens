@@ -14,7 +14,7 @@ test('field score widget is present and loaded after analytics', () => {
   assert.match(html, /data-field-score="missing"/);
   assert.match(html, /data-field-score="wrong"/);
   assert.match(html, /\/js\/analytics\.js/);
-  assert.match(html, /\/js\/field-score\.js\?v=20260828-closing-score/);
+  assert.match(html, /\/js\/field-score\.js\?v=20260914-field60-challenge/);
   assert.ok(html.indexOf('/js/analytics.js') < html.indexOf('/js/field-score.js'));
 });
 
@@ -26,6 +26,8 @@ test('field score tracking captures activation and campaign attribution', () => 
   assert.match(fieldScore, /utm_medium/);
   assert.match(fieldScore, /utm_campaign/);
   assert.match(fieldScore, /challenge_path/);
+  assert.match(fieldScore, /currentChallenge/);
+  assert.match(fieldScore, /splashlens-field-challenge-context-v1/);
   assert.match(fieldScore, /navigator\.sendBeacon/);
 });
 
@@ -47,6 +49,19 @@ test('field score does not interrupt first-run or scanner entry clicks', () => {
 test('homepage promise matches field technician positioning', () => {
   assert.match(html, /Get off the pad faster\./);
   assert.doesNotMatch(html, /<h1>Proof-first pool work\.<\/h1>/);
+});
+
+test('first screen runs a measurable 60-second field challenge', () => {
+  assert.match(html, /60-second field challenge/);
+  assert.match(html, /Try one real code, part, or equipment family/);
+  assert.match(html, /startFieldChallenge\('partsnap'\)/);
+  assert.match(html, /startFieldChallenge\('code'\)/);
+  assert.match(html, /startFieldChallenge\('equipment'\)/);
+  assert.match(appSource, /function startFieldChallenge/);
+  assert.match(appSource, /field_challenge_started/);
+  assert.match(appSource, /field_challenge_routed/);
+  assert.match(appSource, /field60_/);
+  assert.match(appSource, /FIELD_CHALLENGE_CONTEXT_KEY/);
 });
 
 test('first-run marketing screen sells the verified field network in plain field language', () => {

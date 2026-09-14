@@ -1,13 +1,13 @@
-const CACHE = 'splashlens-v10-store-proof-partsnap-upgrade';
+const CACHE = 'splashlens-v11-field60-challenge';
 const ASSETS = [
   '/',
   '/index.html',
   '/js/errors.js',
   '/js/data.js?v=20260904-commercial-scale',
-  '/js/app.js?v=20260910-store-proof-partsnap-upgrade',
+  '/js/app.js?v=20260914-field60-challenge',
   '/js/field-signals.js?v=20260728-field-signals',
   '/js/analytics.js',
-  '/js/field-score.js?v=20260828-closing-score',
+  '/js/field-score.js?v=20260914-field60-challenge',
   '/favicon.svg',
   '/manifest.json'
 ];
