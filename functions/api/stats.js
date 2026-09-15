@@ -63,7 +63,7 @@ const FUNNEL_STAGES = [
   {
     key: 'checkout_intent',
     label: 'Checkout intent',
-    events: ['checkout_click', 'upgrade_click', 'post_value_upgrade_clicked', 'partsnap_pro_restore_requested', 'native_purchase_click', 'paid_lane_click', 'paid_lane_lead_captured'],
+    events: ['checkout_click', 'upgrade_click', 'post_value_upgrade_clicked', 'account_pro_checkout_clicked', 'partsnap_pro_restore_requested', 'native_purchase_click', 'paid_lane_click', 'paid_lane_lead_captured'],
   },
   {
     key: 'paid_or_restored',
@@ -198,7 +198,7 @@ export async function onRequestGet({ request, env }) {
       count(db, `SELECT COUNT(*) AS value FROM events WHERE event IN ('first_action_started','manual_code_search','ai_scan_started','service_proof_workflow_started','facility_workflow_action_selected','field_challenge_started') AND created_at >= datetime('now', '-30 days') ${EXTERNAL_EVENT_FILTER}`),
       count(db, `SELECT COUNT(*) AS value FROM events WHERE event IN ('first_value_completed','partsnap_result','service_report_saved','service_proof_summary_generated','service_proof_share_link_created','field_challenge_completed') AND created_at >= datetime('now', '-30 days') ${EXTERNAL_EVENT_FILTER}`),
       count(db, `SELECT COUNT(*) AS value FROM events WHERE event IN ('partsnap_result_feedback','field_feedback_quick_answered','field_feedback_submitted','field_score_feedback') AND created_at >= datetime('now', '-30 days') ${EXTERNAL_EVENT_FILTER}`),
-      count(db, `SELECT COUNT(*) AS value FROM events WHERE event IN ('checkout_click','upgrade_click','post_value_upgrade_clicked','partsnap_pro_restore_requested','native_purchase_click','paid_lane_click','paid_lane_lead_captured') AND created_at >= datetime('now', '-30 days') ${EXTERNAL_EVENT_FILTER}`),
+      count(db, `SELECT COUNT(*) AS value FROM events WHERE event IN ('checkout_click','upgrade_click','post_value_upgrade_clicked','account_pro_checkout_clicked','partsnap_pro_restore_requested','native_purchase_click','paid_lane_click','paid_lane_lead_captured') AND created_at >= datetime('now', '-30 days') ${EXTERNAL_EVENT_FILTER}`),
       count(db, `SELECT COUNT(*) AS value FROM subscribers`),
       count(db, `SELECT COUNT(*) AS value FROM partner_intake`),
       all(db, `SELECT event, COUNT(*) AS count FROM events WHERE created_at >= datetime('now', '-30 days') ${EXTERNAL_EVENT_FILTER} GROUP BY event ORDER BY count DESC LIMIT 15`),

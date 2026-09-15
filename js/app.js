@@ -2428,7 +2428,7 @@ function renderSplashLensCommercialSection(commercialPayload = {}) {
         </div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:10px;">
-        <a href="/api/checkout?plan=monthly" onclick="trackSplashLensEvent('account_pro_checkout_clicked',{plan:'monthly'})" style="display:block;text-align:center;text-decoration:none;border-radius:9px;background:#0f766e;color:#fff;font-size:12px;font-weight:950;padding:11px 8px;">Get Pro</a>
+        <a href="/api/checkout?plan=monthly" onclick="trackSplashLensEvent('checkout_click',{plan:'monthly',source:'account_dashboard'});trackSplashLensEvent('account_pro_checkout_clicked',{plan:'monthly',source:'account_dashboard'})" style="display:block;text-align:center;text-decoration:none;border-radius:9px;background:#0f766e;color:#fff;font-size:12px;font-weight:950;padding:11px 8px;">Get Pro</a>
         <button type="button" onclick="requestSplashLensCommercialAccess('teams')" style="border:1px solid #0369a1;border-radius:9px;background:#fff;color:#0369a1;font-size:12px;font-weight:950;padding:11px 8px;cursor:pointer;">Request team</button>
       </div>
       <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin-bottom:10px;">

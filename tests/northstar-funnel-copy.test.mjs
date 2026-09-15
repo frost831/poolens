@@ -87,6 +87,25 @@ test('checkout exposes a JSON catalog and Splash Lens Pro Unlimited metadata', (
   assert.match(checkout, /Splash Lens Pro Unlimited Annual/);
   assert.match(checkout, /SPLASHLENS_STRIPE_PRICE_\$\{key\}_PRO/);
   assert.match(checkout, /SPLASHLENS_STRIPE_LINK_MONTHLY_PRO/);
+  assert.match(checkout, /year\|annual/);
+});
+
+test('checkout intent reporting includes every app paid-action event', () => {
+  const stats = fs.readFileSync(new URL('../functions/api/stats.js', import.meta.url), 'utf8');
+  const runner = fs.readFileSync(new URL('../tools/run-field-intelligence-loop.mjs', import.meta.url), 'utf8');
+  for (const eventName of [
+    'checkout_click',
+    'upgrade_click',
+    'post_value_upgrade_clicked',
+    'account_pro_checkout_clicked',
+    'partsnap_pro_restore_requested',
+    'native_purchase_click',
+    'paid_lane_click',
+    'paid_lane_lead_captured',
+  ]) {
+    assert.match(stats, new RegExp(eventName));
+    assert.match(runner, new RegExp(eventName));
+  }
 });
 
 test('account dashboard shows commercial lanes without pretending every lane is checkout-ready', () => {

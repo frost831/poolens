@@ -11,7 +11,7 @@ const PRICE_IDS = {
 };
 
 function paymentLinkForPlan(env, plan) {
-  const yearly = plan === 'yearly' || plan === 'annual';
+  const yearly = /year|annual/i.test(String(plan || ''));
   return String(
     yearly
       ? env.SPLASHLENS_STRIPE_LINK_YEARLY_PRO || env.SPLASHLENS_STRIPE_LINK_YEARLY || LINKS.yearly
@@ -20,7 +20,7 @@ function paymentLinkForPlan(env, plan) {
 }
 
 function priceForPlan(env, plan) {
-  const key = plan === 'yearly' || plan === 'annual' ? 'YEARLY' : 'MONTHLY';
+  const key = /year|annual/i.test(String(plan || '')) ? 'YEARLY' : 'MONTHLY';
   return String(
     env[`SPLASHLENS_STRIPE_PRICE_${key}_PRO`]
       || env[`SPLASHLENS_STRIPE_PRICE_${key}`]
@@ -46,7 +46,7 @@ async function createCheckoutSession(request, env, plan) {
   params.set('cancel_url', `${origin}/?checkout=cancelled&plan=${encodeURIComponent(plan)}`);
   params.set('metadata[product]', 'splashlens');
   params.set('metadata[feature]', 'scanner');
-  params.set('metadata[plan]', plan === 'yearly' || plan === 'annual' ? 'Splash Lens Pro Unlimited Annual' : 'Splash Lens Pro Unlimited Monthly');
+  params.set('metadata[plan]', /year|annual/i.test(String(plan || '')) ? 'Splash Lens Pro Unlimited Annual' : 'Splash Lens Pro Unlimited Monthly');
   params.set('subscription_data[metadata][product]', 'splashlens');
   params.set('subscription_data[metadata][feature]', 'scanner');
   params.set('subscription_data[metadata][plan]', params.get('metadata[plan]'));

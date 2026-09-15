@@ -330,7 +330,7 @@ function remoteD1Snapshot(database) {
       manualSearches30d: countEvents(database, 30, ['manual_code_search']),
       serviceProof30d: countEvents(database, 30, ['service_report_saved', 'service_proof_summary_generated', 'service_proof_share_link_created']),
       feedback30d: countEvents(database, 30, ['partsnap_result_feedback', 'field_feedback_quick_answered', 'field_feedback_submitted', 'field_score_feedback']),
-      checkoutClicks30d: countEvents(database, 30, ['checkout_click', 'upgrade_click', 'post_value_upgrade_clicked', 'native_purchase_click']),
+      checkoutClicks30d: countEvents(database, 30, ['checkout_click', 'upgrade_click', 'post_value_upgrade_clicked', 'account_pro_checkout_clicked', 'partsnap_pro_restore_requested', 'native_purchase_click', 'paid_lane_click', 'paid_lane_lead_captured']),
       subscribersTotal: firstValue(database, 'SELECT COUNT(*) AS value FROM subscribers'),
       freeProfilesTotal: firstValue(database, 'SELECT COUNT(*) AS value FROM free_profiles'),
       verifiedFreeProfilesTotal: firstValue(database, 'SELECT COUNT(*) AS value FROM free_profiles WHERE verified_at IS NOT NULL'),
