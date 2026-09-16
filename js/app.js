@@ -9257,6 +9257,7 @@ function renderPartSnapResultUpgradeOffer(placement = 'partsnap_result') {
 }
 
 function trackPostValueUpgrade(plan, placement = 'partsnap_result') {
+  trackSplashLensEvent('checkout_click', { plan, feature: 'unlimited_partsnap', placement });
   trackSplashLensEvent('post_value_upgrade_clicked', { plan, feature: 'unlimited_partsnap', placement });
   trackSplashLensEvent('upgrade_click', { plan, feature: 'unlimited_partsnap', placement });
 }
@@ -10146,7 +10147,35 @@ function renderScanHits(hits, query) {
       ${h.callpro ? `<p style="color:#fbbf24;font-size:12px;font-weight:700;margin-top:10px;">⚠ Recommend calling a certified technician for this fault.</p>` : ''}
       <p style="color:#64748b;font-size:10px;line-height:1.45;margin-top:10px;">Reference only. Confirm the code, model, and procedure against the current manufacturer manual before repair or parts ordering.</p>
     </div>
-  `).join('');
+  `).join('') + renderManualLookupUpgradeOffer(hits.length, query);
+}
+
+function renderManualLookupUpgradeOffer(resultCount, query) {
+  if (isPartSnapPro() || isStoreShellMode()) return '';
+  const safeQuery = String(query || '').replace(/[^a-zA-Z0-9 ._-]/g, '').slice(0, 40);
+  try {
+    const key = 'splashlens-post-value-upgrade-scan-lookup-shown-at';
+    const lastShownAt = Date.parse(localStorage.getItem(key) || '');
+    if (!Number.isFinite(lastShownAt) || Date.now() - lastShownAt >= 24 * 3600000) {
+      localStorage.setItem(key, new Date().toISOString());
+      trackSplashLensEvent('post_value_upgrade_shown', {
+        feature: 'unlimited_partsnap',
+        placement: 'scan_lookup_search',
+        result_count: resultCount,
+        query: safeQuery,
+      });
+    }
+  } catch {}
+  return `
+    <div style="background:#082f49;border:1px solid #0ea5e9;border-radius:10px;padding:12px;margin:12px 0 6px;">
+      <p style="color:#7dd3fc;font-size:10px;font-weight:950;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;">Found the code?</p>
+      <p style="color:#f8fafc;font-size:13px;font-weight:950;margin-bottom:4px;">Now keep the whole route moving.</p>
+      <p style="color:#bae6fd;font-size:11px;line-height:1.4;margin-bottom:9px;">Manual lookup stays free. Pro is for the paid field layer: unlimited scanner use where available, saved job memory, customer-safe notes, and boss/counter packets.</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;">
+        <a href="${PARTSNAP_MONTHLY_LINK}" target="_blank" rel="noopener" onclick="trackPostValueUpgrade('monthly','scan_lookup_search')" style="background:#0ea5e9;color:#082f49;text-decoration:none;text-align:center;border-radius:8px;padding:10px 7px;font-size:11px;font-weight:950;">Go Pro $29</a>
+        <a href="${PARTSNAP_YEARLY_LINK}" target="_blank" rel="noopener" onclick="trackPostValueUpgrade('yearly','scan_lookup_search')" style="background:#22c55e;color:#052e16;text-decoration:none;text-align:center;border-radius:8px;padding:10px 7px;font-size:11px;font-weight:950;">Save yearly</a>
+      </div>
+    </div>`;
 }
 
 function renderStripResult(ai, result, status) {

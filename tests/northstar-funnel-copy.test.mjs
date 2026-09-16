@@ -108,6 +108,14 @@ test('checkout intent reporting includes every app paid-action event', () => {
   }
 });
 
+test('post-value lookup results expose a paid path without charging for manual lookup', () => {
+  assert.match(app, /function renderManualLookupUpgradeOffer/);
+  assert.match(app, /Manual lookup stays free/);
+  assert.match(app, /trackPostValueUpgrade\('monthly','scan_lookup_search'\)/);
+  assert.match(app, /trackPostValueUpgrade\('yearly','scan_lookup_search'\)/);
+  assert.match(app, /trackSplashLensEvent\('checkout_click', \{ plan, feature: 'unlimited_partsnap', placement \}\)/);
+});
+
 test('account dashboard shows commercial lanes without pretending every lane is checkout-ready', () => {
   assert.match(app, /const SPLASHLENS_COMMERCIAL_ENDPOINT = '\/api\/commercial'/);
   assert.match(app, /splashLensCommercialRequest/);
