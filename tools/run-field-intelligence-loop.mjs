@@ -261,16 +261,11 @@ function countEvents(database, days, events = null) {
   return firstValue(database, `SELECT COUNT(*) AS value FROM events WHERE ${eventClause}${whereDays(days)} ${REPORTING_EVENT_FILTER}`);
 }
 
-function d1Funnel(database, days) {
-  const rows = FUNNEL_STAGES.map((stage) => ({
+function d1ActivitySignals(database, days) {
+  return FUNNEL_STAGES.map((stage) => ({
     ...stage,
     count: countEvents(database, days, stage.events),
   }));
-  return rows.map((row, index) => {
-    const previous = index > 0 ? rows[index - 1].count : null;
-    const conversionFromPrevious = previous && previous > 0 ? Math.round((row.count / previous) * 1000) / 10 : null;
-    return { ...row, conversionFromPrevious };
-  });
 }
 
 function paymentRows(database) {
@@ -341,8 +336,8 @@ function remoteD1Snapshot(database) {
       splashlensPaidCompletions: splashlensCompleted,
       suspectNonSplashLensPaymentRows: suspectCompleted,
     },
-    funnel7d: d1Funnel(database, 7),
-    funnel30d: d1Funnel(database, 30),
+    activitySignals7d: d1ActivitySignals(database, 7),
+    activitySignals30d: d1ActivitySignals(database, 30),
     topEvents30d: d1Rows(database, `SELECT event, COUNT(*) AS count FROM events WHERE ${whereDays(30)} ${REPORTING_EVENT_FILTER} GROUP BY event ORDER BY count DESC LIMIT 15`),
     topPages30d: d1Rows(database, `SELECT COALESCE(path, '/') AS path, COUNT(*) AS count FROM events WHERE ${whereDays(30)} ${REPORTING_EVENT_FILTER} GROUP BY COALESCE(path, '/') ORDER BY count DESC LIMIT 15`),
     paymentsByPlan: splashlensPayments,
@@ -350,29 +345,6 @@ function remoteD1Snapshot(database) {
     storeSignals,
     storeMetricImports,
   };
-}
-
-function stageDrop(funnel = []) {
-  let worst = null;
-  for (let index = 1; index < funnel.length; index += 1) {
-    const current = funnel[index];
-    const previous = funnel[index - 1];
-    if (!previous || !Number.isFinite(Number(previous.count)) || Number(previous.count) <= 0) continue;
-    const rate = Number(current.count || 0) / Number(previous.count);
-    const dropFraction = 1 - rate;
-    const drop = Math.round(dropFraction * 1000) / 10;
-    if (!worst || drop > worst.drop) {
-      worst = {
-        from: previous.label,
-        to: current.label,
-        previous: Number(previous.count || 0),
-        current: Number(current.count || 0),
-        conversion: Math.round(rate * 1000) / 10,
-        drop,
-      };
-    }
-  }
-  return worst;
 }
 
 function buildRecommendations({ probes, env, stats, admin }) {
@@ -436,13 +408,26 @@ function buildRecommendations({ probes, env, stats, admin }) {
     });
   }
   if (stats?.ok) {
-    const worstDrop = stageDrop(stats.funnel30d || []);
-    if (worstDrop && worstDrop.previous >= 5 && worstDrop.drop >= 60) {
+    const signalRows = stats.activitySignals30d || stats.funnel30d || [];
+    const signals = Object.fromEntries(signalRows.map((row) => [row.key, Number(row.count || 0)]));
+    const firstActions = Number(stats.metrics?.firstActions30d ?? signals.first_action ?? 0);
+    const firstValues = Number(stats.metrics?.firstValues30d ?? signals.first_value ?? 0);
+    const checkoutClicks = Number(stats.metrics?.checkoutClicks30d ?? signals.checkout_intent ?? 0);
+    if (firstActions >= 5 && firstValues / firstActions < 0.5) {
+      const signalRatio = Math.round((firstValues / firstActions) * 1000) / 10;
       recommendations.push({
         severity: 'high',
-        issue: `Largest 30-day funnel drop: ${worstDrop.from} to ${worstDrop.to}`,
-        evidence: `${worstDrop.previous} to ${worstDrop.current}; ${worstDrop.conversion}% conversion.`,
-        fix: 'Run a focused UX/content fix on that exact transition and tag the experiment in analytics.',
+        issue: 'First field actions are not consistently producing a useful-result signal',
+        evidence: `${firstActions} first-action events and ${firstValues} useful-result events in 30 days; ${signalRatio}% event-count ratio (not a cohort conversion rate).`,
+        fix: 'Inspect the highest-volume first actions, remove dead ends, and require one explicit first_value_completed event only after a useful result renders.',
+      });
+    }
+    if (firstValues >= 5 && checkoutClicks === 0) {
+      recommendations.push({
+        severity: 'high',
+        issue: 'Useful-result activity is not producing paid-lane intent',
+        evidence: `${firstValues} useful-result events and 0 checkout-intent events in 30 days.`,
+        fix: 'Keep lookup free, then test the newly shipped post-result Pro offer and watch checkout_click for the next real-user result.',
       });
     }
     if (Number(stats.metrics?.feedback30d || 0) === 0 && Number(stats.metrics?.firstValues30d || 0) > 0) {
@@ -548,9 +533,11 @@ function markdownReport(report) {
     lines.push('');
     lines.push(table(Object.entries(report.stats.metrics || {}).map(([key, value]) => ({ key, value })), ['key', 'value']));
     lines.push('');
-    lines.push('## Funnel Summary');
+    lines.push('## Activity Signal Summary');
     lines.push('');
-    lines.push(table(report.stats.funnel30d || [], ['label', 'count', 'conversionFromPrevious']));
+    lines.push('Counts are independent production-clean events, not a sequential cohort funnel. A later signal may exceed an earlier one; no step-to-step conversion rate is implied.');
+    lines.push('');
+    lines.push(table(report.stats.activitySignals30d || report.stats.funnel30d || [], ['label', 'count']));
     if (Array.isArray(report.stats.storeSignals) && report.stats.storeSignals.length) {
       lines.push('');
       lines.push('## Store Signals');
@@ -705,5 +692,4 @@ export {
   markdownReport,
   parseArgs,
   run,
-  stageDrop,
 };

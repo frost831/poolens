@@ -6,7 +6,6 @@ import {
   buildRecommendations,
   envStatus,
   parseArgs,
-  stageDrop,
 } from '../tools/run-field-intelligence-loop.mjs';
 
 const toolSource = readFileSync(new URL('../tools/run-field-intelligence-loop.mjs', import.meta.url), 'utf8');
@@ -84,21 +83,10 @@ test('field intelligence runner treats D1 fallback as usable local analytics acc
   assert.ok(!recommendations.some((item) => item.severity === 'blocked-local'));
 });
 
-test('field intelligence runner ranks measurable funnel drops when stats are available', () => {
-  const worst = stageDrop([
-    { label: 'App open', count: 100 },
-    { label: 'First action', count: 40 },
-    { label: 'Paid', count: 2 },
-  ]);
-
-  assert.deepEqual(worst, {
-    from: 'First action',
-    to: 'Paid',
-    previous: 40,
-    current: 2,
-    conversion: 5,
-    drop: 95,
-  });
+test('field intelligence runner does not present independent event totals as cohort conversion', () => {
+  assert.match(toolSource, /Counts are independent production-clean events/);
+  assert.doesNotMatch(toolSource, /conversionFromPrevious/);
+  assert.doesNotMatch(toolSource, /Largest 30-day funnel drop/);
 });
 
 test('field intelligence runner flags value-without-feedback and checkout-without-paid proof', () => {
@@ -120,10 +108,10 @@ test('field intelligence runner flags value-without-feedback and checkout-withou
         splashlensPaidCompletions: 0,
         suspectNonSplashLensPaymentRows: 0,
       },
-      funnel30d: [
-        { label: 'App open', count: 20 },
-        { label: 'Useful result', count: 12 },
-        { label: 'Paid', count: 0 },
+      activitySignals30d: [
+        { key: 'app_intent', label: 'App open', count: 20 },
+        { key: 'first_value', label: 'Useful result', count: 12 },
+        { key: 'paid_or_restored', label: 'Paid', count: 0 },
       ],
     },
     admin: null,

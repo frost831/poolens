@@ -104,13 +104,19 @@ Write-TableRows -Headers @("Metric", "Value") -Rows @(
   [pscustomobject]@{ Metric = "Suspect non-SplashLens payment rows"; Value = $metrics.suspectNonSplashLensPaymentRows }
 )
 ""
-"## 7-Day Funnel"
+"## 7-Day Activity Signals"
 ""
-Write-TableRows -Headers @("label", "count", "conversionFromPrevious") -Rows @($stats.funnel7d)
+"Counts are independent events, not a sequential cohort funnel."
 ""
-"## 30-Day Funnel"
+$signals7d = if ($stats.PSObject.Properties.Name -contains "activitySignals7d") { @($stats.activitySignals7d) } else { @($stats.funnel7d) }
+Write-TableRows -Headers @("label", "count") -Rows $signals7d
 ""
-Write-TableRows -Headers @("label", "count", "conversionFromPrevious") -Rows @($stats.funnel30d)
+"## 30-Day Activity Signals"
+""
+"Counts are independent events, not a sequential cohort funnel."
+""
+$signals30d = if ($stats.PSObject.Properties.Name -contains "activitySignals30d") { @($stats.activitySignals30d) } else { @($stats.funnel30d) }
+Write-TableRows -Headers @("label", "count") -Rows $signals30d
 ""
 "## Top Events, 30 Days"
 ""
