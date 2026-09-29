@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 import { execFileSync } from 'node:child_process';
 import { readFileSync, existsSync } from 'node:fs';
-import { join } from 'node:path';
+import { tmpdir } from 'node:os';
+import { dirname, join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import process from 'node:process';
 
@@ -144,6 +145,11 @@ function entriesFromCsv(text, source) {
 
 function wranglerCommand() {
   if (process.platform !== 'win32') return { command: 'npx', prefixArgs: ['wrangler'] };
+  const npmCache = join(tmpdir(), 'splashlens-wrangler-npm-cache');
+  const npxCli = join(dirname(process.execPath), 'node_modules', 'npm', 'bin', 'npx-cli.js');
+  if (existsSync(npxCli)) {
+    return { command: process.execPath, prefixArgs: [npxCli, '--cache', npmCache, '--yes', 'wrangler'] };
+  }
   const appData = process.env.APPDATA || join(process.env.USERPROFILE || '', 'AppData', 'Roaming');
   const wranglerJs = join(appData, 'npm', 'node_modules', 'wrangler', 'bin', 'wrangler.js');
   if (existsSync(wranglerJs)) {
@@ -153,7 +159,24 @@ function wranglerCommand() {
   if (existsSync(globalWrangler)) {
     return { command: 'powershell.exe', prefixArgs: ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', globalWrangler] };
   }
-  return { command: 'powershell.exe', prefixArgs: ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-Command', 'wrangler'] };
+  return { command: 'npx.cmd', prefixArgs: ['--cache', npmCache, '--yes', 'wrangler'] };
+}
+
+function wranglerExecOptions() {
+  const cleanEnv = Object.fromEntries(Object.entries(process.env).filter(([key]) => ![
+    'npm_config_cache',
+    'wrangler_log_path',
+  ].includes(key.toLowerCase())));
+  return {
+    encoding: 'utf8',
+    timeout: 60000,
+    windowsHide: true,
+    env: {
+      ...cleanEnv,
+      NPM_CONFIG_CACHE: join(tmpdir(), 'splashlens-wrangler-npm-cache'),
+      WRANGLER_LOG_PATH: join(tmpdir(), 'splashlens-wrangler.log'),
+    },
+  };
 }
 
 function sqlString(value) {
@@ -188,7 +211,7 @@ function writeD1(entries, database) {
     '--json',
     '--command',
     statements,
-  ], { encoding: 'utf8', timeout: 60000, windowsHide: true });
+  ], wranglerExecOptions());
   return JSON.parse(output);
 }
 

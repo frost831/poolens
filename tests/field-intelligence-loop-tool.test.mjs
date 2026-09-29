@@ -6,6 +6,8 @@ import {
   buildRecommendations,
   envStatus,
   parseArgs,
+  wranglerCommand,
+  wranglerExecOptions,
 } from '../tools/run-field-intelligence-loop.mjs';
 
 const toolSource = readFileSync(new URL('../tools/run-field-intelligence-loop.mjs', import.meta.url), 'utf8');
@@ -29,6 +31,17 @@ test('field intelligence runner is non-interactive and safe for heartbeat use', 
   assert.match(numbersPullSource, /\[switch\]\$PromptForSecret/);
   assert.match(numbersPullSource, /\$PromptForSecret/);
   assert.match(numbersPullSource, /run-field-intelligence-loop\.mjs/);
+});
+
+test('Windows Wrangler fallback preserves SQL as an argv value', () => {
+  const runner = wranglerCommand();
+  if (process.platform === 'win32') {
+    assert.notDeepEqual(runner.prefixArgs.slice(-2), ['-Command', 'wrangler']);
+    assert.ok(runner.command === process.execPath || /npx\.cmd$/i.test(runner.command));
+  }
+  const options = wranglerExecOptions();
+  assert.match(options.env.NPM_CONFIG_CACHE, /splashlens-wrangler-npm-cache/);
+  assert.match(options.env.WRANGLER_LOG_PATH, /splashlens-wrangler\.log/);
 });
 
 test('field intelligence runner distinguishes local credential gaps from production failures', () => {
