@@ -13,7 +13,7 @@
 
 ## Corrected 30-day baseline
 
-The earlier 26-event useful-result figure included 20 zero-result scanner code searches. The corrected production query requires a positive `result_count`.
+The earlier 26-event useful-result figure included 11 zero-result scanner code searches. The corrected production query requires a positive `result_count`, leaving 15 qualified events across four sessions. Those qualified events were manual/text lookup or turnover results, not PartSnap image results; production recorded one AI scan attempt and zero AI scan completions.
 
 | Signal | Current |
 | --- | ---: |
