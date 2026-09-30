@@ -29,6 +29,7 @@ function parseArgs(argv) {
     endpoint: DEFAULT_ENDPOINT,
     source: 'manual_console_export',
     d1Database: DEFAULT_D1_DATABASE,
+    format: 'auto',
     dryRun: false,
     d1: false,
   };
@@ -38,6 +39,7 @@ function parseArgs(argv) {
     else if (arg === '--endpoint') options.endpoint = argv[++index] || DEFAULT_ENDPOINT;
     else if (arg === '--source') options.source = argv[++index] || options.source;
     else if (arg === '--d1-database') options.d1Database = argv[++index] || options.d1Database;
+    else if (arg === '--format') options.format = clean(argv[++index] || 'auto', 40).toLowerCase();
     else if (arg === '--d1') options.d1 = true;
     else if (arg === '--dry-run') options.dryRun = true;
     else if (arg === '--help' || arg === '-h') options.help = true;
@@ -60,6 +62,8 @@ Metrics:
 
 Examples:
   node tools/import-store-metrics.mjs --file exports/store-metrics.csv --dry-run
+  node tools/import-store-metrics.mjs --file exports/app-store-sales.csv --format app-store-connect --dry-run
+  node tools/import-store-metrics.mjs --file exports/google-play-statistics.csv --format google-play --dry-run
   node tools/import-store-metrics.mjs --file exports/store-metrics.csv
   node tools/import-store-metrics.mjs --file exports/store-metrics.csv --d1
 
@@ -141,6 +145,83 @@ function entriesFromCsv(text, source) {
       notes: clean(record.notes || '', 500),
     };
   });
+}
+
+function normalizedHeader(value) {
+  return clean(value, 120).toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '');
+}
+
+function dateIso(value) {
+  const raw = clean(value, 40);
+  if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw;
+  const us = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(raw);
+  if (us) return `${us[3]}-${us[1].padStart(2, '0')}-${us[2].padStart(2, '0')}`;
+  throw new Error(`Unsupported official store date: ${raw}`);
+}
+
+function numeric(value) {
+  const parsed = Number(String(value ?? '').replace(/,/g, '').trim() || '0');
+  return Number.isFinite(parsed) ? Math.max(0, Math.round(parsed)) : 0;
+}
+
+function detectFormat(headers) {
+  const set = new Set(headers);
+  if (set.has('provider') && set.has('units') && (set.has('begin_date') || set.has('date'))) return 'app-store-connect';
+  if (set.has('package_name') && (set.has('daily_device_installs') || set.has('install_events') || set.has('crashes'))) return 'google-play';
+  return 'generic';
+}
+
+function aggregateOfficialRows(rows, platform, source, dateFields, mappings) {
+  const totals = new Map();
+  for (const row of rows) {
+    const dateField = dateFields.find((field) => clean(row[field]));
+    if (!dateField) continue;
+    const date = dateIso(row[dateField]);
+    for (const [field, metric] of mappings) {
+      if (!(field in row) || clean(row[field]) === '') continue;
+      const key = `${date}|${metric}`;
+      totals.set(key, (totals.get(key) || 0) + numeric(row[field]));
+    }
+  }
+  return [...totals.entries()].map(([key, value]) => {
+    const [date, metric] = key.split('|');
+    return { platform, metric, value, date, source, notes: `${platform === 'app_store' ? 'App Store Connect' : 'Google Play Console'} official export` };
+  });
+}
+
+function entriesFromOfficialCsv(text, requestedFormat, source) {
+  const rows = parseCsv(text);
+  if (!rows.length) return [];
+  const headers = rows[0].map(normalizedHeader);
+  const records = rows.slice(1).map((row) => Object.fromEntries(headers.map((header, index) => [header, row[index] ?? ''])));
+  const format = requestedFormat === 'auto' ? detectFormat(headers) : requestedFormat;
+  if (format === 'generic') return entriesFromCsv(text, source);
+  if (format === 'app-store-connect') {
+    return aggregateOfficialRows(records, 'app_store', source, ['begin_date', 'date'], [
+      ['units', 'downloads'],
+      ['first_time_downloads', 'first_time_downloads'],
+      ['redownloads', 'redownloads'],
+      ['product_page_views', 'product_page_views'],
+      ['crashes', 'crashes'],
+      ['updates', 'updates'],
+    ]);
+  }
+  if (format === 'google-play') {
+    return aggregateOfficialRows(records, 'google_play', source, ['date', 'day'], [
+      ['daily_device_installs', 'installs'],
+      ['daily_user_installs', 'first_time_downloads'],
+      ['install_events', 'installs'],
+      ['daily_device_uninstalls', 'uninstalls'],
+      ['daily_user_uninstalls', 'uninstalls'],
+      ['uninstall_events', 'uninstalls'],
+      ['daily_device_upgrades', 'updates'],
+      ['update_events', 'updates'],
+      ['crashes', 'crashes'],
+      ['store_listing_visitors', 'store_listing_visitors'],
+      ['store_listing_acquisitions', 'acquisitions'],
+    ]);
+  }
+  throw new Error(`Unsupported --format ${requestedFormat}`);
 }
 
 function wranglerCommand() {
@@ -237,7 +318,8 @@ async function main() {
     process.exitCode = options.help ? 0 : 1;
     return;
   }
-  const entries = entriesFromCsv(readFileSync(options.file, 'utf8'), options.source);
+  const entries = entriesFromOfficialCsv(readFileSync(options.file, 'utf8'), options.format, options.source);
+  if (!entries.length) throw new Error('No supported metric rows were found in the store export.');
   if (options.dryRun) {
     console.log(JSON.stringify({ ok: true, dryRun: true, entries }, null, 2));
     return;
@@ -255,4 +337,4 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   });
 }
 
-export { entriesFromCsv, parseArgs, parseCsv };
+export { detectFormat, entriesFromCsv, entriesFromOfficialCsv, parseArgs, parseCsv };

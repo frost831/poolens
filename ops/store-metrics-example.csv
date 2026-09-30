@@ -1,0 +1,3 @@
+date,platform,metric,value,notes
+2026-09-30,app_store,downloads,0,Example only - replace with official App Store Connect export
+2026-09-30,google_play,installs,0,Example only - replace with official Google Play Console export

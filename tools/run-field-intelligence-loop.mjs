@@ -43,12 +43,12 @@ const FUNNEL_STAGES = [
   {
     key: 'first_action',
     label: 'First field action',
-    events: ['first_action_started', 'manual_code_search', 'ai_scan_started', 'service_proof_workflow_started', 'facility_workflow_action_selected', 'field_challenge_started', 'field_challenge_routed'],
+    events: ['first_action_started', 'manual_code_search', 'ai_scan_attempted', 'ai_scan_started', 'service_proof_workflow_started', 'facility_workflow_action_selected', 'field_challenge_started', 'field_challenge_routed'],
   },
   {
     key: 'first_value',
     label: 'Useful result',
-    events: ['first_value_completed', 'partsnap_result', 'service_report_saved', 'service_proof_summary_generated', 'service_proof_share_link_created', 'field_challenge_completed'],
+    events: ['first_value_completed'],
   },
   {
     key: 'feedback',
@@ -63,7 +63,7 @@ const FUNNEL_STAGES = [
   {
     key: 'checkout_intent',
     label: 'Checkout intent',
-    events: ['checkout_click', 'upgrade_click', 'post_value_upgrade_clicked', 'partsnap_pro_restore_requested', 'native_purchase_click', 'paid_lane_click', 'paid_lane_lead_captured'],
+    events: ['checkout_click', 'native_purchase_click'],
   },
   {
     key: 'paid_or_restored',
@@ -283,10 +283,32 @@ function countEvents(database, days, events = null) {
   return firstValue(database, `SELECT COUNT(*) AS value FROM events WHERE ${eventClause}${whereDays(days)} ${REPORTING_EVENT_FILTER}`);
 }
 
+function countQualifiedFirstValues(database, days) {
+  return firstValue(database, `
+    SELECT COUNT(*) AS value
+    FROM events
+    WHERE event = 'first_value_completed'
+      AND ${whereDays(days)}
+      AND NOT (COALESCE(CAST(json_extract(props, '$.result_count') AS INTEGER), 1) <= 0)
+      ${REPORTING_EVENT_FILTER}
+  `);
+}
+
+function countQualifiedFirstValueSessions(database, days) {
+  return firstValue(database, `
+    SELECT COUNT(DISTINCT COALESCE(NULLIF(json_extract(props, '$.session_id'), ''), NULLIF(json_extract(props, '$.client_id'), ''), id)) AS value
+    FROM events
+    WHERE event = 'first_value_completed'
+      AND ${whereDays(days)}
+      AND NOT (COALESCE(CAST(json_extract(props, '$.result_count') AS INTEGER), 1) <= 0)
+      ${REPORTING_EVENT_FILTER}
+  `);
+}
+
 function d1ActivitySignals(database, days) {
   return FUNNEL_STAGES.map((stage) => ({
     ...stage,
-    count: countEvents(database, days, stage.events),
+    count: stage.key === 'first_value' ? countQualifiedFirstValues(database, days) : countEvents(database, days, stage.events),
   }));
 }
 
@@ -306,7 +328,10 @@ function remoteD1Snapshot(database) {
   const payments = paymentRows(database);
   const splashlensPayments = payments.filter((row) => /partsnap|splashlens|splash lens/i.test(String(row.plan || '')));
   const foreignPayments = payments.filter((row) => !/partsnap|splashlens|splash lens/i.test(String(row.plan || '')));
-  const splashlensCompleted = splashlensPayments.reduce((sum, row) => sum + Number(row.count || 0), 0);
+  const completedEventTypes = new Set(['checkout.session.completed', 'checkout.session.async_payment_succeeded']);
+  const splashlensCompleted = splashlensPayments
+    .filter((row) => completedEventTypes.has(String(row.event_type || '')))
+    .reduce((sum, row) => sum + Number(row.count || 0), 0);
   const suspectCompleted = foreignPayments.reduce((sum, row) => sum + Number(row.count || 0), 0);
 
   const storeSignals = d1Rows(database, `
@@ -340,14 +365,18 @@ function remoteD1Snapshot(database) {
       events7d: countEvents(database, 7),
       events30d: countEvents(database, 30),
       appOpens30d: countEvents(database, 30, ['app_open', 'first_app_open', 'native_shell_open', 'native_shell_first_open']),
-      firstActions30d: countEvents(database, 30, ['first_action_started', 'manual_code_search', 'ai_scan_started', 'service_proof_workflow_started', 'facility_workflow_action_selected', 'field_challenge_started']),
-      firstValues30d: countEvents(database, 30, ['first_value_completed', 'partsnap_result', 'service_report_saved', 'service_proof_summary_generated', 'service_proof_share_link_created', 'field_challenge_completed']),
+      firstActions30d: countEvents(database, 30, ['first_action_started', 'manual_code_search', 'ai_scan_attempted', 'ai_scan_started', 'service_proof_workflow_started', 'facility_workflow_action_selected', 'field_challenge_started']),
+      firstValues30d: countQualifiedFirstValues(database, 30),
+      qualifiedFirstValueSessions30d: countQualifiedFirstValueSessions(database, 30),
       partSnapResults30d: countEvents(database, 30, ['partsnap_result']),
-      aiScanStarts30d: countEvents(database, 30, ['ai_scan_started']),
+      aiScanAttempts30d: countEvents(database, 30, ['ai_scan_attempted', 'ai_scan_started']),
+      aiScanCompletions30d: countEvents(database, 30, ['ai_scan_completed']),
+      aiScanFailures30d: countEvents(database, 30, ['ai_scan_failed', 'ai_scan_blocked']),
       manualSearches30d: countEvents(database, 30, ['manual_code_search']),
       serviceProof30d: countEvents(database, 30, ['service_report_saved', 'service_proof_summary_generated', 'service_proof_share_link_created']),
       feedback30d: countEvents(database, 30, ['partsnap_result_feedback', 'field_feedback_quick_answered', 'field_feedback_submitted', 'field_score_feedback']),
       checkoutClicks30d: countEvents(database, 30, ['checkout_click', 'upgrade_click', 'post_value_upgrade_clicked', 'account_pro_checkout_clicked', 'partsnap_pro_restore_requested', 'native_purchase_click', 'paid_lane_click', 'paid_lane_lead_captured']),
+      checkoutStarts30d: countEvents(database, 30, ['checkout_click']),
       subscribersTotal: firstValue(database, 'SELECT COUNT(*) AS value FROM subscribers'),
       freeProfilesTotal: firstValue(database, 'SELECT COUNT(*) AS value FROM free_profiles'),
       verifiedFreeProfilesTotal: firstValue(database, 'SELECT COUNT(*) AS value FROM free_profiles WHERE verified_at IS NOT NULL'),
@@ -356,7 +385,9 @@ function remoteD1Snapshot(database) {
       commercialEntitlementsTotal: firstValue(database, 'SELECT COUNT(*) AS value FROM commercial_entitlements'),
       commercialEntitlementsActive: firstValue(database, "SELECT COUNT(*) AS value FROM commercial_entitlements WHERE status IN ('active','trialing','pilot')"),
       splashlensPaidCompletions: splashlensCompleted,
+      splashlensPaidCompletions30d: firstValue(database, `SELECT COUNT(DISTINCT stripe_session_id) AS value FROM payment_events WHERE event_type IN ('checkout.session.completed', 'checkout.session.async_payment_succeeded') AND ${whereDays(30)} AND (lower(COALESCE(plan, '')) LIKE '%partsnap%' OR lower(COALESCE(plan, '')) LIKE '%splashlens%' OR lower(COALESCE(plan, '')) LIKE '%splash lens%')`),
       suspectNonSplashLensPaymentRows: suspectCompleted,
+      separatedHeartbeatTotal: tableExists(database, 'engagement_events') ? firstValue(database, "SELECT COUNT(*) AS value FROM engagement_events WHERE event = 'session_heartbeat'") : 0,
     },
     activitySignals7d: d1ActivitySignals(database, 7),
     activitySignals30d: d1ActivitySignals(database, 30),
@@ -434,7 +465,7 @@ function buildRecommendations({ probes, env, stats, admin }) {
     const signals = Object.fromEntries(signalRows.map((row) => [row.key, Number(row.count || 0)]));
     const firstActions = Number(stats.metrics?.firstActions30d ?? signals.first_action ?? 0);
     const firstValues = Number(stats.metrics?.firstValues30d ?? signals.first_value ?? 0);
-    const checkoutClicks = Number(stats.metrics?.checkoutClicks30d ?? signals.checkout_intent ?? 0);
+    const checkoutClicks = Number(stats.metrics?.checkoutStarts30d ?? stats.metrics?.checkoutClicks30d ?? signals.checkout_intent ?? 0);
     if (firstActions >= 5 && firstValues / firstActions < 0.5) {
       const signalRatio = Math.round((firstValues / firstActions) * 1000) / 10;
       recommendations.push({
@@ -460,11 +491,11 @@ function buildRecommendations({ probes, env, stats, admin }) {
         fix: 'Move the Did this help? trap closer to PartSnap/result completion and make Wrong/Missing one tap.',
       });
     }
-    if (Number(stats.metrics?.checkoutClicks30d || 0) > 0 && Number(stats.metrics?.splashlensPaidCompletions || 0) === 0) {
+    if (Number(stats.metrics?.checkoutStarts30d ?? stats.metrics?.checkoutClicks30d ?? 0) > 0 && Number(stats.metrics?.splashlensPaidCompletions30d ?? stats.metrics?.splashlensPaidCompletions ?? 0) === 0) {
       recommendations.push({
         severity: 'high',
         issue: 'Checkout intent exists with no paid completion proof',
-        evidence: `${stats.metrics.checkoutClicks30d} checkout clicks and 0 SplashLens paid completions.`,
+        evidence: `${stats.metrics.checkoutStarts30d ?? stats.metrics.checkoutClicks30d} checkout starts and 0 new SplashLens paid completions.`,
         fix: 'Check Stripe dashboard sessions, webhook delivery, and entitlement fulfillment immediately.',
       });
     }
@@ -709,6 +740,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
 
 export {
   buildRecommendations,
+  d1Rows,
   envStatus,
   helpText,
   markdownReport,

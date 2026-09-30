@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
 
-import { entriesFromCsv, parseArgs } from '../tools/import-store-metrics.mjs';
+import { entriesFromCsv, entriesFromOfficialCsv, parseArgs } from '../tools/import-store-metrics.mjs';
 
 const statsSource = readFileSync(new URL('../functions/api/stats.js', import.meta.url), 'utf8');
 const dashboardSource = readFileSync(new URL('../dashboard.html', import.meta.url), 'utf8');
@@ -43,16 +43,44 @@ test('official store metrics are exposed in owner reporting', () => {
   assert.match(dashboardSource, /latestStoreMetricImportAt/);
 });
 
+test('raw App Store Connect sales exports aggregate download units by day', () => {
+  const csv = [
+    'Provider,SKU,Title,Units,Begin Date',
+    'APPLE,sl,SplashLens,3,09/10/2026',
+    'APPLE,sl,SplashLens,2,09/10/2026',
+  ].join('\n');
+  assert.deepEqual(entriesFromOfficialCsv(csv, 'auto', 'app_store_connect_export'), [{
+    platform: 'app_store', metric: 'downloads', value: 5, date: '2026-09-10',
+    source: 'app_store_connect_export', notes: 'App Store Connect official export',
+  }]);
+});
+
+test('raw Google Play statistics exports map install, update, uninstall, and crash rows', () => {
+  const csv = [
+    'Date,Package Name,Daily Device Installs,Daily Device Uninstalls,Daily Device Upgrades,Crashes',
+    '2026-09-10,com.splashlens.fieldtools,8,2,3,1',
+  ].join('\n');
+  assert.deepEqual(entriesFromOfficialCsv(csv, 'auto', 'google_play_export').map((entry) => [entry.metric, entry.value]), [
+    ['installs', 8], ['uninstalls', 2], ['updates', 3], ['crashes', 1],
+  ]);
+});
+
 test('PartSnap is the default scanner path and has an immediate post-result upgrade nudge', () => {
   assert.match(appSource, /setScanMode\(_scanMode \|\| 'parts'\)/);
   assert.match(appSource, /renderPartSnapResultUpgradeOffer\('partsnap_result'\)/);
   assert.match(appSource, /post_value_upgrade_shown/);
   assert.match(appSource, /post_value_upgrade_clicked/);
+  assert.match(appSource, /Save this job, customer summary, and equipment history with Pro\./);
+  assert.match(appSource, /ai_scan_attempted/);
+  assert.match(appSource, /ai_scan_completed/);
+  assert.match(appSource, /ai_scan_failed/);
+  assert.match(appSource, /lookup_zero_result/);
 });
 
 test('store metric importer has dry-run and D1 fallback modes', () => {
   assert.deepEqual(parseArgs(['--file', 'x.csv', '--dry-run']).dryRun, true);
   assert.deepEqual(parseArgs(['--file', 'x.csv', '--d1']).d1, true);
+  assert.equal(parseArgs(['--file', 'x.csv', '--format', 'google-play']).format, 'google-play');
   assert.match(importerSource, /SPLASHLENS_STATS_SECRET/);
   assert.match(importerSource, /wrangler/);
   assert.match(packageJson.scripts['store-metrics:import'], /import-store-metrics\.mjs/);

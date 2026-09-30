@@ -26,6 +26,10 @@ test('field intelligence runner is non-interactive and safe for heartbeat use', 
   assert.match(toolSource, /splashlens-subscribers/);
   assert.match(toolSource, /REPORTING_EVENT_FILTER/);
   assert.match(toolSource, /'session_heartbeat'/);
+  assert.match(toolSource, /countQualifiedFirstValues/);
+  assert.match(toolSource, /qualifiedFirstValueSessions30d/);
+  assert.match(toolSource, /checkoutStarts30d/);
+  assert.match(toolSource, /splashlensPaidCompletions30d/);
   assert.match(packageJson.scripts['intelligence:check'], /run-field-intelligence-loop\.mjs/);
   assert.match(packageJson.scripts['numbers:pull'], /pull-splashlens-numbers\.ps1/);
   assert.match(numbersPullSource, /\[switch\]\$PromptForSecret/);

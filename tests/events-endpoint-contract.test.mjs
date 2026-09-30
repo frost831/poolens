@@ -13,6 +13,7 @@ const teamEndpoint = readFileSync(new URL('../functions/api/team.js', import.met
 const commercialEndpoint = readFileSync(new URL('../functions/api/commercial.js', import.meta.url), 'utf8');
 const stripeWebhookEndpoint = readFileSync(new URL('../functions/api/stripe-webhook.js', import.meta.url), 'utf8');
 const storeMetricsEndpoint = readFileSync(new URL('../functions/api/store-metrics.js', import.meta.url), 'utf8');
+const heartbeatMigration = readFileSync(new URL('../tools/migrate-heartbeats.mjs', import.meta.url), 'utf8');
 const wrangler = readFileSync(new URL('../wrangler.toml', import.meta.url), 'utf8');
 
 test('events endpoint accepts app analytics payload shapes', () => {
@@ -27,6 +28,9 @@ test('events endpoint stores to D1 when the binding exists', () => {
   assert.match(eventsEndpoint, /CREATE TABLE IF NOT EXISTS events/);
   assert.match(eventsEndpoint, /INSERT INTO events/);
   assert.match(eventsEndpoint, /stored: true/);
+  assert.match(eventsEndpoint, /CREATE TABLE IF NOT EXISTS engagement_events/);
+  assert.match(eventsEndpoint, /INSERT INTO engagement_events/);
+  assert.match(eventsEndpoint, /storageBucket: 'engagement_events'/);
 });
 
 test('app API routes expose protected stats and server-side amplitude config as JSON', () => {
@@ -41,6 +45,11 @@ test('app API routes expose protected stats and server-side amplitude config as 
   assert.match(statsEndpoint, /headless/);
   assert.match(statsEndpoint, /suspectNonSplashLensPaymentRows/);
   assert.match(statsEndpoint, /foreignPaymentsByPlan/);
+  assert.match(statsEndpoint, /QUALIFIED_FIRST_VALUE_FILTER/);
+  assert.match(statsEndpoint, /qualifiedFirstValueSessions30d/);
+  assert.match(statsEndpoint, /partSnapResults30d/);
+  assert.match(statsEndpoint, /checkoutStarts30d/);
+  assert.match(statsEndpoint, /splashlensPaidCompletions30d/);
 });
 
 test('events endpoint normalizes identity and suppresses internal heartbeat noise', () => {
@@ -50,7 +59,7 @@ test('events endpoint normalizes identity and suppresses internal heartbeat nois
   assert.match(eventsEndpoint, /identity_confidence/);
   assert.match(eventsEndpoint, /internal_heartbeat_noise/);
   assert.match(eventsEndpoint, /LOW_SIGNAL_EVENTS/);
-  assert.match(eventsEndpoint, /low_signal_engagement_event/);
+  assert.match(eventsEndpoint, /engagement_events/);
   assert.match(eventsEndpoint, /forwardEventToAmplitude/);
 });
 
@@ -71,6 +80,16 @@ test('free scanner profile endpoint verifies durable identity before AI usage', 
   assert.match(freeProfileEndpoint, /verified_at/);
   assert.match(freeProfileEndpoint, /SUBSCRIBERS_DB/);
   assert.match(freeProfileEndpoint, /ON CONFLICT\(email\) DO UPDATE/);
+});
+
+test('heartbeat migration is retry-safe and verifies copy before deletion', () => {
+  const source = heartbeatMigration;
+  assert.match(source, /legacy_event_id INTEGER/);
+  assert.match(source, /CREATE UNIQUE INDEX IF NOT EXISTS idx_engagement_events_legacy_event_id/);
+  assert.match(source, /INSERT OR IGNORE INTO engagement_events/);
+  assert.match(source, /copied !== before\.source/);
+  assert.match(source, /source rows were preserved/);
+  assert.match(source, /--execute/);
 });
 
 test('account endpoint requires a signed passwordless account token', () => {

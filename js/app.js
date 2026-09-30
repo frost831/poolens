@@ -225,7 +225,7 @@ let activeFacilityConfig = null;
 let activeFacilityId = '';
 let activeFacilityEquipmentId = '';
 const FIELD_FEEDBACK_ACTIONS = new Set([
-  'ai_scan_started',
+  'ai_scan_completed',
   'manual_code_search',
   'partsnap_result',
   'partsnap_packet_copied',
@@ -1444,7 +1444,7 @@ function recordFieldFeedbackSignal(eventName) {
     state.signals = [...(state.signals || []), { event: eventName, tab: S.tab, at: new Date().toISOString() }].slice(-8);
   }
   writeFieldFeedbackState(state);
-  if (['partsnap_result', 'ai_scan_started', 'manual_code_search', 'service_report_saved', 'proof_ready_report_saved'].includes(eventName)) {
+  if (['partsnap_result', 'ai_scan_completed', 'manual_code_search', 'service_report_saved', 'proof_ready_report_saved'].includes(eventName)) {
     setTimeout(() => showQuickFeedbackPrompt(eventName), 8500);
   }
   else if (shouldShowFieldFeedback(state)) setTimeout(() => showFieldFeedbackPrompt(eventName), 900);
@@ -1452,7 +1452,7 @@ function recordFieldFeedbackSignal(eventName) {
 
 function shouldShowQuickFeedback(state, eventName = '') {
   const now = Date.now();
-  if (!['partsnap_result', 'ai_scan_started', 'manual_code_search', 'service_report_saved', 'proof_ready_report_saved'].includes(eventName)) return false;
+  if (!['partsnap_result', 'ai_scan_completed', 'manual_code_search', 'service_report_saved', 'proof_ready_report_saved'].includes(eventName)) return false;
   if (document.getElementById('field-feedback-overlay') || document.getElementById('field-quick-feedback')) return false;
   if (state.quickSnoozedUntil && now < Number(state.quickSnoozedUntil)) return false;
   if (state.submittedAt && now - Number(state.submittedAt) < FIELD_FEEDBACK_AFTER_SUBMIT_MS) return false;
@@ -1469,7 +1469,7 @@ function showQuickFeedbackPrompt(trigger = 'usage') {
 
   const label = trigger === 'partsnap_result'
     ? 'Did PartSnap help?'
-    : trigger === 'ai_scan_started'
+    : trigger === 'ai_scan_completed'
       ? 'Did the scan help?'
       : 'Did this help?';
   const toast = document.createElement('div');
@@ -1517,7 +1517,7 @@ function answerQuickFeedback(answer, trigger = 'usage') {
         ? 'Wrong result: '
         : trigger === 'partsnap_result'
           ? 'PartSnap was missing: '
-          : trigger === 'ai_scan_started'
+          : trigger === 'ai_scan_completed'
             ? 'The scan was missing: '
             : 'This workflow was missing: ',
       rating: '2',
@@ -1539,7 +1539,7 @@ function getFieldFeedbackContext(trigger = '') {
     component: part.component || part.category || '',
     model: part.model || part.partNumber || '',
     confidence: part.confidence || '',
-    photo_type: trigger === 'partsnap_result' ? 'part/photo/label' : trigger === 'ai_scan_started' ? 'scanner/photo' : '',
+    photo_type: trigger === 'partsnap_result' ? 'part/photo/label' : trigger === 'ai_scan_completed' ? 'scanner/photo' : '',
   };
 }
 
@@ -1601,6 +1601,20 @@ function showFieldFeedbackPrompt(trigger = 'usage', prefill = {}) {
           <input id="field-feedback-email" type="email" inputmode="email" placeholder="you@example.com" style="width:100%;border:1px solid #cbd5e1;border-radius:10px;padding:10px;font-size:14px;">
         </div>
       </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
+        <div>
+          <label class="field-label" for="field-feedback-time-saved">Time saved</label>
+          <select id="field-feedback-time-saved" style="width:100%;border:1px solid #cbd5e1;border-radius:10px;padding:10px;font-size:14px;background:#fff;">
+            <option value="">Pick one</option><option value="under_1_minute">Under 1 minute</option><option value="1_to_5_minutes">1-5 minutes</option><option value="5_to_15_minutes">5-15 minutes</option><option value="15_plus_minutes">15+ minutes</option><option value="no_time_saved">No time saved</option>
+          </select>
+        </div>
+        <div>
+          <label class="field-label" for="field-feedback-upgrade-intent">Would Pro help?</label>
+          <select id="field-feedback-upgrade-intent" style="width:100%;border:1px solid #cbd5e1;border-radius:10px;padding:10px;font-size:14px;background:#fff;">
+            <option value="">Pick one</option><option value="yes">Yes</option><option value="maybe">Maybe</option><option value="no">No</option>
+          </select>
+        </div>
+      </div>
       <label style="display:flex;align-items:flex-start;gap:8px;color:#334155;font-size:12px;line-height:1.35;font-weight:800;margin-bottom:12px;">
         <input id="field-feedback-tester" type="checkbox" style="margin-top:2px;">
         <span>I am open to being a founding field tester. Joshua may email me about this feedback if I entered an email.</span>
@@ -1640,8 +1654,10 @@ function submitFieldFeedback() {
   const code = (document.getElementById('field-feedback-code')?.value || '').trim();
   const brand = (document.getElementById('field-feedback-brand')?.value || '').trim();
   const photoType = (document.getElementById('field-feedback-photo-type')?.value || '').trim();
+  const timeSaved = (document.getElementById('field-feedback-time-saved')?.value || '').trim();
+  const upgradeIntent = (document.getElementById('field-feedback-upgrade-intent')?.value || '').trim();
   const error = document.getElementById('field-feedback-error');
-  if (!text && !rating && !tester) {
+  if (!text && !rating && !tester && !timeSaved && !upgradeIntent) {
     if (error) {
       error.textContent = 'Add a quick note, rating, or field tester opt-in first.';
       error.style.display = 'block';
@@ -1659,7 +1675,7 @@ function submitFieldFeedback() {
   const state = readFieldFeedbackState();
   state.submittedAt = Date.now();
   state.snoozedUntil = Date.now() + FIELD_FEEDBACK_AFTER_SUBMIT_MS;
-  state.lastFeedback = { text: text.slice(0, 500), rating, email, tester, code, brand, photoType, at: new Date().toISOString() };
+  state.lastFeedback = { text: text.slice(0, 500), rating, email, tester, code, brand, photoType, timeSaved, upgradeIntent, at: new Date().toISOString() };
   writeFieldFeedbackState(state);
   trackSplashLensEvent('field_feedback_submitted', {
     feedback: text.slice(0, 900),
@@ -1668,6 +1684,8 @@ function submitFieldFeedback() {
     code_or_part: code,
     brand,
     photo_type: photoType,
+    time_saved: timeSaved,
+    upgrade_intent: upgradeIntent,
     field_tester_opt_in: tester,
     consent_to_follow_up: Boolean(email && tester),
     meaningful_actions: state.meaningfulActions || 0,
@@ -8293,15 +8311,20 @@ function maybeTrackActivationCompleted(eventName, props = {}) {
   const challenge = getFieldChallengeContext();
   const challengeCompleted = challenge.field_challenge && claimFieldChallenge(FIELD_CHALLENGE_COMPLETED_KEY);
   if (challengeCompleted) {
+    const capturedAt = Date.parse(challenge.captured_at || '');
     trackSplashLensEvent('field_challenge_completed', {
       ...challenge,
       activation_type: activationType,
       activation_trigger: eventName,
+      seconds_to_value: Number.isFinite(capturedAt) ? Math.max(0, Math.round((Date.now() - capturedAt) / 1000)) : null,
     });
   }
   if (firstActivation || challengeCompleted) {
     setTimeout(() => showValueIdentityPrompt(eventName), 1200);
     setTimeout(() => showFieldReferralPrompt(eventName), 6200);
+  }
+  if (challengeCompleted && challenge.pilot_id) {
+    setTimeout(() => showFieldFeedbackPrompt(eventName, { force: true }), 1800);
   }
 }
 
@@ -8342,7 +8365,7 @@ function recordAIScan(mode, serverUsage = null) {
     usage.count += 1;
     saveScanUsage(usage);
   }
-  trackSplashLensEvent('ai_scan_started', { mode });
+  trackSplashLensEvent('ai_scan_completed', { mode });
   updateAIStatusBar();
 }
 
@@ -8667,6 +8690,7 @@ function trackStoreShellOpen() {
 }
 
 async function callAIScan(canvas, mode, result, status) {
+  trackSplashLensEvent('ai_scan_attempted', { mode });
   try {
     const base64 = canvas.toDataURL('image/jpeg', 0.85).replace(/^data:image\/jpeg;base64,/, '');
     const headers = { 'Content-Type': 'application/json', ...getLanguageHeaders() };
@@ -8710,6 +8734,7 @@ async function callAIScan(canvas, mode, result, status) {
     const payload = await res.json().catch(() => ({}));
     if (!res.ok) {
       if (payload.profileRequired) {
+        trackSplashLensEvent('ai_scan_blocked', { mode, reason: 'profile_required', status: res.status });
         localStorage.removeItem(FREE_PROFILE_TOKEN_KEY);
         localStorage.removeItem(ACCOUNT_TOKEN_KEY);
         const savedProfile = getFieldSaveAccount();
@@ -8728,12 +8753,14 @@ async function callAIScan(canvas, mode, result, status) {
         return;
       }
       if (res.status === 429 && /free scan limit/i.test(payload.error || '')) {
+        trackSplashLensEvent('ai_scan_blocked', { mode, reason: 'free_limit_reached', status: res.status });
         syncScanUsageFromServer({ source: 'free_metered', count: payload.limit || SCAN_LIMIT_FREE });
         trackSplashLensEvent('scan_limit_reached_server', { mode, limit: payload.limit || SCAN_LIMIT_FREE, upgrade: payload.upgrade || '' });
         showScanLimitModal(result, status);
         return;
       }
       if ([401, 402, 403].includes(res.status) && entitlementToken) {
+        trackSplashLensEvent('ai_scan_blocked', { mode, reason: 'entitlement_rejected', status: res.status });
         localStorage.removeItem(SCAN_ENTITLEMENT_TOKEN_KEY);
         localStorage.removeItem(SCAN_ENTITLEMENT_META_KEY);
         localStorage.removeItem(SCAN_PRO_KEY);
@@ -8799,6 +8826,10 @@ async function callAIScan(canvas, mode, result, status) {
       }
     }
   } catch (err) {
+    trackSplashLensEvent('ai_scan_failed', {
+      mode,
+      reason: err && err.name === 'TypeError' ? 'network_or_worker_unavailable' : 'scan_request_failed',
+    });
     // Network error or worker unavailable — fall back to offline path
     if (status) status.textContent = 'AI UNAVAILABLE — USING LOCAL SCAN';
     if ('TextDetector' in window) {
@@ -9246,9 +9277,8 @@ function renderPartSnapResultUpgradeOffer(placement = 'partsnap_result') {
   trackSplashLensEvent('post_value_upgrade_shown', { feature: 'unlimited_partsnap', placement });
   return `
     <div style="background:#082f49;border:1px solid #0ea5e9;border-radius:10px;padding:12px;margin:10px 0;">
-      <p style="color:#7dd3fc;font-size:10px;font-weight:950;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;">Keep the route moving</p>
-      <p style="color:#f8fafc;font-size:13px;font-weight:950;margin-bottom:4px;">Use PartSnap on every weird part today.</p>
-      <p style="color:#bae6fd;font-size:11px;line-height:1.4;margin-bottom:9px;">Free profiles get 3 AI scans a month. Pro unlocks unlimited scanner use, saved job memory, customer-safe notes, and boss/counter packets where paid access is available.</p>
+      <p style="color:#7dd3fc;font-size:10px;font-weight:950;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;">Keep the result</p>
+      <p style="color:#f8fafc;font-size:13px;font-weight:950;margin-bottom:9px;">Save this job, customer summary, and equipment history with Pro.</p>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;">
         <a href="${PARTSNAP_MONTHLY_LINK}" target="_blank" rel="noopener" onclick="trackPostValueUpgrade('monthly','${escAttr(placement)}')" style="background:#0ea5e9;color:#082f49;text-decoration:none;text-align:center;border-radius:8px;padding:10px 7px;font-size:11px;font-weight:950;">Go Pro $29</a>
         <a href="${PARTSNAP_YEARLY_LINK}" target="_blank" rel="noopener" onclick="trackPostValueUpgrade('yearly','${escAttr(placement)}')" style="background:#22c55e;color:#052e16;text-decoration:none;text-align:center;border-radius:8px;padding:10px 7px;font-size:11px;font-weight:950;">Save yearly</a>
@@ -10084,12 +10114,21 @@ function scanCodeSearch(val) {
       brand: _scanBrand || 'all',
       result_count: hits.length,
     });
-    trackSplashLensEvent('first_value_completed', {
-      role: getSplashLensRole(),
-      workflow: 'scan_lookup_search',
-      result_count: hits.length,
-      time_back_message: 'Lookup answer found inside scanner mode.',
-    });
+    if (hits.length > 0) {
+      trackSplashLensEvent('first_value_completed', {
+        role: getSplashLensRole(),
+        workflow: 'scan_lookup_search',
+        result_count: hits.length,
+        time_back_message: 'Lookup answer found inside scanner mode.',
+      });
+    } else {
+      trackSplashLensEvent('lookup_zero_result', {
+        role: getSplashLensRole(),
+        workflow: 'scan_lookup_search',
+        query: safeQuery,
+        brand: _scanBrand || 'all',
+      });
+    }
   }
 }
 
@@ -10166,11 +10205,11 @@ function renderManualLookupUpgradeOffer(resultCount, query) {
       });
     }
   } catch {}
+  if (resultCount <= 0) return '';
   return `
     <div style="background:#082f49;border:1px solid #0ea5e9;border-radius:10px;padding:12px;margin:12px 0 6px;">
-      <p style="color:#7dd3fc;font-size:10px;font-weight:950;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;">Found the code?</p>
-      <p style="color:#f8fafc;font-size:13px;font-weight:950;margin-bottom:4px;">Now keep the whole route moving.</p>
-      <p style="color:#bae6fd;font-size:11px;line-height:1.4;margin-bottom:9px;">Manual lookup stays free. Pro is for the paid field layer: unlimited scanner use where available, saved job memory, customer-safe notes, and boss/counter packets.</p>
+      <p style="color:#7dd3fc;font-size:10px;font-weight:950;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;">Keep the result</p>
+      <p style="color:#f8fafc;font-size:13px;font-weight:950;margin-bottom:9px;">Save this job, customer summary, and equipment history with Pro.</p>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;">
         <a href="${PARTSNAP_MONTHLY_LINK}" target="_blank" rel="noopener" onclick="trackPostValueUpgrade('monthly','scan_lookup_search')" style="background:#0ea5e9;color:#082f49;text-decoration:none;text-align:center;border-radius:8px;padding:10px 7px;font-size:11px;font-weight:950;">Go Pro $29</a>
         <a href="${PARTSNAP_YEARLY_LINK}" target="_blank" rel="noopener" onclick="trackPostValueUpgrade('yearly','scan_lookup_search')" style="background:#22c55e;color:#052e16;text-decoration:none;text-align:center;border-radius:8px;padding:10px 7px;font-size:11px;font-weight:950;">Save yearly</a>

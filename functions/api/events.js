@@ -85,6 +85,23 @@ async function ensureEventsTable(db) {
   ).run();
 }
 
+async function ensureEngagementEventsTable(db) {
+  await db.prepare(
+    `CREATE TABLE IF NOT EXISTS engagement_events (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      event TEXT NOT NULL,
+      source TEXT,
+      path TEXT,
+      mode TEXT,
+      props TEXT,
+      user_agent TEXT,
+      referrer TEXT,
+      country TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )`
+  ).run();
+}
+
 export async function onRequestPost({ request, env }) {
   const headers = corsHeaders(request);
   let body;
@@ -120,23 +137,36 @@ export async function onRequestPost({ request, env }) {
   }
 
   try {
+    if (LOW_SIGNAL_EVENTS.has(event)) {
+      await ensureEngagementEventsTable(env.SUBSCRIBERS_DB);
+      await env.SUBSCRIBERS_DB.prepare(
+        `INSERT INTO engagement_events (event, source, path, mode, props, user_agent, referrer, country)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+      ).bind(event, source, path, mode, propsJson, userAgent, referrer, country).run();
+      return new Response(JSON.stringify({
+        ok: true,
+        stored: true,
+        storageBucket: 'engagement_events',
+        amplitudeQueued: false,
+        amplitudeConfigured: amplitudeEnabled(env),
+      }), { status: 200, headers });
+    }
+
     await ensureEventsTable(env.SUBSCRIBERS_DB);
     await env.SUBSCRIBERS_DB.prepare(
       `INSERT INTO events (event, source, path, plan, mode, props, user_agent, referrer, country)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
     ).bind(event, source, path, plan, mode, propsJson, userAgent, referrer, country).run();
 
-    const amplitude = LOW_SIGNAL_EVENTS.has(event)
-      ? { sent: false, skipped: true, reason: 'low_signal_engagement_event' }
-      : await forwardEventToAmplitude(env, {
-          correlationId: crypto.randomUUID(),
-          event,
-          source,
-          path,
-          plan,
-          mode,
-          createdAt: new Date().toISOString(),
-        }, props);
+    const amplitude = await forwardEventToAmplitude(env, {
+      correlationId: crypto.randomUUID(),
+      event,
+      source,
+      path,
+      plan,
+      mode,
+      createdAt: new Date().toISOString(),
+    }, props);
 
     return new Response(JSON.stringify({
       ok: true,

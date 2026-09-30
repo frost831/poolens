@@ -43,12 +43,12 @@ const FUNNEL_STAGES = [
   {
     key: 'first_action',
     label: 'First field action',
-    events: ['first_action_started', 'manual_code_search', 'ai_scan_started', 'service_proof_workflow_started', 'facility_workflow_action_selected', 'field_challenge_started', 'field_challenge_routed'],
+    events: ['first_action_started', 'manual_code_search', 'ai_scan_attempted', 'ai_scan_started', 'service_proof_workflow_started', 'facility_workflow_action_selected', 'field_challenge_started', 'field_challenge_routed'],
   },
   {
     key: 'first_value',
     label: 'Useful result',
-    events: ['first_value_completed', 'partsnap_result', 'service_report_saved', 'service_proof_summary_generated', 'service_proof_share_link_created', 'field_challenge_completed'],
+    events: ['first_value_completed'],
   },
   {
     key: 'feedback',
@@ -63,7 +63,7 @@ const FUNNEL_STAGES = [
   {
     key: 'checkout_intent',
     label: 'Checkout intent',
-    events: ['checkout_click', 'upgrade_click', 'post_value_upgrade_clicked', 'account_pro_checkout_clicked', 'partsnap_pro_restore_requested', 'native_purchase_click', 'paid_lane_click', 'paid_lane_lead_captured'],
+    events: ['checkout_click', 'native_purchase_click'],
   },
   {
     key: 'paid_or_restored',
@@ -116,6 +116,17 @@ function quotedEvents(events) {
   return events.map((event) => `'${event.replace(/'/g, "''")}'`).join(', ');
 }
 
+const QUALIFIED_FIRST_VALUE_FILTER = `
+ AND NOT (
+   event = 'first_value_completed'
+   AND COALESCE(CAST(json_extract(props, '$.result_count') AS INTEGER), 1) <= 0
+ )
+`;
+
+function stageFilter(stage) {
+  return stage.key === 'first_value' ? QUALIFIED_FIRST_VALUE_FILTER : '';
+}
+
 async function funnelStageStats(db, days) {
   const rows = [];
   for (const stage of FUNNEL_STAGES) {
@@ -125,6 +136,7 @@ async function funnelStageStats(db, days) {
       WHERE event IN (${quotedEvents(stage.events)})
       AND created_at >= datetime('now', '-${days} days')
       ${EXTERNAL_EVENT_FILTER}
+      ${stageFilter(stage)}
     `);
     rows.push({ key: stage.key, label: stage.label, count: value, events: stage.events });
   }
@@ -137,7 +149,7 @@ async function funnelStageStats(db, days) {
 
 async function paymentStats(db) {
   const table = await first(db, `SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'payment_events'`);
-  if (!table.name) return { byPlan: [], foreignByPlan: [], splashlensCompleted: 0, suspectCompleted: 0 };
+  if (!table.name) return { byPlan: [], foreignByPlan: [], splashlensCompleted: 0, splashlensCompleted30d: 0, suspectCompleted: 0 };
   const allByPlan = await all(db, `
     SELECT event_type, COALESCE(plan, 'unknown') AS plan, COUNT(*) AS count,
       COUNT(DISTINCT stripe_session_id) AS stripeSessions,
@@ -149,10 +161,28 @@ async function paymentStats(db) {
   `);
   const byPlan = allByPlan.filter((row) => /partsnap|splashlens|splash lens/i.test(String(row.plan || '')));
   const foreignByPlan = allByPlan.filter((row) => !/partsnap|splashlens|splash lens/i.test(String(row.plan || '')));
+  const completionEvents = new Set(['checkout.session.completed', 'checkout.session.async_payment_succeeded']);
   const splashlensCompleted = byPlan
+    .filter((row) => completionEvents.has(String(row.event_type || '')))
     .reduce((sum, row) => sum + Number(row.count || 0), 0);
+  const recent = await first(db, `
+    SELECT COUNT(DISTINCT stripe_session_id) AS value
+    FROM payment_events
+    WHERE event_type IN ('checkout.session.completed', 'checkout.session.async_payment_succeeded')
+      AND created_at >= datetime('now', '-30 days')
+      AND (lower(COALESCE(plan, '')) LIKE '%partsnap%' OR lower(COALESCE(plan, '')) LIKE '%splashlens%' OR lower(COALESCE(plan, '')) LIKE '%splash lens%')
+  `);
   const suspectCompleted = foreignByPlan.reduce((sum, row) => sum + Number(row.count || 0), 0);
-  return { byPlan, foreignByPlan, splashlensCompleted, suspectCompleted };
+  return { byPlan, foreignByPlan, splashlensCompleted, splashlensCompleted30d: Number(recent.value || 0), suspectCompleted };
+}
+
+async function engagementStats(db) {
+  const table = await first(db, `SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'engagement_events'`);
+  const separatedHeartbeatTotal = table.name
+    ? await count(db, `SELECT COUNT(*) AS value FROM engagement_events WHERE event = 'session_heartbeat'`)
+    : 0;
+  const legacyHeartbeatTotal = await count(db, `SELECT COUNT(*) AS value FROM events WHERE event = 'session_heartbeat'`);
+  return { separatedHeartbeatTotal, legacyHeartbeatTotal };
 }
 
 async function storeMetricStats(db) {
@@ -191,12 +221,13 @@ export async function onRequestGet({ request, env }) {
       funnel30d,
       payments,
       storeMetrics,
+      engagement,
     ] = await Promise.all([
       count(db, `SELECT COUNT(*) AS value FROM events WHERE created_at >= datetime('now', '-7 days') ${EXTERNAL_EVENT_FILTER}`),
       count(db, `SELECT COUNT(*) AS value FROM events WHERE created_at >= datetime('now', '-30 days') ${EXTERNAL_EVENT_FILTER}`),
       count(db, `SELECT COUNT(*) AS value FROM events WHERE event IN ('app_open','first_app_open','native_shell_open','native_shell_first_open') AND created_at >= datetime('now', '-30 days') ${EXTERNAL_EVENT_FILTER}`),
-      count(db, `SELECT COUNT(*) AS value FROM events WHERE event IN ('first_action_started','manual_code_search','ai_scan_started','service_proof_workflow_started','facility_workflow_action_selected','field_challenge_started') AND created_at >= datetime('now', '-30 days') ${EXTERNAL_EVENT_FILTER}`),
-      count(db, `SELECT COUNT(*) AS value FROM events WHERE event IN ('first_value_completed','partsnap_result','service_report_saved','service_proof_summary_generated','service_proof_share_link_created','field_challenge_completed') AND created_at >= datetime('now', '-30 days') ${EXTERNAL_EVENT_FILTER}`),
+      count(db, `SELECT COUNT(*) AS value FROM events WHERE event IN ('first_action_started','manual_code_search','ai_scan_attempted','ai_scan_started','service_proof_workflow_started','facility_workflow_action_selected','field_challenge_started') AND created_at >= datetime('now', '-30 days') ${EXTERNAL_EVENT_FILTER}`),
+      count(db, `SELECT COUNT(*) AS value FROM events WHERE event = 'first_value_completed' AND created_at >= datetime('now', '-30 days') ${EXTERNAL_EVENT_FILTER} ${QUALIFIED_FIRST_VALUE_FILTER}`),
       count(db, `SELECT COUNT(*) AS value FROM events WHERE event IN ('partsnap_result_feedback','field_feedback_quick_answered','field_feedback_submitted','field_score_feedback') AND created_at >= datetime('now', '-30 days') ${EXTERNAL_EVENT_FILTER}`),
       count(db, `SELECT COUNT(*) AS value FROM events WHERE event IN ('checkout_click','upgrade_click','post_value_upgrade_clicked','account_pro_checkout_clicked','partsnap_pro_restore_requested','native_purchase_click','paid_lane_click','paid_lane_lead_captured') AND created_at >= datetime('now', '-30 days') ${EXTERNAL_EVENT_FILTER}`),
       count(db, `SELECT COUNT(*) AS value FROM subscribers`),
@@ -207,6 +238,7 @@ export async function onRequestGet({ request, env }) {
       funnelStageStats(db, 30),
       paymentStats(db),
       storeMetricStats(db),
+      engagementStats(db),
     ]);
 
     return json({
@@ -224,12 +256,18 @@ export async function onRequestGet({ request, env }) {
         appOpens30d,
         firstActions30d,
         firstValues30d,
+        qualifiedFirstValueSessions30d: await count(db, `SELECT COUNT(DISTINCT COALESCE(NULLIF(json_extract(props, '$.session_id'), ''), NULLIF(json_extract(props, '$.client_id'), ''), id)) AS value FROM events WHERE event = 'first_value_completed' AND created_at >= datetime('now', '-30 days') ${EXTERNAL_EVENT_FILTER} ${QUALIFIED_FIRST_VALUE_FILTER}`),
+        partSnapResults30d: await count(db, `SELECT COUNT(*) AS value FROM events WHERE event = 'partsnap_result' AND created_at >= datetime('now', '-30 days') ${EXTERNAL_EVENT_FILTER}`),
         feedback30d,
         checkoutClicks30d,
+        checkoutStarts30d: await count(db, `SELECT COUNT(*) AS value FROM events WHERE event = 'checkout_click' AND created_at >= datetime('now', '-30 days') ${EXTERNAL_EVENT_FILTER}`),
         subscribersTotal,
         partnerLeadsTotal,
         splashlensPaidCompletions: payments.splashlensCompleted,
+        splashlensPaidCompletions30d: payments.splashlensCompleted30d,
         suspectNonSplashLensPaymentRows: payments.suspectCompleted,
+        legacyHeartbeatRows: engagement.legacyHeartbeatTotal,
+        separatedHeartbeatRows: engagement.separatedHeartbeatTotal,
       },
       funnel7d,
       funnel30d,
