@@ -2700,43 +2700,159 @@ function ensureFieldSaveAccount(feature = 'saved_job') {
     return true;
   }
 
-  const wantsProfile = window.confirm(
-    feature.startsWith('scan_gate')
-      ? `Manual lookup stays free. Create a free SplashLens profile to unlock ${SCAN_LIMIT_FREE} AI scans this month and let us follow up on misses?`
-      : 'Manual lookup stays free. Create a free SplashLens profile to save job history and proof on this device?'
-  );
-  if (!wantsProfile) {
+  // The sheet is asynchronous, so the save that asked for a profile is replayed once one exists.
+  createFieldSaveProfile(feature).then((profile) => {
+    if (profile && FIELD_SAVE_RETRY_ACTIONS[feature]) FIELD_SAVE_RETRY_ACTIONS[feature]();
+  });
+  return false;
+}
+
+const FIELD_SAVE_RETRY_ACTIONS = {
+  service_report_saved: () => saveReportToPoolHistory(),
+  partsnap_field_stop_saved: () => savePartSnapFieldStop(),
+  partsnap_saved_to_pool: () => confirmPartSnapSaveToPool(),
+};
+
+let _splashLensSheetFinish = null;
+
+function closeSplashLensSheet(value = null) {
+  const finish = _splashLensSheetFinish;
+  _splashLensSheetFinish = null;
+  document.getElementById('splashlens-sheet')?.remove();
+  if (finish) finish(value);
+}
+
+// In-page replacement for window.confirm/prompt. The iOS store shell is a WKWebView with no
+// JavaScript panel handlers, so native dialogs answer "Cancel" instantly and nothing is shown.
+// Resolves with the submitted values (or whatever config.submit returns), or null when dismissed.
+function openSplashLensSheet(config) {
+  closeSplashLensSheet(null);
+  return new Promise((resolve) => {
+    const wrap = document.createElement('div');
+    wrap.id = 'splashlens-sheet';
+    wrap.setAttribute('role', 'dialog');
+    wrap.setAttribute('aria-modal', 'true');
+    wrap.setAttribute('aria-label', config.title || 'SplashLens');
+    wrap.style.cssText = 'position:fixed;inset:0;z-index:10000;background:rgba(15,23,42,.72);display:flex;align-items:flex-end;justify-content:center;padding:12px;';
+    wrap.innerHTML = `
+      <form novalidate style="width:min(480px,100%);max-height:88vh;overflow:auto;background:#0f172a;border:1px solid #334155;border-top:4px solid #14b8a6;border-radius:16px 16px 12px 12px;box-shadow:0 22px 70px rgba(2,6,23,.6);padding:18px;">
+        ${config.eyebrow ? `<p style="color:#5eead4;font-size:10px;font-weight:950;letter-spacing:.11em;text-transform:uppercase;margin:0 0 6px;">${escHtml(config.eyebrow)}</p>` : ''}
+        <h2 style="color:#f8fafc;font-size:20px;font-weight:950;line-height:1.15;margin:0 0 8px;">${escHtml(config.title || '')}</h2>
+        ${config.body ? `<p style="color:#cbd5e1;font-size:13px;line-height:1.5;margin:0 0 14px;">${escHtml(config.body)}</p>` : ''}
+        ${(config.fields || []).map((field) => `
+          <label style="display:block;color:#94a3b8;font-size:11px;font-weight:900;letter-spacing:.04em;margin:0 0 5px;" for="splashlens-sheet-${escAttr(field.name)}">${escHtml(field.label)}</label>
+          <input id="splashlens-sheet-${escAttr(field.name)}" name="${escAttr(field.name)}" type="${escAttr(field.type || 'text')}"
+            ${field.inputmode ? `inputmode="${escAttr(field.inputmode)}"` : ''} ${field.autocomplete ? `autocomplete="${escAttr(field.autocomplete)}"` : ''}
+            ${field.maxlength ? `maxlength="${escAttr(field.maxlength)}"` : ''} ${field.placeholder ? `placeholder="${escAttr(field.placeholder)}"` : ''}
+            value="${escAttr(field.value || '')}" autocapitalize="off" autocorrect="off" spellcheck="false"
+            style="width:100%;box-sizing:border-box;background:#020617;color:#f8fafc;border:1px solid #475569;border-radius:10px;padding:13px 12px;font-size:16px;margin:0 0 12px;">`).join('')}
+        <p data-sheet-error role="alert" style="color:#fca5a5;font-size:12px;font-weight:800;line-height:1.4;min-height:0;margin:0 0 10px;"></p>
+        <button type="submit" style="width:100%;background:#14b8a6;color:#042f2e;border:0;border-radius:10px;padding:14px 10px;font-size:14px;font-weight:950;cursor:pointer;">${escHtml(config.primaryLabel || 'Continue')}</button>
+        <button type="button" data-sheet-cancel style="width:100%;background:transparent;color:#94a3b8;border:0;padding:12px 10px 4px;font-size:13px;font-weight:800;cursor:pointer;">${escHtml(config.secondaryLabel || 'Not now')}</button>
+        ${config.tertiaryLabel ? `<button type="button" data-sheet-tertiary style="width:100%;background:transparent;color:#64748b;border:0;padding:8px 10px 0;font-size:12px;font-weight:800;text-decoration:underline;cursor:pointer;">${escHtml(config.tertiaryLabel)}</button>` : ''}
+        ${config.footnote ? `<p style="color:#64748b;font-size:11px;line-height:1.45;margin:10px 0 0;text-align:center;">${escHtml(config.footnote)}</p>` : ''}
+      </form>`;
+
+    _splashLensSheetFinish = resolve;
+    const form = wrap.querySelector('form');
+    const errorEl = wrap.querySelector('[data-sheet-error]');
+    const submitBtn = wrap.querySelector('button[type="submit"]');
+    wrap.addEventListener('click', (event) => {
+      if (event.target === wrap) closeSplashLensSheet(null);
+    });
+    wrap.querySelector('[data-sheet-cancel]').addEventListener('click', () => closeSplashLensSheet(null));
+    wrap.querySelector('[data-sheet-tertiary]')?.addEventListener('click', () => {
+      if (config.onTertiary) config.onTertiary();
+      closeSplashLensSheet(null);
+    });
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const values = {};
+      form.querySelectorAll('input[name]').forEach((input) => { values[input.name] = String(input.value || '').trim(); });
+      const problem = config.validate ? config.validate(values) : '';
+      if (problem) {
+        errorEl.textContent = problem;
+        return;
+      }
+      const idleLabel = submitBtn.textContent;
+      errorEl.textContent = '';
+      submitBtn.disabled = true;
+      submitBtn.textContent = config.busyLabel || 'Working...';
+      try {
+        const outcome = config.submit ? await config.submit(values) : values;
+        closeSplashLensSheet(outcome);
+      } catch (error) {
+        errorEl.textContent = error.message || 'That did not work. Try again.';
+        submitBtn.disabled = false;
+        submitBtn.textContent = idleLabel;
+      }
+    });
+    document.body.appendChild(wrap);
+    setTimeout(() => form.querySelector('input')?.focus(), 80);
+  });
+}
+
+function showSplashLensNotice(message) {
+  const text = String(message || '').trim();
+  if (!text) return;
+  document.getElementById('splashlens-notice')?.remove();
+  const notice = document.createElement('div');
+  notice.id = 'splashlens-notice';
+  notice.setAttribute('role', 'status');
+  notice.style.cssText = 'position:fixed;left:12px;right:12px;top:14px;z-index:10001;background:#0f172a;color:#f8fafc;border:1px solid #334155;border-left:4px solid #14b8a6;border-radius:12px;padding:13px 14px;font-size:13px;font-weight:800;line-height:1.45;box-shadow:0 18px 50px rgba(2,6,23,.5);';
+  notice.textContent = text;
+  notice.addEventListener('click', () => notice.remove());
+  document.body.appendChild(notice);
+  setTimeout(() => notice.remove(), 7000);
+}
+
+// window.alert is silently dropped by the iOS store shell, so its messages surface as a notice there.
+function installStoreShellDialogFallbacks() {
+  if (getStoreShellMode() !== 'ios') return;
+  window.alert = (message) => showSplashLensNotice(message);
+}
+document.addEventListener('DOMContentLoaded', installStoreShellDialogFallbacks);
+
+async function createFieldSaveProfile(feature = 'saved_job') {
+  const scanGate = feature.startsWith('scan_gate');
+  trackSplashLensEvent('free_save_profile_sheet_shown', { feature });
+  const values = await openSplashLensSheet({
+    eyebrow: scanGate ? 'Free to start' : 'Free save profile',
+    title: scanGate ? `${SCAN_LIMIT_FREE} free AI scans. Just your email.` : 'Save this job with a free profile.',
+    body: scanGate
+      ? 'We email a 6-digit code so your free scans stay yours. No card, no password. Manual lookup stays free without it.'
+      : 'Add your email so saved job history and proof stay tied to you. No card, no password. Manual lookup stays free without it.',
+    fields: [
+      { name: 'email', label: 'Work email', type: 'email', inputmode: 'email', autocomplete: 'email', placeholder: 'you@company.com' },
+    ],
+    primaryLabel: scanGate ? 'Email my code' : 'Save with this email',
+    secondaryLabel: 'Not now',
+    validate: (input) => (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input.email) ? '' : 'Enter a valid email address.'),
+  });
+  if (!values) {
     trackSplashLensEvent('free_save_profile_gate_dismissed', { feature });
-    return false;
+    return null;
   }
 
-  const email = String(window.prompt('Email for your free SplashLens save profile:') || '').trim().toLowerCase();
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    window.alert('Enter a valid email before using AI scans or saving job history.');
-    trackSplashLensEvent('free_save_profile_invalid_email', { feature });
-    return false;
-  }
-
-  const name = String(window.prompt('Your name (optional):') || '').trim().slice(0, 80);
-  const company = String(window.prompt('Company (optional):') || '').trim().slice(0, 120);
+  const email = values.email.toLowerCase();
   const profile = {
     email,
-    name,
-    company,
+    name: '',
+    company: '',
     createdAt: new Date().toISOString(),
     sourceFeature: feature,
     role: getSplashLensRole() || 'tech',
   };
   localStorage.setItem(FIELD_SAVE_ACCOUNT_KEY, JSON.stringify(profile));
-  rememberSplashLensIdentity({ email, name, company, role: profile.role }, 'free_save_profile_created');
+  rememberSplashLensIdentity({ email, name: '', company: '', role: profile.role }, 'free_save_profile_created');
   syncFieldSaveProfile(profile, feature).catch(() => {});
   trackSplashLensEvent('free_save_profile_created', {
     feature,
     role: profile.role,
-    company_provided: Boolean(company),
-    name_provided: Boolean(name),
+    company_provided: false,
+    name_provided: false,
   });
-  return true;
+  return profile;
 }
 
 async function ensureFreeScanProfile(mode = 'ai_scan', result = null, status = null) {
@@ -2744,7 +2860,8 @@ async function ensureFreeScanProfile(mode = 'ai_scan', result = null, status = n
   let profile = getFieldSaveAccount();
   const feature = `scan_gate_${mode}`;
 
-  if (!profile && !ensureFieldSaveAccount(feature)) {
+  if (!profile) profile = await createFieldSaveProfile(feature);
+  if (!profile) {
     if (status) status.textContent = 'FREE PROFILE REQUIRED FOR AI SCAN';
     if (result) {
       result.innerHTML = `
@@ -2775,15 +2892,34 @@ async function ensureFreeScanProfile(mode = 'ai_scan', result = null, status = n
     }
 
     try {
+      if (status) status.textContent = 'EMAILING YOUR CODE…';
       await requestFreeProfileCode(profile, feature);
-      window.alert(`SplashLens emailed a 6-digit scanner code to ${profile.email}.`);
-      const code = String(window.prompt(`Enter the 6-digit SplashLens code sent to ${profile.email}:`) || '').trim();
-      if (!/^\d{6}$/.test(code)) {
+      if (status) status.textContent = 'ENTER THE CODE FROM YOUR EMAIL';
+      const pendingProfile = profile;
+      const verified = await openSplashLensSheet({
+        eyebrow: 'Check your email',
+        title: 'Enter your 6-digit code.',
+        body: `Sent to ${pendingProfile.email}. It can take a minute. Check spam if you do not see it.`,
+        fields: [
+          { name: 'code', label: '6-digit code', type: 'text', inputmode: 'numeric', autocomplete: 'one-time-code', maxlength: 6, placeholder: '123456' },
+        ],
+        primaryLabel: 'Verify and scan',
+        busyLabel: 'Verifying...',
+        secondaryLabel: 'Not now',
+        tertiaryLabel: 'Wrong email? Start over',
+        onTertiary: () => {
+          localStorage.removeItem(FIELD_SAVE_ACCOUNT_KEY);
+          trackSplashLensEvent('free_scan_profile_email_reset', { mode, feature });
+        },
+        validate: (input) => (/^\d{6}$/.test(input.code) ? '' : 'Enter the 6 digits from the email.'),
+        submit: (input) => verifyFreeProfileCode(pendingProfile, input.code, feature),
+      });
+      if (!verified) {
         trackSplashLensEvent('free_scan_profile_verification_dismissed', { mode, feature });
         if (status) status.textContent = 'EMAIL VERIFICATION REQUIRED';
         return false;
       }
-      profile = await verifyFreeProfileCode(profile, code, feature);
+      profile = verified;
       trackSplashLensEvent('free_scan_profile_verification_completed', { mode, feature });
     } catch (error) {
       if (status) status.textContent = 'EMAIL VERIFICATION NEEDED';

@@ -76,9 +76,9 @@ test('saving job history requires a free save profile signal', () => {
 });
 
 test('service worker cache version ships the newest account bundle', () => {
-  assert.match(shell, /app\.js\?v=20260930-activation-truth/);
-  assert.match(sw, /splashlens-v13-activation-truth/);
-  assert.match(sw, /app\.js\?v=20260930-activation-truth/);
+  assert.match(shell, /app\.js\?v=20260930-ios-safe-gate/);
+  assert.match(sw, /splashlens-v14-ios-safe-gate/);
+  assert.match(sw, /app\.js\?v=20260930-ios-safe-gate/);
 });
 
 test('checkout exposes a JSON catalog and Splash Lens Pro Unlimited metadata', () => {
@@ -132,4 +132,19 @@ test('account dashboard shows commercial lanes without pretending every lane is 
   assert.match(checkout, /requestAccessConfigured/);
   assert.match(commercial, /pilot_request/);
   assert.match(commercial, /partner_pilot/);
+});
+
+test('scan and save profile gates never depend on native JavaScript dialogs', () => {
+  const start = app.indexOf('function ensureFieldSaveAccount');
+  const end = app.indexOf('function speechRecognitionCtor');
+  const gate = app.slice(start, end > start ? end : start + 16000);
+  assert.ok(start > 0 && gate.length > 2000);
+  assert.match(gate, /function openSplashLensSheet\(config\)/);
+  assert.match(gate, /async function createFieldSaveProfile/);
+  assert.match(gate, /autocomplete: 'one-time-code'/);
+  assert.match(gate, /FIELD_SAVE_RETRY_ACTIONS\[feature\]/);
+  assert.match(gate, /getStoreShellMode\(\) !== 'ios'/);
+  const scanGate = gate.slice(gate.indexOf('async function createFieldSaveProfile'));
+  assert.doesNotMatch(scanGate, /window\.(confirm|prompt|alert)\(/);
+  assert.doesNotMatch(gate.slice(0, gate.indexOf('const FIELD_SAVE_RETRY_ACTIONS')), /window\.(confirm|prompt|alert)\(/);
 });

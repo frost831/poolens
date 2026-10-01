@@ -1,10 +1,10 @@
-const CACHE = 'splashlens-v13-activation-truth';
+const CACHE = 'splashlens-v14-ios-safe-gate';
 const ASSETS = [
   '/',
   '/index.html',
   '/js/errors.js',
   '/js/data.js?v=20260904-commercial-scale',
-  '/js/app.js?v=20260930-activation-truth',
+  '/js/app.js?v=20260930-ios-safe-gate',
   '/js/field-signals.js?v=20260728-field-signals',
   '/js/analytics.js',
   '/js/field-score.js?v=20260914-closing-season-challenge',
