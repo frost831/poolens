@@ -1,32 +1,36 @@
-const LINKS = {
-  monthly: 'https://buy.stripe.com/7sY7sE2aIaq31cE5EF8AE0O',
-  yearly: 'https://buy.stripe.com/aFa28k9Da69NdZq3wx8AE0P',
-  annual: 'https://buy.stripe.com/aFa28k9Da69NdZq3wx8AE0P',
+const PLAN_CONFIG = {
+  monthly: {
+    amount: 2900,
+    interval: 'month',
+    label: 'Splash Lens Pro Unlimited Monthly',
+  },
+  yearly: {
+    amount: 24900,
+    interval: 'year',
+    label: 'Splash Lens Pro Unlimited Annual',
+  },
 };
 
-const PRICE_IDS = {
-  monthly: 'price_1TbAp725fqLun6cVz5lhOiiS',
-  yearly: 'price_1TbAp825fqLun6cVoVG0wqQl',
-  annual: 'price_1TbAp825fqLun6cVoVG0wqQl',
-};
+function normalizedPlan(plan) {
+  return /year|annual/i.test(String(plan || '')) ? 'yearly' : 'monthly';
+}
 
 function paymentLinkForPlan(env, plan) {
-  const yearly = /year|annual/i.test(String(plan || ''));
+  const yearly = normalizedPlan(plan) === 'yearly';
   return String(
     yearly
-      ? env.SPLASHLENS_STRIPE_LINK_YEARLY_PRO || env.SPLASHLENS_STRIPE_LINK_YEARLY || LINKS.yearly
-      : env.SPLASHLENS_STRIPE_LINK_MONTHLY_PRO || env.SPLASHLENS_STRIPE_LINK_MONTHLY || LINKS.monthly
+      ? env.SPLASHLENS_STRIPE_LINK_YEARLY_PRO || env.SPLASHLENS_STRIPE_LINK_YEARLY || ''
+      : env.SPLASHLENS_STRIPE_LINK_MONTHLY_PRO || env.SPLASHLENS_STRIPE_LINK_MONTHLY || ''
   ).trim();
 }
 
 function priceForPlan(env, plan) {
-  const key = /year|annual/i.test(String(plan || '')) ? 'YEARLY' : 'MONTHLY';
+  const key = normalizedPlan(plan) === 'yearly' ? 'YEARLY' : 'MONTHLY';
   return String(
     env[`SPLASHLENS_STRIPE_PRICE_${key}_PRO`]
       || env[`SPLASHLENS_STRIPE_PRICE_${key}`]
       || env[`STRIPE_PRICE_${key}`]
-      || PRICE_IDS[plan]
-      || PRICE_IDS.monthly,
+      || '',
   ).trim();
 }
 
@@ -42,15 +46,26 @@ async function createCheckoutSession(request, env, plan) {
   if (!env.STRIPE_SECRET_KEY) return null;
 
   const origin = appOrigin(request, env);
+  const planKey = normalizedPlan(plan);
+  const planConfig = PLAN_CONFIG[planKey];
+  const configuredPrice = priceForPlan(env, planKey);
   const params = new URLSearchParams();
   params.set('mode', 'subscription');
-  params.set('line_items[0][price]', priceForPlan(env, plan));
+  if (configuredPrice) {
+    params.set('line_items[0][price]', configuredPrice);
+  } else {
+    params.set('line_items[0][price_data][currency]', 'usd');
+    params.set('line_items[0][price_data][unit_amount]', String(planConfig.amount));
+    params.set('line_items[0][price_data][recurring][interval]', planConfig.interval);
+    params.set('line_items[0][price_data][product_data][name]', 'Splash Lens Pro Unlimited');
+    params.set('line_items[0][price_data][product_data][description]', 'Unlimited PartSnap scans, saved jobs, customer summaries, and equipment history.');
+  }
   params.set('line_items[0][quantity]', '1');
   params.set('success_url', `${origin}/api/checkout-success?session_id={CHECKOUT_SESSION_ID}`);
   params.set('cancel_url', `${origin}/?checkout=cancelled&plan=${encodeURIComponent(plan)}`);
   params.set('metadata[product]', 'splashlens');
   params.set('metadata[feature]', 'scanner');
-  params.set('metadata[plan]', /year|annual/i.test(String(plan || '')) ? 'Splash Lens Pro Unlimited Annual' : 'Splash Lens Pro Unlimited Monthly');
+  params.set('metadata[plan]', planConfig.label);
   params.set('subscription_data[metadata][product]', 'splashlens');
   params.set('subscription_data[metadata][feature]', 'scanner');
   params.set('subscription_data[metadata][plan]', params.get('metadata[plan]'));
@@ -156,5 +171,9 @@ export async function onRequestGet({ request, env }) {
   if (sessionUrl) return checkoutRedirect(sessionUrl, 'stripe_checkout_session');
 
   const target = paymentLinkForPlan(env, plan);
-  return checkoutRedirect(target, 'payment_link_direct');
+  if (target) return checkoutRedirect(target, 'payment_link_direct');
+  return Response.json({ ok: false, error: 'Stripe Checkout could not be started. Please try again.' }, {
+    status: 503,
+    headers: { 'Cache-Control': 'no-store' },
+  });
 }

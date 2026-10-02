@@ -19,6 +19,11 @@ test('checkout creates subscription sessions before falling back to payment link
   assert.match(checkout, /priceLabel: '\$29\/month'/);
   assert.match(checkout, /priceLabel: '\$249\/year'/);
   assert.doesNotMatch(checkout, /\$29\/month target|\$249\/year target/);
+  assert.match(checkout, /amount: 2900/);
+  assert.match(checkout, /amount: 24900/);
+  assert.match(checkout, /price_data\]\[unit_amount\]/);
+  assert.doesNotMatch(checkout, /price_1TbAp725fqLun6cVz5lhOiiS|price_1TbAp825fqLun6cVoVG0wqQl/);
+  assert.doesNotMatch(checkout, /buy\.stripe\.com\/7sY7sE2aIaq31cE5EF8AE0O|buy\.stripe\.com\/aFa28k9Da69NdZq3wx8AE0P/);
 });
 
 test('Stripe webhook endpoint verifies signed checkout completion before storing entitlement', () => {
