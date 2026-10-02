@@ -34,6 +34,8 @@ function query(database) {
     FROM events
     WHERE json_extract(props, '$.pilot_id') = '${PILOT_ID}'
       AND COALESCE(source, '') NOT IN ('qa','codex','codex_smoke','launch-gate-test')
+      AND lower(COALESCE(source, '')) NOT LIKE 'codex%'
+      AND lower(COALESCE(source, '')) NOT IN ('release_gate','release-gate')
       AND lower(COALESCE(user_agent, '')) NOT LIKE '%headless%'
       AND lower(COALESCE(user_agent, '')) NOT LIKE '%bot%'
     GROUP BY json_extract(props, '$.participant_id')

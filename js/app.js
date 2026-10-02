@@ -3340,12 +3340,21 @@ function onErrorSearch(q) {
       result_count: matches.length,
       surface: 'error_search',
     });
-    trackSplashLensEvent('first_value_completed', {
-      role: getSplashLensRole(),
-      workflow: 'manual_code_search',
-      result_count: matches.length,
-      time_back_message: 'Code path found without leaving the stop.',
-    });
+    if (matches.length > 0) {
+      trackSplashLensEvent('first_value_completed', {
+        role: getSplashLensRole(),
+        workflow: 'manual_code_search',
+        result_count: matches.length,
+        time_back_message: 'Code path found without leaving the stop.',
+      });
+    } else {
+      trackSplashLensEvent('lookup_zero_result', {
+        role: getSplashLensRole(),
+        workflow: 'manual_code_search',
+        query: q.slice(0, 40),
+        brand: S.brand || 'all',
+      });
+    }
   }
 }
 
@@ -5369,6 +5378,7 @@ function calcTurnoverRate() {
   trackSplashLensEvent('first_value_completed', {
     role: getSplashLensRole(),
     workflow: 'turnover_calculator',
+    result_count: 1,
     hours: Number(hours.toFixed(2)),
     status: status.label,
     time_back_message: 'Turnover answer calculated without a spreadsheet.',

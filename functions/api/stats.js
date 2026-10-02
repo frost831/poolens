@@ -14,6 +14,8 @@ const ALLOWED_ORIGINS = new Set([
 const EXTERNAL_EVENT_FILTER = `
  AND COALESCE(event, '') NOT IN ('session_heartbeat', 'amplitude_readiness_smoke', 'growth_plan_smoke', 'audit_handoff_probe', 'codex_deploy_smoke', 'codex_launch_probe', 'codex_post_push_probe', 'command_center_probe', 'release_gate_live_custom_domain', 'release_gate_live_preview')
  AND COALESCE(source, '') NOT IN ('qa', 'codex', 'codex_smoke', 'launch-gate-test')
+ AND lower(COALESCE(source, '')) NOT LIKE 'codex%'
+ AND lower(COALESCE(source, '')) NOT IN ('release_gate', 'release-gate')
  AND lower(COALESCE(user_agent, '')) NOT LIKE '%headless%'
  AND lower(COALESCE(user_agent, '')) NOT LIKE '%bot%'
  AND lower(COALESCE(user_agent, '')) NOT LIKE '%crawler%'

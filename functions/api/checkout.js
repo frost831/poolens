@@ -70,6 +70,17 @@ async function createCheckoutSession(request, env, plan) {
   return session?.url || null;
 }
 
+function checkoutRedirect(location, mode) {
+  return new Response(null, {
+    status: 302,
+    headers: {
+      Location: location,
+      'Cache-Control': 'no-store',
+      'X-SplashLens-Checkout-Mode': mode,
+    },
+  });
+}
+
 export async function onRequestGet({ request, env }) {
   const url = new URL(request.url);
   const plan = (url.searchParams.get('plan') || 'monthly').toLowerCase();
@@ -130,8 +141,8 @@ export async function onRequestGet({ request, env }) {
   }
 
   const sessionUrl = await createCheckoutSession(request, env, plan);
-  if (sessionUrl) return Response.redirect(sessionUrl, 302);
+  if (sessionUrl) return checkoutRedirect(sessionUrl, 'stripe_checkout_session');
 
   const target = paymentLinkForPlan(env, plan);
-  return Response.redirect(target, 302);
+  return checkoutRedirect(target, 'payment_link_direct');
 }

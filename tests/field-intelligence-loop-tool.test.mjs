@@ -25,6 +25,8 @@ test('field intelligence runner is non-interactive and safe for heartbeat use', 
   assert.match(toolSource, /wrangler/);
   assert.match(toolSource, /splashlens-subscribers/);
   assert.match(toolSource, /REPORTING_EVENT_FILTER/);
+  assert.match(toolSource, /NOT LIKE 'codex%'/);
+  assert.match(toolSource, /'release_gate', 'release-gate'/);
   assert.match(toolSource, /'session_heartbeat'/);
   assert.match(toolSource, /countQualifiedFirstValues/);
   assert.match(toolSource, /qualifiedFirstValueSessions30d/);

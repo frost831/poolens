@@ -88,6 +88,9 @@ test('checkout exposes a JSON catalog and Splash Lens Pro Unlimited metadata', (
   assert.match(checkout, /SPLASHLENS_STRIPE_PRICE_\$\{key\}_PRO/);
   assert.match(checkout, /SPLASHLENS_STRIPE_LINK_MONTHLY_PRO/);
   assert.match(checkout, /year\|annual/);
+  assert.match(checkout, /X-SplashLens-Checkout-Mode/);
+  assert.match(checkout, /stripe_checkout_session/);
+  assert.match(checkout, /payment_link_direct/);
 });
 
 test('checkout intent reporting includes every app paid-action event', () => {
@@ -147,4 +150,10 @@ test('scan and save profile gates never depend on native JavaScript dialogs', ()
   const scanGate = gate.slice(gate.indexOf('async function createFieldSaveProfile'));
   assert.doesNotMatch(scanGate, /window\.(confirm|prompt|alert)\(/);
   assert.doesNotMatch(gate.slice(0, gate.indexOf('const FIELD_SAVE_RETRY_ACTIONS')), /window\.(confirm|prompt|alert)\(/);
+});
+
+test('first-value analytics exclude zero-result searches and count calculator output', () => {
+  assert.match(app, /if \(matches\.length > 0\) \{[\s\S]*workflow: 'manual_code_search'/);
+  assert.match(app, /workflow: 'manual_code_search',[\s\S]*lookup_zero_result/);
+  assert.match(app, /workflow: 'turnover_calculator',[\s\S]*result_count: 1/);
 });
