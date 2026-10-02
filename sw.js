@@ -1,10 +1,10 @@
-const CACHE = 'splashlens-v17-offline-routes';
+const CACHE = 'splashlens-v18-offline-routes';
 const ASSETS = [
   '/',
   '/index.html',
   '/js/errors.js',
-  '/js/data.js?v=20261002-trust-fixes',
-  '/js/app.js?v=20261002-trust-fixes',
+  '/js/data.js?v=20261002-trust-fixes-2',
+  '/js/app.js?v=20261002-trust-fixes-2',
   '/js/field-signals.js?v=20260728-field-signals',
   '/js/analytics.js',
   '/js/field-score.js?v=20260914-closing-season-challenge',

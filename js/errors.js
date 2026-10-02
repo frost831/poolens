@@ -229,6 +229,7 @@ window.ERROR_DB = {
         note:"UNVERIFIED FAMILY: SplashLens has not verified these code meanings against a current Jandy LXi/LRZ manual. Do not infer LXi/LRZ meanings from JXi or another heater family.",
         codes:[
           { code:"UNVERIFIED", name:"Code meaning withheld pending official manual verification",
+            searchAliases:["AGS","E01","E02","E03","E04","E05","SFS","SNSR"],
             causes:["The visible code has not been matched to a current model-specific Jandy LXi/LRZ source."],
             fix:["Record the exact model and serial plate","Photograph the complete display code","Use the current Jandy LXi/LRZ manual or contact Jandy support before diagnosing or ordering"],
             severity:"medium", callpro:true, unverified:true }
@@ -421,6 +422,7 @@ window.ERROR_DB = {
         note:"UNVERIFIED FAMILY: Raypak code meanings vary by control generation and model. SplashLens withholds mappings until each code is tied to a current model-specific source.",
         codes:[
           { code:"UNVERIFIED", name:"Code meaning withheld pending official manual verification",
+            searchAliases:["E1","E2","E3","E4","E5"],
             causes:["The visible code has not been matched to the exact Raypak model and control generation."],
             fix:["Record model, serial, and control-board revision","Photograph the full display code","Use the matching current Raypak manual or Raypak support before diagnosing or ordering"],
             severity:"medium", callpro:true, unverified:true }
@@ -439,6 +441,7 @@ window.ERROR_DB = {
         note:"UNVERIFIED FAMILY: Beatbot indicator and app-code meanings are withheld until matched to a current model-specific support source.",
         codes:[
           { code:"UNVERIFIED", name:"Indicator meaning withheld pending official support verification",
+            searchAliases:["E01","E02","E03","E05","E07","APP FILTER FULL","LED BLINKING BLUE","LED BLINKING RED","LED SOLID BLUE","LED SOLID RED","RED WHITE ALTERNATING","NO POWER","WON'T START"],
             causes:["The light pattern or app code has not been matched to the exact Beatbot model and current firmware documentation."],
             fix:["Record the exact model and serial number","Capture the complete light pattern or app message","Use the matching Beatbot support article or contact Beatbot support before diagnosing or ordering"],
             severity:"medium", callpro:true, unverified:true }
@@ -738,6 +741,7 @@ window.ERROR_DB = {
         note:"UNVERIFIED FAMILY: AquaCal code meanings vary by model and controller. SplashLens withholds mappings until each code is tied to a current model-specific source.",
         codes: [
           { code:"UNVERIFIED", name:"Code meaning withheld pending official manual verification",
+            searchAliases:["E1","LO","E2","HI","E3","E5","E6","E7","E9","FLO","FS1","FS2","NO DISPLAY","NO POWER"],
             causes:["The visible code has not been matched to the exact AquaCal model and controller generation."],
             fix:["Record model, serial, and controller revision","Photograph the complete display code","Use the matching current AquaCal manual or AquaCal support before diagnosing or ordering"],
             severity:"medium", callpro:true, unverified:true }
@@ -757,6 +761,7 @@ window.ERROR_DB = {
         note:"UNVERIFIED FAMILY: SplashLens does not assume Sta-Rite and Pentair code meanings are interchangeable. Use the exact model-specific source.",
         codes: [
           { code:"UNVERIFIED", name:"Code meaning withheld pending official manual verification",
+            searchAliases:["AFS","AGS","E05","E06","EO1","HLS","IGN","PRS","SERVICE HEATER"],
             causes:["The visible code has not been matched to the exact Sta-Rite heater model and control generation."],
             fix:["Record model, serial, and control-board revision","Photograph the complete display code","Use the matching current Sta-Rite manual or manufacturer support before diagnosing or ordering"],
             severity:"medium", callpro:true, unverified:true }
@@ -769,6 +774,7 @@ window.ERROR_DB = {
         note:"UNVERIFIED FAMILY: These symptom mappings are withheld until tied to current model-specific Sta-Rite service documentation.",
         codes: [
           { code:"UNVERIFIED", name:"Symptom meaning withheld pending official service verification",
+            searchAliases:["HIGH AMPERAGE","TRIPPING BREAKER","LEAKING SHAFT SEAL","MOTOR HUMMING","NOT STARTING","MOTOR OVERHEATING","NOISY","CAVITATING","WON'T PRIME"],
             causes:["The reported symptom has not been matched to the exact Sta-Rite pump model and current service source."],
             fix:["Record the model, motor label, and serial number","Capture the full installed plumbing context","Use the matching current Sta-Rite service source before diagnosing or ordering"],
             severity:"medium", callpro:true, unverified:true }

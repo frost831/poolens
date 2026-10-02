@@ -11055,6 +11055,7 @@ function searchErrorDB(query, brandFilter) {
   const q = normalizeSearchText(query);
   if (!q) return [];
   const rawQuery = String(query || '').trim().toUpperCase();
+  const queryTokens = rawQuery.split(/[^A-Z0-9]+/).filter(Boolean);
   const results = [];
   const brands = brandFilter ? { [brandFilter]: window.ERROR_DB[brandFilter] } : window.ERROR_DB;
   for (const [brandKey, brand] of Object.entries(brands)) {
@@ -11068,10 +11069,12 @@ function searchErrorDB(query, brandFilter) {
         const models = (cat.models || []).join(' ').toUpperCase();
         const causes = (code.causes || []).join(' ').toUpperCase();
         const fixes = (code.fix || []).join(' ').toUpperCase();
-        const haystack = normalizeSearchText([brandText, category, models, c, n, causes, fixes].join(' '));
-        const looseHaystack = [brandText, category, models, c, n, causes, fixes].join(' ');
-        const exactOrLongCode = c === q || (c.length >= 3 && q.includes(c));
-        if (haystack.includes(q) || exactOrLongCode || looseHaystack.includes(rawQuery)) {
+        const aliases = (code.searchAliases || []).join(' ').toUpperCase();
+        const haystack = normalizeSearchText([brandText, category, models, c, n, aliases, causes, fixes].join(' '));
+        const looseHaystack = [brandText, category, models, c, n, aliases, causes, fixes].join(' ');
+        const exactOrLongCode = c === q || (queryTokens.length === 1 && c.length >= 3 && q.includes(c));
+        const tokenMatch = queryTokens.length > 1 && queryTokens.every(token => haystack.includes(normalizeSearchText(token)));
+        if (haystack.includes(q) || exactOrLongCode || looseHaystack.includes(rawQuery) || tokenMatch) {
           const nameText = normalizeSearchText(n);
           const familyText = normalizeSearchText([brandText, category, models].join(' '));
           const matchRank = c === q ? 0

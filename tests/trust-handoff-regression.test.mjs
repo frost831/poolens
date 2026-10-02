@@ -37,6 +37,30 @@ test('exact-code search is above secondary navigation and ranks exact codes firs
   assert.match(appSource, /return results\.sort\(\(a, b\) => \(/);
 });
 
+test('retired code families remain searchable without restoring guessed meanings', () => {
+  const start = appSource.indexOf('function searchErrorDB');
+  const end = appSource.indexOf('function renderScanHits', start);
+  assert.ok(start >= 0 && end > start);
+  const searchContext = { window: { ERROR_DB: errorContext.window.ERROR_DB } };
+  vm.createContext(searchContext);
+  vm.runInContext(`${appSource.slice(start, end)}; this.searchErrorDB = searchErrorDB;`, searchContext);
+  const cases = [
+    ['Raypak E1', 'Raypak'],
+    ['Jandy LXi E01', 'Jandy / Zodiac'],
+    ['Beatbot E03', 'Beatbot'],
+    ['AquaCal FLO', 'AquaCal'],
+    ['Sta-Rite E05', 'Sta-Rite'],
+    ["Sta-Rite won't prime", 'Sta-Rite'],
+  ];
+  for (const [query, brand] of cases) {
+    const hits = searchContext.searchErrorDB(query);
+    assert.ok(hits.length > 0, `${query} should resolve to an unverified family result`);
+    const safeHit = hits.find(hit => hit.brandLabel === brand && hit.unverified === true);
+    assert.ok(safeHit, `${query} should include the ${brand} unverified family result`);
+    assert.equal(safeHit.code, 'UNVERIFIED');
+  }
+});
+
 test('first value requires an opened answer or completed calculation and first-session prompts wait', () => {
   assert.match(appSource, /trackSplashLensEvent\('code_answer_opened'/);
   assert.match(appSource, /trackSplashLensEvent\('calculation_completed'/);
