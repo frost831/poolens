@@ -39,7 +39,7 @@ async function stripeGet(path, env) {
 }
 
 function isPaid(session) {
-  return session && (session.payment_status === 'paid' || session.status === 'complete');
+  return session && ['paid', 'no_payment_required'].includes(String(session.payment_status || ''));
 }
 
 function cleanSubject(session) {
@@ -55,10 +55,15 @@ function cleanPlan(session) {
 }
 
 function allowedPaymentLinkIds(env) {
-  return String(env.SPLASHLENS_STRIPE_PAYMENT_LINK_IDS || env.SPLASHLENS_STRIPE_ALLOWED_PAYMENT_LINKS || '')
-    .split(',')
+  return [
+    env.SPLASHLENS_STRIPE_PAYMENT_LINK_IDS,
+    env.SPLASHLENS_STRIPE_ALLOWED_PAYMENT_LINKS,
+    env.SPLASHLENS_STRIPE_PAYMENT_LINK_MONTHLY_ID,
+    env.SPLASHLENS_STRIPE_PAYMENT_LINK_YEARLY_ID,
+  ]
+    .flatMap((value) => String(value || '').split(','))
     .map((value) => value.trim())
-    .filter(Boolean);
+    .filter((value, index, list) => value && list.indexOf(value) === index);
 }
 
 function isSplashLensCheckoutSession(session, env) {
@@ -70,11 +75,97 @@ function isSplashLensCheckoutSession(session, env) {
   const paymentLink = String(session?.payment_link || '').trim();
   const allowedLinks = allowedPaymentLinkIds(env);
 
-  if (product === 'splashlens') return true;
-  if (feature === 'scanner' && /partsnap|splashlens/.test(plan)) return true;
-  if (/partsnap|splashlens/.test(plan) && product !== 'cora') return true;
+  if (product === 'splashlens' && feature === 'scanner' && /splash lens pro unlimited/.test(plan)) return true;
   if (paymentLink && allowedLinks.includes(paymentLink)) return true;
   return false;
+}
+
+async function ensurePaymentTables(db) {
+  await db.prepare(
+    `CREATE TABLE IF NOT EXISTS payment_events (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      event_type TEXT NOT NULL,
+      stripe_session_id TEXT,
+      subject TEXT,
+      plan TEXT,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP
+    )`,
+  ).run();
+  await db.prepare(
+    `CREATE TABLE IF NOT EXISTS commercial_entitlements (
+      id TEXT PRIMARY KEY,
+      email TEXT NOT NULL,
+      team_id TEXT,
+      lane TEXT NOT NULL,
+      plan TEXT NOT NULL,
+      status TEXT DEFAULT 'active',
+      source TEXT,
+      stripe_session_id TEXT,
+      stripe_customer_id TEXT,
+      current_period_end DATETIME,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )`,
+  ).run();
+  await db.prepare(
+    `CREATE TABLE IF NOT EXISTS audit_records (
+      id TEXT PRIMARY KEY,
+      actor_email TEXT,
+      action TEXT NOT NULL,
+      target_type TEXT,
+      target_id TEXT,
+      payload TEXT,
+      user_agent TEXT,
+      referrer TEXT,
+      country TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )`,
+  ).run();
+}
+
+async function persistActivation(session, subject, plan, env) {
+  if (!env.SUBSCRIBERS_DB || typeof env.SUBSCRIBERS_DB.prepare !== 'function') return false;
+  const db = env.SUBSCRIBERS_DB;
+  await ensurePaymentTables(db);
+  const sessionId = String(session.id || '');
+  const customerId = String(session.customer || '');
+  const fallbackDays = /year|annual/i.test(plan) ? 370 : 35;
+  await db.prepare(
+    `INSERT INTO payment_events (event_type, stripe_session_id, subject, plan)
+     SELECT 'checkout.success.recovered', ?, ?, ?
+     WHERE NOT EXISTS (
+       SELECT 1 FROM payment_events WHERE event_type = 'checkout.success.recovered' AND stripe_session_id = ?
+     )`,
+  ).bind(sessionId, subject, plan, sessionId).run();
+  await db.prepare(
+    `INSERT INTO commercial_entitlements (id, email, lane, plan, status, source, stripe_session_id, stripe_customer_id, current_period_end)
+     VALUES (?, ?, 'pro', ?, 'active', 'stripe_checkout_success', ?, ?, ?)
+     ON CONFLICT(id) DO UPDATE SET
+       email = excluded.email,
+       plan = excluded.plan,
+       status = 'active',
+       source = CASE WHEN commercial_entitlements.source = 'stripe_webhook' THEN commercial_entitlements.source ELSE excluded.source END,
+       stripe_customer_id = excluded.stripe_customer_id,
+       current_period_end = COALESCE(commercial_entitlements.current_period_end, excluded.current_period_end),
+       updated_at = CURRENT_TIMESTAMP`,
+  ).bind(
+    `stripe:${sessionId || subject}`,
+    subject,
+    plan,
+    sessionId,
+    customerId,
+    new Date(Date.now() + fallbackDays * 24 * 60 * 60 * 1000).toISOString(),
+  ).run();
+  await db.prepare(
+    `INSERT OR IGNORE INTO audit_records (id, actor_email, action, target_type, target_id, payload)
+     VALUES (?, ?, 'stripe_checkout_success_recovered', 'commercial_entitlement', ?, ?)`,
+  ).bind(
+    `audit_checkout_success:${sessionId}`,
+    subject,
+    `stripe:${sessionId || subject}`,
+    JSON.stringify({ stripe_session_id: sessionId, stripe_customer_id: customerId, plan }).slice(0, 2400),
+  ).run();
+  return true;
 }
 
 async function signToken(secret, payload) {
@@ -134,7 +225,16 @@ async function issueActivation(session, env) {
       issuedAt: new Date(payload.iat * 1000).toISOString(),
       expiresAt: new Date(payload.exp * 1000).toISOString(),
     }), { expirationTtl: 365 * 24 * 60 * 60 });
+    if (payload.stripeSessionId) {
+      await env.SCAN_USAGE_KV.put(`entitlement_session:${payload.stripeSessionId}`, subject, { expirationTtl: 365 * 24 * 60 * 60 });
+    }
+    if (payload.stripeCustomerId) {
+      await env.SCAN_USAGE_KV.put(`entitlement_customer:${payload.stripeCustomerId}`, subject, { expirationTtl: 365 * 24 * 60 * 60 });
+    }
+    await env.SCAN_USAGE_KV.delete(`entitlement_revoked:${subject}`);
   }
+
+  await persistActivation(session, subject, payload.plan, env);
 
   return { activateUrl, subject };
 }

@@ -155,7 +155,9 @@ test('stripe webhook only activates SplashLens entitlements with explicit produc
   assert.match(stripeWebhookEndpoint, /stripe_entitlement_activated/);
   assert.match(stripeWebhookEndpoint, /allowedLinks\.includes\(paymentLink\)/);
   assert.match(stripeWebhookEndpoint, /product === 'splashlens'/);
-  assert.match(stripeWebhookEndpoint, /!product && feature === 'scanner'/);
+  assert.match(stripeWebhookEndpoint, /feature === 'scanner'/);
+  assert.match(stripeWebhookEndpoint, /splash lens pro unlimited/);
+  assert.match(stripeWebhookEndpoint, /non_splashlens_lifecycle/);
   assert.match(stripeWebhookEndpoint, /webhookSecrets/);
   assert.match(stripeWebhookEndpoint, /SPLASHLENS_STRIPE_WEBHOOK_SECRETS/);
   assert.match(stripeWebhookEndpoint, /customer\.subscription\.deleted/);

@@ -8047,7 +8047,7 @@ function requestNativePartSnapRestore() {
     return;
   }
 
-  restorePaidScanEntitlement();
+  restorePartSnapPro();
 }
 
 function cleanAttributionValue(value, max = 160) {
@@ -8530,11 +8530,18 @@ function unlockPartSnapProLocal() {
 }
 
 async function restorePartSnapPro() {
-  const email = prompt('Enter the email used at SplashLens checkout:');
-  if (!email) return;
-  rememberSplashLensIdentity({ email, role: getSplashLensRole() }, 'restore_entitlement');
   const result = document.getElementById('scan-result');
   try {
+    let profile = getFieldSaveAccount();
+    if (!hasAccountSession(profile)) {
+      const verified = await ensureFreeScanProfile('restore_entitlement', result, document.getElementById('scan-ai-label'));
+      if (!verified) return;
+      profile = getFieldSaveAccount();
+    }
+    const email = String(profile?.email || '').trim().toLowerCase();
+    const accountToken = profile?.accountToken || localStorage.getItem(ACCOUNT_TOKEN_KEY) || '';
+    if (!email || !accountToken) throw new Error('Verify the checkout email before restoring paid access.');
+    rememberSplashLensIdentity({ email, role: getSplashLensRole() }, 'restore_entitlement');
     if (result) {
       result.innerHTML = `<div style="background:#0f172a;border:1px solid #334155;border-radius:12px;padding:16px;text-align:center;">
         <p style="color:#e2e8f0;font-size:14px;font-weight:900;">Checking Splash Lens Pro Unlimited access...</p>
@@ -8542,16 +8549,22 @@ async function restorePartSnapPro() {
     }
     const response = await fetch(PARTSNAP_RESTORE_ENDPOINT, {
       method: 'POST',
-      headers: { 'content-type': 'application/json' },
+      headers: { 'content-type': 'application/json', 'X-SplashLens-Account-Token': accountToken },
       body: JSON.stringify({ email }),
     });
     const payload = await response.json().catch(() => ({}));
-    trackSplashLensEvent('partsnap_pro_restore_requested', { ok: response.ok, email_sent: Boolean(payload.emailSent) });
-    if (!response.ok) throw new Error(payload.error || 'Restore failed.');
+    trackSplashLensEvent('partsnap_pro_restore_requested', { ok: response.ok, verified_account: true });
+    if (!response.ok || !String(payload.token || '').startsWith('sl_scan_v1.')) throw new Error(payload.error || 'Restore failed.');
+    const meta = getScanEntitlementMetaFromToken(payload.token);
+    localStorage.setItem(SCAN_ENTITLEMENT_TOKEN_KEY, payload.token);
+    if (meta) localStorage.setItem(SCAN_ENTITLEMENT_META_KEY, JSON.stringify(meta));
+    localStorage.setItem(SCAN_PRO_KEY, '1');
+    updateAIStatusBar();
+    trackSplashLensEvent('restore_entitlement_success', { plan: meta?.plan || payload.entitlement?.plan || 'SplashLens paid access' });
     if (result) {
       result.innerHTML = `<div style="background:#052e16;border:1px solid #16a34a;border-radius:12px;padding:18px;text-align:center;">
-        <p style="color:#86efac;font-size:15px;font-weight:900;margin-bottom:6px;">Restore link requested</p>
-        <p style="color:#bbf7d0;font-size:12px;line-height:1.5;">${escHtml(payload.message || 'Check the email used at checkout for your activation link.')}</p>
+        <p style="color:#86efac;font-size:15px;font-weight:900;margin-bottom:6px;">Splash Lens Pro Unlimited restored</p>
+        <p style="color:#bbf7d0;font-size:12px;line-height:1.5;">${escHtml(payload.message || 'Paid scanner access is active on this device.')}</p>
       </div>`;
     }
   } catch (error) {

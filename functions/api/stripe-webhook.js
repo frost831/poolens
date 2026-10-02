@@ -7,6 +7,9 @@ const ACCEPTED_EVENTS = new Set([
   'customer.subscription.deleted',
   'invoice.paid',
   'invoice.payment_failed',
+  'invoice.payment_action_required',
+  'customer.subscription.paused',
+  'customer.subscription.resumed',
   'charge.refunded',
   'charge.dispute.created',
 ]);
@@ -54,10 +57,15 @@ function cleanPlan(session) {
 }
 
 function allowedPaymentLinkIds(env) {
-  return String(env.SPLASHLENS_STRIPE_PAYMENT_LINK_IDS || env.SPLASHLENS_STRIPE_ALLOWED_PAYMENT_LINKS || '')
-    .split(',')
+  return [
+    env.SPLASHLENS_STRIPE_PAYMENT_LINK_IDS,
+    env.SPLASHLENS_STRIPE_ALLOWED_PAYMENT_LINKS,
+    env.SPLASHLENS_STRIPE_PAYMENT_LINK_MONTHLY_ID,
+    env.SPLASHLENS_STRIPE_PAYMENT_LINK_YEARLY_ID,
+  ]
+    .flatMap((value) => String(value || '').split(','))
     .map((value) => value.trim())
-    .filter(Boolean);
+    .filter((value, index, list) => value && list.indexOf(value) === index);
 }
 
 function isSplashLensCheckoutSession(session, env) {
@@ -69,9 +77,8 @@ function isSplashLensCheckoutSession(session, env) {
   const paymentLink = String(session?.payment_link || '').trim();
   const allowedLinks = allowedPaymentLinkIds(env);
 
-  if (product === 'splashlens') return true;
+  if (product === 'splashlens' && feature === 'scanner' && /splash lens pro unlimited/.test(plan)) return true;
   if (paymentLink && allowedLinks.includes(paymentLink)) return true;
-  if (!product && feature === 'scanner' && /partsnap|splashlens|splash lens/.test(plan)) return true;
   return false;
 }
 
@@ -84,19 +91,17 @@ function isPaidSession(session, eventType) {
 }
 
 async function verifyStripeSignature(rawBody, signatureHeader, secret) {
-  const parts = Object.fromEntries(
-    String(signatureHeader || '')
-      .split(',')
-      .map((part) => part.split('='))
-      .filter((pair) => pair.length === 2),
-  );
-  const timestamp = Number(parts.t || 0);
-  const signature = parts.v1 || '';
-  if (!timestamp || !signature) return false;
+  const parts = String(signatureHeader || '')
+    .split(',')
+    .map((part) => part.trim().split('='))
+    .filter((pair) => pair.length === 2);
+  const timestamp = Number(parts.find(([key]) => key === 't')?.[1] || 0);
+  const signatures = parts.filter(([key]) => key === 'v1').map(([, value]) => value);
+  if (!timestamp || signatures.length === 0) return false;
   if (Math.abs(Math.floor(Date.now() / 1000) - timestamp) > 300) return false;
 
   const expected = await hmacHex(secret, `${timestamp}.${rawBody}`);
-  return constantTimeEqual(expected, signature);
+  return signatures.some((signature) => constantTimeEqual(expected, signature));
 }
 
 async function verifyAnyStripeSignature(rawBody, signatureHeader, secrets) {
@@ -187,6 +192,10 @@ async function storeEntitlement(session, eventType, env) {
     if (payload.stripeSessionId) {
       await env.SCAN_USAGE_KV.put(`entitlement_session:${payload.stripeSessionId}`, subject, { expirationTtl: 365 * 24 * 60 * 60 });
     }
+    if (payload.stripeCustomerId) {
+      await env.SCAN_USAGE_KV.put(`entitlement_customer:${payload.stripeCustomerId}`, subject, { expirationTtl: 365 * 24 * 60 * 60 });
+    }
+    await env.SCAN_USAGE_KV.delete(`entitlement_revoked:${subject}`);
   }
 
   if (env.SUBSCRIBERS_DB && typeof env.SUBSCRIBERS_DB.prepare === 'function') {
@@ -273,6 +282,16 @@ async function storeEntitlement(session, eventType, env) {
 
 async function ensurePaymentTables(db) {
   await db.prepare(
+    `CREATE TABLE IF NOT EXISTS stripe_webhook_events (
+      event_id TEXT PRIMARY KEY,
+      event_type TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'received',
+      processed_at DATETIME,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )`,
+  ).run();
+  await db.prepare(
     `CREATE TABLE IF NOT EXISTS payment_events (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       event_type TEXT NOT NULL,
@@ -314,16 +333,62 @@ async function ensurePaymentTables(db) {
   ).run();
 }
 
+async function webhookEventStatus(db, event) {
+  await ensurePaymentTables(db);
+  const eventId = String(event?.id || '').trim();
+  if (!eventId) return { eventId: '', duplicate: false };
+  const existing = await db.prepare('SELECT status FROM stripe_webhook_events WHERE event_id = ?').bind(eventId).first();
+  if (existing?.status === 'processed') return { eventId, duplicate: true };
+  await db.prepare(
+    `INSERT INTO stripe_webhook_events (event_id, event_type, status)
+     VALUES (?, ?, 'received')
+     ON CONFLICT(event_id) DO UPDATE SET event_type = excluded.event_type, updated_at = CURRENT_TIMESTAMP`,
+  ).bind(eventId, String(event?.type || '')).run();
+  return { eventId, duplicate: false };
+}
+
+async function markWebhookProcessed(db, eventId) {
+  if (!eventId) return;
+  await db.prepare(
+    `UPDATE stripe_webhook_events
+     SET status = 'processed', processed_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
+     WHERE event_id = ?`,
+  ).bind(eventId).run();
+}
+
 function subscriptionCustomer(object) {
   return String(object?.customer || object?.customer_id || object?.subscription_details?.customer || '').trim();
 }
 
+function lifecycleReference(object, eventType) {
+  if (eventType.startsWith('customer.subscription.')) return String(object?.id || '').trim();
+  if (eventType.startsWith('invoice.')) return String(object?.subscription || object?.parent?.subscription_details?.subscription || object?.id || '').trim();
+  return String(object?.invoice || object?.payment_intent || object?.id || '').trim();
+}
+
 function subscriptionStatus(object, eventType) {
-  if (eventType === 'customer.subscription.deleted') return 'cancelled';
-  if (eventType === 'invoice.payment_failed') return 'past_due';
+  if (eventType === 'customer.subscription.deleted') return 'canceled';
+  if (eventType === 'customer.subscription.paused') return 'paused';
+  if (eventType === 'customer.subscription.resumed' || eventType === 'invoice.paid') return 'active';
+  if (eventType === 'invoice.payment_failed' || eventType === 'invoice.payment_action_required') return 'past_due';
   if (eventType === 'charge.refunded') return 'refunded';
   if (eventType === 'charge.dispute.created') return 'disputed';
   return String(object?.status || 'active').trim().toLowerCase().slice(0, 80);
+}
+
+function lifecycleMetadata(object) {
+  return object?.metadata
+    || object?.subscription_details?.metadata
+    || object?.parent?.subscription_details?.metadata
+    || object?.lines?.data?.[0]?.metadata
+    || {};
+}
+
+function hasSplashLensLifecycleMetadata(object) {
+  const metadata = lifecycleMetadata(object);
+  const product = String(metadata.product || '').trim().toLowerCase();
+  const feature = String(metadata.feature || '').trim().toLowerCase();
+  return product === 'splashlens' && feature === 'scanner';
 }
 
 function periodEnd(object) {
@@ -338,9 +403,19 @@ async function storeLifecycleEvent(object, eventType, env) {
   const db = env.SUBSCRIBERS_DB;
   await ensurePaymentTables(db);
   const customer = subscriptionCustomer(object);
-  const subscriptionId = String(object?.id || object?.subscription || object?.subscription_details?.subscription || '').trim();
-  const subject = String(object?.customer_email || object?.customer_details?.email || customer || '').trim().toLowerCase().slice(0, 160);
-  const plan = String(object?.metadata?.plan || object?.metadata?.product || object?.billing_reason || cleanPlan(object)).trim().slice(0, 100);
+  const subscriptionId = lifecycleReference(object, eventType);
+  const entitlement = customer
+    ? await db.prepare(
+      `SELECT email, plan, stripe_session_id AS stripeSessionId, stripe_customer_id AS stripeCustomerId
+       FROM commercial_entitlements WHERE stripe_customer_id = ? ORDER BY updated_at DESC LIMIT 1`,
+    ).bind(customer).first()
+    : null;
+  if (!entitlement?.email && !hasSplashLensLifecycleMetadata(object)) {
+    return { ok: true, stored: false, ignored: true, reason: 'non_splashlens_lifecycle' };
+  }
+  const subject = String(entitlement?.email || object?.customer_email || object?.customer_details?.email || customer || '').trim().toLowerCase().slice(0, 160);
+  const metadata = lifecycleMetadata(object);
+  const plan = String(entitlement?.plan || metadata.plan || metadata.product || object?.billing_reason || cleanPlan(object)).trim().slice(0, 100);
   await db.prepare(
     'INSERT INTO payment_events (event_type, stripe_session_id, subject, plan) VALUES (?, ?, ?, ?)',
   ).bind(eventType, subscriptionId, subject, plan).run();
@@ -351,6 +426,20 @@ async function storeLifecycleEvent(object, eventType, env) {
        WHERE stripe_customer_id = ?`,
     ).bind(subscriptionStatus(object, eventType), periodEnd(object), customer).run();
   }
+  const status = subscriptionStatus(object, eventType);
+  if (subject && env.SCAN_USAGE_KV && typeof env.SCAN_USAGE_KV.put === 'function') {
+    if (['active', 'trialing'].includes(status)) {
+      await env.SCAN_USAGE_KV.delete(`entitlement_revoked:${subject}`);
+    } else {
+      await env.SCAN_USAGE_KV.put(`entitlement_revoked:${subject}`, JSON.stringify({
+        status,
+        eventType,
+        customer,
+        updatedAt: new Date().toISOString(),
+      }), { expirationTtl: 730 * 24 * 60 * 60 });
+      await env.SCAN_USAGE_KV.delete(`entitlement:${subject}`);
+    }
+  }
   await db.prepare(
     `INSERT INTO audit_records (id, actor_email, action, target_type, target_id, payload)
      VALUES (?, ?, ?, 'stripe_lifecycle', ?, ?)`,
@@ -359,9 +448,9 @@ async function storeLifecycleEvent(object, eventType, env) {
     subject,
     `stripe_${eventType.replace(/\W+/g, '_')}`,
     subscriptionId || customer || eventType,
-    JSON.stringify({ event_type: eventType, stripe_customer_id: customer, subscription_id: subscriptionId, status: subscriptionStatus(object, eventType) }).slice(0, 2400),
+    JSON.stringify({ event_type: eventType, stripe_customer_id: customer, subscription_id: subscriptionId, status }).slice(0, 2400),
   ).run();
-  return { ok: true, stored: true, subject, status: subscriptionStatus(object, eventType) };
+  return { ok: true, stored: true, subject, status };
 }
 
 export async function onRequestPost({ request, env }) {
@@ -392,13 +481,28 @@ export async function onRequestPost({ request, env }) {
 
   if (!ACCEPTED_EVENTS.has(event.type)) return json({ ok: true, ignored: true, event: String(event.type || '') });
 
+  const webhookDb = env.SUBSCRIBERS_DB && typeof env.SUBSCRIBERS_DB.prepare === 'function' ? env.SUBSCRIBERS_DB : null;
+  const receipt = webhookDb ? await webhookEventStatus(webhookDb, event) : { eventId: '', duplicate: false };
+  if (receipt.duplicate) {
+    return json({ ok: true, event: event.type, duplicate: true, eventId: receipt.eventId });
+  }
+
   if (event.type !== 'checkout.session.completed' && event.type !== 'checkout.session.async_payment_succeeded') {
     const storedLifecycle = await storeLifecycleEvent(event?.data?.object, event.type, env);
-    return json({ ok: true, event: event.type, lifecycleStored: Boolean(storedLifecycle.stored), status: storedLifecycle.status || '' });
+    if (webhookDb) await markWebhookProcessed(webhookDb, receipt.eventId);
+    return json({
+      ok: true,
+      event: event.type,
+      lifecycleStored: Boolean(storedLifecycle.stored),
+      ignored: Boolean(storedLifecycle.ignored),
+      reason: storedLifecycle.reason || '',
+      status: storedLifecycle.status || '',
+    });
   }
 
   const session = event?.data?.object;
   if (!isSplashLensCheckoutSession(session, env)) {
+    if (webhookDb) await markWebhookProcessed(webhookDb, receipt.eventId);
     return json({
       ok: true,
       ignored: true,
@@ -408,11 +512,13 @@ export async function onRequestPost({ request, env }) {
     });
   }
   if (!isPaidSession(session, event.type)) {
+    if (webhookDb) await markWebhookProcessed(webhookDb, receipt.eventId);
     return json({ ok: true, ignored: true, event: event.type, reason: 'checkout_not_paid' });
   }
 
   const stored = await storeEntitlement(session, event.type, env);
   if (!stored.ok) return json({ ok: false, error: stored.error }, 422);
+  if (webhookDb) await markWebhookProcessed(webhookDb, receipt.eventId);
   return json({ ok: true, event: event.type, subject: stored.subject, entitlementStored: true });
 }
 

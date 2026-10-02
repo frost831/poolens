@@ -34,6 +34,10 @@ function appOrigin(request, env) {
   return String(env.SPLASHLENS_APP_ORIGIN || new URL(request.url).origin).replace(/\/+$/, '');
 }
 
+function paidCheckoutEnabled(env) {
+  return !/^(0|false|off|disabled)$/i.test(String(env.SPLASHLENS_PAID_CHECKOUT_ENABLED || '').trim());
+}
+
 async function createCheckoutSession(request, env, plan) {
   if (!env.STRIPE_SECRET_KEY) return null;
 
@@ -85,21 +89,22 @@ export async function onRequestGet({ request, env }) {
   const url = new URL(request.url);
   const plan = (url.searchParams.get('plan') || 'monthly').toLowerCase();
   if (url.searchParams.has('catalog')) {
-    const stripeReady = Boolean(env.STRIPE_SECRET_KEY);
+    const checkoutEnabled = paidCheckoutEnabled(env);
+    const stripeReady = checkoutEnabled && Boolean(env.STRIPE_SECRET_KEY);
     return Response.json({
       product: 'splashlens',
       plans: [
         {
           key: 'partsnap_pro_monthly',
           label: 'Splash Lens Pro Unlimited Monthly',
-          priceLabel: '$29/month target',
-          checkoutConfigured: stripeReady || Boolean(paymentLinkForPlan(env, 'monthly')),
+          priceLabel: '$29/month',
+          checkoutConfigured: checkoutEnabled && (stripeReady || Boolean(paymentLinkForPlan(env, 'monthly'))),
         },
         {
           key: 'partsnap_pro_yearly',
           label: 'Splash Lens Pro Unlimited Annual',
-          priceLabel: '$249/year target',
-          checkoutConfigured: stripeReady || Boolean(paymentLinkForPlan(env, 'yearly')),
+          priceLabel: '$249/year',
+          checkoutConfigured: checkoutEnabled && (stripeReady || Boolean(paymentLinkForPlan(env, 'yearly'))),
         },
         {
           key: 'team_proof_os_monthly',
@@ -138,6 +143,13 @@ export async function onRequestGet({ request, env }) {
         },
       ],
     }, { headers: { 'Cache-Control': 'no-store' } });
+  }
+
+  if (!paidCheckoutEnabled(env)) {
+    return Response.json({ ok: false, error: 'SplashLens paid checkout is temporarily unavailable.' }, {
+      status: 503,
+      headers: { 'Cache-Control': 'no-store' },
+    });
   }
 
   const sessionUrl = await createCheckoutSession(request, env, plan);
