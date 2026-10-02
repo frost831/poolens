@@ -2,6 +2,7 @@ const TOKEN_PREFIX = 'sl_scan_v1';
 const ACCEPTED_EVENTS = new Set([
   'checkout.session.completed',
   'checkout.session.async_payment_succeeded',
+  'customer.created',
   'customer.subscription.created',
   'customer.subscription.updated',
   'customer.subscription.deleted',

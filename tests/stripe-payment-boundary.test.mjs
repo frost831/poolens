@@ -29,6 +29,7 @@ test('checkout creates subscription sessions before falling back to payment link
 test('Stripe webhook endpoint verifies signed checkout completion before storing entitlement', () => {
   assert.match(webhook, /checkout\.session\.completed/);
   assert.match(webhook, /checkout\.session\.async_payment_succeeded/);
+  assert.match(webhook, /customer\.created/);
   assert.match(webhook, /verifyStripeSignature/);
   assert.match(webhook, /stripe-signature/);
   assert.match(webhook, /SCAN_USAGE_KV\.put\(`entitlement:\$\{subject\}`/);
