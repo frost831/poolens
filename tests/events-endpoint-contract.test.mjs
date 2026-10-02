@@ -52,11 +52,15 @@ test('app API routes expose protected stats and server-side amplitude config as 
   assert.match(statsEndpoint, /splashlensPaidCompletions30d/);
 });
 
-test('events endpoint normalizes identity and suppresses internal heartbeat noise', () => {
-  assert.match(eventsEndpoint, /normalizeIdentityProps/);
-  assert.match(eventsEndpoint, /known_email/);
-  assert.match(eventsEndpoint, /known_company/);
+test('events endpoint removes personal identity and suppresses internal heartbeat noise', () => {
+  assert.match(eventsEndpoint, /sanitizeAnalyticsProps/);
+  assert.match(eventsEndpoint, /PERSONAL_PROP_KEYS/);
+  assert.match(eventsEndpoint, /has_known_identity/);
+  assert.match(eventsEndpoint, /has_verified_email/);
   assert.match(eventsEndpoint, /identity_confidence/);
+  assert.match(eventsEndpoint, /safeUrlField/);
+  assert.doesNotMatch(amplitudeShared, /user_id:/);
+  assert.doesNotMatch(amplitudeShared, /company:/);
   assert.match(eventsEndpoint, /internal_heartbeat_noise/);
   assert.match(eventsEndpoint, /LOW_SIGNAL_EVENTS/);
   assert.match(eventsEndpoint, /engagement_events/);

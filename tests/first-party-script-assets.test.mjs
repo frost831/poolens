@@ -44,12 +44,13 @@ test('service worker registration and precache use existing app assets', () => {
   }
 });
 
-test('service worker caches only static allowlisted assets and never API or authenticated responses', () => {
-  assert.match(serviceWorker, /STATIC_ASSET_URLS/);
+test('service worker supports offline routes and never caches API or authenticated responses', () => {
+  assert.match(serviceWorker, /e\.request\.mode === 'navigate'/);
+  assert.match(serviceWorker, /caches\.match\('\/index\.html'\)/);
   assert.match(serviceWorker, /url\.pathname\.startsWith\('\/api\/'\)/);
   assert.match(serviceWorker, /x-splashlens-account-token/);
   assert.match(serviceWorker, /x-splashlens-profile-token/);
-  assert.match(serviceWorker, /if \(!staticAsset \|\| authenticated/);
+  assert.match(serviceWorker, /if \(!sameOrigin \|\| authenticated/);
 });
 
 test('field signals API methods used by app shell are implemented', () => {

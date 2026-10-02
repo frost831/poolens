@@ -34,52 +34,69 @@ function pruneObject(value) {
   return Object.fromEntries(Object.entries(value).filter(([, item]) => item !== undefined && item !== null && item !== ''));
 }
 
+const PERSONAL_PROP_KEYS = new Set([
+  'email', 'e', 'sl_email', 'customer_email', 'contact_email', 'free_profile_email', 'known_email',
+  'name', 'first_name', 'last_name', 'customer_name', 'contact_name', 'free_profile_name', 'known_name',
+  'company', 'organization', 'org', 'account', 'free_profile_company', 'known_company',
+  'phone', 'mobile', 'address', 'street', 'city', 'postal_code', 'zip',
+  'lead_id', 'contact_id', 'recipient_id', 'prospect_id', 'pilot_id', 'participant_id',
+]);
+
+function sanitizeProps(props = {}) {
+  return Object.fromEntries(Object.entries(props).flatMap(([key, value]) => {
+    const normalizedKey = String(key || '').trim().toLowerCase();
+    if (!normalizedKey || PERSONAL_PROP_KEYS.has(normalizedKey)) return [];
+    if (value === null || ['string', 'number', 'boolean'].includes(typeof value)) {
+      const safeValue = typeof value === 'string'
+        ? clean(value, 300).replace(/[^\s@]+@[^\s@]+\.[^\s@]+/g, '[redacted-email]')
+        : value;
+      return [[key, safeValue]];
+    }
+    return [];
+  }));
+}
+
 function groups(props) {
-  const company = clean(props.known_company || props.company || props.organization || props.org || props.account || '', 160);
   const campaign = clean(props.attribution_campaign || props.campaign || '', 120);
   const publisher = clean(props.publication || props.publisher || props.attribution_source || '', 80);
-  const value = pruneObject({ company, campaign, publisher });
+  const value = pruneObject({ campaign, publisher });
   return Object.keys(value).length ? value : undefined;
 }
 
 function identity(record, props) {
-  const knownEmail = clean(props.known_email || props.contact_email || props.email || props.e || props.sl_email, 180).toLowerCase();
-  const leadId = clean(props.lead_id || props.contact_id || props.recipient_id || props.prospect_id || props.referral_id, 120);
   const clientId = clean(props.client_id || props.clientId || props.anon_device_id || '', 120);
   const fallback = clean(record.correlationId || `${record.event}:${record.createdAt}`, 180);
-  const userId = knownEmail || leadId || '';
   const deviceId = clientId || fallback || 'splashlens-app-device';
   return {
-    user_id: userId && userId.length >= 5 ? userId : undefined,
     device_id: deviceId.length >= 5 ? deviceId : 'splashlens-app-device',
   };
 }
 
 export async function forwardEventToAmplitude(env, record, props = {}) {
   if (!amplitudeEnabled(env)) return { sent: false, skipped: true, reason: 'missing_amplitude_api_key' };
+  const safeProps = sanitizeProps(props);
   const payload = {
     api_key: amplitudeApiKey(env),
     events: [{
-      ...identity(record, props),
+      ...identity(record, safeProps),
       event_type: clean(record.event || 'app_event', 80),
       event_properties: pruneObject({
-        ...props,
+        ...safeProps,
         product: 'splashlens',
-        source: clean(record.source || props.source || props.attribution_source || 'app', 80),
-        path: clean(record.path || props.path || '', 300),
-        page_path: clean(record.path || props.path || '', 300),
-        plan: clean(record.plan || props.plan || '', 80),
-        mode: clean(record.mode || props.mode || '', 80),
+        source: clean(record.source || safeProps.source || safeProps.attribution_source || 'app', 80),
+        path: clean(record.path || safeProps.path || '', 300),
+        page_path: clean(record.path || safeProps.path || '', 300),
+        plan: clean(record.plan || safeProps.plan || '', 80),
+        mode: clean(record.mode || safeProps.mode || '', 80),
       }),
       user_properties: pruneObject({
         product: 'splashlens',
-        source: clean(record.source || props.source || props.attribution_source || 'app', 80),
-        role: clean(props.known_role || props.role || props.audience || props.persona || props.splashlens_role || '', 80),
-        company: clean(props.known_company || props.company || props.organization || props.org || props.account || '', 160),
-        identity_source: clean(props.identity_source || props.attribution_source || record.source || 'app', 80),
-        identity_confidence: clean(props.identity_confidence || '', 40),
+        source: clean(record.source || safeProps.source || safeProps.attribution_source || 'app', 80),
+        role: clean(safeProps.known_role || safeProps.role || safeProps.audience || safeProps.persona || safeProps.splashlens_role || '', 80),
+        identity_source: clean(safeProps.identity_source || safeProps.attribution_source || record.source || 'app', 80),
+        identity_confidence: clean(safeProps.identity_confidence || '', 40),
       }),
-      groups: groups(props),
+      groups: groups(safeProps),
       time: Date.parse(record.createdAt || '') || Date.now(),
       insert_id: clean(record.correlationId || `${record.event}:${record.createdAt}`, 180),
     }],

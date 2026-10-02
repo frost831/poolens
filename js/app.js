@@ -229,7 +229,9 @@ let activeFacilityId = '';
 let activeFacilityEquipmentId = '';
 const FIELD_FEEDBACK_ACTIONS = new Set([
   'ai_scan_completed',
-  'manual_code_search',
+  'code_answer_opened',
+  'scan_code_answer_opened',
+  'calculation_completed',
   'partsnap_result',
   'partsnap_packet_copied',
   'partsnap_share_used',
@@ -259,14 +261,15 @@ const STORE_REVIEW_SUCCESS_EVENTS = new Set([
   'pool_packet_printed',
 ]);
 const ACTIVATION_EVENT_TYPES = new Map([
-  ['manual_code_search', 'manual_lookup'],
+  ['code_answer_opened', 'manual_lookup'],
+  ['scan_code_answer_opened', 'manual_lookup'],
+  ['calculation_completed', 'calculator_result'],
   ['partsnap_result', 'partsnap_result'],
   ['partsnap_packet_copied', 'partsnap_copy'],
   ['partsnap_share_used', 'partsnap_share'],
   ['partsnap_saved_to_pool', 'partsnap_save'],
   ['service_report_saved', 'proof_report_save'],
   ['proof_ready_report_saved', 'proof_report_save'],
-  ['facility_workflow_action_selected', 'facility_assist_action'],
   ['facility_workflow_completed', 'facility_assist_completed'],
 ]);
 
@@ -842,7 +845,7 @@ function initSplashLensPersonaMode() {
     showTab('scan');
     setTimeout(() => {
       setScanMode('parts');
-      showRoleNudge('partsnap_direct');
+      if (hasCompletedFirstUsageSession()) showRoleNudge('partsnap_direct');
     }, 120);
     trackSplashLensEvent('partsnap_direct_entry', { role: '', nonblocking_role_prompt: true });
     return;
@@ -1427,13 +1430,17 @@ function writeFieldFeedbackState(state) {
   try { localStorage.setItem(FIELD_FEEDBACK_KEY, JSON.stringify(state)); } catch {}
 }
 
+function hasCompletedFirstUsageSession() {
+  return Number(readFieldFeedbackState().opens || 0) >= 2;
+}
+
 function shouldShowFieldFeedback(state) {
   const now = Date.now();
   if (document.getElementById('field-feedback-overlay')) return false;
   if (state.snoozedUntil && now < Number(state.snoozedUntil)) return false;
   if (state.submittedAt && now - Number(state.submittedAt) < FIELD_FEEDBACK_AFTER_SUBMIT_MS) return false;
   if (state.promptShown && now - Number(state.promptShown) < FIELD_FEEDBACK_COOLDOWN_MS) return false;
-  return state.meaningfulActions >= 2 || state.opens >= 3;
+  return state.opens >= 2 && (state.meaningfulActions >= 2 || state.opens >= 3);
 }
 
 function recordFieldFeedbackSignal(eventName) {
@@ -1460,6 +1467,7 @@ function shouldShowQuickFeedback(state, eventName = '') {
   if (state.quickSnoozedUntil && now < Number(state.quickSnoozedUntil)) return false;
   if (state.submittedAt && now - Number(state.submittedAt) < FIELD_FEEDBACK_AFTER_SUBMIT_MS) return false;
   if (state.quickPromptShown && now - Number(state.quickPromptShown) < 18 * 60 * 60 * 1000) return false;
+  if (Number(state.opens || 0) < 2) return false;
   return Number(state.meaningfulActions || 0) >= 2 || (state.firstValueAt && now - Number(state.firstValueAt) >= 8000);
 }
 
@@ -1732,7 +1740,7 @@ function recordReviewableWin(eventName) {
 function shouldShowStoreReviewPrompt(state) {
   const now = Date.now();
   if (document.getElementById('field-feedback-overlay') || document.getElementById('store-review-overlay')) return false;
-  if (state.wins < 2) return false;
+  if (!hasCompletedFirstUsageSession() || state.wins < 2) return false;
   if (state.reviewedAt) return false;
   if (state.promptShown && now - Number(state.promptShown) < STORE_REVIEW_COOLDOWN_MS) return false;
   if (state.declinedAt && now - Number(state.declinedAt) < STORE_REVIEW_COOLDOWN_MS) return false;
@@ -3430,7 +3438,7 @@ function codeCard(code, uid, brandColor) {
   const causes = (code.causes || []).slice(0, 5);
   const fixes = (code.fix || []).slice(0, 6);
   return `
-    <div class="error-card" style="border-left:3px solid ${brandColor};">
+    <div class="error-card" data-code="${escAttr(code.code)}" data-answer-name="${escAttr(code.name)}" style="border-left:3px solid ${brandColor};">
       <button class="error-toggle" onclick="toggleCode('${uid}')">
         <div style="flex:1;">
           <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:5px;align-items:center;">
@@ -3464,8 +3472,23 @@ function toggleCode(uid) {
   const open = det.classList.toggle('open');
   chev.style.transform = open ? 'rotate(180deg)' : '';
   if (open) {
+    const card = det.closest('.error-card');
+    const code = card?.dataset.code || '';
+    const answerName = card?.dataset.answerName || '';
+    trackSplashLensEvent('code_answer_opened', {
+      code,
+      answer_name: answerName,
+      workflow: 'manual_code_search',
+    });
+    trackSplashLensEvent('first_value_completed', {
+      role: getSplashLensRole(),
+      workflow: 'manual_code_answer',
+      code,
+      result_count: 1,
+      time_back_message: 'A code answer was opened without leaving the stop.',
+    });
     window.SplashLensFieldSignals?.onCodeOpened({
-      description: det.closest('.error-card')?.textContent || '',
+      description: card?.textContent || '',
     });
   }
 }
@@ -3480,15 +3503,30 @@ function onErrorSearch(q) {
     else document.getElementById('error-results').innerHTML = emptyState();
     return;
   }
-  const matches = [];
-  Object.entries(window.ERROR_DB).forEach(([brandId, brand]) => {
-    Object.entries(brand.categories).forEach(([catName, cat]) => {
-      cat.codes.forEach((code, i) => {
-        const hay = [code.code, code.name, ...code.causes, ...code.fix].join(' ').toLowerCase();
-        if (hay.includes(q)) matches.push({ brandId, brand, catName, code, i });
-      });
+  const matches = searchErrorDB(q, S.brand).map((hit, i) => ({
+    brandId: hit.brandKey,
+    brand: window.ERROR_DB[hit.brandKey],
+    catName: hit.category,
+    code: hit,
+    i,
+  }));
+  if (q.length >= 2 && onErrorSearch._lastTracked !== q) {
+    onErrorSearch._lastTracked = q;
+    trackSplashLensEvent('manual_code_search', {
+      query: q.slice(0, 40),
+      brand: S.brand || 'all',
+      result_count: matches.length,
+      surface: 'error_search',
     });
-  });
+    if (!matches.length) {
+      trackSplashLensEvent('lookup_zero_result', {
+        role: getSplashLensRole(),
+        workflow: 'manual_code_search',
+        query: q.slice(0, 40),
+        brand: S.brand || 'all',
+      });
+    }
+  }
   if (!matches.length) {
     document.getElementById('error-results').innerHTML =
       `<p style="color:#64748b;text-align:center;padding:40px;font-size:14px;">No results for "${q}"</p>`;
@@ -3503,30 +3541,6 @@ function onErrorSearch(q) {
        ${codeCard(code, `srch-${brandId}-${i}`, brand.color)}
      </div>`
   ).join('');
-  if (q.length >= 2 && onErrorSearch._lastTracked !== q) {
-    onErrorSearch._lastTracked = q;
-    trackSplashLensEvent('manual_code_search', {
-      query: q.slice(0, 40),
-      brand: S.brand || 'all',
-      result_count: matches.length,
-      surface: 'error_search',
-    });
-    if (matches.length > 0) {
-      trackSplashLensEvent('first_value_completed', {
-        role: getSplashLensRole(),
-        workflow: 'manual_code_search',
-        result_count: matches.length,
-        time_back_message: 'Code path found without leaving the stop.',
-      });
-    } else {
-      trackSplashLensEvent('lookup_zero_result', {
-        role: getSplashLensRole(),
-        workflow: 'manual_code_search',
-        query: q.slice(0, 40),
-        brand: S.brand || 'all',
-      });
-    }
-  }
 }
 
 function clearSearch() {
@@ -3607,6 +3621,20 @@ function onParamChange() {
   document.getElementById('dose-result').innerHTML = '';
   renderProductLineHelper();
   seedLsiFromDoseInputs();
+}
+
+function trackCalculationCompleted(calculator, props = {}) {
+  const eventProps = {
+    calculator,
+    role: getSplashLensRole(),
+    result_count: 1,
+    ...props,
+  };
+  trackSplashLensEvent('calculation_completed', eventProps);
+  trackSplashLensEvent('first_value_completed', {
+    ...eventProps,
+    workflow: `${calculator}_calculator`,
+  });
 }
 
 function calculateDose() {
@@ -3703,6 +3731,10 @@ function calculateDose() {
   renderProductLineHelper();
   seedLsiFromDoseInputs();
   calculateLsiPreview({ quiet: true });
+  trackCalculationCompleted('dose', {
+    parameter: param,
+    time_back_message: 'A field dose was calculated from the entered water values.',
+  });
 }
 
 function resultCard(amount, unit, product, note, basis) {
@@ -3845,6 +3877,13 @@ function calculateLsiPreview(opts = {}) {
       </div>
     </div>
     <p style="color:#64748b;font-size:11px;line-height:1.45;margin-top:8px;">Uses cyanurate-adjusted alkalinity and field factors. If the after number is outside -0.30 to +0.30, retest and split the dose.</p>`);
+  if (!opts.quiet) {
+    trackCalculationCompleted('lsi', {
+      before: Number(beforeVal.toFixed(2)),
+      after: Number(afterVal.toFixed(2)),
+      time_back_message: 'The balance preview was calculated from the entered water values.',
+    });
+  }
   return { before: beforeVal, after: afterVal };
 }
 
@@ -3927,6 +3966,10 @@ function calculateSlam() {
         ▶ Start SLAM Tracker (Multi-Day)
       </button>
     </div>`);
+  trackCalculationCompleted('slam', {
+    target_fc: targetFC,
+    time_back_message: 'The SLAM target and treatment amount are visible.',
+  });
 }
 
 // ═══════════════════════════════════════════
@@ -4211,6 +4254,11 @@ function calcVolume() {
         </button>
       </div>
     </div>`);
+  trackCalculationCompleted('volume', {
+    shape: shape.id,
+    gallons: Math.round(gallons),
+    time_back_message: 'Pool volume was calculated from the entered dimensions.',
+  });
 }
 
 function useVolumeInDosing(gallons) {
@@ -5555,12 +5603,17 @@ function calcTreatmentPlan() {
   }
 
   if (steps.length === 0) {
-    return setEl('plan-result', `
+    setEl('plan-result', `
       <div style="background:#f0fdf4;border:2px solid #86efac;border-radius:12px;padding:20px;text-align:center;">
         <div style="font-size:36px;margin-bottom:10px;">✓</div>
         <p style="color:#166534;font-size:16px;font-weight:900;margin-bottom:6px;">Water is Balanced!</p>
         <p style="color:#374151;font-size:13px;">All parameters are within target range. No adjustments needed today.</p>
       </div>`);
+    trackCalculationCompleted('treatment_plan', {
+      step_count: 0,
+      time_back_message: 'The entered water values were checked and require no treatment steps.',
+    });
+    return;
   }
 
   const typeColors = {
@@ -5596,6 +5649,10 @@ function calcTreatmentPlan() {
       }).join('')}
       <p style="color:#94a3b8;font-size:10px;margin-top:8px;">Always add chemicals one at a time with pump running. Retest after each step before proceeding.${!isNaN(vol) && vol > 0 ? ' Volume: ' + Number(vol).toLocaleString() + ' gal.' : ''}</p>
     </div>`);
+  trackCalculationCompleted('treatment_plan', {
+    step_count: steps.length,
+    time_back_message: 'A sequenced treatment plan was built from the entered water values.',
+  });
 }
 
 // ═══════════════════════════════════════════
@@ -5631,6 +5688,10 @@ function calcDrainRefill() {
       </div>
       <div class="result-note" style="margin-top:12px;">Draining ${pct.toFixed(0)}% reduces level from ${current} → approximately ${Math.round(current * (1 - pct / 100))} ppm. Rebalance all chemistry after refill.</div>
     </div>`);
+  trackCalculationCompleted('drain_refill', {
+    drain_percent: Number(pct.toFixed(1)),
+    time_back_message: 'The drain and refill amount was calculated.',
+  });
 }
 
 // ═══════════════════════════════════════════
@@ -5648,10 +5709,7 @@ function calcTurnoverRate() {
                : isOk   ? { label:'Marginal', color:'#92400e', bg:'#fffbeb', border:'#fcd34d' }
                :           { label:'Too Slow', color:'#991b1b', bg:'#fef2f2', border:'#fca5a5' };
   const dailyRec = Math.ceil(8 / hours);
-  trackSplashLensEvent('first_value_completed', {
-    role: getSplashLensRole(),
-    workflow: 'turnover_calculator',
-    result_count: 1,
+  trackCalculationCompleted('turnover', {
     hours: Number(hours.toFixed(2)),
     status: status.label,
     time_back_message: 'Turnover answer calculated without a spreadsheet.',
@@ -8705,9 +8763,9 @@ function attributionFromCurrentPage() {
       source: source || 'direct',
       medium,
       campaign,
-      referrer: cleanAttributionValue(document.referrer, 300),
+      referrer: cleanAttributionValue(document.referrer ? new URL(document.referrer).origin : '', 300),
       referrer_host: cleanAttributionValue(referrerHost, 120),
-      landing_path: cleanAttributionValue(`${window.location.pathname}${window.location.search}`, 300),
+      landing_path: cleanAttributionValue(window.location.pathname, 300),
       article: source === 'poolpro' ? 'poolpro_splashlens_launches_free_field_reference_app' : '',
       first_seen: now,
       last_seen: now,
@@ -8915,6 +8973,7 @@ function shareFieldResult(audience = 'tech') {
 }
 
 function showFieldReferralPrompt(trigger) {
+  if (!hasCompletedFirstUsageSession()) return;
   if (document.getElementById('field-referral-prompt')) return;
   try {
     const lastShown = Number(localStorage.getItem(FIELD_REFERRAL_PROMPT_KEY) || 0);
@@ -8943,6 +9002,7 @@ function showFieldReferralPrompt(trigger) {
 }
 
 function shouldShowValueIdentityPrompt() {
+  if (!hasCompletedFirstUsageSession()) return false;
   if (hasIdentitySignal(getSplashLensIdentityProfile())) return false;
   if (document.getElementById('field-identity-prompt') || document.getElementById('field-feedback-overlay')) return false;
   try {
@@ -9065,7 +9125,7 @@ function maybeTrackActivationCompleted(eventName, props = {}) {
       seconds_to_value: Number.isFinite(capturedAt) ? Math.max(0, Math.round((Date.now() - capturedAt) / 1000)) : null,
     });
   }
-  if (firstActivation || challengeCompleted) {
+  if ((firstActivation || challengeCompleted) && hasCompletedFirstUsageSession()) {
     setTimeout(() => showValueIdentityPrompt(eventName), 1200);
     setTimeout(() => showFieldReferralPrompt(eventName), 6200);
   }
@@ -9208,6 +9268,28 @@ function showScanLimitModal(result, status) {
   }
 }
 
+const ANALYTICS_PERSONAL_KEYS = new Set([
+  'email', 'e', 'sl_email', 'customer_email', 'contact_email', 'free_profile_email', 'known_email',
+  'name', 'first_name', 'last_name', 'customer_name', 'contact_name', 'free_profile_name', 'known_name',
+  'company', 'organization', 'org', 'account', 'free_profile_company', 'known_company',
+  'phone', 'mobile', 'address', 'street', 'city', 'postal_code', 'zip',
+  'lead_id', 'contact_id', 'recipient_id', 'prospect_id', 'pilot_id', 'participant_id',
+]);
+
+function sanitizeAnalyticsProps(props = {}) {
+  return Object.fromEntries(Object.entries(props || {}).flatMap(([key, value]) => {
+    const normalizedKey = String(key || '').trim().toLowerCase();
+    if (!normalizedKey || ANALYTICS_PERSONAL_KEYS.has(normalizedKey)) return [];
+    if (value === null || ['string', 'number', 'boolean'].includes(typeof value)) {
+      const safeValue = typeof value === 'string'
+        ? value.replace(/[^\s@]+@[^\s@]+\.[^\s@]+/g, '[redacted-email]').slice(0, 300)
+        : value;
+      return [[key, safeValue]];
+    }
+    return [];
+  }));
+}
+
 function trackSplashLensEvent(name, props = {}) {
   if (isInternalAnalyticsSession(name, props)) return;
   const clientId = getScanClientId();
@@ -9219,7 +9301,7 @@ function trackSplashLensEvent(name, props = {}) {
     sessionId = `session-${Date.now().toString(36)}-${clientId.slice(0, 8)}`;
     sessionStorage.setItem(sessionKey, sessionId);
   }
-  const eventProps = {
+  const eventProps = sanitizeAnalyticsProps({
     client_id: clientId,
     session_id: sessionId,
     standalone: isStandaloneAppShell(),
@@ -9231,19 +9313,15 @@ function trackSplashLensEvent(name, props = {}) {
     attribution_referrer_host: attribution.referrer_host || '',
     attribution_landing_path: attribution.landing_path || '',
     attribution_article: attribution.article || '',
-    known_email: identity.known_email || '',
-    known_name: identity.known_name || '',
-    known_company: identity.known_company || '',
+    has_known_identity: hasIdentitySignal(identity),
+    has_verified_email: Boolean(identity.known_email),
     known_role: identity.known_role || '',
-    lead_id: identity.lead_id || '',
-    pilot_id: identity.pilot_id || '',
-    participant_id: identity.participant_id || '',
     identity_source: identity.identity_source || '',
     identity_confidence: identity.identity_confidence || '',
     splashlens_role: getSplashLensRole(),
     ...getFieldChallengeContext(),
     ...props,
-  };
+  });
   window.dataLayer = window.dataLayer || [];
   window.dataLayer.push({ event: name, ...eventProps, ts: new Date().toISOString() });
   if (window.plausible) window.plausible(name, { props: eventProps });
@@ -9255,7 +9333,7 @@ function trackSplashLensEvent(name, props = {}) {
   const payload = JSON.stringify(withLanguageMetadata({
     event: name,
     source: attribution.source || props.source || 'app',
-    path: `${window.location.pathname}${window.location.search}`,
+    path: window.location.pathname,
     props: withLanguageMetadata(eventProps),
   }));
 
@@ -9734,6 +9812,18 @@ function renderPartsSnapResult(ai, result, status) {
   const { manufacturer, category, component, model, partNumber, description, condition, replacementNotes, verificationNotes, searchTerms, confidence } = ai;
   const low = confidence === 'low';
   const notes = verificationNotes || replacementNotes;
+  const safe = {
+    manufacturer: escHtml(manufacturer || ''),
+    category: escHtml(category || ''),
+    component: escHtml(component || 'Unknown Part'),
+    model: escHtml(model || ''),
+    partNumber: escHtml(partNumber || ''),
+    description: escHtml(description || ''),
+    condition: escHtml(String(condition || 'unknown').toUpperCase()),
+    replacementNotes: escHtml(replacementNotes || ''),
+    verificationNotes: escHtml(verificationNotes || ''),
+    searchTerms: Array.isArray(searchTerms) ? searchTerms.map(term => escHtml(String(term || ''))) : [],
+  };
 
   const condColor = { new:'#16a34a', good:'#16a34a', worn:'#d97706', damaged:'#dc2626', unknown:'#64748b' }[condition] || '#64748b';
 
@@ -9830,22 +9920,22 @@ function renderPartsSnapResult(ai, result, status) {
     <div style="background:#1e293b;border:1px solid ${low?'#334155':'#14b8a6'};border-radius:12px;padding:16px;margin-bottom:10px;border-left:4px solid ${low?'#334155':'#14b8a6'};">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap;">
         <span style="background:#0f766e;color:#fff;padding:2px 10px;border-radius:100px;font-size:10px;font-weight:900;letter-spacing:.04em;">PARTSNAP SERVICE</span>
-        ${manufacturer ? `<span style="color:#94a3b8;font-size:11px;">${manufacturer}</span>` : ''}
-        ${category ? `<span style="color:#64748b;font-size:11px;text-transform:uppercase;">${category}</span>` : ''}
-        <span style="background:${risk.color};color:#fff;padding:2px 8px;border-radius:100px;font-size:10px;font-weight:900;">${risk.label}</span>
-        <span style="margin-left:auto;background:${condColor};color:#fff;padding:2px 8px;border-radius:100px;font-size:10px;font-weight:700;">${(condition||'unknown').toUpperCase()}</span>
+        ${manufacturer ? `<span style="color:#94a3b8;font-size:11px;">${safe.manufacturer}</span>` : ''}
+        ${category ? `<span style="color:#64748b;font-size:11px;text-transform:uppercase;">${safe.category}</span>` : ''}
+        <span style="background:${risk.color};color:#fff;padding:2px 8px;border-radius:100px;font-size:10px;font-weight:900;">${escHtml(risk.label)}</span>
+        <span style="margin-left:auto;background:${condColor};color:#fff;padding:2px 8px;border-radius:100px;font-size:10px;font-weight:700;">${safe.condition}</span>
       </div>
-      <p style="color:#f1f5f9;font-size:18px;font-weight:800;margin-bottom:4px;">${component || 'Unknown Part'}</p>
-      ${model ? `<p style="color:#7dd3fc;font-size:12px;margin-bottom:6px;">${model}</p>` : ''}
-      ${description ? `<p style="color:#94a3b8;font-size:13px;line-height:1.5;margin-bottom:10px;">${description}</p>` : ''}
+      <p style="color:#f1f5f9;font-size:18px;font-weight:800;margin-bottom:4px;">${safe.component}</p>
+      ${model ? `<p style="color:#7dd3fc;font-size:12px;margin-bottom:6px;">${safe.model}</p>` : ''}
+      ${description ? `<p style="color:#94a3b8;font-size:13px;line-height:1.5;margin-bottom:10px;">${safe.description}</p>` : ''}
       ${partNumber ? `
         <div style="background:#0f172a;border-radius:8px;padding:10px 12px;margin-bottom:10px;">
           <p style="color:#64748b;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px;">POSSIBLE OEM / MODEL NUMBER</p>
-          <p style="color:#fbbf24;font-size:16px;font-weight:800;letter-spacing:.05em;">${partNumber}</p>
+          <p style="color:#fbbf24;font-size:16px;font-weight:800;letter-spacing:.05em;">${safe.partNumber}</p>
         </div>
       ` : ''}
-      ${replacementNotes ? `<p style="color:#fbbf24;font-size:12px;font-weight:600;margin-bottom:10px;">⚠ ${replacementNotes}</p>` : ''}
-      ${verificationNotes ? `<p style="color:#fbbf24;font-size:12px;font-weight:600;margin-bottom:10px;">Check: ${verificationNotes}</p>` : ''}
+      ${replacementNotes ? `<p style="color:#fbbf24;font-size:12px;font-weight:600;margin-bottom:10px;">⚠ ${safe.replacementNotes}</p>` : ''}
+      ${verificationNotes ? `<p style="color:#fbbf24;font-size:12px;font-weight:600;margin-bottom:10px;">Check: ${safe.verificationNotes}</p>` : ''}
       ${renderPartSnapOrderGate(orderGate)}
       ${showGuidedRetry ? renderPartSnapGuidedRetry(_lastPartSnapResult, ladder, risk, missingProof) : ''}
       ${renderPartSnapFastWorkflow(_lastPartSnapResult, corpusCandidates, ladder, missingProof)}
@@ -9861,10 +9951,10 @@ function renderPartsSnapResult(ai, result, status) {
       ${renderPartAlternates(alternates)}
       ${renderPartSnapProofPacketDrawer(_lastPartSnapResult)}
       ${renderPartSnapPartnerCards(_lastPartSnapResult)}
-      ${searchTerms?.length ? `
+      ${safe.searchTerms.length ? `
         <p style="color:#64748b;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">SEARCH ONLINE</p>
         <div style="display:flex;flex-wrap:wrap;gap:6px;">
-          ${searchTerms.map(t => `<span style="background:#0f172a;color:#7dd3fc;padding:5px 10px;border-radius:6px;font-size:11px;font-weight:600;">${t}</span>`).join('')}
+          ${safe.searchTerms.map(t => `<span style="background:#0f172a;color:#7dd3fc;padding:5px 10px;border-radius:6px;font-size:11px;font-weight:600;">${t}</span>`).join('')}
         </div>
       ` : ''}
       ${buyLinks}
@@ -10937,6 +11027,11 @@ function scanCodeSearch(val) {
       result_count: hits.length,
     });
     if (hits.length > 0) {
+      trackSplashLensEvent('scan_code_answer_opened', {
+        code: hits[0]?.code || safeQuery,
+        result_count: hits.length,
+        workflow: 'scan_lookup_search',
+      });
       trackSplashLensEvent('first_value_completed', {
         role: getSplashLensRole(),
         workflow: 'scan_lookup_search',
@@ -10958,6 +11053,8 @@ function searchErrorDB(query, brandFilter) {
   if (!window.ERROR_DB) return [];
   const normalizeSearchText = (value) => String(value || '').toUpperCase().replace(/[^A-Z0-9]/g,'');
   const q = normalizeSearchText(query);
+  if (!q) return [];
+  const rawQuery = String(query || '').trim().toUpperCase();
   const results = [];
   const brands = brandFilter ? { [brandFilter]: window.ERROR_DB[brandFilter] } : window.ERROR_DB;
   for (const [brandKey, brand] of Object.entries(brands)) {
@@ -10967,19 +11064,33 @@ function searchErrorDB(query, brandFilter) {
         const c = normalizeSearchText(code.code);
         const n = (code.name || '').toUpperCase();
         const category = (catName || '').toUpperCase();
+        const brandText = String(brand.label || brandKey || '').toUpperCase();
         const models = (cat.models || []).join(' ').toUpperCase();
         const causes = (code.causes || []).join(' ').toUpperCase();
         const fixes = (code.fix || []).join(' ').toUpperCase();
-        const haystack = normalizeSearchText([category, models, c, n, causes, fixes].join(' '));
-        const looseHaystack = [category, models, c, n, causes, fixes].join(' ');
+        const haystack = normalizeSearchText([brandText, category, models, c, n, causes, fixes].join(' '));
+        const looseHaystack = [brandText, category, models, c, n, causes, fixes].join(' ');
         const exactOrLongCode = c === q || (c.length >= 3 && q.includes(c));
-        if (haystack.includes(q) || exactOrLongCode || looseHaystack.includes(query.trim().toUpperCase())) {
-          results.push({ brandKey, brandLabel: brand.label, brandColor: brand.color || '#0284c7', category: catName, ...code });
+        if (haystack.includes(q) || exactOrLongCode || looseHaystack.includes(rawQuery)) {
+          const nameText = normalizeSearchText(n);
+          const familyText = normalizeSearchText([brandText, category, models].join(' '));
+          const matchRank = c === q ? 0
+            : c.startsWith(q) ? 1
+            : c.includes(q) ? 2
+            : familyText === q ? 3
+            : nameText.startsWith(q) ? 4
+            : exactOrLongCode ? 5
+            : 6;
+          results.push({ brandKey, brandLabel: brand.label, brandColor: brand.color || '#0284c7', category: catName, matchRank, ...code });
         }
       }
     }
   }
-  return results;
+  return results.sort((a, b) => (
+    a.matchRank - b.matchRank ||
+    String(a.brandLabel).localeCompare(String(b.brandLabel)) ||
+    String(a.code).localeCompare(String(b.code))
+  ));
 }
 
 function renderScanHits(hits, query) {

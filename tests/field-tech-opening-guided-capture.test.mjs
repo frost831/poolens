@@ -14,12 +14,14 @@ test('opening screen exposes exactly three dominant field actions', () => {
   assert.doesNotMatch(workflow, /<strong>(Dose|Note|Search)<\/strong>/);
 });
 
-test('secondary home tools live inside expandable navigation', () => {
+test('exact-code search is primary while secondary tools stay expandable', () => {
   const drawer = shell.match(/<details class="field-tool-drawer">[\s\S]*?<\/details>/)?.[0] || '';
   assert.match(drawer, /CPO \/ Facility quick start/);
   assert.match(drawer, /New Tech Radar and Connected Pool Network/);
-  assert.match(drawer, /id="brand-grid"/);
-  assert.match(drawer, /id="error-search"/);
+  assert.match(shell, /id="brand-grid"/);
+  assert.match(shell, /id="error-search"/);
+  assert.ok(shell.indexOf('id="error-search"') < shell.indexOf('<details class="field-tool-drawer">'));
+  assert.doesNotMatch(drawer, /id="error-search"/);
 });
 
 test('PartSnap requires the four-shot guided evidence sequence', () => {

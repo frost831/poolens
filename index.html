@@ -897,6 +897,24 @@
         <p class="rescue-proof"><strong>Offline:</strong> manual lookup, calculators, guides. <strong>Online:</strong> AI scan, PartSnap, voice.</p>
       </section>
 
+      <section class="primary-code-search" aria-label="Pool equipment code search" style="margin-bottom:14px;">
+        <div style="position:relative;margin-bottom:10px;">
+          <svg style="position:absolute;left:13px;top:50%;transform:translateY(-50%);pointer-events:none;" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="search" id="error-search" aria-label="Search equipment codes, symptoms, and brands" placeholder="Search exact code, symptom, or brand..." oninput="onErrorSearch(this.value)" style="padding-left:40px;padding-right:40px;" autocomplete="off" spellcheck="false">
+          <button id="search-clear" type="button" aria-label="Clear code search" onclick="clearSearch()" style="display:none;position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:#94a3b8;cursor:pointer;padding:6px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+        <div id="brand-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:10px;"></div>
+        <div id="category-strip" style="display:none;margin-bottom:12px;" class="scroll-x"></div>
+        <div id="error-results">
+          <div style="text-align:center;padding:24px 16px;">
+            <p style="font-size:15px;color:#475569;margin-bottom:5px;font-weight:700;">Enter the code exactly as shown</p>
+            <p style="font-size:12px;color:#64748b;">Exact code matches appear first. Brand and symptom searches still work.</p>
+          </div>
+        </div>
+      </section>
+
       <details class="field-tool-drawer">
         <summary><span>More field tools<span class="field-tool-drawer-copy">CPO, smart equipment, brands, dosing, notes, and training</span></span></summary>
         <div class="field-tool-drawer-body">
@@ -962,23 +980,6 @@
         </div>
       </section>
 
-      <div style="position:relative;margin-bottom:12px;">
-        <svg style="position:absolute;left:13px;top:50%;transform:translateY(-50%);pointer-events:none;" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <input type="search" id="error-search" placeholder="Search codes, symptoms, brands..." oninput="onErrorSearch(this.value)" style="padding-left:40px;padding-right:40px;" autocomplete="off" spellcheck="false">
-        <button id="search-clear" onclick="clearSearch()" style="display:none;position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:#94a3b8;cursor:pointer;padding:6px;">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-        </button>
-      </div>
-
-      <div id="brand-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:10px;"></div>
-      <div id="category-strip" style="display:none;margin-bottom:12px;" class="scroll-x"></div>
-      <div id="error-results">
-        <div style="text-align:center;padding:40px 16px;">
-          <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="1.5" style="margin:0 auto 14px;display:block;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <p style="font-size:15px;color:#475569;margin-bottom:5px;font-weight:600;">Pick a brand or search</p>
-          <p style="font-size:12px;color:#475569;">Hayward / Pentair / Jandy / Maytronics / Aiper / Raypak</p>
-        </div>
-      </div>
         </div>
       </details>
     </div>
@@ -1669,8 +1670,8 @@
   </nav>
 
   <script src="/js/errors.js"></script>
-  <script src="/js/data.js?v=20260904-commercial-scale"></script>
-  <script src="/js/app.js?v=20261002-partsnap-proof-gate"></script>
+  <script src="/js/data.js?v=20261002-trust-fixes"></script>
+  <script src="/js/app.js?v=20261002-trust-fixes"></script>
   <script type="module" src="/js/field-signals.js?v=20260728-field-signals"></script>
   <script src="/js/analytics.js"></script>
   <script src="/js/field-score.js?v=20260914-closing-season-challenge"></script>

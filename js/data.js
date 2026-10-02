@@ -288,7 +288,7 @@ window.POOL_VOLUME_DATA = {
     {
       id:"round", label:"Round / Circle",
       fields:["diameter","shallowEnd","deepEnd"],
-      formula: (dia,_,s,d) => Math.PI * Math.pow(dia/2,2) * ((s+d)/2) * 7.48,
+      formula: (dia,s,d) => Math.PI * Math.pow(dia/2,2) * ((s+d)/2) * 7.48,
       tip:"Measure diameter across the center."
     },
     {
@@ -306,7 +306,7 @@ window.POOL_VOLUME_DATA = {
     {
       id:"freeform", label:"Freeform (estimate)",
       fields:["surfaceAreaEst","shallowEnd","deepEnd"],
-      formula: (area,_,s,d) => area * ((s+d)/2) * 7.48,
+      formula: (area,s,d) => area * ((s+d)/2) * 7.48,
       tip:"Estimate surface area by overlaying a rectangle and subtracting ~20-30% for irregular edges."
     }
   ]

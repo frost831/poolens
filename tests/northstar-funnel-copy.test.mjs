@@ -76,9 +76,9 @@ test('saving job history requires a free save profile signal', () => {
 });
 
 test('service worker cache version ships the newest account bundle', () => {
-  assert.match(shell, /app\.js\?v=20261002-partsnap-proof-gate/);
-  assert.match(sw, /splashlens-v16-static-only/);
-  assert.match(sw, /app\.js\?v=20261002-partsnap-proof-gate/);
+  assert.match(shell, /app\.js\?v=20261002-trust-fixes/);
+  assert.match(sw, /splashlens-v17-offline-routes/);
+  assert.match(sw, /app\.js\?v=20261002-trust-fixes/);
 });
 
 test('checkout exposes a JSON catalog and Splash Lens Pro Unlimited metadata', () => {
@@ -153,7 +153,10 @@ test('scan and save profile gates never depend on native JavaScript dialogs', ()
 });
 
 test('first-value analytics exclude zero-result searches and count calculator output', () => {
-  assert.match(app, /if \(matches\.length > 0\) \{[\s\S]*workflow: 'manual_code_search'/);
-  assert.match(app, /workflow: 'manual_code_search',[\s\S]*lookup_zero_result/);
-  assert.match(app, /workflow: 'turnover_calculator',[\s\S]*result_count: 1/);
+  const searchHandler = app.slice(app.indexOf('function onErrorSearch'), app.indexOf('function clearSearch'));
+  assert.match(app, /trackSplashLensEvent\('code_answer_opened'/);
+  assert.match(app, /if \(!matches\.length\) \{[\s\S]*lookup_zero_result/);
+  assert.doesNotMatch(searchHandler, /first_value_completed/);
+  assert.match(app, /function trackCalculationCompleted/);
+  assert.match(app, /trackSplashLensEvent\('calculation_completed'/);
 });
