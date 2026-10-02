@@ -5,6 +5,8 @@
 // Optional bindings/env: SCAN_RATE_LIMITER, SCAN_USAGE_KV, SPLASHLENS_ENTITLEMENT_SECRET.
 // Production scanner traffic must have SCAN_USAGE_KV so free and entitled monthly limits are server-enforced.
 
+import { attachPartSnapCorpusCandidates } from '../lib/partsnap-corpus.mjs';
+
 const CLAUDE_API = 'https://api.anthropic.com/v1/messages';
 const DEFAULT_ORIGIN = 'https://app.splashlens.com';
 const FREE_SCAN_LIMIT = 3;
@@ -16,6 +18,7 @@ const LOCAL_FALLBACK_WINDOW_MS = 60 * 60 * 1000;
 const ENTITLEMENT_TOKEN_PREFIX = 'sl_scan_v1';
 const PROFILE_TOKEN_PREFIX = 'sl_profile_v1';
 const ACCOUNT_TOKEN_PREFIX = 'sl_account_v1';
+const ACCOUNT_TOKEN_MAX_AGE_SECONDS = 24 * 60 * 60;
 const textEncoder = new TextEncoder();
 
 const ALLOWED_ORIGINS = new Set([
@@ -70,22 +73,34 @@ Return ONLY valid JSON in this exact format:
   "condition": "worn",
   "replacementNotes": "Check for wear marks on vanes; replace annually if running 8+ hours daily",
   "searchTerms": ["hayward impeller", "SPX2607C", "super pump impeller"],
+  "visibleEvidence": ["Hayward wordmark", "molded marking SPX2607C"],
+  "observedMarkings": ["SPX2607C"],
+  "missingProof": ["pump model plate", "impeller dimensions"],
+  "modelVisible": false,
+  "partNumberVisible": true,
   "confidence": "high"
 }
 
 Rules:
 - manufacturer: brand name or null
-- category: one of pump, filter, heater, cleaner, valve, motor, seal, impeller, basket, gauge, o-ring, controller, sensor, other
+- category: one of pump, filter, heater, cleaner, robot, automation, salt, lighting, spa, valve, motor, seal, impeller, basket, gauge, o-ring, controller, sensor, other
 - component: specific part name
 - model: equipment model this belongs to (null if unknown)
-- partNumber: OEM part number if visible or identifiable (null if unknown)
+- partNumber: exact OEM part number only when the complete marking is clearly visible; otherwise null
 - description: what this part does (15 words max)
 - condition: new, good, worn, damaged, unknown
 - replacementNotes: when/why to replace this (20 words max, null if not applicable)
 - searchTerms: 2-4 search strings that would find this part online
+- visibleEvidence: only markings, shapes, labels, and context actually visible in the image
+- observedMarkings: exact text strings you can read in the image; never infer or complete a partial marking
+- missingProof: 2-5 specific photos, markings, dimensions, or context needed before ordering
+- modelVisible: true only when the complete model is legible in the image
+- partNumberVisible: true only when the complete part number is legible in the image and included in observedMarkings
 - confidence: high/medium/low
 
-If image does not show pool equipment: {"manufacturer":null,"category":"other","component":"unknown","model":null,"partNumber":null,"description":"Not a pool part","condition":"unknown","replacementNotes":null,"searchTerms":[],"confidence":"low"}`,
+Never claim exact fitment, compatibility, manufacturer approval, or an exact part number from appearance alone.
+
+If image does not show pool equipment: {"manufacturer":null,"category":"other","component":"unknown","model":null,"partNumber":null,"description":"Not a pool part","condition":"unknown","replacementNotes":null,"searchTerms":[],"visibleEvidence":[],"observedMarkings":[],"missingProof":["clear pool-equipment context photo"],"modelVisible":false,"partNumberVisible":false,"confidence":"low"}`,
 
   test_strip: `You are a pool water chemistry analyzer. The user has photographed a pool test strip. Read the color blocks and estimate the water chemistry values.
 
@@ -300,6 +315,12 @@ async function verifyProfileToken(request, env, body, email) {
   if (!payload || payload.exp <= Math.floor(Date.now() / 1000)) {
     return { ok: false, status: 401, error: 'Free profile verification expired. Verify your email again.' };
   }
+  const nowSeconds = Math.floor(Date.now() / 1000);
+  if (parts[0] === ACCOUNT_TOKEN_PREFIX
+      && (!Number.isFinite(Number(payload.iat)) || Number(payload.iat) > nowSeconds + 60
+        || nowSeconds - Number(payload.iat) > ACCOUNT_TOKEN_MAX_AGE_SECONDS)) {
+    return { ok: false, status: 401, error: 'Account session expired. Verify your email again.' };
+  }
   if (String(payload.sub || '').toLowerCase() !== email) {
     return { ok: false, status: 401, error: 'Free profile token does not match this email.' };
   }
@@ -455,6 +476,68 @@ async function recordFreeProfileScanUse(request, env, body, email, mode, usage) 
     ).run();
   } catch (error) {
     console.error('SplashLens free profile scan record error:', error);
+  }
+}
+
+function createScanId() {
+  if (typeof globalThis.crypto?.randomUUID === 'function') return globalThis.crypto.randomUUID();
+  return `scan_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+}
+
+async function recordScanStage(request, env, body, details) {
+  const stage = clean(details.stage, 60) || 'unknown';
+  const status = clean(details.status, 30) || 'ok';
+  const telemetry = {
+    scan_id: clean(details.scanId, 80),
+    stage,
+    status,
+    duration_ms: Math.max(0, Number(details.durationMs) || 0),
+    candidate_count: Math.max(0, Number(details.candidateCount) || 0),
+    corpus_status: clean(details.corpusLabel, 60),
+    error_code: clean(details.errorCode, 80),
+    usage_source: clean(details.usageSource, 40),
+  };
+  console.info('SplashLens scan stage', JSON.stringify(telemetry));
+
+  if (!env.SUBSCRIBERS_DB || typeof env.SUBSCRIBERS_DB.prepare !== 'function') return;
+  const path = clean(body?.path || '', 300);
+  const mode = clean(body?.mode || details.mode || 'unknown', 40);
+  const userAgent = clean(request.headers.get('User-Agent'), 300);
+  const referrer = clean(request.headers.get('Referer'), 500);
+  const country = clean(request.cf && request.cf.country, 10);
+
+  try {
+    await env.SUBSCRIBERS_DB.prepare(
+      `CREATE TABLE IF NOT EXISTS events (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        event TEXT NOT NULL,
+        source TEXT,
+        path TEXT,
+        plan TEXT,
+        mode TEXT,
+        props TEXT,
+        user_agent TEXT,
+        referrer TEXT,
+        country TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )`
+    ).run();
+    await env.SUBSCRIBERS_DB.prepare(
+      `INSERT INTO events (event, source, path, plan, mode, props, user_agent, referrer, country)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+    ).bind(
+      'scan_stage',
+      'app',
+      path,
+      telemetry.usage_source,
+      mode,
+      JSON.stringify(telemetry).slice(0, 2400),
+      userAgent,
+      referrer,
+      country,
+    ).run();
+  } catch (error) {
+    console.error('SplashLens scan telemetry record error:', error);
   }
 }
 
@@ -643,6 +726,8 @@ function normalizeImage(image) {
 }
 
 export async function onRequestPost({ request, env }) {
+  const scanId = createScanId();
+  const startedAt = Date.now();
   const headers = corsHeaders(request, env);
   const origin = request.headers.get('Origin') || '';
   const production = isProductionRequest(request, env);
@@ -653,30 +738,55 @@ export async function onRequestPost({ request, env }) {
 
   const contentLength = Number(request.headers.get('Content-Length') || 0);
   if (contentLength > MAX_IMAGE_BASE64_CHARS + 4096) {
-    return json({ error: 'Request is too large. Upload a compressed image under 5 MB.' }, 413, headers);
-  }
-
-  if (!env.ANTHROPIC_API_KEY) {
-    return json({ error: 'AI scanner not configured' }, 503, headers);
+    await recordScanStage(request, env, {}, { scanId, stage: 'validation_failed', status: 'blocked', errorCode: 'request_too_large' });
+    return json({ error: 'Request is too large. Upload a compressed image under 5 MB.', scanId }, 413, headers);
   }
 
   let body;
   try {
     body = await request.json();
   } catch {
-    return json({ error: 'Invalid request body' }, 400, headers);
+    await recordScanStage(request, env, {}, { scanId, stage: 'validation_failed', status: 'blocked', errorCode: 'invalid_json' });
+    return json({ error: 'Invalid request body', scanId }, 400, headers);
   }
 
   const { image, mode = 'error_code' } = body;
-  if (!PROMPTS[mode]) return json({ error: 'Unknown mode' }, 400, headers);
+  if (!PROMPTS[mode]) {
+    await recordScanStage(request, env, body, { scanId, stage: 'validation_failed', status: 'blocked', errorCode: 'unknown_mode', mode });
+    return json({ error: 'Unknown mode', scanId }, 400, headers);
+  }
+
+  if (!env.ANTHROPIC_API_KEY) {
+    await recordScanStage(request, env, body, { scanId, stage: 'configuration_failed', status: 'blocked', errorCode: 'anthropic_not_configured', mode });
+    return json({ error: 'AI scanner not configured', scanId }, 503, headers);
+  }
 
   const normalized = normalizeImage(image);
-  if (normalized.error) return json({ error: normalized.error }, 400, headers);
+  if (normalized.error) {
+    await recordScanStage(request, env, body, { scanId, stage: 'validation_failed', status: 'blocked', errorCode: 'invalid_image', mode });
+    return json({ error: normalized.error, scanId }, 400, headers);
+  }
 
   const meter = await enforceScanAccess(request, env, headers, body);
-  if (!meter.ok) return meter.response;
+  if (!meter.ok) {
+    await recordScanStage(request, env, body, { scanId, stage: 'access_denied', status: 'blocked', errorCode: `http_${meter.response.status}`, mode });
+    return meter.response;
+  }
+
+  await recordScanStage(request, env, body, {
+    scanId,
+    stage: 'accepted',
+    mode,
+    usageSource: meter.usage?.source,
+  });
 
   try {
+    await recordScanStage(request, env, body, {
+      scanId,
+      stage: 'ai_requested',
+      mode,
+      usageSource: meter.usage?.source,
+    });
     const apiRes = await fetch(CLAUDE_API, {
       method: 'POST',
       headers: {
@@ -700,8 +810,17 @@ export async function onRequestPost({ request, env }) {
     if (!apiRes.ok) {
       const err = await apiRes.text();
       console.error('Anthropic API error:', apiRes.status, err);
+      await recordScanStage(request, env, body, {
+        scanId,
+        stage: 'ai_failed',
+        status: 'error',
+        errorCode: `anthropic_http_${apiRes.status}`,
+        durationMs: Date.now() - startedAt,
+        mode,
+        usageSource: meter.usage?.source,
+      });
       await refundUsageQuota(env, meter.usage);
-      return json({ error: 'AI service error', status: apiRes.status }, 502, headers);
+      return json({ error: 'AI service error', status: apiRes.status, scanId }, 502, headers);
     }
 
     const data = await apiRes.json();
@@ -712,16 +831,76 @@ export async function onRequestPost({ request, env }) {
       const jsonMatch = text.match(/\{[\s\S]*\}/);
       parsed = jsonMatch ? JSON.parse(jsonMatch[0]) : JSON.parse(text);
     } catch {
+      await recordScanStage(request, env, body, {
+        scanId,
+        stage: 'ai_failed',
+        status: 'error',
+        errorCode: 'invalid_model_json',
+        durationMs: Date.now() - startedAt,
+        mode,
+        usageSource: meter.usage?.source,
+      });
       await refundUsageQuota(env, meter.usage);
-      return json({ error: 'AI response parse failed', raw: text.slice(0, 200) }, 502, headers);
+      return json({ error: 'AI response parse failed', scanId }, 502, headers);
+    }
+
+    await recordScanStage(request, env, body, {
+      scanId,
+      stage: 'ai_completed',
+      durationMs: Date.now() - startedAt,
+      mode,
+      usageSource: meter.usage?.source,
+    });
+
+    if (mode === 'parts_snap') {
+      parsed = attachPartSnapCorpusCandidates(parsed);
+      await recordScanStage(request, env, body, {
+        scanId,
+        stage: 'corpus_completed',
+        durationMs: Date.now() - startedAt,
+        candidateCount: parsed.corpusCandidates.length,
+        corpusLabel: parsed.corpusStatus.label,
+        mode,
+        usageSource: meter.usage?.source,
+      });
     }
 
     await recordFreeProfileScanUse(request, env, body, getFreeProfileEmail(body), mode, meter.usage);
-    return json({ ok: true, mode, result: parsed, usage: publicUsage(meter.usage) }, 200, headers);
+    await recordScanStage(request, env, body, {
+      scanId,
+      stage: 'completed',
+      durationMs: Date.now() - startedAt,
+      candidateCount: parsed.corpusCandidates?.length || 0,
+      corpusLabel: parsed.corpusStatus?.label || '',
+      mode,
+      usageSource: meter.usage?.source,
+    });
+    return json({
+      ok: true,
+      mode,
+      result: parsed,
+      usage: publicUsage(meter.usage),
+      telemetry: {
+        scanId,
+        stage: 'completed',
+        durationMs: Date.now() - startedAt,
+        corpusStatus: parsed.corpusStatus?.label || null,
+        candidateCount: parsed.corpusCandidates?.length || 0,
+      },
+    }, 200, headers);
   } catch (err) {
     console.error('Scan worker error:', err);
+    await recordScanStage(request, env, body, {
+      scanId,
+      stage: 'internal_failed',
+      status: 'error',
+      errorCode: 'internal_error',
+      durationMs: Date.now() - startedAt,
+      mode,
+      usageSource: meter.usage?.source,
+    }).catch(() => {});
     await refundUsageQuota(env, meter.usage).catch(() => {});
-    return json({ error: 'Internal error' }, 500, headers);
+    return json({ error: 'Internal error', scanId }, 500, headers);
   }
 }
 

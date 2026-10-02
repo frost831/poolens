@@ -3,7 +3,7 @@ const PROFILE_TOKEN_PREFIX = 'sl_profile_v1';
 const ACCOUNT_TOKEN_PREFIX = 'sl_account_v1';
 const VERIFICATION_TTL_SECONDS = 10 * 60;
 const PROFILE_TOKEN_TTL_SECONDS = 180 * 24 * 60 * 60;
-const ACCOUNT_TOKEN_TTL_SECONDS = 180 * 24 * 60 * 60;
+const ACCOUNT_TOKEN_TTL_SECONDS = 24 * 60 * 60;
 const textEncoder = new TextEncoder();
 
 const ALLOWED_ORIGINS = new Set([

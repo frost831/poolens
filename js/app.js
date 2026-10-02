@@ -218,6 +218,9 @@ const ACCOUNT_TOKEN_KEY = 'splashlens-account-token-v1';
 const SPLASHLENS_ACCOUNT_ENDPOINT = '/api/account';
 const SPLASHLENS_TEAM_ENDPOINT = '/api/team';
 const SPLASHLENS_COMMERCIAL_ENDPOINT = '/api/commercial';
+const SPLASHLENS_PROOF_PACKETS_ENDPOINT = '/api/proof-packets';
+const SPLASHLENS_TEAM_REVIEW_ENDPOINT = '/api/team-review';
+const SPLASHLENS_LAST_TEAM_KEY = 'splashlens-last-team-id-v1';
 const SPLASHLENS_ROLES = ['tech', 'facility', 'counter', 'trainer'];
 let facilitySessionMode = '';
 let facilityForcedMode = false;
@@ -1925,7 +1928,7 @@ function startServiceProofWorkflow(kind = 'visit') {
     setReportValueAndNotify('rpt-type', 'Repair', { force: true });
     setReportValueAndNotify('rpt-priority', 'senior-review', { force: true });
     setReportValueAndNotify('rpt-review-to', 'Senior tech / vendor', { force: false });
-    setReportValueAndNotify('rpt-photo-proof', 'Needs: wide equipment photo, model plate, code display, close-up part marking, second proof photo.', { force: false });
+    setReportValueAndNotify('rpt-photo-proof', '', { force: false });
     setReportValueAndNotify('rpt-issue-note', 'Part/code needs verification before ordering. Capture label, model, serial, and symptom proof.', { force: false });
     setReportValueAndNotify('rpt-equip', 'PartSnap / scanner workflow started. Verify possible match against model plate, manual, and qualified tech judgment.', { force: false });
     setReportCheck('rpt-proof-equipment', false);
@@ -1941,7 +1944,7 @@ function startServiceProofWorkflow(kind = 'visit') {
     setReportValueAndNotify('rpt-priority', 'seasonal', { force: true });
     setReportValueAndNotify('rpt-review-to', 'Customer / owner / spring opening crew', { force: false });
     setReportValueAndNotify('rpt-work', 'Completed closing-season proof workflow: chemistry recorded, visible equipment checked, winterization proof captured, and follow-up risks documented.', { force: false });
-    setReportValueAndNotify('rpt-photo-proof', `Closing proof needed: ${(proof.proofPhotos || []).join(', ') || 'water level, equipment pad, drain plugs, winter plugs, cover, and unusual conditions.'}`, { force: false });
+    setReportValueAndNotify('rpt-photo-proof', '', { force: false });
     setReportValueAndNotify('rpt-issue-note', `Repeat issue check: ${(proof.callbackFlags || []).slice(0, 6).join(', ') || 'missing drain-plug proof, unclear cover proof, hard-freeze forecast, or declined work.'}`, { force: false });
     setReportValueAndNotify('rpt-customer-summary', 'Pool was closed and documented for the season. Photos and notes show the visible work completed today, open items, and any customer-approved or declined follow-up. This record supports future review but does not replace the exact equipment manual, local code, or qualified judgment.', { force: false });
     setReportCheck('rpt-proof-summary', true);
@@ -2043,7 +2046,7 @@ function renderFieldLearningOS(kind = 'partsnap') {
   setReportValueAndNotify('rpt-priority', lesson.fields.priority, { force: true });
   setReportValueAndNotify('rpt-review-to', lesson.fields.reviewTo, { force: false });
   setReportValueAndNotify('rpt-issue-note', lesson.fields.issue, { force: false });
-  setReportValueAndNotify('rpt-photo-proof', lesson.fields.proof, { force: false });
+  setReportValueAndNotify('rpt-photo-proof', '', { force: false });
   setReportValueAndNotify('rpt-customer-summary', 'Training use only: this lesson teaches proof habits and should be reviewed by a qualified person before customer-facing use.', { force: false });
   setReportCheck('rpt-proof-summary', true);
   renderProofWorkflowOutput(
@@ -2136,12 +2139,16 @@ async function openSplashLensPaidLane(planKey, label) {
       return;
     }
   } catch {}
-  const email = String(window.prompt(`Enter your email to request ${safeLabel} access:`) || '').trim().toLowerCase();
-  if (!email) return;
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    window.alert('Enter a valid email address.');
-    return;
-  }
+  const request = await openSplashLensSheet({
+    eyebrow: 'Paid access',
+    title: `Request ${safeLabel}`,
+    body: 'Use the email where SplashLens should send access and account updates.',
+    primaryLabel: 'Send request',
+    fields: [{ name: 'email', label: 'Work email', type: 'email', autocomplete: 'email', maxlength: 254 }],
+    validate: ({ email }) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email || '').trim()) ? '' : 'Enter a valid email address.',
+  });
+  if (!request) return;
+  const email = String(request.email || '').trim().toLowerCase();
   rememberSplashLensIdentity({ email, role: getSplashLensRole() }, 'paid_lane_lead');
   try {
     const response = await fetch('/api/waitlist', {
@@ -2328,6 +2335,35 @@ async function splashLensCommercialRequest(body = null) {
   return payload;
 }
 
+async function splashLensProtectedRequest(endpoint, body = null, query = '') {
+  const profile = getFieldSaveAccount();
+  const accountToken = profile?.accountToken || localStorage.getItem(ACCOUNT_TOKEN_KEY) || '';
+  if (!accountToken) throw new Error('Verify your SplashLens email before using saved proof and team review.');
+  const options = body
+    ? {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-SplashLens-Account-Token': accountToken, ...getLanguageHeaders() },
+        body: JSON.stringify(body),
+      }
+    : {
+        method: 'GET',
+        headers: { 'X-SplashLens-Account-Token': accountToken, ...getLanguageHeaders() },
+      };
+  const response = await fetch(`${endpoint}${query}`, options);
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok || !payload.ok) throw new Error(payload.error || 'SplashLens could not complete that protected action.');
+  return payload;
+}
+
+function splashLensProofPacketRequest(body = null) {
+  return splashLensProtectedRequest(SPLASHLENS_PROOF_PACKETS_ENDPOINT, body);
+}
+
+function splashLensTeamReviewRequest(body = null, teamId = '') {
+  const query = body ? '' : `?action=list&teamId=${encodeURIComponent(teamId)}`;
+  return splashLensProtectedRequest(SPLASHLENS_TEAM_REVIEW_ENDPOINT, body, query);
+}
+
 function commercialLaneLabel(lane = '') {
   const labels = {
     pro: 'Splash Lens Pro',
@@ -2343,7 +2379,15 @@ function commercialLaneLabel(lane = '') {
 async function requestSplashLensCommercialAccess(lane = 'pro') {
   const profile = getFieldSaveAccount() || {};
   const label = commercialLaneLabel(lane);
-  const notes = String(window.prompt(`What should SplashLens know about your ${label} use case?`, '') || '').trim().slice(0, 900);
+  const request = await openSplashLensSheet({
+    eyebrow: 'Commercial access',
+    title: `Request ${label}`,
+    body: 'Tell us what your team needs so the right workflow and access can be prepared.',
+    primaryLabel: 'Save request',
+    fields: [{ name: 'notes', label: 'Use case', maxlength: 900, placeholder: 'Team size, workflow, or field problem' }],
+  });
+  if (!request) return;
+  const notes = String(request.notes || '').trim().slice(0, 900);
   try {
     const payload = await splashLensCommercialRequest({
       action: 'request_access',
@@ -2365,10 +2409,31 @@ async function requestSplashLensCommercialAccess(lane = 'pro') {
 
 async function requestSplashLensPartnerCard() {
   const profile = getFieldSaveAccount() || {};
-  const manufacturer = String(window.prompt('Manufacturer, brand, trainer, or distributor name:', profile.company || '') || '').trim().slice(0, 140);
-  if (!manufacturer) return;
-  const docUrl = String(window.prompt('Manual/support URL to review (optional):', '') || '').trim().slice(0, 480);
-  const proofLanguage = String(window.prompt('What proof should techs capture before ordering or escalating?', '') || '').trim().slice(0, 900);
+  const request = await openSplashLensSheet({
+    eyebrow: 'Partner card',
+    title: 'Submit source-backed field guidance',
+    body: 'Provide the organization, an official source when available, and the proof a technician should capture.',
+    primaryLabel: 'Submit card request',
+    fields: [
+      { name: 'manufacturer', label: 'Manufacturer, trainer, or distributor', value: profile.company || '', maxlength: 140 },
+      { name: 'docUrl', label: 'Official manual or support URL (optional)', type: 'url', inputmode: 'url', maxlength: 480 },
+      { name: 'proofLanguage', label: 'Required field proof', maxlength: 900, placeholder: 'Plate, marking, dimensions, installed context' },
+    ],
+    validate: ({ manufacturer, docUrl }) => {
+      if (!String(manufacturer || '').trim()) return 'Enter the organization name.';
+      if (!String(docUrl || '').trim()) return '';
+      try {
+        const url = new URL(String(docUrl).trim());
+        return url.protocol === 'https:' ? '' : 'Use an HTTPS source URL.';
+      } catch {
+        return 'Enter a valid source URL.';
+      }
+    },
+  });
+  if (!request) return;
+  const manufacturer = String(request.manufacturer || '').trim().slice(0, 140);
+  const docUrl = String(request.docUrl || '').trim().slice(0, 480);
+  const proofLanguage = String(request.proofLanguage || '').trim().slice(0, 900);
   try {
     const payload = await splashLensCommercialRequest({
       action: 'partner_card_request',
@@ -2467,32 +2532,48 @@ function renderSplashLensCommercialSection(commercialPayload = {}) {
 async function createSplashLensTeamWorkspace() {
   const profile = getFieldSaveAccount();
   const defaultName = profile?.company || profile?.name || 'SplashLens Team';
-  const name = String(window.prompt('Team/workspace name:', defaultName) || '').trim();
-  if (!name) return;
-  try {
-    await splashLensTeamRequest({ action: 'create_team', name });
-    trackSplashLensEvent('team_workspace_create_clicked', { has_company_name: Boolean(profile?.company) });
-    openSplashLensAccount();
-  } catch (error) {
-    window.alert(error.message || 'SplashLens could not create that team workspace.');
-  }
+  const result = await openSplashLensSheet({
+    eyebrow: 'Team workspace',
+    title: 'Name this crew workspace',
+    body: 'Use the company or service-team name technicians will recognize.',
+    fields: [{ name: 'name', label: 'Workspace name', value: defaultName, maxlength: 120, placeholder: 'Company or crew name' }],
+    primaryLabel: 'Create workspace',
+    secondaryLabel: 'Cancel',
+    validate: (input) => (String(input.name || '').trim() ? '' : 'Enter a workspace name.'),
+    submit: async (input) => splashLensTeamRequest({ action: 'create_team', name: String(input.name || '').trim() }),
+  });
+  if (!result) return;
+  trackSplashLensEvent('team_workspace_create_clicked', { has_company_name: Boolean(profile?.company) });
+  openSplashLensAccount();
 }
 
 async function inviteSplashLensTeamMember(teamId, teamName = '') {
-  const email = String(window.prompt(`Invite tech email${teamName ? ` for ${teamName}` : ''}:`) || '').trim().toLowerCase();
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    if (email) window.alert('Enter a valid invite email.');
-    return;
-  }
-  const role = String(window.prompt('Role: member or admin', 'member') || 'member').trim().toLowerCase();
-  try {
-    const payload = await splashLensTeamRequest({ action: 'invite_member', teamId, email, role });
-    trackSplashLensEvent('team_member_invite_clicked', { team_id: teamId, email_sent: Boolean(payload.emailSent), role });
-    window.alert(payload.emailSent ? 'Invite sent from SplashLens.' : `Invite saved. Email did not send automatically: ${payload.emailError || 'unknown email issue'}`);
-    openSplashLensAccount();
-  } catch (error) {
-    window.alert(error.message || 'SplashLens could not send that team invite.');
-  }
+  const payload = await openSplashLensSheet({
+    eyebrow: 'Team invite',
+    title: teamName ? `Invite a tech to ${teamName}` : 'Invite a technician',
+    body: 'Choose member for field capture or admin for review and workspace management.',
+    fields: [
+      { name: 'email', label: 'Work email', type: 'email', inputmode: 'email', autocomplete: 'email', maxlength: 180, placeholder: 'tech@company.com' },
+      { name: 'role', label: 'Role: member or admin', value: 'member', maxlength: 10, placeholder: 'member' },
+    ],
+    primaryLabel: 'Send invite',
+    secondaryLabel: 'Cancel',
+    validate: (input) => {
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(input.email || '').trim())) return 'Enter a valid work email.';
+      if (!['member', 'admin'].includes(String(input.role || '').trim().toLowerCase())) return 'Role must be member or admin.';
+      return '';
+    },
+    submit: async (input) => splashLensTeamRequest({
+      action: 'invite_member',
+      teamId,
+      email: String(input.email || '').trim().toLowerCase(),
+      role: String(input.role || '').trim().toLowerCase(),
+    }),
+  });
+  if (!payload) return;
+  trackSplashLensEvent('team_member_invite_clicked', { team_id: teamId, email_sent: Boolean(payload.emailSent), role: payload.member?.role || 'member' });
+  showSplashLensNotice(payload.emailSent ? 'Invite sent from SplashLens.' : `Invite saved. Email did not send automatically: ${payload.emailError || 'unknown email issue'}`);
+  openSplashLensAccount();
 }
 
 async function acceptSplashLensTeamInvite(inviteId = '') {
@@ -2517,7 +2598,7 @@ function renderSplashLensTeamSection(teamPayload = {}) {
             <strong style="display:block;color:#451a03;font-size:13px;">${escHtml(invite.teamName || 'SplashLens team')}</strong>
             <span style="display:block;color:#92400e;font-size:11px;">Role: ${escHtml(invite.role || 'member')}</span>
           </div>
-          <button type="button" onclick="acceptSplashLensTeamInvite('${escAttr(invite.id || '')}')" style="border:0;border-radius:8px;background:#f59e0b;color:#451a03;font-size:11px;font-weight:950;padding:9px 10px;cursor:pointer;">Accept</button>
+          <button type="button" data-splashlens-team-accept data-invite-id="${escAttr(invite.id || '')}" style="border:0;border-radius:8px;background:#f59e0b;color:#451a03;font-size:11px;font-weight:950;padding:9px 10px;cursor:pointer;">Accept</button>
         </div>`).join('')}
     </div>` : '';
   const teamHtml = teams.length ? `
@@ -2530,7 +2611,7 @@ function renderSplashLensTeamSection(teamPayload = {}) {
               <strong style="display:block;color:#0f172a;font-size:14px;">${escHtml(team.name || 'SplashLens Team')}</strong>
               <span style="display:block;color:#64748b;font-size:11px;">${escHtml(team.role || 'member')} workspace</span>
             </div>
-            ${canInvite ? `<button type="button" onclick="inviteSplashLensTeamMember('${escAttr(team.id || '')}','${escAttr(team.name || 'team')}')" style="border:1px solid #0369a1;border-radius:8px;background:#fff;color:#0369a1;font-size:11px;font-weight:950;padding:9px 10px;cursor:pointer;">Invite</button>` : ''}
+            ${canInvite ? `<button type="button" data-splashlens-team-invite data-team-id="${escAttr(team.id || '')}" data-team-name="${escAttr(team.name || 'team')}" style="border:1px solid #0369a1;border-radius:8px;background:#fff;color:#0369a1;font-size:11px;font-weight:950;padding:9px 10px;cursor:pointer;">Invite</button>` : ''}
           </div>
         </div>`;
     }).join('')}` : `
@@ -2548,6 +2629,81 @@ function renderSplashLensTeamSection(teamPayload = {}) {
       ${inviteHtml}
       ${teamHtml}
       <p style="color:#047857;font-size:10px;line-height:1.35;margin:8px 0 0;">Team invites require the invited tech to verify the same email before joining. That keeps workspace access tied to a real account session.</p>
+    </div>`;
+}
+
+function wireSplashLensTeamActions(root) {
+  root?.querySelectorAll('[data-splashlens-team-accept]').forEach((button) => {
+    button.addEventListener('click', () => acceptSplashLensTeamInvite(button.dataset.inviteId || ''));
+  });
+  root?.querySelectorAll('[data-splashlens-team-invite]').forEach((button) => {
+    button.addEventListener('click', () => inviteSplashLensTeamMember(button.dataset.teamId || '', button.dataset.teamName || 'team'));
+  });
+}
+
+async function changeSplashLensTeamReview(reviewId, action, teamId) {
+  const needsReason = ['request_evidence', 'reject'].includes(action);
+  let comment = '';
+  if (needsReason) {
+    const values = await openSplashLensSheet({
+      eyebrow: 'Team review',
+      title: action === 'reject' ? 'Why is this result being rejected?' : 'What evidence is still needed?',
+      body: 'Give the field technician a specific correction they can act on at the equipment pad.',
+      fields: [{
+        name: 'comment',
+        label: action === 'reject' ? 'Rejection reason' : 'Evidence request',
+        maxlength: 1200,
+        placeholder: action === 'reject' ? 'Explain the incorrect or unsafe conclusion.' : 'Example: capture the full model plate and the union measurement.',
+      }],
+      primaryLabel: action === 'reject' ? 'Reject result' : 'Request evidence',
+      secondaryLabel: 'Cancel',
+      validate: (input) => (String(input.comment || '').trim() ? '' : 'Add a clear reason before continuing.'),
+    });
+    if (!values) return;
+    comment = String(values.comment || '').trim().slice(0, 1200);
+  }
+  if (needsReason && !comment) return;
+  try {
+    await splashLensTeamReviewRequest({ action, reviewId, ...(comment ? { comment } : {}) });
+    trackSplashLensEvent('team_review_status_changed', { action, team_id: teamId, review_id: reviewId });
+    openSplashLensAccount();
+  } catch (error) {
+    window.alert(error.message || 'SplashLens could not update that review.');
+  }
+}
+
+function renderSplashLensReviewSection(reviewPayload = {}, teamId = '') {
+  const reviews = Array.isArray(reviewPayload.reviews) ? reviewPayload.reviews : [];
+  const role = String(reviewPayload.memberRole || '').toLowerCase();
+  const reviewer = ['owner', 'admin'].includes(role);
+  if (!teamId) return '';
+  return `
+    <div style="background:#f8fafc;border:1px solid #cbd5e1;border-radius:12px;padding:13px;margin-bottom:12px;">
+      <div style="display:flex;justify-content:space-between;gap:10px;align-items:start;margin-bottom:9px;">
+        <div>
+          <p style="color:#475569;font-size:10px;font-weight:950;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;">Team proof review</p>
+          <strong style="display:block;color:#0f172a;font-size:15px;">${reviews.length} packet${reviews.length === 1 ? '' : 's'} in this queue</strong>
+        </div>
+        <span style="border-radius:999px;background:#e0f2fe;color:#075985;font-size:9px;font-weight:950;padding:6px 8px;">${escHtml(role || 'member')}</span>
+      </div>
+      ${reviews.length ? reviews.slice(0, 12).map((review) => {
+        const status = String(review.status || 'draft');
+        const open = !['approved', 'rejected'].includes(status);
+        return `<div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:10px;margin-top:7px;">
+          <div style="display:flex;justify-content:space-between;gap:8px;align-items:start;">
+            <div style="min-width:0;">
+              <strong style="display:block;color:#0f172a;font-size:12px;line-height:1.25;">${escHtml(review.title || 'Field proof packet')}</strong>
+              <span style="display:block;color:#64748b;font-size:10px;margin-top:3px;">${escHtml(status.replace(/_/g, ' '))}${review.assigneeEmail ? ` - ${escHtml(review.assigneeEmail)}` : ''}</span>
+            </div>
+            ${open && status !== 'submitted' ? `<button type="button" onclick="changeSplashLensTeamReview('${escAttr(review.id)}','submit','${escAttr(teamId)}')" style="border:1px solid #0369a1;border-radius:7px;background:#fff;color:#0369a1;padding:7px 8px;font-size:9px;font-weight:950;cursor:pointer;">Submit</button>` : ''}
+          </div>
+          ${reviewer && status === 'submitted' ? `<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin-top:8px;">
+            <button type="button" onclick="changeSplashLensTeamReview('${escAttr(review.id)}','approve','${escAttr(teamId)}')" style="border:0;border-radius:7px;background:#047857;color:#fff;padding:8px 5px;font-size:9px;font-weight:950;cursor:pointer;">Approve</button>
+            <button type="button" onclick="changeSplashLensTeamReview('${escAttr(review.id)}','request_evidence','${escAttr(teamId)}')" style="border:0;border-radius:7px;background:#d97706;color:#fff;padding:8px 5px;font-size:9px;font-weight:950;cursor:pointer;">Need proof</button>
+            <button type="button" onclick="changeSplashLensTeamReview('${escAttr(review.id)}','reject','${escAttr(teamId)}')" style="border:0;border-radius:7px;background:#b91c1c;color:#fff;padding:8px 5px;font-size:9px;font-weight:950;cursor:pointer;">Reject</button>
+          </div>` : ''}
+        </div>`;
+      }).join('') : '<p style="color:#64748b;font-size:12px;line-height:1.45;">No team proof is waiting. Create a server-backed proof packet and send it to this workspace for review.</p>'}
     </div>`;
 }
 
@@ -2620,6 +2776,14 @@ async function openSplashLensAccount() {
       trackSplashLensEvent('team_workspace_snapshot_failed', { error: String(error.message || error).slice(0, 120) });
       return { teams: [], pendingInvites: [], unavailable: true };
     });
+    const reviewTeamId = teamPayload.teams?.[0]?.id || '';
+    if (reviewTeamId) localStorage.setItem(SPLASHLENS_LAST_TEAM_KEY, reviewTeamId);
+    const reviewPayload = reviewTeamId
+      ? await splashLensTeamReviewRequest(null, reviewTeamId).catch((error) => {
+          trackSplashLensEvent('team_review_snapshot_failed', { error: String(error.message || error).slice(0, 120), team_id: reviewTeamId });
+          return { reviews: [], memberRole: teamPayload.teams?.[0]?.role || '', unavailable: true };
+        })
+      : { reviews: [], memberRole: '' };
     const commercialPayload = await splashLensCommercialRequest().catch((error) => {
       trackSplashLensEvent('commercial_snapshot_failed', { error: String(error.message || error).slice(0, 120) });
       return { plans: [], entitlements: [], intakes: [], proof: {}, readiness: {} };
@@ -2655,6 +2819,7 @@ async function openSplashLensAccount() {
         </div>
         ${renderSplashLensCommercialSection(commercialPayload)}
         ${renderSplashLensTeamSection(teamPayload)}
+        ${renderSplashLensReviewSection(reviewPayload, reviewTeamId)}
         ${(payload.recentEvents || []).length ? `
           <p style="color:#0f172a;font-size:12px;font-weight:950;margin-bottom:7px;">Recent account activity</p>
           ${(payload.recentEvents || []).slice(0, 6).map((event) => `
@@ -2664,6 +2829,7 @@ async function openSplashLensAccount() {
             </div>`).join('')}
         ` : `<p style="color:#64748b;font-size:12px;line-height:1.45;">No recent account activity yet. Run one lookup, PartSnap scan, proof packet, or feedback action and it will start shaping the account trail.</p>`}
       </section>`;
+    wireSplashLensTeamActions(wrap);
     trackSplashLensEvent('account_dashboard_opened', {
       scans_used: Number(scanner.count || 0),
       scans_remaining: remaining,
@@ -2722,7 +2888,7 @@ function closeSplashLensSheet(value = null) {
   if (finish) finish(value);
 }
 
-// In-page replacement for window.confirm/prompt. The iOS store shell is a WKWebView with no
+// In-page replacement for browser-native dialogs. The iOS store shell is a WKWebView with no
 // JavaScript panel handlers, so native dialogs answer "Cancel" instantly and nothing is shown.
 // Resolves with the submitted values (or whatever config.submit returns), or null when dismissed.
 function openSplashLensSheet(config) {
@@ -2790,6 +2956,11 @@ function openSplashLensSheet(config) {
     document.body.appendChild(wrap);
     setTimeout(() => form.querySelector('input')?.focus(), 80);
   });
+}
+
+async function confirmSplashLensAction({ eyebrow = 'Confirm', title, body = '', primaryLabel = 'Continue' }) {
+  const result = await openSplashLensSheet({ eyebrow, title, body, primaryLabel, secondaryLabel: 'Cancel' });
+  return Boolean(result);
 }
 
 function showSplashLensNotice(message) {
@@ -3769,10 +3940,16 @@ function getSlamState() {
 function saveSlamState(s) { localStorage.setItem(SLAM_KEY, JSON.stringify(s)); }
 function clearSlamState() { localStorage.removeItem(SLAM_KEY); }
 
-function startSlamTracker(targetFC, slamType, poolVolume, cya) {
+async function startSlamTracker(targetFC, slamType, poolVolume, cya) {
   const existing = getSlamState();
   if (existing?.active) {
-    if (!confirm('A SLAM is already in progress. Start a new one?')) return;
+    const replace = await confirmSplashLensAction({
+      eyebrow: 'SLAM tracker',
+      title: 'Replace the active SLAM?',
+      body: 'The current multi-day tracker will be cleared before the new one starts.',
+      primaryLabel: 'Start new SLAM',
+    });
+    if (!replace) return;
   }
   const state = {
     active:        true,
@@ -3793,6 +3970,18 @@ function startSlamTracker(targetFC, slamType, poolVolume, cya) {
       <p style="color:#92400e;font-weight:800;font-size:14px;margin-bottom:6px;">SLAM Tracker Started</p>
       <p style="color:#78350f;font-size:13px;">Check FC every 4-6 hours. Maintain at ${targetFC} ppm. Use the banner at the top of this tab to log readings.</p>
     </div>`);
+}
+
+async function endSlamTracker() {
+  const confirmed = await confirmSplashLensAction({
+    eyebrow: 'SLAM tracker',
+    title: 'End this SLAM?',
+    body: 'This clears the active tracker and its recorded checks from this device.',
+    primaryLabel: 'End and clear',
+  });
+  if (!confirmed) return;
+  clearSlamState();
+  renderSlamBanner();
 }
 
 function renderSlamBanner() {
@@ -3819,7 +4008,7 @@ function renderSlamBanner() {
           <span style="background:#fbbf24;color:#78350f;padding:2px 8px;border-radius:100px;font-size:10px;font-weight:800;">SLAM DAY ${dayNum}</span>
           <p style="font-size:16px;font-weight:900;margin-top:4px;">Target FC: ${s.targetFC} ppm</p>
         </div>
-        <button onclick="if(confirm('End SLAM and clear tracker?')){clearSlamState();renderSlamBanner();}" style="background:rgba(255,255,255,0.15);color:#fff;border:1px solid rgba(255,255,255,0.3);border-radius:8px;padding:6px 12px;font-size:11px;cursor:pointer;">End SLAM</button>
+        <button onclick="endSlamTracker()" style="background:rgba(255,255,255,0.15);color:#fff;border:1px solid rgba(255,255,255,0.3);border-radius:8px;padding:6px 12px;font-size:11px;cursor:pointer;">End SLAM</button>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px;">
         <div style="background:rgba(0,0,0,0.2);border-radius:8px;padding:8px;text-align:center;">
@@ -4338,8 +4527,14 @@ function updateProgress() {
   if (txt) txt.style.color = (done === total && total > 0) ? '#166534' : '#0369a1';
 }
 
-function resetChecklist() {
-  if (!confirm(`Reset ${CL_MAP[S.clType].label}?`)) return;
+async function resetChecklist() {
+  const confirmed = await confirmSplashLensAction({
+    eyebrow: 'Checklist',
+    title: `Reset ${CL_MAP[S.clType].label}?`,
+    body: 'Every checked step in this checklist will be cleared on this device.',
+    primaryLabel: 'Reset checklist',
+  });
+  if (!confirmed) return;
   S.checklists[S.clType] = {};
   localStorage.removeItem(CL_MAP[S.clType].key);
   renderChecklist();
@@ -4444,7 +4639,7 @@ function validateReportProof(opts = {}) {
   const source = _rptVal('rpt-reading-source') || 'manual';
   const hasReading = hasAnyReportReading();
   const waterOk = _rptChecked('rpt-proof-water') || hasReading;
-  const photoOk = _rptChecked('rpt-proof-equipment') || !!_rptVal('rpt-photo-proof');
+  const photoOk = _rptChecked('rpt-proof-equipment');
   const summaryOk = _rptChecked('rpt-proof-summary') || !!_rptVal('rpt-customer-summary');
   if (!waterOk) missing.push('water reading');
   if (!photoOk) missing.push('equipment/photo proof');
@@ -4640,22 +4835,66 @@ function serviceProofSharePayload() {
   };
 }
 
-function encodeProofPacketPayload(payload) {
-  const json = JSON.stringify(payload);
-  const bytes = new TextEncoder().encode(json);
-  let binary = '';
-  bytes.forEach((byte) => { binary += String.fromCharCode(byte); });
-  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+let _lastSecureProofPacket = null;
+
+async function submitProofPacketForTeamReview(proofPacketId, payload) {
+  const teamId = localStorage.getItem(SPLASHLENS_LAST_TEAM_KEY) || '';
+  if (!teamId) throw new Error('Create or join a team workspace before sending proof for review.');
+  const review = await splashLensTeamReviewRequest({
+    action: 'create',
+    teamId,
+    title: `${payload.customer || 'Customer'} - ${payload.visitType || 'Service visit'}`,
+    summary: payload.proof?.customerSummary || payload.workPerformed || 'Field proof packet',
+    proofPacketId,
+    payload: {
+      proofReady: Boolean(payload.proof?.complete),
+      missingProof: payload.proof?.missing || [],
+      callbackRisk: payload.callbackRisk?.level || 'unknown',
+      generatedAt: payload.generatedAt,
+    },
+  });
+  await splashLensTeamReviewRequest({ action: 'submit', reviewId: review.review?.id || review.reviewId });
+  trackSplashLensEvent('team_review_submitted_from_proof_packet', { team_id: teamId, proof_packet_id: proofPacketId });
+  return review;
 }
 
-function createServiceProofShareLink() {
+async function submitLastProofPacketForTeamReview() {
+  if (!_lastSecureProofPacket?.proofPacketId || !_lastSecureProofPacket?.payload) {
+    throw new Error('Create a secure proof packet before sending it to review.');
+  }
+  const result = await submitProofPacketForTeamReview(_lastSecureProofPacket.proofPacketId, _lastSecureProofPacket.payload);
+  showSplashLensNotice('Proof packet sent to team review.');
+  openSplashLensAccount();
+  return result;
+}
+
+async function createServiceProofShareLink() {
   const proof = validateReportProof({ quiet: true });
-  if (!proof.complete && !confirm(`Stop proof is incomplete: ${proof.missing.join(', ')}. Create a share link anyway?`)) return;
+  if (!proof.complete) {
+    showSplashLensNotice(`Finish the proof packet before sharing: ${proof.missing.join(', ')}.`);
+    trackSplashLensEvent('service_proof_share_blocked_incomplete', { missing: proof.missing.join('|') });
+    return;
+  }
+  if (!hasAccountSession()) {
+    ensureFieldSaveAccount('service_report_saved');
+    window.alert('Verify your SplashLens email, then create the proof link again. Server-backed links require a signed account so they can be revoked.');
+    return;
+  }
   const payload = serviceProofSharePayload();
-  const encoded = encodeProofPacketPayload(payload);
-  const url = `${window.location.origin}/proof-packet.html?p=${encoded}`;
-  const message = `SplashLens Service Proof Packet\n${url}\n\nReference only. Verify repairs, part fit, chemical safety, and code requirements with qualified service judgment.`;
+  const teamId = localStorage.getItem(SPLASHLENS_LAST_TEAM_KEY) || '';
   const output = document.getElementById('rpt-proof-os-output');
+  if (output) output.innerHTML = '<section class="brain-card"><strong>Creating secure proof packet...</strong><p style="color:#64748b;font-size:12px;margin-top:5px;">The packet is stored server-side and the share link contains only an opaque ID.</p></section>';
+  let stored;
+  try {
+    stored = await splashLensProofPacketRequest({ action: 'create', teamId, packet: payload, expiresInHours: 24 * 14 });
+  } catch (error) {
+    if (output) output.innerHTML = `<section class="brain-card"><strong>Proof packet was not created.</strong><p style="color:#b91c1c;font-size:12px;margin-top:5px;">${escHtml(error.message || 'Server storage is unavailable.')}</p></section>`;
+    trackSplashLensEvent('service_proof_share_link_failed', { error: String(error.message || error).slice(0, 120) });
+    return;
+  }
+  const url = stored.shareUrl;
+  _lastSecureProofPacket = { proofPacketId: stored.proofPacketId, payload };
+  const message = `SplashLens Service Proof Packet\n${url}\n\nReference only. Verify repairs, part fit, chemical safety, and code requirements with qualified service judgment.`;
   if (output) {
     output.innerHTML = `
       <section class="brain-card" aria-label="Service Proof share link">
@@ -4666,13 +4905,17 @@ function createServiceProofShareLink() {
           </div>
           <span class="brain-pill ${proof.complete ? 'ready' : 'risk'}">${proof.complete ? 'proof ready' : 'needs proof'}</span>
         </div>
-        <p style="color:#334155;font-size:12px;line-height:1.45;margin-bottom:10px;">This creates a customer/senior-tech packet link from this visit. The packet is reference-only and keeps all repair decisions in qualified hands.</p>
+        <p style="color:#334155;font-size:12px;line-height:1.45;margin-bottom:10px;">This server-backed packet expires ${escHtml(String(stored.expiresAt || '').slice(0, 10))} and can be revoked from the verified account. The link contains no customer details.</p>
         <input type="text" readonly value="${escAttr(url)}" onclick="this.select()" style="width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:10px;font-size:12px;margin-bottom:10px;">
         <div class="brain-grid">
-          <button type="button" class="brain-action green" onclick="copyTextToClipboard('${escAttr(message)}','Proof packet link copied.')">Copy link</button>
+          <button type="button" id="rpt-proof-copy-link" class="brain-action green">Copy link</button>
           <a class="brain-action secondary" href="${escAttr(url)}" target="_blank" rel="noopener" style="text-align:center;text-decoration:none;">Open packet</a>
         </div>
+        ${teamId ? `<button type="button" class="brain-action secondary" style="width:100%;margin-top:8px;" onclick="submitLastProofPacketForTeamReview().catch((error)=>window.alert(error.message))">Send to team review</button>` : ''}
       </section>`;
+    document.getElementById('rpt-proof-copy-link')?.addEventListener('click', () => {
+      copyTextToClipboard(message, 'Proof packet link copied.');
+    });
   }
   if (navigator.share) {
     navigator.share({ title: 'SplashLens Service Proof Packet', text: message, url }).catch(() => {});
@@ -4683,14 +4926,24 @@ function createServiceProofShareLink() {
     proof_ready: proof.complete,
     risk: payload.callbackRisk?.level || 'unknown',
     has_customer_summary: Boolean(payload.proof?.customerSummary),
+    server_stored: true,
+    expires_at: stored.expiresAt || '',
   });
 }
 
 function copyTextToClipboard(text, confirmation) {
+  const copied = () => showSplashLensNotice(confirmation || 'Copied.');
+  const fallback = () => openSplashLensSheet({
+    eyebrow: 'Copy',
+    title: 'Copy this text',
+    body: 'Select the field below, copy it, then close this sheet.',
+    fields: [{ name: 'copyText', label: 'Text', value: String(text || ''), maxlength: Math.max(200, String(text || '').length + 20) }],
+    primaryLabel: 'Done',
+  });
   if (navigator.clipboard?.writeText) {
-    navigator.clipboard.writeText(text).then(() => alert(confirmation || 'Copied.')).catch(() => alert(text));
+    navigator.clipboard.writeText(text).then(copied).catch(fallback);
   } else {
-    alert(text);
+    fallback();
   }
 }
 
@@ -5040,10 +5293,17 @@ function resumeReportDraft() {
   trackSplashLensEvent('service_report_draft_resumed', { priority: draft.priority || 'routine' });
 }
 
-function clearReportDraft() {
+async function clearReportDraft() {
   const draft = readReportDraft();
   if (!draft) return;
-  if (!confirm('Clear the saved Service Proof draft from this device?')) return;
+  const confirmed = await openSplashLensSheet({
+    eyebrow: 'Saved draft',
+    title: 'Clear this Service Proof draft?',
+    body: 'This removes the draft from this device. Saved customer history is not changed.',
+    primaryLabel: 'Clear draft',
+    secondaryLabel: 'Keep draft',
+  });
+  if (!confirmed) return;
   localStorage.removeItem(REPORT_DRAFT_KEY);
   renderReportDraftStatus();
   trackSplashLensEvent('service_report_draft_cleared', {});
@@ -5067,7 +5327,11 @@ function saveReportToPoolHistory() {
   if (!ensureFieldSaveAccount('service_report_saved')) return;
 
   const proof = validateReportProof({ quiet: true });
-  if (!proof.complete && !confirm(`Stop proof is incomplete: ${proof.missing.join(', ')}. Save anyway?`)) return;
+  if (!proof.complete) {
+    showSplashLensNotice(`Finish the stop proof before saving: ${proof.missing.join(', ')}.`);
+    trackSplashLensEvent('service_report_save_blocked_incomplete', { missing: proof.missing.join('|') });
+    return;
+  }
 
   const pools = getPools();
   if (!pools.length) {
@@ -5126,7 +5390,10 @@ function saveReportToPoolHistory() {
 
 function copyReport() {
   const proof = validateReportProof({ quiet: true });
-  if (!proof.complete && !confirm(`Stop proof is incomplete: ${proof.missing.join(', ')}. Copy anyway?`)) return;
+  if (!proof.complete) {
+    showSplashLensNotice(`Finish the stop proof before copying: ${proof.missing.join(', ')}.`);
+    return;
+  }
   const text = buildReportText();
   navigator.clipboard.writeText(text).then(() => {
     const el = document.getElementById('rpt-copy-confirm');
@@ -5136,7 +5403,10 @@ function copyReport() {
 
 function shareReport() {
   const proof = validateReportProof({ quiet: true });
-  if (!proof.complete && !confirm(`Stop proof is incomplete: ${proof.missing.join(', ')}. Share anyway?`)) return;
+  if (!proof.complete) {
+    showSplashLensNotice(`Finish the stop proof before sharing: ${proof.missing.join(', ')}.`);
+    return;
+  }
   const text = buildReportText();
   trackSplashLensEvent('service_report_shared', { proof_ready: proof.complete, method: navigator.share ? 'native' : 'clipboard' });
   if (navigator.share) {
@@ -5152,7 +5422,10 @@ function shareReport() {
 
 function printReport() {
   const proof = validateReportProof({ quiet: true });
-  if (!proof.complete && !confirm(`Stop proof is incomplete: ${proof.missing.join(', ')}. Print anyway?`)) return;
+  if (!proof.complete) {
+    showSplashLensNotice(`Finish the stop proof before printing: ${proof.missing.join(', ')}.`);
+    return;
+  }
   const text = buildReportText();
   const safe = text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   const win  = window.open('', '_blank');
@@ -6481,8 +6754,14 @@ function savePool(id) {
 }
 
 // ─── DELETE POOL ──────────────────────────
-function deletePool(id) {
-  if (!confirm('Delete this pool profile and all its history? This cannot be undone.')) return;
+async function deletePool(id) {
+  const confirmed = await confirmSplashLensAction({
+    eyebrow: 'Customer history',
+    title: 'Delete this pool profile?',
+    body: 'All locally saved history for this pool will be removed. This cannot be undone.',
+    primaryLabel: 'Delete profile',
+  });
+  if (!confirmed) return;
   const pools = getPools().filter(x => x.id !== id);
   savePools(pools);
   renderPoolList();
@@ -7196,8 +7475,14 @@ function deleteRouteJob(idx) {
   renderRoute();
 }
 
-function confirmClearRoute() {
-  if (!confirm('Clear all stops from today\'s route?')) return;
+async function confirmClearRoute() {
+  const confirmed = await confirmSplashLensAction({
+    eyebrow: 'Route',
+    title: 'Clear today\'s route?',
+    body: 'Every stop in the current route will be removed from this device.',
+    primaryLabel: 'Clear route',
+  });
+  if (!confirmed) return;
   saveRoute({ date: getTodayStr(), jobs: [] });
   renderRoute();
 }
@@ -7302,11 +7587,19 @@ function infoBox(main, sub) {
 // ═══════════════════════════════════════════
 
 let _scanStream    = null;
+let _scanUploadedFrameReady = false;
 let _scanMode      = 'camera';
 let _scanBrand     = null;   // null = all brands
 let _flashOn       = false;
 let _flashTrack    = null;
 let _lastPartSnapResult = null;
+const PARTSNAP_EVIDENCE_STEPS = [
+  { key: 'equipment', label: 'Full equipment', hint: 'Step back. Show the complete unit and plumbing.' },
+  { key: 'plate', label: 'Data plate', hint: 'Fill the frame with model, serial, voltage, and ratings.' },
+  { key: 'marking', label: 'Close-up marking', hint: 'Capture the molded number, label, casting, or connector.' },
+  { key: 'context', label: 'Context + dimensions', hint: 'Show where it fits with a ruler or written dimensions.' },
+];
+let _partSnapEvidenceSession = createPartSnapEvidenceSession();
 
 const SCAN_LIMIT_FREE = 3;
 const SCAN_USAGE_KEY = 'pl_scans_month';
@@ -7326,6 +7619,178 @@ const ATTRIBUTION_KEY = 'splashlens-attribution-v1';
 const ATTRIBUTION_SESSION_KEY = 'splashlens-attribution-session-v1';
 const IDENTITY_PROFILE_KEY = 'splashlens-identity-profile-v1';
 const IDENTITY_SESSION_KEY = 'splashlens-identity-session-v1';
+
+function createPartSnapEvidenceSession(source = 'initial') {
+  return {
+    source,
+    startedAt: '',
+    captures: {},
+    dimensions: '',
+    dimensionsUnavailable: false,
+    completedAt: '',
+  };
+}
+
+function getPartSnapEvidenceStepIndex() {
+  return PARTSNAP_EVIDENCE_STEPS.findIndex(step => !_partSnapEvidenceSession.captures[step.key]);
+}
+
+function getPartSnapEvidenceSummary() {
+  const capturedKeys = PARTSNAP_EVIDENCE_STEPS
+    .map(step => step.key)
+    .filter(key => Boolean(_partSnapEvidenceSession.captures[key]));
+  return {
+    capturedKeys,
+    captureCount: capturedKeys.length,
+    complete: capturedKeys.length === PARTSNAP_EVIDENCE_STEPS.length,
+    dimensions: _partSnapEvidenceSession.dimensions,
+    dimensionStatus: _partSnapEvidenceSession.dimensions
+      ? 'provided'
+      : _partSnapEvidenceSession.dimensionsUnavailable ? 'unavailable' : 'missing',
+    source: _partSnapEvidenceSession.source,
+  };
+}
+
+function startPartSnapEvidenceSession(source = 'partsnap_open') {
+  _partSnapEvidenceSession = createPartSnapEvidenceSession(source);
+  _partSnapEvidenceSession.startedAt = new Date().toISOString();
+  renderPartSnapEvidenceGuide();
+  trackSplashLensEvent('partsnap_evidence_session_started', { source });
+}
+
+function updatePartSnapDimensions(value = '') {
+  _partSnapEvidenceSession.dimensions = String(value || '').trim().slice(0, 160);
+  if (_partSnapEvidenceSession.dimensions) _partSnapEvidenceSession.dimensionsUnavailable = false;
+}
+
+function markPartSnapDimensionsUnavailable() {
+  _partSnapEvidenceSession.dimensions = '';
+  _partSnapEvidenceSession.dimensionsUnavailable = true;
+  renderPartSnapEvidenceGuide();
+  trackSplashLensEvent('partsnap_dimensions_unavailable', { step: 'context' });
+}
+
+function renderPartSnapEvidenceGuide() {
+  const guide = document.getElementById('partsnap-evidence-guide');
+  if (!guide) return;
+  if (_scanMode !== 'parts') {
+    guide.hidden = true;
+    guide.innerHTML = '';
+    return;
+  }
+  if (!_partSnapEvidenceSession.startedAt) {
+    _partSnapEvidenceSession.startedAt = new Date().toISOString();
+  }
+  guide.hidden = false;
+  const currentIndex = getPartSnapEvidenceStepIndex();
+  const summary = getPartSnapEvidenceSummary();
+  const current = currentIndex >= 0 ? PARTSNAP_EVIDENCE_STEPS[currentIndex] : null;
+  const dimensionValue = escAttr(_partSnapEvidenceSession.dimensions || '');
+  guide.innerHTML = `
+    <div class="partsnap-evidence-head">
+      <div>
+        <p class="partsnap-evidence-kicker">Guided evidence set</p>
+        <p class="partsnap-evidence-title">${current ? `Next: ${escHtml(current.label)}` : 'Four proof views captured'}</p>
+      </div>
+      <button type="button" class="partsnap-evidence-reset" onclick="startPartSnapEvidenceSession('manual_restart')">Restart</button>
+    </div>
+    <div class="partsnap-evidence-grid">
+      ${PARTSNAP_EVIDENCE_STEPS.map((step, index) => {
+        const complete = Boolean(_partSnapEvidenceSession.captures[step.key]);
+        const active = index === currentIndex;
+        return `<div class="partsnap-evidence-step${complete ? ' complete' : active ? ' active' : ''}">
+          <b>${complete ? 'Done' : index + 1}. ${escHtml(step.label)}</b>
+          <span>${complete ? 'Captured' : escHtml(step.hint)}</span>
+        </div>`;
+      }).join('')}
+    </div>
+    <div class="partsnap-dimension-row">
+      <input id="partsnap-dimensions" type="text" value="${dimensionValue}" placeholder="Dimensions or fit notes, e.g. lid OD 8 1/2 in" maxlength="160" oninput="updatePartSnapDimensions(this.value)">
+      <button type="button" onclick="markPartSnapDimensionsUnavailable()">${_partSnapEvidenceSession.dimensionsUnavailable ? 'Dimensions unavailable' : 'No dimension available'}</button>
+    </div>
+    <div class="partsnap-order-hold"><strong>ORDER HOLD:</strong> ${summary.complete ? 'Evidence set captured. Analysis must still match a model/source and current manufacturer diagram.' : `Capture all four views before analysis. ${current ? escHtml(current.hint) : ''}`}</div>`;
+
+  const capBtn = document.getElementById('scan-capture-btn');
+  const status = document.getElementById('scan-camera-status');
+  if (capBtn) capBtn.textContent = current ? `CAPTURE ${current.label.toUpperCase()}` : 'ANALYZE EVIDENCE SET';
+  if (status) status.textContent = current ? current.hint.toUpperCase() : 'EVIDENCE SET READY - TAP ANALYZE';
+}
+
+async function capturePartSnapEvidenceFrame(canvas, result, status) {
+  const currentIndex = getPartSnapEvidenceStepIndex();
+  if (currentIndex < 0) return true;
+  const step = PARTSNAP_EVIDENCE_STEPS[currentIndex];
+  if (step.key === 'context' && !_partSnapEvidenceSession.dimensions && !_partSnapEvidenceSession.dimensionsUnavailable) {
+    if (status) status.textContent = 'ADD DIMENSIONS OR MARK THEM UNAVAILABLE';
+    if (result) result.innerHTML = `<div style="background:#431407;border:1px solid #b45309;border-radius:10px;padding:12px;margin:8px 0;color:#fed7aa;font-size:12px;font-weight:850;line-height:1.45;">Add a dimension or fit note above, or mark dimensions unavailable. An unavailable dimension keeps the final result on order hold.</div>`;
+    trackSplashLensEvent('partsnap_evidence_blocked', { step: step.key, reason: 'dimension_status_missing' });
+    return false;
+  }
+  _partSnapEvidenceSession.captures[step.key] = canvas.toDataURL('image/jpeg', 0.82);
+  trackSplashLensEvent('partsnap_evidence_step_completed', {
+    step: step.key,
+    step_number: currentIndex + 1,
+    capture_count: currentIndex + 1,
+    dimension_status: getPartSnapEvidenceSummary().dimensionStatus,
+  });
+  const summary = getPartSnapEvidenceSummary();
+  if (summary.complete) {
+    _partSnapEvidenceSession.completedAt = new Date().toISOString();
+    trackSplashLensEvent('partsnap_evidence_set_completed', {
+      capture_count: summary.captureCount,
+      dimension_status: summary.dimensionStatus,
+      elapsed_ms: Date.now() - Date.parse(_partSnapEvidenceSession.startedAt),
+    });
+  }
+  renderPartSnapEvidenceGuide();
+  return summary.complete;
+}
+
+function loadPartSnapEvidenceImage(src) {
+  return new Promise((resolve, reject) => {
+    const image = new Image();
+    image.onload = () => resolve(image);
+    image.onerror = reject;
+    image.src = src;
+  });
+}
+
+async function composePartSnapEvidenceSheet(targetCanvas) {
+  const images = await Promise.all(PARTSNAP_EVIDENCE_STEPS.map(step => loadPartSnapEvidenceImage(_partSnapEvidenceSession.captures[step.key])));
+  const width = 1200;
+  const height = 900;
+  const cellWidth = width / 2;
+  const cellHeight = height / 2;
+  const headerHeight = 54;
+  targetCanvas.width = width;
+  targetCanvas.height = height;
+  const ctx = targetCanvas.getContext('2d');
+  ctx.fillStyle = '#0f172a';
+  ctx.fillRect(0, 0, width, height);
+  images.forEach((image, index) => {
+    const x = (index % 2) * cellWidth;
+    const y = Math.floor(index / 2) * cellHeight;
+    const areaHeight = cellHeight - headerHeight;
+    const scale = Math.max(cellWidth / image.width, areaHeight / image.height);
+    const drawWidth = image.width * scale;
+    const drawHeight = image.height * scale;
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(x, y + headerHeight, cellWidth, areaHeight);
+    ctx.clip();
+    ctx.drawImage(image, x + ((cellWidth - drawWidth) / 2), y + headerHeight + ((areaHeight - drawHeight) / 2), drawWidth, drawHeight);
+    ctx.restore();
+    ctx.fillStyle = '#071827';
+    ctx.fillRect(x, y, cellWidth, headerHeight);
+    ctx.fillStyle = '#f8fafc';
+    ctx.font = '700 23px system-ui, sans-serif';
+    const dimensionSuffix = index === 3 && _partSnapEvidenceSession.dimensions ? ` - ${_partSnapEvidenceSession.dimensions}` : '';
+    ctx.fillText(`${index + 1}. ${PARTSNAP_EVIDENCE_STEPS[index].label}${dimensionSuffix}`.slice(0, 48), x + 18, y + 35);
+    ctx.strokeStyle = '#38bdf8';
+    ctx.lineWidth = 3;
+    ctx.strokeRect(x + 1.5, y + 1.5, cellWidth - 3, cellHeight - 3);
+  });
+}
 
 function initScanTab() {
   updateAIStatusBar();
@@ -7404,7 +7869,12 @@ function setScanMode(mode) {
   else              stopCamera();
   if (mode === 'lookup') renderScanBrandFilter();
   if (mode === 'chem')   renderChemCatalogHome();
-  if (mode === 'parts')  renderPartSnapPrimer();
+  if (mode === 'parts') {
+    renderPartSnapEvidenceGuide();
+    renderPartSnapPrimer();
+  } else {
+    renderPartSnapEvidenceGuide();
+  }
   updateAIStatusBar();
 }
 
@@ -7413,13 +7883,42 @@ function openLivePartSnap() {
   setTimeout(() => {
     const result = document.getElementById('scan-result');
     if (result) result.innerHTML = '';
+    startPartSnapEvidenceSession('primary_identify_part');
     setScanMode('parts');
     trackSplashLensEvent('first_action_started', {
       role: getSplashLensRole(),
       action: 'Use real PartSnap',
       workflow_style: getWorkflowStyle(),
     });
+    requestAnimationFrame(() => {
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+      window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+      document.getElementById('partsnap-evidence-guide')?.scrollIntoView({ block: 'start', inline: 'nearest', behavior: 'auto' });
+    });
   }, 80);
+}
+
+function openFieldCodeLookup() {
+  showTab('scan');
+  setTimeout(() => {
+    setScanMode('lookup');
+    document.getElementById('scan-code-input')?.focus();
+    trackSplashLensEvent('first_action_started', {
+      role: getSplashLensRole(),
+      action: 'Look Up Code',
+      workflow_style: getWorkflowStyle(),
+    });
+  }, 80);
+}
+
+function openFieldProofPacket() {
+  trackSplashLensEvent('first_action_started', {
+    role: getSplashLensRole(),
+    action: 'Build Proof Packet',
+    workflow_style: getWorkflowStyle(),
+  });
+  startServiceProofWorkflow('part');
 }
 
 function renderCounterSamplePacket() {
@@ -7491,12 +7990,12 @@ function renderPartSnapPrimer() {
   result.innerHTML = `
     <div style="margin:12px 0 16px;background:linear-gradient(135deg,#062b2f,#0f172a);border:1px solid #0f766e;border-radius:14px;padding:14px;border-left:4px solid #14b8a6;">
       <p style="color:#5eead4;font-size:10px;font-weight:950;letter-spacing:.12em;text-transform:uppercase;margin-bottom:6px;">PartSnap AI Service</p>
-      <p style="color:#f8fafc;font-size:18px;font-weight:950;line-height:1.1;margin-bottom:8px;">Shoot the part, then shoot the label.</p>
+      <p style="color:#f8fafc;font-size:18px;font-weight:950;line-height:1.1;margin-bottom:8px;">Capture the evidence set before analysis.</p>
       <div style="display:grid;grid-template-columns:repeat(4,minmax(76px,1fr));gap:7px;overflow-x:auto;-webkit-overflow-scrolling:touch;">
-        <div style="background:#042f2e;border:1px solid #0f766e;border-radius:9px;padding:9px;min-height:66px;"><b style="display:block;color:#ccfbf1;font-size:12px;">1. Part</b><span style="display:block;color:#99f6e4;font-size:10px;font-weight:800;margin-top:6px;">close + lit</span></div>
-        <div style="background:#111827;border:1px solid #334155;border-radius:9px;padding:9px;min-height:66px;"><b style="display:block;color:#e2e8f0;font-size:12px;">2. Label</b><span style="display:block;color:#94a3b8;font-size:10px;font-weight:800;margin-top:6px;">model proof</span></div>
-        <div style="background:#431407;border:1px solid #b45309;border-radius:9px;padding:9px;min-height:66px;"><b style="display:block;color:#fed7aa;font-size:12px;">3. Verify</b><span style="display:block;color:#fdba74;font-size:10px;font-weight:800;margin-top:6px;">before buy</span></div>
-        <div style="background:#082f49;border:1px solid #0369a1;border-radius:9px;padding:9px;min-height:66px;"><b style="display:block;color:#bae6fd;font-size:12px;">4. Packet</b><span style="display:block;color:#7dd3fc;font-size:10px;font-weight:800;margin-top:6px;">send / save</span></div>
+        <div style="background:#042f2e;border:1px solid #0f766e;border-radius:9px;padding:9px;min-height:66px;"><b style="display:block;color:#ccfbf1;font-size:12px;">1. Equipment</b><span style="display:block;color:#99f6e4;font-size:10px;font-weight:800;margin-top:6px;">full unit</span></div>
+        <div style="background:#111827;border:1px solid #334155;border-radius:9px;padding:9px;min-height:66px;"><b style="display:block;color:#e2e8f0;font-size:12px;">2. Data plate</b><span style="display:block;color:#94a3b8;font-size:10px;font-weight:800;margin-top:6px;">model + serial</span></div>
+        <div style="background:#431407;border:1px solid #b45309;border-radius:9px;padding:9px;min-height:66px;"><b style="display:block;color:#fed7aa;font-size:12px;">3. Marking</b><span style="display:block;color:#fdba74;font-size:10px;font-weight:800;margin-top:6px;">close + lit</span></div>
+        <div style="background:#082f49;border:1px solid #0369a1;border-radius:9px;padding:9px;min-height:66px;"><b style="display:block;color:#bae6fd;font-size:12px;">4. Context</b><span style="display:block;color:#7dd3fc;font-size:10px;font-weight:800;margin-top:6px;">fit + dimensions</span></div>
       </div>
       ${renderPartSnapFieldStopSummary()}
       ${renderPartSnapReviewTicketSummary()}
@@ -7574,8 +8073,14 @@ function assignPartSnapFieldStop(id) {
   savePartSnapToPool();
 }
 
-function deletePartSnapFieldStop(id) {
-  if (!window.confirm('Delete this saved field stop from this device?')) return;
+async function deletePartSnapFieldStop(id) {
+  const confirmed = await confirmSplashLensAction({
+    eyebrow: 'Saved field stop',
+    title: 'Delete this saved stop?',
+    body: 'The captured evidence and local stop record will be removed from this device.',
+    primaryLabel: 'Delete stop',
+  });
+  if (!confirmed) return;
   const stops = getPartSnapFieldStops().filter((item) => item.id !== id);
   localStorage.setItem('splashlens-partsnap-field-stops', JSON.stringify(stops));
   trackSplashLensEvent('partsnap_field_stop_deleted', { remaining_count: stops.length });
@@ -7586,10 +8091,74 @@ function deletePartSnapFieldStop(id) {
 
 function revealNoCameraFallback(noCam, vWrap) {
   if (vWrap) vWrap.style.display = 'none';
+  const controls = document.getElementById('scan-camera-controls');
+  if (controls) controls.style.display = 'none';
   if (!noCam) return;
   noCam.style.display = 'block';
+  const status = document.getElementById('scan-camera-status');
+  if (status) status.textContent = 'CAMERA UNAVAILABLE - RETRY OR UPLOAD A PHOTO';
   noCam.style.scrollMarginBottom = 'calc(184px + env(safe-area-inset-bottom))';
-  setTimeout(() => noCam.scrollIntoView({ block: 'nearest', behavior: 'smooth' }), 60);
+  setTimeout(() => {
+    if (_scanMode === 'parts') {
+      document.getElementById('partsnap-evidence-guide')?.scrollIntoView({ block: 'start', inline: 'nearest', behavior: 'auto' });
+      return;
+    }
+    noCam.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  }, 60);
+}
+
+function retryCameraAccess() {
+  const noCam = document.getElementById('scan-no-camera');
+  const vWrap = document.getElementById('scan-viewfinder-wrap');
+  const controls = document.getElementById('scan-camera-controls');
+  if (noCam) noCam.style.display = 'none';
+  if (vWrap) vWrap.style.display = 'block';
+  if (controls) controls.style.display = 'flex';
+  trackSplashLensEvent('scanner_camera_retry_clicked', { mode: _scanMode });
+  startCamera();
+}
+
+function showSplashLensCameraSettingsHelp() {
+  trackSplashLensEvent('scanner_camera_settings_help_opened', { mode: _scanMode });
+  showSplashLensNotice('Open this device Settings, allow Camera access for SplashLens or your browser, then return and tap Retry Camera.');
+}
+
+async function analyzeUploadedScanPhoto(input) {
+  const file = input?.files?.[0];
+  if (input) input.value = '';
+  if (!file) return;
+  if (!String(file.type || '').startsWith('image/') || file.size > 10 * 1024 * 1024) {
+    showSplashLensNotice('Choose a JPG, PNG, HEIC, or WebP photo under 10 MB.');
+    trackSplashLensEvent('scanner_photo_upload_rejected', { mode: _scanMode, size: Number(file.size || 0), type: String(file.type || '').slice(0, 60) });
+    return;
+  }
+  const canvas = document.getElementById('scan-canvas');
+  const status = document.getElementById('scan-camera-status');
+  if (!canvas) return;
+  const objectUrl = URL.createObjectURL(file);
+  try {
+    const image = new Image();
+    await new Promise((resolve, reject) => {
+      image.onload = resolve;
+      image.onerror = reject;
+      image.src = objectUrl;
+    });
+    const maxDimension = 1600;
+    const scale = Math.min(1, maxDimension / Math.max(image.naturalWidth || 1, image.naturalHeight || 1));
+    canvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
+    canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
+    canvas.getContext('2d').drawImage(image, 0, 0, canvas.width, canvas.height);
+    _scanUploadedFrameReady = true;
+    if (status) status.textContent = 'PHOTO LOADED - CHECKING EVIDENCE';
+    trackSplashLensEvent('scanner_photo_uploaded', { mode: _scanMode, width: canvas.width, height: canvas.height, size: file.size });
+    await captureAndAnalyze();
+  } catch {
+    _scanUploadedFrameReady = false;
+    showSplashLensNotice('SplashLens could not read that photo. Try a JPG, PNG, HEIC, or WebP image.');
+    trackSplashLensEvent('scanner_photo_upload_failed', { mode: _scanMode, type: String(file.type || '').slice(0, 60) });
+  } finally {
+    URL.revokeObjectURL(objectUrl);
+  }
 }
 
 function getPartSnapReviewTickets() {
@@ -7651,6 +8220,7 @@ function startCamera() {
   const vWrap  = document.getElementById('scan-viewfinder-wrap');
   if (!video) return;
   if (!navigator.mediaDevices?.getUserMedia) {
+    trackSplashLensEvent('scanner_camera_unavailable', { mode: _scanMode, reason: 'media_devices_unsupported' });
     revealNoCameraFallback(noCam, vWrap);
     return;
   }
@@ -7668,8 +8238,15 @@ function startCamera() {
       video.srcObject = stream;
       if (vWrap)  vWrap.style.display = 'block';
       if (noCam)  noCam.style.display = 'none';
+      const controls = document.getElementById('scan-camera-controls');
+      if (controls) controls.style.display = 'flex';
+      trackSplashLensEvent('scanner_camera_ready', { mode: _scanMode });
     })
-    .catch(() => {
+    .catch((error) => {
+      trackSplashLensEvent('scanner_camera_denied', {
+        mode: _scanMode,
+        reason: error?.name || 'camera_request_failed',
+      });
       revealNoCameraFallback(noCam, vWrap);
     });
 }
@@ -7705,24 +8282,25 @@ async function captureAndAnalyze() {
   const result = document.getElementById('scan-result');
   if (!video || !canvas) return;
 
-  canvas.width  = video.videoWidth  || 640;
-  canvas.height = video.videoHeight || 360;
-  canvas.getContext('2d').drawImage(video, 0, 0);
+  if (_scanUploadedFrameReady) {
+    _scanUploadedFrameReady = false;
+  } else {
+    if (!video.videoWidth || !video.videoHeight) {
+      if (status) status.textContent = 'CAMERA IS NOT READY - RETRY OR UPLOAD A PHOTO';
+      trackSplashLensEvent('scanner_capture_blocked_no_frame', { mode: _scanMode });
+      return;
+    }
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    canvas.getContext('2d').drawImage(video, 0, 0);
+  }
 
   const isPartsScan  = _scanMode === 'parts';
   const isStripScan  = _scanMode === 'strip';
 
-  if (status) status.textContent = navigator.onLine ? 'AI ANALYZING…' : 'SCANNING…';
-
-  // AI-first path: call CF Worker when online
-  if (navigator.onLine) {
-    const aiMode = isPartsScan ? 'parts_snap' : isStripScan ? 'test_strip' : 'error_code';
-    if (!(await ensureFreeScanProfile(aiMode, result, status))) return;
-    if (!canUseAIScan()) {
-      showScanLimitModal(result, status);
-      return;
-    }
-    if (isPartsScan) {
+  if (isPartsScan) {
+    const evidenceBeforeCapture = getPartSnapEvidenceSummary();
+    if (!evidenceBeforeCapture.complete) {
       const preflight = inspectPartSnapImage(canvas);
       if (preflight.block) {
         showPartSnapImagePreflight(preflight, result, status);
@@ -7736,9 +8314,31 @@ async function captureAndAnalyze() {
           edge_score: preflight.edgeScore,
           width: preflight.width,
           height: preflight.height,
+          evidence_step: PARTSNAP_EVIDENCE_STEPS[getPartSnapEvidenceStepIndex()]?.key || 'complete',
           recovery: getPartSnapRecoveryContext()?.active || false,
         });
       }
+      const evidenceReady = await capturePartSnapEvidenceFrame(canvas, result, status);
+      if (!evidenceReady) return;
+    }
+    try {
+      await composePartSnapEvidenceSheet(canvas);
+    } catch {
+      trackSplashLensEvent('partsnap_evidence_compose_failed', { capture_count: getPartSnapEvidenceSummary().captureCount });
+      if (status) status.textContent = 'EVIDENCE SET COULD NOT BE COMBINED - RETRY';
+      return;
+    }
+  }
+
+  if (status) status.textContent = navigator.onLine ? (isPartsScan ? 'AI ANALYZING EVIDENCE SET...' : 'AI ANALYZING...') : 'SCANNING...';
+
+  // AI-first path: call CF Worker when online
+  if (navigator.onLine) {
+    const aiMode = isPartsScan ? 'parts_snap' : isStripScan ? 'test_strip' : 'error_code';
+    if (!(await ensureFreeScanProfile(aiMode, result, status))) return;
+    if (!canUseAIScan()) {
+      showScanLimitModal(result, status);
+      return;
     }
     callAIScan(canvas, aiMode, result, status);
     return;
@@ -8309,7 +8909,7 @@ function shareFieldResult(audience = 'tech') {
   if (navigator.share) {
     navigator.share({ title: 'Try SplashLens in the field', text, url: url.toString() }).catch(() => {});
   } else {
-    navigator.clipboard?.writeText(text).then(() => alert(`Link copied for ${labels[audience] || 'another tech'}.`)).catch(() => prompt('Copy this SplashLens link:', url.toString()));
+    copyTextToClipboard(text, `Link copied for ${labels[audience] || 'another tech'}.`);
   }
   document.getElementById('field-referral-prompt')?.remove();
 }
@@ -8888,6 +9488,7 @@ async function callAIScan(canvas, mode, result, status) {
         identity_source: identity.identity_source || (fieldProfile.email ? 'free_scan_profile' : ''),
         identity_confidence: identity.identity_confidence || (fieldProfile.email ? 'provided-email' : ''),
         partSnapRecovery,
+        partSnapEvidence: mode === 'parts_snap' ? getPartSnapEvidenceSummary() : null,
       })),
     });
     const payload = await res.json().catch(() => ({}));
@@ -8941,7 +9542,10 @@ async function callAIScan(canvas, mode, result, status) {
     recordAIScan(mode, serverUsage);
 
     if (mode === 'parts_snap') {
-      renderPartsSnapResult(aiResult, result, status);
+      renderPartsSnapResult({
+        ...(aiResult || {}),
+        guidedEvidence: getPartSnapEvidenceSummary(),
+      }, result, status);
       return;
     }
     if (mode === 'test_strip') {
@@ -9075,6 +9679,50 @@ function isPartSnapRecoveryImproved(ai = {}, candidates = [], visibleEvidence = 
     missingProof.length <= 1;
 }
 
+function getPartSnapOrderGate(ai = {}, candidates = [], ladder = {}, risk = {}, missingProof = []) {
+  const guided = ai.guidedEvidence || {};
+  const completeCapture = guided.complete === true && Number(guided.captureCount || 0) === PARTSNAP_EVIDENCE_STEPS.length;
+  const dimensionsProvided = guided.dimensionStatus === 'provided';
+  const sourceBacked = candidates.length > 0;
+  const identifierProof = Boolean(ai.manufacturer && (ai.model || ai.partNumber));
+  const noMissingProof = missingProof.length === 0 && (ladder.missing || []).length === 0;
+  const lowRisk = risk.level === 'low';
+  const reasons = [];
+  if (!completeCapture) reasons.push('complete four-view evidence set');
+  if (!dimensionsProvided) reasons.push('record dimensions or fit measurements');
+  if (!identifierProof) reasons.push('confirm manufacturer plus model or part number');
+  if (!sourceBacked) reasons.push('match a source-backed equipment family');
+  if (!noMissingProof) reasons.push('resolve the listed missing proof');
+  if (!lowRisk) reasons.push('clear callback or safety risk');
+  return {
+    verificationReady: completeCapture && dimensionsProvided && identifierProof && sourceBacked && noMissingProof && lowRisk,
+    completeCapture,
+    dimensionsProvided,
+    sourceBacked,
+    identifierProof,
+    noMissingProof,
+    lowRisk,
+    reasons,
+  };
+}
+
+function renderPartSnapOrderGate(gate = {}) {
+  if (gate.verificationReady) {
+    return `
+      <div style="background:#052e2b;border:2px solid #14b8a6;border-radius:10px;padding:12px;margin:10px 0;">
+        <p style="color:#5eead4;font-size:10px;font-weight:950;letter-spacing:.08em;text-transform:uppercase;margin-bottom:5px;">Verification ready</p>
+        <p style="color:#f0fdfa;font-size:13px;font-weight:950;line-height:1.3;margin-bottom:4px;">The evidence set, identifiers, source family, and risk checks agree.</p>
+        <p style="color:#99f6e4;font-size:11px;line-height:1.45;">Still confirm exact fitment against the current manufacturer parts diagram and supplier record before ordering.</p>
+      </div>`;
+  }
+  return `
+    <div style="background:#431407;border:2px solid #f97316;border-radius:10px;padding:12px;margin:10px 0;">
+      <p style="color:#fdba74;font-size:10px;font-weight:950;letter-spacing:.08em;text-transform:uppercase;margin-bottom:5px;">ORDER HOLD</p>
+      <p style="color:#fff7ed;font-size:13px;font-weight:950;line-height:1.3;margin-bottom:6px;">This result is not ready for a parts order.</p>
+      <p style="color:#fed7aa;font-size:11px;line-height:1.45;">Need: ${escHtml((gate.reasons || ['current manufacturer verification']).join('; '))}. Save or share the packet for review without claiming fitment.</p>
+    </div>`;
+}
+
 function renderPartsSnapResult(ai, result, status) {
   if (!result) return;
   _lastPartSnapResult = ai || {};
@@ -9091,7 +9739,8 @@ function renderPartsSnapResult(ai, result, status) {
 
   const ladder = partConfidenceLadder(confidence, partNumber, manufacturer, model, component);
   const risk = partSnapCallbackRisk(_lastPartSnapResult, ladder, visibleEvidence, missingProof);
-  const buyLinks = ladder.allowLinks ? renderPartBuyLinks(searchTerms, partNumber, manufacturer, component) : '';
+  const orderGate = getPartSnapOrderGate(_lastPartSnapResult, corpusCandidates, ladder, risk, missingProof);
+  const buyLinks = orderGate.verificationReady ? renderPartBuyLinks(searchTerms, partNumber, manufacturer, component) : '';
   const showGuidedRetry = shouldShowPartSnapGuidedRetry(_lastPartSnapResult, corpusCandidates, ladder, risk, visibleEvidence, missingProof);
   const recoveryBefore = getPartSnapRecoveryContext();
 
@@ -9117,7 +9766,19 @@ function renderPartsSnapResult(ai, result, status) {
     corpus_top_match_level: corpusCandidates[0]?.matchLevel || '',
     proof_visible: compactPartSnapList(visibleEvidence),
     proof_missing: compactPartSnapList(missingProof.length ? missingProof : ladder.missing),
+    guided_capture_count: _lastPartSnapResult.guidedEvidence?.captureCount || 0,
+    dimension_status: _lastPartSnapResult.guidedEvidence?.dimensionStatus || 'missing',
+    verification_ready: orderGate.verificationReady,
     result_summary: [manufacturer, component, model || partNumber].filter(Boolean).join(' / ') || 'Unknown PartSnap result',
+  });
+  trackSplashLensEvent('partsnap_verification_gate_evaluated', {
+    verification_ready: orderGate.verificationReady,
+    complete_capture: orderGate.completeCapture,
+    dimension_status: _lastPartSnapResult.guidedEvidence?.dimensionStatus || 'missing',
+    source_backed: orderGate.sourceBacked,
+    identifier_proof: orderGate.identifierProof,
+    low_risk: orderGate.lowRisk,
+    hold_reasons: orderGate.reasons.join('|'),
   });
   if (showGuidedRetry) {
     const recovery = savePartSnapRecoveryContext({
@@ -9185,12 +9846,13 @@ function renderPartsSnapResult(ai, result, status) {
       ` : ''}
       ${replacementNotes ? `<p style="color:#fbbf24;font-size:12px;font-weight:600;margin-bottom:10px;">⚠ ${replacementNotes}</p>` : ''}
       ${verificationNotes ? `<p style="color:#fbbf24;font-size:12px;font-weight:600;margin-bottom:10px;">Check: ${verificationNotes}</p>` : ''}
+      ${renderPartSnapOrderGate(orderGate)}
       ${showGuidedRetry ? renderPartSnapGuidedRetry(_lastPartSnapResult, ladder, risk, missingProof) : ''}
       ${renderPartSnapFastWorkflow(_lastPartSnapResult, corpusCandidates, ladder, missingProof)}
       ${renderPartSnapFeedbackTrap(_lastPartSnapResult, corpusCandidates, ladder, missingProof, risk)}
       ${renderPartSnapResultUpgradeOffer('partsnap_result')}
       ${renderPartSnapPrimaryAction(risk, missingProof.length ? missingProof : ladder.missing)}
-      ${renderPartSnapProofSnapshot(ladder, risk, visibleEvidence, missingProof)}
+      ${renderPartSnapProofSnapshot(ladder, risk, visibleEvidence, missingProof, orderGate)}
       ${renderPartConfidenceLadder(ladder)}
       ${renderPartEvidencePanel(visibleEvidence, missingProof)}
       ${renderPartSnapCorpusPanel(corpusCandidates, corpusStatus)}
@@ -9206,7 +9868,7 @@ function renderPartsSnapResult(ai, result, status) {
         </div>
       ` : ''}
       ${buyLinks}
-      ${!ladder.allowLinks ? `<div style="margin-top:12px;background:#0f172a;border:1px solid #334155;border-radius:8px;padding:10px;"><p style="color:#fbbf24;font-size:12px;font-weight:900;margin-bottom:4px;">Hold buying links until proof improves</p><p style="color:#94a3b8;font-size:11px;line-height:1.45;">Need: ${ladder.missing.map(escHtml).join(', ')}.</p></div>` : ''}
+      ${!orderGate.verificationReady ? `<div style="margin-top:12px;background:#0f172a;border:1px solid #334155;border-radius:8px;padding:10px;"><p style="color:#fbbf24;font-size:12px;font-weight:900;margin-bottom:4px;">Buying links are locked</p><p style="color:#94a3b8;font-size:11px;line-height:1.45;">Need: ${orderGate.reasons.map(escHtml).join(', ')}.</p></div>` : ''}
       ${ai.escalationSummary ? `<div style="margin-top:12px;background:#020617;border:1px solid #334155;border-radius:10px;padding:11px;"><p style="color:#94a3b8;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px;">Escalation packet</p><p style="color:#e2e8f0;font-size:12px;line-height:1.45;">${escHtml(ai.escalationSummary)}</p></div>` : ''}
       <p style="color:#94a3b8;font-size:11px;line-height:1.45;margin-top:10px;">Reference only. Confirm model, dimensions, and the current manufacturer parts diagram before ordering.</p>
       ${low && !showGuidedRetry ? `<p style="color:#64748b;font-size:12px;margin-top:12px;text-align:center;">Try getting closer, better lighting, or a different angle</p>` : ''}
@@ -9218,7 +9880,7 @@ function renderPartsSnapResult(ai, result, status) {
       <button onclick="renderMysteryPartForm()" style="background:#431407;color:#fed7aa;border:1px solid #b45309;border-radius:10px;padding:11px 8px;font-size:12px;font-weight:900;cursor:pointer;">Mystery Lab</button>
       <button onclick="copyPartSnapEscalation()" style="background:#0f172a;color:#7dd3fc;border:1px solid #334155;border-radius:10px;padding:10px 8px;font-size:12px;font-weight:900;cursor:pointer;">Copy Text</button>
       <button onclick="requestPartSnapSecondProof()" style="background:#0f172a;color:#7dd3fc;border:1px solid #334155;border-radius:10px;padding:10px 8px;font-size:12px;font-weight:900;cursor:pointer;">Second Proof Photo</button>
-      <button onclick="document.getElementById('scan-result').innerHTML='';renderPartSnapPrimer();setScanMode('parts')" style="grid-column:1 / -1;background:#0f172a;color:#7dd3fc;border:1px solid #334155;border-radius:10px;padding:10px 20px;font-size:13px;cursor:pointer;">Scan Another Part or Label</button>
+      <button onclick="document.getElementById('scan-result').innerHTML='';startPartSnapEvidenceSession('scan_another');renderPartSnapPrimer();setScanMode('parts')" style="grid-column:1 / -1;background:#0f172a;color:#7dd3fc;border:1px solid #334155;border-radius:10px;padding:10px 20px;font-size:13px;cursor:pointer;">Start New Evidence Set</button>
     </div>
     <div id="partsnap-feedback-panel"></div>
   `;
@@ -9338,7 +10000,7 @@ function renderPartSnapGuidedRetry(ai = {}, ladder = {}, risk = {}, missingProof
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
         <button onclick="requestPartSnapSecondProof()" style="background:#ea580c;color:#fff;border:0;border-radius:9px;padding:12px 9px;font-size:12px;font-weight:950;cursor:pointer;">Add proof photo</button>
-        <button onclick="document.getElementById('scan-result').innerHTML='';setScanMode('parts')" style="background:#0f172a;color:#fed7aa;border:1px solid #92400e;border-radius:9px;padding:12px 9px;font-size:12px;font-weight:950;cursor:pointer;">Run PartSnap again</button>
+        <button onclick="document.getElementById('scan-result').innerHTML='';startPartSnapEvidenceSession('guided_retry');setScanMode('parts')" style="background:#0f172a;color:#fed7aa;border:1px solid #92400e;border-radius:9px;padding:12px 9px;font-size:12px;font-weight:950;cursor:pointer;">Run PartSnap again</button>
       </div>
     </div>`;
 }
@@ -9451,10 +10113,10 @@ function trackPostValueUpgrade(plan, placement = 'partsnap_result') {
   trackSplashLensEvent('upgrade_click', { plan, feature: 'unlimited_partsnap', placement });
 }
 
-function renderPartSnapProofSnapshot(ladder = {}, risk = {}, visibleEvidence = [], missingProof = []) {
+function renderPartSnapProofSnapshot(ladder = {}, risk = {}, visibleEvidence = [], missingProof = [], orderGate = {}) {
   const proofCount = visibleEvidence.length;
   const missingCount = missingProof.length || (ladder.missing || []).length;
-  const packetState = missingCount ? 'Needs proof' : 'Packet ready';
+  const packetState = orderGate.verificationReady ? 'Review ready' : 'Needs proof';
   return `
     <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin:10px 0;">
       <div style="background:#ecfeff;border:1px solid #67e8f9;border-radius:8px;padding:9px;">
@@ -10042,12 +10704,13 @@ function requestPartSnapSecondProof() {
   });
   const result = document.getElementById('scan-result');
   const status = document.getElementById('scan-camera-status');
+  startPartSnapEvidenceSession('second_proof_request');
   if (status) status.textContent = 'SECOND PROOF: CAPTURE LABEL, MODEL PLATE, OR PART NUMBER';
   if (result) result.innerHTML = `
     <div style="background:#0f172a;border:1px solid #334155;border-radius:12px;padding:14px;margin:8px 0;text-align:center;">
       <p style="color:#e2e8f0;font-size:14px;font-weight:900;margin-bottom:6px;">Second proof photo</p>
       <p style="color:#94a3b8;font-size:12px;line-height:1.45;margin-bottom:10px;">Get the label, model plate, casting number, wiring label, or a wider shot that shows where the part lives.</p>
-      <button onclick="setScanMode('parts')" style="background:#0f766e;color:#fff;border:none;border-radius:10px;padding:10px 18px;font-size:12px;font-weight:900;cursor:pointer;">Capture Second Proof</button>
+      <button onclick="setScanMode('parts')" style="background:#0f766e;color:#fff;border:none;border-radius:10px;padding:10px 18px;font-size:12px;font-weight:900;cursor:pointer;">Capture Guided Evidence Set</button>
     </div>`;
   trackSplashLensEvent('partsnap_second_proof_requested', {
     proof_request_id: proofRequestId,

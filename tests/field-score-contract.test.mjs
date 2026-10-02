@@ -108,7 +108,8 @@ test('foldable and compact tablet screens get a deliberate field layout', () => 
   assert.match(html, /--foldable-pane-gap/);
   assert.match(html, /horizontal-viewport-segments:\s*2/);
   assert.match(html, /viewport-segment-width 0 0/);
-  assert.match(html, /\.tab-panel\.active:not\(#tab-scan\)\s*\{\s*display:grid/);
+  assert.match(html, /#tab-errors\.active\s*\{\s*display:grid/);
+  assert.doesNotMatch(html, /\.tab-panel\.active:not\(#tab-scan\)\s*\{\s*display:grid/);
   assert.match(html, /min-width:\s*760px\)[\s\S]*pointer:\s*coarse/);
   assert.match(html, /nav\[aria-label="SplashLens field tools"\]/);
   assert.match(html, /max-width:\s*430px/);

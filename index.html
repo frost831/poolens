@@ -163,7 +163,13 @@
     .proof-status-chip { background:rgba(255,255,255,.1); border:1px solid rgba(226,232,240,.18); border-radius:9px; padding:8px; color:#e2e8f0; font-size:10px; font-weight:900; line-height:1.25; text-align:center; }
     .proof-status-chip.ready { background:rgba(20,184,166,.18); border-color:rgba(94,234,212,.38); color:#ccfbf1; }
     @media (max-width:720px){ .proof-command-grid{grid-template-columns:1fr 1fr;} }
-    @media (max-width:560px){ .proof-command-grid,.proof-status-row{grid-template-columns:1fr 1fr;} }
+    @media (max-width:560px){
+      .proof-command-grid,.proof-status-row{grid-template-columns:1fr 1fr;}
+      .field-workflow{grid-template-columns:1fr;}
+      .workflow-chip{min-height:84px;}
+      .partsnap-evidence-grid{grid-template-columns:1fr 1fr;}
+      .partsnap-dimension-row{grid-template-columns:1fr;}
+    }
 
     /* Buttons */
     .btn-calc { background: linear-gradient(135deg, var(--field-blue-bright) 0%, var(--field-blue) 100%); color: white; border: none; border-radius: var(--field-radius); padding: 14px; font-weight: 800; font-size: 15px; width: 100%; cursor: pointer; letter-spacing: 0.03em; transition: all 0.15s; -webkit-tap-highlight-color: transparent; }
@@ -174,8 +180,8 @@
     .rescue-kicker { color: #7dd3fc; font-size: 10px; font-weight: 900; letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 7px; }
     .rescue-title { color: #ffffff; font-size: 24px; line-height: 1.05; font-weight: 900; margin-bottom: 7px; letter-spacing: 0; }
     .rescue-sub { color: #cbd5e1; font-size: 13px; line-height: 1.35; margin-bottom: 12px; max-width: 42rem; }
-    .field-workflow { display:grid; grid-template-columns:repeat(5, minmax(92px,1fr)); gap:8px; overflow-x:auto; padding-bottom:2px; -webkit-overflow-scrolling:touch; scrollbar-width:none; }
-    .workflow-chip { min-height:82px; border:1px solid #bae6fd; border-radius:10px; background:#ffffff; color:#0f172a; padding:10px; text-align:left; cursor:pointer; box-shadow:var(--field-shadow-tight); display:flex; flex-direction:column; justify-content:space-between; -webkit-tap-highlight-color:transparent; }
+    .field-workflow { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:9px; }
+    .workflow-chip { min-height:104px; border:1px solid #bae6fd; border-radius:10px; background:#ffffff; color:#0f172a; padding:12px; text-align:left; cursor:pointer; box-shadow:var(--field-shadow-tight); display:flex; flex-direction:column; justify-content:space-between; -webkit-tap-highlight-color:transparent; }
     .workflow-chip:active { transform:scale(.98); }
     .workflow-chip.partsnap { background:#0f766e; color:#ffffff; border-color:#5eead4; }
     .workflow-chip.primary { background:#0369a1; color:#ffffff; border-color:#7dd3fc; }
@@ -185,6 +191,29 @@
     .workflow-chip span { display:block; color:#64748b; font-size:10px; line-height:1.2; font-weight:800; margin-top:4px; }
     .workflow-chip.partsnap span { color:#ccfbf1; }
     .workflow-chip.primary span { color:#e0f2fe; }
+    .workflow-chip.proof { background:#f8fafc; border-color:#cbd5e1; }
+    .field-tool-drawer { margin-bottom:12px; border:1px solid #cbd5e1; border-radius:10px; background:#ffffff; box-shadow:var(--field-shadow-tight); overflow:hidden; }
+    .field-tool-drawer > summary { min-height:52px; display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 14px; cursor:pointer; color:#0f172a; font-size:13px; font-weight:950; list-style:none; }
+    .field-tool-drawer > summary::-webkit-details-marker { display:none; }
+    .field-tool-drawer > summary::after { content:'+'; display:grid; place-items:center; width:28px; height:28px; border-radius:7px; background:#e0f2fe; color:#0369a1; font-size:18px; line-height:1; }
+    .field-tool-drawer[open] > summary::after { content:'-'; }
+    .field-tool-drawer-copy { display:block; color:#64748b; font-size:10px; font-weight:750; line-height:1.3; margin-top:3px; }
+    .field-tool-drawer-body { border-top:1px solid #e2e8f0; padding:12px; background:#f8fafc; }
+    .partsnap-evidence-guide { padding:12px 14px; background:#071827; border-bottom:1px solid #334155; scroll-margin-top:8px; }
+    .partsnap-evidence-head { display:flex; justify-content:space-between; gap:10px; align-items:flex-start; margin-bottom:9px; }
+    .partsnap-evidence-kicker { color:#5eead4; font-size:10px; font-weight:950; letter-spacing:.1em; text-transform:uppercase; }
+    .partsnap-evidence-title { color:#f8fafc; font-size:15px; line-height:1.2; font-weight:950; margin-top:3px; }
+    .partsnap-evidence-reset { border:1px solid #475569; background:#1e293b; color:#cbd5e1; border-radius:8px; padding:7px 9px; font-size:10px; font-weight:900; cursor:pointer; }
+    .partsnap-evidence-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:6px; }
+    .partsnap-evidence-step { min-height:66px; border:1px solid #334155; border-radius:8px; background:#111827; padding:8px; color:#94a3b8; }
+    .partsnap-evidence-step.active { border-color:#38bdf8; background:#082f49; color:#e0f2fe; }
+    .partsnap-evidence-step.complete { border-color:#14b8a6; background:#042f2e; color:#ccfbf1; }
+    .partsnap-evidence-step b { display:block; font-size:11px; line-height:1.15; }
+    .partsnap-evidence-step span { display:block; margin-top:5px; font-size:9px; line-height:1.25; font-weight:750; }
+    .partsnap-dimension-row { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:7px; margin-top:9px; }
+    .partsnap-dimension-row input { min-height:42px; background:#111827; border-color:#475569; color:#f8fafc; font-size:13px; }
+    .partsnap-dimension-row button { min-height:42px; border:1px solid #475569; border-radius:8px; background:#1e293b; color:#cbd5e1; padding:8px 10px; font-size:10px; font-weight:900; cursor:pointer; }
+    .partsnap-order-hold { margin-top:9px; border:1px solid #b45309; border-radius:8px; background:#431407; color:#fed7aa; padding:8px 10px; font-size:10px; font-weight:850; line-height:1.4; }
     .rescue-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
     .rescue-action { background: #ffffff; color: #0f172a; border: 1px solid #bae6fd; border-radius: var(--field-radius); padding: 10px; min-height: 74px; cursor: pointer; text-align: left; display: flex; flex-direction: column; justify-content: space-between; -webkit-tap-highlight-color: transparent; box-shadow: var(--field-shadow-tight); }
     .rescue-action strong { display: block; font-size: 14px; line-height: 1.15; font-weight: 900; letter-spacing: 0; }
@@ -316,7 +345,8 @@
     @media (max-width: 360px) {
       .rescue-actions { grid-template-columns: 1fr; }
       .rescue-strip, .tech-radar-grid, .field-lane-strip, .operator-grid { grid-template-columns: 1fr; }
-      .field-workflow, .partsnap-steps { grid-template-columns:repeat(5,86px); }
+      .field-workflow { grid-template-columns:1fr; }
+      .partsnap-steps { grid-template-columns:repeat(5,86px); }
       .nav-btn span { font-size: 9px; letter-spacing: 0; }
     }
 
@@ -514,13 +544,11 @@
       .marketing-lanes { max-width:1120px; grid-template-columns:repeat(3,minmax(0,1fr)); padding-left:max(18px, env(safe-area-inset-left)); padding-right:max(18px, env(safe-area-inset-right)); }
       .app-shell > header { padding-left:max(14px, env(safe-area-inset-left)); padding-right:max(14px, env(safe-area-inset-right)); }
       main { max-width:1120px; margin:0 auto; padding-left:max(12px, env(safe-area-inset-left)); padding-right:max(12px, env(safe-area-inset-right)); }
-      .tab-panel.active { grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:var(--foldable-pane-gap); align-items:start; }
-      .tab-panel.active:not(#tab-scan) { display:grid; }
-      #tab-errors.active { grid-template-columns:minmax(300px,.86fr) minmax(340px,1.14fr); }
+      #tab-errors.active { display:grid; grid-template-columns:minmax(300px,.86fr) minmax(340px,1.14fr); gap:var(--foldable-pane-gap); align-items:start; }
       #tab-scan.active { padding-left:max(12px, env(safe-area-inset-left)); padding-right:max(12px, env(safe-area-inset-right)); }
       .rescue-hero, .proof-command, .partsnap-hero-card, .operator-card, .route-ready-card, .tech-radar-card, .brain-card, .pool-form-panel, .pool-card, .result-wrap { break-inside:avoid; page-break-inside:avoid; }
       .field-workflow, .partsnap-steps, .marketing-outcomes { overflow:visible; scrollbar-width:none; }
-      .field-workflow { grid-template-columns:repeat(5,minmax(86px,1fr)); }
+      .field-workflow { grid-template-columns:repeat(3,minmax(0,1fr)); }
       .partsnap-steps { grid-template-columns:repeat(5,minmax(74px,1fr)); }
       .proof-command-grid, .rescue-actions, .field-lane-strip, .rescue-strip, .tech-radar-grid, .operator-grid, .pump-decision-metrics { grid-template-columns:repeat(2,minmax(0,1fr)); }
       .pool-reading-detail.open { grid-template-columns:repeat(3,minmax(0,1fr)); }
@@ -542,7 +570,7 @@
     @media (min-width: 700px) and (max-width: 1180px) and (orientation: landscape) and (pointer: coarse) {
       .marketing-hero { grid-template-columns:minmax(0,1fr) minmax(300px,.82fr); align-items:start; }
       .preview-screen { min-height:360px; }
-      .tab-panel.active:not(#tab-scan) { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:var(--foldable-pane-gap); }
+      #tab-errors.active { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:var(--foldable-pane-gap); }
       .role-card { max-height:calc(100dvh - 28px); }
       .role-picker { align-items:flex-start; overflow:auto; }
     }
@@ -849,38 +877,31 @@
         <p class="rescue-kicker">PartSnap first - proof before ordering</p>
         <h1 class="rescue-title">Find the part. Prove the path.</h1>
         <p class="rescue-sub">Photo it, verify it, packet it, then move.</p>
-        <div class="field-workflow" aria-label="Fast field workflow">
-          <button type="button" class="workflow-chip partsnap" onclick="showTab('scan');setTimeout(()=>setScanMode('parts'),80)">
+        <div class="field-workflow" aria-label="Primary field actions">
+          <button type="button" class="workflow-chip partsnap" onclick="openLivePartSnap()">
             <span class="workflow-num">1</span>
-            <strong>ID Part</strong>
-            <span>photo + label</span>
+            <strong>Identify Part</strong>
+            <span>four proof shots</span>
           </button>
-          <button type="button" class="workflow-chip primary" onclick="showTab('scan')">
+          <button type="button" class="workflow-chip primary" onclick="openFieldCodeLookup()">
             <span class="workflow-num">2</span>
-            <strong>Scan Code</strong>
-            <span>display / plate</span>
+            <strong>Look Up Code</strong>
+            <span>brand, code, symptom</span>
           </button>
-          <button type="button" class="workflow-chip" onclick="focusErrorSearch()">
+          <button type="button" class="workflow-chip proof" onclick="openFieldProofPacket()">
             <span class="workflow-num">3</span>
-            <strong>Search</strong>
-            <span>brand / symptom</span>
-          </button>
-          <button type="button" class="workflow-chip" onclick="focusVolumeInput()">
-            <span class="workflow-num">4</span>
-            <strong>Dose</strong>
-            <span>pool math</span>
-          </button>
-          <button type="button" class="workflow-chip" onclick="quickServiceNote()">
-            <span class="workflow-num">5</span>
-            <strong>Note</strong>
-            <span>talk + save</span>
+            <strong>Build Proof Packet</strong>
+            <span>save, share, escalate</span>
           </button>
         </div>
         <p class="rescue-proof"><strong>Offline:</strong> manual lookup, calculators, guides. <strong>Online:</strong> AI scan, PartSnap, voice.</p>
       </section>
 
-      <section id="role-next-action" class="role-next-action" aria-live="polite"></section>
-      <section id="field-signal-inline" aria-live="polite" aria-label="Relevant field signal"></section>
+      <details class="field-tool-drawer">
+        <summary><span>More field tools<span class="field-tool-drawer-copy">CPO, smart equipment, brands, dosing, notes, and training</span></span></summary>
+        <div class="field-tool-drawer-body">
+          <section id="role-next-action" class="role-next-action" aria-live="polite"></section>
+          <section id="field-signal-inline" aria-live="polite" aria-label="Relevant field signal"></section>
 
       <section class="operator-card" aria-label="CPO and facility manager quick start">
         <h2>CPO / Facility quick start</h2>
@@ -958,6 +979,8 @@
           <p style="font-size:12px;color:#475569;">Hayward / Pentair / Jandy / Maytronics / Aiper / Raypak</p>
         </div>
       </div>
+        </div>
+      </details>
     </div>
 
     <!-- DOSING -->
@@ -1510,6 +1533,8 @@
         <button type="button" onclick="openSplashLensAccount()" style="margin-left:4px;border:1px solid #334155;background:#1e293b;color:#cbd5e1;border-radius:999px;padding:4px 8px;font-size:9px;font-weight:900;letter-spacing:.06em;cursor:pointer;">ACCOUNT</button>
       </div>
 
+      <section id="partsnap-evidence-guide" class="partsnap-evidence-guide" aria-live="polite" aria-label="PartSnap guided evidence capture"></section>
+
       <!-- Camera mode -->
       <div id="scan-camera-panel" style="padding:0;">
         <div style="position:relative;width:100%;background:#000;overflow:hidden;" id="scan-viewfinder-wrap">
@@ -1526,7 +1551,7 @@
           <canvas id="scan-canvas" style="display:none;"></canvas>
         </div>
         <div id="scan-camera-status" style="text-align:center;padding:10px;color:#7dd3fc;font-size:12px;font-weight:600;letter-spacing:.04em;">AIM AT ERROR CODE DISPLAY - TAP CAPTURE</div>
-        <div style="display:flex;gap:10px;padding:0 14px 14px;align-items:center;">
+        <div id="scan-camera-controls" style="display:flex;gap:10px;padding:0 14px 14px;align-items:center;">
           <button id="scan-capture-btn" onclick="captureAndAnalyze()" style="flex:1;padding:16px;background:#0284c7;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;letter-spacing:.02em;">
             CAPTURE
           </button>
@@ -1537,8 +1562,15 @@
         <div id="scan-no-camera" style="display:none;padding:20px 14px;">
           <div style="background:#1e293b;border:1px solid #334155;border-radius:12px;padding:20px;text-align:center;">
             <div style="font-size:2rem;margin-bottom:10px;">CAM</div>
-            <p style="color:#94a3b8;font-size:14px;margin-bottom:16px;">Camera access not available or permission denied. Use Code Lookup to search manually.</p>
-            <button onclick="setScanMode('lookup')" style="background:#0284c7;color:#fff;border:none;padding:12px 24px;border-radius:8px;font-weight:700;cursor:pointer;">Go to Code Lookup</button>
+            <p style="color:#e2e8f0;font-size:14px;font-weight:800;margin-bottom:7px;">Camera access is unavailable.</p>
+            <p style="color:#94a3b8;font-size:12px;line-height:1.45;margin-bottom:16px;">Retry permission, upload a photo already on this device, open device settings guidance, or use manual Code Lookup.</p>
+            <input id="scan-photo-upload" type="file" accept="image/*" capture="environment" onchange="analyzeUploadedScanPhoto(this)" style="display:none;">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+              <button type="button" onclick="retryCameraAccess()" style="background:#0284c7;color:#fff;border:none;padding:12px 10px;border-radius:8px;font-weight:800;cursor:pointer;">Retry Camera</button>
+              <button type="button" onclick="document.getElementById('scan-photo-upload').click()" style="background:#0f766e;color:#fff;border:none;padding:12px 10px;border-radius:8px;font-weight:800;cursor:pointer;">Upload Photo</button>
+              <button type="button" onclick="showSplashLensCameraSettingsHelp()" style="background:#fff;color:#334155;border:1px solid #cbd5e1;padding:12px 10px;border-radius:8px;font-weight:800;cursor:pointer;">Camera Settings</button>
+              <button type="button" onclick="setScanMode('lookup')" style="background:#fff;color:#0369a1;border:1px solid #7dd3fc;padding:12px 10px;border-radius:8px;font-weight:800;cursor:pointer;">Code Lookup</button>
+            </div>
           </div>
         </div>
       </div>
@@ -1638,7 +1670,7 @@
 
   <script src="/js/errors.js"></script>
   <script src="/js/data.js?v=20260904-commercial-scale"></script>
-  <script src="/js/app.js?v=20260930-ios-safe-gate"></script>
+  <script src="/js/app.js?v=20261002-partsnap-proof-gate"></script>
   <script type="module" src="/js/field-signals.js?v=20260728-field-signals"></script>
   <script src="/js/analytics.js"></script>
   <script src="/js/field-score.js?v=20260914-closing-season-challenge"></script>

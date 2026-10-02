@@ -4,7 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "node --test tests/field-score-contract.test.mjs tests/first-party-script-assets.test.mjs tests/events-endpoint-contract.test.mjs tests/scan-entitlement-boundary.test.mjs tests/stripe-payment-boundary.test.mjs tests/northstar-funnel-copy.test.mjs tests/field-intelligence-loop-tool.test.mjs tests/store-metrics-importer.test.mjs tests/pilot-contract.test.mjs",
+    "test": "node --test tests/*.test.mjs",
+    "partsnap:benchmark": "node tools/run-partsnap-benchmark.mjs",
     "intelligence:check": "node tools/run-field-intelligence-loop.mjs",
     "numbers:pull": "powershell -ExecutionPolicy Bypass -File tools/pull-splashlens-numbers.ps1",
     "store-metrics:import": "node tools/import-store-metrics.mjs",

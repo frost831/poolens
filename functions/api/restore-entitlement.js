@@ -1,5 +1,6 @@
 const TOKEN_PREFIX = 'sl_scan_v1';
 const ACCOUNT_TOKEN_PREFIX = 'sl_account_v1';
+const ACCOUNT_TOKEN_MAX_AGE_SECONDS = 24 * 60 * 60;
 const textEncoder = new TextEncoder();
 
 const ALLOWED_ORIGINS = new Set([
@@ -83,7 +84,9 @@ async function verifyAccountToken(request, env) {
   }
   const email = cleanEmail(payload?.sub);
   const scopes = Array.isArray(payload?.scopes) ? payload.scopes : [];
-  if (!email || Number(payload?.exp || 0) <= Math.floor(Date.now() / 1000) || !scopes.includes('account')) {
+  const now = Math.floor(Date.now() / 1000);
+  const issuedAt = Number(payload?.iat);
+  if (!email || Number(payload?.exp || 0) <= now || !Number.isFinite(issuedAt) || issuedAt > now + 300 || now - issuedAt > ACCOUNT_TOKEN_MAX_AGE_SECONDS || !scopes.includes('account')) {
     return { ok: false, status: 401, error: 'SplashLens account verification has expired.' };
   }
   return { ok: true, email };

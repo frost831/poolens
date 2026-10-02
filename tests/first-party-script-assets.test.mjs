@@ -44,6 +44,14 @@ test('service worker registration and precache use existing app assets', () => {
   }
 });
 
+test('service worker caches only static allowlisted assets and never API or authenticated responses', () => {
+  assert.match(serviceWorker, /STATIC_ASSET_URLS/);
+  assert.match(serviceWorker, /url\.pathname\.startsWith\('\/api\/'\)/);
+  assert.match(serviceWorker, /x-splashlens-account-token/);
+  assert.match(serviceWorker, /x-splashlens-profile-token/);
+  assert.match(serviceWorker, /if \(!staticAsset \|\| authenticated/);
+});
+
 test('field signals API methods used by app shell are implemented', () => {
   const fieldSignals = readFileSync(join(root, 'js', 'field-signals.js'), 'utf8');
   for (const method of [

@@ -26,3 +26,5 @@ jobs:
           node-version: 22
       - name: Run app regression suite
         run: npm test
+      - name: Run PartSnap benchmark proof gate
+        run: npm run partsnap:benchmark

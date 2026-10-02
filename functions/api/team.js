@@ -3,6 +3,7 @@
 
 const DEFAULT_ORIGIN = 'https://app.splashlens.com';
 const ACCOUNT_TOKEN_PREFIX = 'sl_account_v1';
+const ACCOUNT_TOKEN_MAX_AGE_SECONDS = 24 * 60 * 60;
 const textEncoder = new TextEncoder();
 
 const ALLOWED_ORIGINS = new Set([
@@ -121,8 +122,12 @@ async function verifyAccountToken(request, env) {
   if (!payload || typeof payload.sub !== 'string' || typeof payload.exp !== 'number') {
     return { ok: false, status: 401, error: 'SplashLens account token is invalid.' };
   }
-  if (payload.exp <= Math.floor(Date.now() / 1000)) {
+  const now = Math.floor(Date.now() / 1000);
+  if (payload.exp <= now) {
     return { ok: false, status: 401, error: 'SplashLens account sign-in expired. Verify your email again.' };
+  }
+  if (!Number.isFinite(payload.iat) || payload.iat > now + 300 || now - payload.iat > ACCOUNT_TOKEN_MAX_AGE_SECONDS) {
+    return { ok: false, status: 401, error: 'SplashLens account session has expired. Verify your email again.' };
   }
   if (!scopeAllowed(payload.scopes, 'account')) {
     return { ok: false, status: 403, error: 'SplashLens account token does not include account access.' };
