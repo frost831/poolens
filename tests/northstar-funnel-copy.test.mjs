@@ -77,7 +77,9 @@ test('saving job history requires a free save profile signal', () => {
 
 test('service worker cache version ships the newest account bundle', () => {
   assert.match(shell, /app\.js\?v=20261002-trust-fixes-2/);
-  assert.match(sw, /splashlens-v18-offline-routes/);
+  assert.match(shell, /errors\.js\?v=20261002-trust-fixes-2/);
+  assert.match(sw, /splashlens-v19-offline-routes/);
+  assert.match(sw, /errors\.js\?v=20261002-trust-fixes-2/);
   assert.match(sw, /app\.js\?v=20261002-trust-fixes-2/);
 });
 

@@ -1,8 +1,8 @@
-const CACHE = 'splashlens-v18-offline-routes';
+const CACHE = 'splashlens-v19-offline-routes';
 const ASSETS = [
   '/',
   '/index.html',
-  '/js/errors.js',
+  '/js/errors.js?v=20261002-trust-fixes-2',
   '/js/data.js?v=20261002-trust-fixes-2',
   '/js/app.js?v=20261002-trust-fixes-2',
   '/js/field-signals.js?v=20260728-field-signals',
