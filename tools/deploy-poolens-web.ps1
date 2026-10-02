@@ -32,7 +32,21 @@ foreach ($dir in @("js", "functions", "icons", ".well-known")) {
 
 Push-Location $root
 try {
-  npx wrangler pages deploy "_deploy\poolens-web" --project-name $ProjectName --branch main --commit-dirty=true
+  $dirty = git status --porcelain
+  if ($LASTEXITCODE -ne 0) {
+    throw "Could not verify the Git working tree before deployment."
+  }
+  if ($dirty) {
+    throw "Refusing to deploy a dirty working tree. Commit or stash the changes first."
+  }
+  $commit = (git rev-parse HEAD).Trim()
+  if ($LASTEXITCODE -ne 0 -or -not $commit) {
+    throw "Could not resolve the Git commit for deployment."
+  }
+  npx wrangler pages deploy "_deploy\poolens-web" --project-name $ProjectName --branch main --commit-hash $commit --commit-dirty=false
+  if ($LASTEXITCODE -ne 0) {
+    throw "Cloudflare Pages deployment failed."
+  }
 }
 finally {
   Pop-Location
