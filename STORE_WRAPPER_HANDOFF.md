@@ -8,7 +8,7 @@ Updated: October 5, 2026
 - Type: offline-first PWA
 - Web monetization: FreeCore tools plus Splash Lens Pro Unlimited checkout links where paid access is available
 - Store wrapper mode: use `https://app.splashlens.com/?store=ios` or `https://app.splashlens.com/?store=android` so native app review sees a FreeCore build with no direct Stripe upgrade CTAs.
-- Upgrade handoff: native store mode may show an `Unlock on splashlens.com` handoff, but it must open Safari/Chrome to `https://splashlens.com/` and must not load Stripe checkout inside the iOS WKWebView, Android TWA, or any fallback WebView.
+- Native purchase handoff: on hold. Store modes show neither Stripe checkout nor an external purchase CTA until the storefront/program eligibility and required link-out handling are verified. Ordinary web mode still offers Pro checkout.
 - Offline behavior: manual lookup, calculators, filter guides, checklists, reports, and cached app shell
 - Online-only behavior: Error Scan, PartSnap, and Test Strip AI scanner
 
@@ -67,6 +67,9 @@ Capture these screens on phone dimensions:
 
 ## Known Launch Constraints
 
+- PC web release `eceb55c` is live. Fresh Chromium sessions passed offline reloads at `/?store=ios` and `/?store=android`; native installed-device acceptance is still required.
+- The native gallery adapter decodes selected images without `fetch(dataUrl)`, which production CSP blocks. Verify an actual camera-denial-to-gallery-to-analysis flow on device.
+- Mac reports an exported, signed iOS distribution IPA that remains unuploaded. Android still needs the existing SplashLens upload key securely transferred to Mac before signing.
 - Current evidence and release blockers: `docs/store/MAC_CODEX_NATIVE_EXECUTION_2026-10-05.md`. A successful archive is not a TestFlight upload.
 - Android candidate is `1.0.9` / code `10`, target SDK `36`; the validated AAB is unsigned pending the existing upload key.
 - PC must publish the native gallery adapter and external upgrade hooks, including PWA cache invalidation, before native releases are sent.
