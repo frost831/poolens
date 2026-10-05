@@ -112,20 +112,19 @@ test('post-value checkout preserves the legacy click and upgrade events', () => 
   assert.deepEqual(names(events), ['checkout_click', 'upgrade_click', 'post_value_upgrade_clicked']);
 });
 
-test('native shells render an external website handoff but cannot initiate checkout', () => {
+test('native shells cannot render or initiate web upgrade paths', () => {
   for (const store of ['ios', 'android', 'native']) {
     const { context, events } = harness([...checkoutFunctions,
-      'renderStoreWebUpgradeBridge', 'renderPostValueUpgradeOffer', 'renderPartSnapResultUpgradeOffer', 'renderManualLookupUpgradeOffer'], {
+      'renderPostValueUpgradeOffer', 'renderPartSnapResultUpgradeOffer', 'renderManualLookupUpgradeOffer'], {
       getStoreShellMode: () => store, isStoreShellMode: () => true, isPartSnapPro: () => false,
     });
     assert.equal(context.getCheckoutUrl('monthly', 'account_dashboard'), '');
     assert.equal(context.trackCheckoutIntent('monthly', 'account_dashboard'), '');
     assert.equal(context.trackPostValueUpgrade('monthly', 'field_stop_saved'), '');
-    for (const html of [context.renderPostValueUpgradeOffer(), context.renderPartSnapResultUpgradeOffer(), context.renderManualLookupUpgradeOffer(1, 'E05')]) {
-      assert.match(html, /openExternalWebUpgrade/);
-      assert.doesNotMatch(html, /\/api\/checkout|data-checkout-plan/);
-    }
-    assert.equal(events.filter(event => event.name === 'checkout_click').length, 0);
+    assert.equal(context.renderPostValueUpgradeOffer(), '');
+    assert.equal(context.renderPartSnapResultUpgradeOffer(), '');
+    assert.equal(context.renderManualLookupUpgradeOffer(1, 'E05'), '');
+    assert.equal(events.length, 0);
   }
 });
 
@@ -157,6 +156,18 @@ test('paid lane checks configuration and redirects with the same click identity'
   assert.equal(click.props.placement, 'paid_lane');
   assert.equal(click.props.plan, 'yearly');
   assert.equal(new URL(context.window.location.href, 'https://app.test').searchParams.get('client_reference_id'), click.props.client_reference_id);
+});
+
+test('store paid lane does not open a purchase path while native link-out is on hold', async () => {
+  let notice = '';
+  const { context, events } = harness(['openSplashLensPaidLane'], {
+    getStoreShellMode: () => 'ios', isStoreShellMode: () => true,
+    showSplashLensNotice: message => { notice = message; },
+    fetch: () => { throw new Error('store mode must not request checkout'); },
+  });
+  await context.openSplashLensPaidLane('partsnap_pro_monthly', 'Pro');
+  assert.match(notice, /unavailable inside this store app/);
+  assert.equal(events.some(event => event.name === 'checkout_click'), false);
 });
 
 test('CTA shown waits for visible viewport content and deduplicates each actual element', () => {
