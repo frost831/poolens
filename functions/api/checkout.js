@@ -1,3 +1,5 @@
+import { checkoutAttribution, recordPaymentEvent } from '../_shared/payment-funnel.mjs';
+
 const PLAN_CONFIG = {
   monthly: {
     amount: 2900,
@@ -69,6 +71,15 @@ async function createCheckoutSession(request, env, plan) {
   params.set('subscription_data[metadata][product]', 'splashlens');
   params.set('subscription_data[metadata][feature]', 'scanner');
   params.set('subscription_data[metadata][plan]', params.get('metadata[plan]'));
+  const attribution = checkoutAttribution(Object.fromEntries(new URL(request.url).searchParams));
+  // Public callers cannot claim an administrative checkout source.
+  if (attribution.source === 'admin') attribution.source = 'server';
+  if (attribution.client_reference_id) params.set('client_reference_id', attribution.client_reference_id);
+  for (const [key, value] of Object.entries(attribution)) {
+    if (!value) continue;
+    params.set(`metadata[${key}]`, value);
+    params.set(`subscription_data[metadata][${key}]`, value);
+  }
   params.set('allow_promotion_codes', 'true');
 
   const response = await fetch('https://api.stripe.com/v1/checkout/sessions', {
@@ -86,7 +97,7 @@ async function createCheckoutSession(request, env, plan) {
   }
 
   const session = await response.json();
-  return session?.url || null;
+  return session?.url ? { ...session, attribution } : null;
 }
 
 function checkoutRedirect(location, mode) {
@@ -195,16 +206,23 @@ export async function onRequestGet({ request, env }) {
     });
   }
 
-  const sessionUrl = await createCheckoutSession(request, env, plan);
-  if (sessionUrl) {
+  const session = await createCheckoutSession(request, env, plan);
+  if (session) {
     await recordCheckoutStarted(request, env, plan, 'stripe_checkout_session');
-    return checkoutRedirect(sessionUrl, 'stripe_checkout_session');
+    await recordPaymentEvent(env, 'checkout_session_created', session.id, {
+      plan: normalizedPlan(plan), path: '/api/checkout', props: session.attribution,
+      userAgent: String(request.headers.get('User-Agent') || ''),
+    });
+    return checkoutRedirect(session.url, 'stripe_checkout_session');
   }
 
   const target = paymentLinkForPlan(env, plan);
   if (target) {
     await recordCheckoutStarted(request, env, plan, 'payment_link_direct');
-    return checkoutRedirect(target, 'payment_link_direct');
+    const attribution = checkoutAttribution(Object.fromEntries(url.searchParams));
+    const paymentUrl = new URL(target);
+    if (attribution.client_reference_id) paymentUrl.searchParams.set('client_reference_id', attribution.client_reference_id);
+    return checkoutRedirect(paymentUrl.href, 'payment_link_direct');
   }
   return Response.json({ ok: false, error: 'Stripe Checkout could not be started. Please try again.' }, {
     status: 503,

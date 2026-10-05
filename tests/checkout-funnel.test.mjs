@@ -135,8 +135,11 @@ test('active paid checkout issues a signed token that a verified account can res
 test('every web upgrade entry records checkout intent, and zero-result lookups do not count impressions', () => {
   assert.match(app, /trackCheckoutIntent\('monthly','scan_limit_reached'\)/);
   assert.match(app, /trackCheckoutIntent\('yearly','scan_limit_reached'\)/);
-  assert.match(app, /placement: 'paid_lane'/);
-  assert.match(app, /function trackCheckoutIntent\(plan, placement\) \{\s*trackSplashLensEvent\('checkout_click'/);
+  assert.match(app, /trackCheckoutIntent\(safePlan, 'paid_lane'\)/);
+  const intent = app.slice(app.indexOf('function trackCheckoutIntent('), app.indexOf('function trackPostValueUpgrade('));
+  assert.match(intent, /trackSplashLensEvent\('checkout_click', props\)/);
+  assert.match(intent, /props.client_reference_id = `sl_checkout_/);
+  assert.match(intent, /return getCheckoutUrl\(plan, placement, props\)/);
   const lookup = app.slice(app.indexOf('function renderManualLookupUpgradeOffer'), app.indexOf('function renderStripResult'));
   assert.match(lookup, /if \(resultCount <= 0 \|\| isPartSnapPro\(\) \|\| isStoreShellMode\(\)\) return '';/);
 });

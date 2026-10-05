@@ -76,11 +76,11 @@ test('saving job history requires a free save profile signal', () => {
 });
 
 test('service worker cache version ships the newest account bundle', () => {
-  assert.match(shell, /app\.js\?v=20261004-field-funnel/);
+  assert.match(shell, /app\.js\?v=20261005-paid-intent/);
   assert.match(shell, /errors\.js\?v=20261002-trust-fixes-3/);
-  assert.match(sw, /splashlens-v21-field-funnel/);
+  assert.match(sw, /splashlens-v22-paid-intent/);
   assert.match(sw, /errors\.js\?v=20261002-trust-fixes-3/);
-  assert.match(sw, /app\.js\?v=20261004-field-funnel/);
+  assert.match(sw, /app\.js\?v=20261005-paid-intent/);
 });
 
 test('checkout exposes a JSON catalog and Splash Lens Pro Unlimited metadata', () => {
@@ -95,22 +95,22 @@ test('checkout exposes a JSON catalog and Splash Lens Pro Unlimited metadata', (
   assert.match(checkout, /payment_link_direct/);
 });
 
-test('checkout intent reporting includes every app paid-action event', () => {
+test('checkout reporting separates intent from offers and server payment stages', () => {
   const stats = fs.readFileSync(new URL('../functions/api/stats.js', import.meta.url), 'utf8');
   const runner = fs.readFileSync(new URL('../tools/run-field-intelligence-loop.mjs', import.meta.url), 'utf8');
   for (const eventName of [
     'checkout_click',
-    'upgrade_click',
-    'post_value_upgrade_clicked',
-    'account_pro_checkout_clicked',
-    'partsnap_pro_restore_requested',
     'native_purchase_click',
-    'paid_lane_click',
-    'paid_lane_lead_captured',
+    'checkout_cta_shown',
+    'checkout_session_created',
+    'checkout_completed',
+    'subscription_created',
+    'entitlement_granted',
   ]) {
     assert.match(stats, new RegExp(eventName));
     assert.match(runner, new RegExp(eventName));
   }
+  assert.match(runner, /checkoutClicks30d: countEvents\(database, 30, \['checkout_click', 'native_purchase_click'\]\)/);
 });
 
 test('post-value lookup results expose a paid path without charging for manual lookup', () => {
@@ -118,7 +118,8 @@ test('post-value lookup results expose a paid path without charging for manual l
   assert.match(app, /Manual lookup stays free/);
   assert.match(app, /trackPostValueUpgrade\('monthly','scan_lookup_search'\)/);
   assert.match(app, /trackPostValueUpgrade\('yearly','scan_lookup_search'\)/);
-  assert.match(app, /trackSplashLensEvent\('checkout_click', \{ plan, feature: 'unlimited_partsnap', placement \}\)/);
+  assert.match(app, /trackSplashLensEvent\('checkout_click', props\)/);
+  assert.match(app, /client_reference_id = `sl_checkout_/);
 });
 
 test('account dashboard shows commercial lanes without pretending every lane is checkout-ready', () => {

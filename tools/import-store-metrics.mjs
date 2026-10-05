@@ -4,6 +4,7 @@ import { readFileSync, existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { pathToFileURL } from 'node:url';
+import { TextDecoder } from 'node:util';
 import process from 'node:process';
 
 const DEFAULT_ENDPOINT = 'https://app.splashlens.com/api/store-metrics';
@@ -62,6 +63,8 @@ Metrics:
   downloads, installs, first_time_downloads, redownloads, store_listing_visitors,
   product_page_views, acquisitions, updates, crashes, ratings, uninstalls
 
+Input encoding: UTF-8 or BOM-marked UTF-16 LE/BE. Unpack compressed exports first.
+
 Examples:
   node tools/import-store-metrics.mjs --file exports/store-metrics.csv --dry-run
   node tools/import-store-metrics.mjs --file exports/app-store-sales.csv --format app-store-connect --dry-run
@@ -75,6 +78,22 @@ Use --d1 only from this trusted PC when the protected API secret is absent local
 
 function clean(value, max = 500) {
   return String(value ?? '').replace(/[\u0000-\u001f\u007f]/g, '').trim().slice(0, max);
+}
+
+function decodeStoreExport(bytes) {
+  // Play bulk reports can be UTF-16; decode before CSV/header normalization.
+  const encoding = bytes[0] === 0xff && bytes[1] === 0xfe ? 'utf-16le'
+    : bytes[0] === 0xfe && bytes[1] === 0xff ? 'utf-16be' : 'utf-8';
+  let text;
+  try {
+    text = new TextDecoder(encoding, { fatal: true }).decode(bytes);
+  } catch {
+    throw new Error('Store export encoding is invalid. Use UTF-8 or BOM-marked UTF-16 LE/BE; unpack compressed exports first.');
+  }
+  if (text.includes('\u0000')) {
+    throw new Error('Store export encoding contains NUL bytes. Re-export as UTF-8 or BOM-marked UTF-16 LE/BE.');
+  }
+  return text;
 }
 
 function normalizePlatform(value) {
@@ -189,7 +208,7 @@ function detectFormat(headers) {
   if (set.has('provider') && set.has('units') && set.has('sku') && (set.has('begin_date') || set.has('date'))) return 'app-store-connect';
   if (set.has('package_name') && [
     'daily_device_installs', 'install_events', 'daily_device_uninstalls', 'uninstall_events',
-    'daily_device_upgrades', 'update_events', 'crashes', 'store_listing_visitors',
+    'daily_device_upgrades', 'update_events', 'daily_crashes', 'crashes', 'store_listing_visitors',
     'store_listing_acquisitions',
   ].some((field) => set.has(field))) return 'google-play';
   return 'generic';
@@ -207,7 +226,9 @@ function aggregateOfficialRows(rows, platform, source, dateFields, mappings) {
     for (const [field, metric] of mappings) {
       if (!(field in row) || clean(row[field]) === '') continue;
       const key = `${date}|${metric}`;
-      totals.set(key, (totals.get(key) || 0) + numeric(row[field]));
+      const total = (totals.get(key) || 0) + numeric(row[field]);
+      if (!Number.isSafeInteger(total)) throw new Error('Official metric total exceeds the safe integer range');
+      totals.set(key, total);
     }
   }
   return [...totals.entries()].map(([key, value]) => {
@@ -256,7 +277,7 @@ function entriesFromOfficialCsv(text, requestedFormat, source) {
       ...choose(['daily_user_installs'], 'first_time_downloads'),
       ...choose(['daily_device_uninstalls', 'uninstall_events'], 'uninstalls'),
       ...choose(['daily_device_upgrades', 'update_events'], 'updates'),
-      ['crashes', 'crashes'],
+      ...choose(['daily_crashes', 'crashes'], 'crashes'),
       ['store_listing_visitors', 'store_listing_visitors'],
       ['store_listing_acquisitions', 'acquisitions'],
     ]);
@@ -358,7 +379,7 @@ async function main() {
     process.exitCode = options.help ? 0 : 1;
     return;
   }
-  const entries = entriesFromOfficialCsv(readFileSync(options.file, 'utf8'), options.format, options.source);
+  const entries = entriesFromOfficialCsv(decodeStoreExport(readFileSync(options.file)), options.format, options.source);
   if (!entries.length) throw new Error('No supported metric rows were found in the store export.');
   if (options.dryRun) {
     console.log(JSON.stringify({ ok: true, dryRun: true, entries }, null, 2));

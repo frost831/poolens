@@ -100,7 +100,8 @@ test('scanner tab keeps fallback content above fixed mobile nav', () => {
   assert.match(html, /id="tab-scan"[^>]+padding:0 0 calc\(184px \+ env\(safe-area-inset-bottom\)\)/);
   assert.match(appSource, /function revealNoCameraFallback/);
   assert.match(appSource, /scrollMarginBottom = 'calc\(184px \+ env\(safe-area-inset-bottom\)\)'/);
-  assert.match(appSource, /scrollIntoView\(\{ block: 'nearest', behavior: 'smooth' \}\)/);
+  assert.match(appSource, /scrollIntoView\(\{ block: 'start', inline: 'nearest', behavior: 'auto' \}\)/);
+  assert.match(appSource, /noCam.parentElement\?\.prepend\(noCam\)/);
 });
 
 test('foldable and compact tablet screens get a deliberate field layout', () => {

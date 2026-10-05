@@ -150,6 +150,9 @@ export async function onRequestPost({ request, env }) {
   if (!event) {
     return new Response(JSON.stringify({ ok: false, error: 'Event name required' }), { status: 400, headers });
   }
+  if (['checkout_session_created', 'checkout_completed', 'subscription_created', 'entitlement_granted'].includes(event)) {
+    return new Response(JSON.stringify({ ok: false, error: 'Payment proof is recorded by the server.' }), { status: 403, headers });
+  }
 
   const rawProps = Object.assign({}, plainObject(body.props), plainObject(body.properties));
   const rawPath = clean(body.path || rawProps.path, 500);
