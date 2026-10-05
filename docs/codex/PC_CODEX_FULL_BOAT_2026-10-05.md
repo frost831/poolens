@@ -14,6 +14,8 @@
 
 **Scope intent:** Implement **100% of this backlog** over sequential PRs. Waves are **build order**, not cuts. Do not drop items because they are later waves.
 
+**Growth companion (2026-10-05):** SEO / ASO / AEO / reactive GTM / miss→library factory live in `docs/codex/PC_CODEX_PASTE_GROWTH_SEO_ASO_AEO_2026-10-05.md` (new tickets **PC-G-01…PC-G-20**, Waves G0–G2). Closing season is live, so run its Wave G0 alongside this file's Wave 0. Strategy: `docs/codex/STRATEGY_WARM_MIDWEST_GROWTH_2026-10-05.md`.
+
 ---
 
 ## 1. Mission / north star / non-negotiables
