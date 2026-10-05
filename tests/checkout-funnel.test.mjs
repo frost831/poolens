@@ -138,5 +138,6 @@ test('every web upgrade entry records checkout intent, and zero-result lookups d
   assert.match(app, /placement: 'paid_lane'/);
   assert.match(app, /function trackCheckoutIntent\(plan, placement\) \{\s*trackSplashLensEvent\('checkout_click'/);
   const lookup = app.slice(app.indexOf('function renderManualLookupUpgradeOffer'), app.indexOf('function renderStripResult'));
-  assert.match(lookup, /if \(resultCount <= 0 \|\| isPartSnapPro\(\) \|\| isStoreShellMode\(\)\) return '';/);
+  assert.match(lookup, /if \(resultCount <= 0 \|\| isPartSnapPro\(\)\) return '';/);
+  assert.match(lookup, /if \(isStoreShellMode\(\)\) return renderStoreWebUpgradeBridge\('scan_lookup_search'\);/);
 });

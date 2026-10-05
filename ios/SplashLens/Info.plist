@@ -25,9 +25,9 @@
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 	<key>NSCameraUsageDescription</key>
-	<string>SplashLens uses the camera only when you choose the optional scanner to review equipment displays, parts, or test strips.</string>
+	<string>SplashLens uses the camera only when you choose PartSnap or scanner tools to read pool and spa equipment labels, markings, displays, and test-strip photos for field reference.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>SplashLens can use a photo you select for optional scanner assistance.</string>
+	<string>SplashLens can use a pool or spa equipment photo you select as a gallery fallback when camera access is denied or unavailable.</string>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UISupportedInterfaceOrientations</key>

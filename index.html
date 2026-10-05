@@ -1564,11 +1564,11 @@
           <div style="background:#1e293b;border:1px solid #334155;border-radius:12px;padding:20px;text-align:center;">
             <div style="font-size:2rem;margin-bottom:10px;">CAM</div>
             <p style="color:#e2e8f0;font-size:14px;font-weight:800;margin-bottom:7px;">Camera access is unavailable.</p>
-            <p style="color:#94a3b8;font-size:12px;line-height:1.45;margin-bottom:16px;">Retry permission, upload a photo already on this device, open device settings guidance, or use manual Code Lookup.</p>
-            <input id="scan-photo-upload" type="file" accept="image/*" capture="environment" onchange="analyzeUploadedScanPhoto(this)" style="display:none;">
+            <p style="color:#94a3b8;font-size:12px;line-height:1.45;margin-bottom:16px;">Retry permission, pick a gallery photo already on this device, add pad light for dark labels, or use manual Code Lookup.</p>
+            <input id="scan-photo-upload" type="file" accept="image/*" onchange="analyzeUploadedScanPhoto(this)" style="display:none;">
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
               <button type="button" onclick="retryCameraAccess()" style="background:#0284c7;color:#fff;border:none;padding:12px 10px;border-radius:8px;font-weight:800;cursor:pointer;">Retry Camera</button>
-              <button type="button" onclick="document.getElementById('scan-photo-upload').click()" style="background:#0f766e;color:#fff;border:none;padding:12px 10px;border-radius:8px;font-weight:800;cursor:pointer;">Upload Photo</button>
+              <button type="button" onclick="requestGalleryPhotoFallback()" style="background:#0f766e;color:#fff;border:none;padding:12px 10px;border-radius:8px;font-weight:800;cursor:pointer;">Pick Gallery</button>
               <button type="button" onclick="showSplashLensCameraSettingsHelp()" style="background:#fff;color:#334155;border:1px solid #cbd5e1;padding:12px 10px;border-radius:8px;font-weight:800;cursor:pointer;">Camera Settings</button>
               <button type="button" onclick="setScanMode('lookup')" style="background:#fff;color:#0369a1;border:1px solid #7dd3fc;padding:12px 10px;border-radius:8px;font-weight:800;cursor:pointer;">Code Lookup</button>
             </div>
