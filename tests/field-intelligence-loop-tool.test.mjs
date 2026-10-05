@@ -20,7 +20,7 @@ test('field intelligence runner is non-interactive and safe for heartbeat use', 
   assert.match(toolSource, /pathToFileURL\(process\.argv\[1\]\)\.href/);
   assert.match(toolSource, /SPLASHLENS_STATS_SECRET/);
   assert.match(toolSource, /redirect:\s*'manual'/);
-  assert.match(toolSource, /expectStatuses:\s*\[302\]/);
+  assert.doesNotMatch(toolSource, /safeFetch\('checkoutMonthly'|\/api\/checkout\?plan=/);
   assert.match(toolSource, /expectStatuses:\s*\[401\]/);
   assert.match(toolSource, /wrangler/);
   assert.match(toolSource, /splashlens-subscribers/);
@@ -57,7 +57,7 @@ test('field intelligence runner distinguishes local credential gaps from product
     probes: [
       { label: 'app', ok: true, status: 200 },
       { label: 'site', ok: true, status: 200 },
-      { label: 'checkoutMonthly', ok: false, status: 302, location: 'https://checkout.stripe.com/c/pay/cs_live_123' },
+      { label: 'checkoutCatalog', ok: true, status: 200, body: '{"product":"splashlens","plans":[{"key":"partsnap_pro_monthly","checkoutConfigured":true},{"key":"partsnap_pro_yearly","checkoutConfigured":true}]}' },
       { label: 'amplitudeConfig', ok: true, status: 200, body: '{"ok":true,"enabled":true,"status":"ready"}' },
       { label: 'statsNoSecret', ok: false, status: 401 },
     ],
@@ -70,13 +70,31 @@ test('field intelligence runner distinguishes local credential gaps from product
   assert.ok(!recommendations.some((item) => item.severity === 'critical'));
 });
 
+test('field intelligence runner flags an unconfigured Pro plan without starting Stripe Checkout', () => {
+  const recommendations = buildRecommendations({
+    env: envStatus({}),
+    probes: [
+      { label: 'app', ok: true, status: 200 },
+      { label: 'site', ok: true, status: 200 },
+      { label: 'checkoutCatalog', ok: true, status: 200, body: '{"product":"splashlens","plans":[{"key":"partsnap_pro_monthly","checkoutConfigured":true},{"key":"partsnap_pro_yearly","checkoutConfigured":false}]}' },
+      { label: 'amplitudeConfig', ok: true, status: 200, body: '{"ok":true,"enabled":true,"status":"ready"}' },
+      { label: 'statsNoSecret', ok: false, status: 401 },
+    ],
+    stats: null,
+    admin: null,
+  });
+
+  assert.ok(recommendations.some((item) => /Pro checkout configuration/.test(item.issue) && /partsnap_pro_yearly/.test(item.evidence)));
+  assert.doesNotMatch(toolSource, /safeFetch\('checkoutMonthly'|\/api\/checkout\?plan=/);
+});
+
 test('field intelligence runner treats D1 fallback as usable local analytics access', () => {
   const recommendations = buildRecommendations({
     env: envStatus({}),
     probes: [
       { label: 'app', ok: true, status: 200 },
       { label: 'site', ok: true, status: 200 },
-      { label: 'checkoutMonthly', ok: false, status: 302, location: 'https://checkout.stripe.com/c/pay/cs_live_123' },
+      { label: 'checkoutCatalog', ok: true, status: 200, body: '{"product":"splashlens","plans":[{"key":"partsnap_pro_monthly","checkoutConfigured":true},{"key":"partsnap_pro_yearly","checkoutConfigured":true}]}' },
       { label: 'amplitudeConfig', ok: true, status: 200, body: '{"ok":true,"enabled":true,"status":"ready"}' },
       { label: 'statsNoSecret', ok: false, status: 401 },
       { label: 'd1Remote', ok: true, status: 200 },
@@ -114,7 +132,7 @@ test('field intelligence runner flags value-without-feedback and checkout-withou
     probes: [
       { label: 'app', ok: true, status: 200 },
       { label: 'site', ok: true, status: 200 },
-      { label: 'checkoutMonthly', ok: false, status: 302, location: 'https://checkout.stripe.com/c/pay/cs_live_123' },
+      { label: 'checkoutCatalog', ok: true, status: 200, body: '{"product":"splashlens","plans":[{"key":"partsnap_pro_monthly","checkoutConfigured":true},{"key":"partsnap_pro_yearly","checkoutConfigured":true}]}' },
       { label: 'amplitudeConfig', ok: true, status: 200, body: '{"ok":true,"enabled":true,"status":"ready"}' },
       { label: 'statsNoSecret', ok: false, status: 401 },
     ],

@@ -422,11 +422,15 @@ function buildRecommendations({ probes, env, stats, admin }) {
       fix: 'Treat as production incident and redeploy or restore Cloudflare Pages routing.',
     });
   }
-  if (!byLabel.checkoutMonthly || byLabel.checkoutMonthly.status !== 302 || !/stripe\.com/i.test(byLabel.checkoutMonthly.location)) {
+  const checkoutCatalog = parseJsonProbe(byLabel.checkoutCatalog);
+  const paidPlans = ['partsnap_pro_monthly', 'partsnap_pro_yearly'];
+  const unavailablePlans = paidPlans.filter((key) =>
+    !checkoutCatalog?.plans?.some((plan) => plan.key === key && plan.checkoutConfigured === true));
+  if (!byLabel.checkoutCatalog?.ok || checkoutCatalog?.product !== 'splashlens' || unavailablePlans.length) {
     recommendations.push({
       severity: 'high',
-      issue: 'Checkout start is not clearly redirecting to Stripe',
-      evidence: byLabel.checkoutMonthly ? `HTTP ${byLabel.checkoutMonthly.status} ${byLabel.checkoutMonthly.location}` : 'No checkout probe',
+      issue: 'Pro checkout configuration is not ready',
+      evidence: `Catalog HTTP ${byLabel.checkoutCatalog?.status ?? 'missing'}; unavailable plans: ${unavailablePlans.join(', ') || 'none'}`,
       fix: 'Check /api/checkout configuration and Stripe price/payment-link environment variables.',
     });
   }
@@ -603,7 +607,7 @@ function markdownReport(report) {
       lines.push('');
       lines.push('## Official Store Metric Imports');
       lines.push('');
-      lines.push(table(report.stats.storeMetricImports, ['platform', 'metric', 'value', 'firstDate', 'lastDate']));
+      lines.push(table(report.stats.storeMetricImports, ['platform', 'metric', 'source', 'value', 'firstDate', 'lastDate']));
     }
     if (Array.isArray(report.stats.paymentsByPlan) && report.stats.paymentsByPlan.length) {
       lines.push('');
@@ -642,7 +646,6 @@ async function run(options = parseArgs(process.argv.slice(2)), env = process.env
     safeFetch('app', `${options.baseUrl}/`),
     safeFetch('site', `${options.siteUrl}/`),
     safeFetch('checkoutCatalog', `${options.baseUrl}/api/checkout?catalog=1`),
-    safeFetch('checkoutMonthly', `${options.baseUrl}/api/checkout?plan=monthly`, { redirect: 'manual', expectStatuses: [302] }),
     safeFetch('amplitudeConfig', `${options.baseUrl}/api/amplitude-config`),
     safeFetch('statsNoSecret', `${options.baseUrl}/api/stats`, { redirect: 'manual', expectStatuses: [401] }),
     safeFetch('serviceWorker', `${options.baseUrl}/sw.js`),
