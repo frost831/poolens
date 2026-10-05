@@ -88,22 +88,8 @@ test('the injected iOS bridge resolves and rejects the matching request and remo
   assert.equal(Object.keys(window.SplashLensNative.__galleryResolvers).length, 0);
 });
 
-test('the store upgrade opens one external browser handoff and leaves the wrapper location intact', () => {
-  const links = [];
-  const window = { location: { href: 'https://app.splashlens.com/?store=ios' } };
-  const context = vm.createContext({
-    window,
-    getStoreShellMode: () => 'ios',
-    trackSplashLensEvent: () => {},
-    SPLASHLENS_WEB_UPGRADE_URL: 'https://splashlens.com/?upgrade=splashlens-pro',
-    document: { createElement: () => {
-      const link = { click() { links.push({ href: this.href, target: this.target, rel: this.rel }); } };
-      return link;
-    } },
-  });
-  vm.runInContext(app.slice(app.indexOf('function openExternalWebUpgrade'),
-    app.indexOf('function renderStoreWebUpgradeBridge')), context);
-  context.openExternalWebUpgrade('test');
-  assert.deepEqual(links, [{ href: 'https://splashlens.com/?upgrade=splashlens-pro', target: '_blank', rel: 'noopener noreferrer' }]);
-  assert.equal(window.location.href, 'https://app.splashlens.com/?store=ios');
+test('store wrappers expose no external purchase handoff before policy approval', () => {
+  assert.doesNotMatch(app, /openExternalWebUpgrade|renderStoreWebUpgradeBridge|SPLASHLENS_WEB_UPGRADE_URL/);
+  assert.doesNotMatch(app, /splashlens\.com\/\?upgrade=splashlens-pro/);
+  assert.match(app, /if \(isStoreShellMode\(\)\) \{\s*trackSplashLensEvent\('store_scan_limit_reached'/);
 });

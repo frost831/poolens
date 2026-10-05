@@ -2137,7 +2137,7 @@ async function openSplashLensPaidLane(planKey, label) {
   trackSplashLensEvent('paid_lane_click', { plan_key: safePlan, label: safeLabel });
   if (isStoreShellMode()) {
     trackSplashLensEvent('store_paid_lane_blocked', { plan_key: safePlan, label: safeLabel, store: getStoreShellMode() });
-    openExternalWebUpgrade('paid_lane');
+    showSplashLensNotice('Paid access is unavailable inside this store app. Manual lookup and core field tools remain free.');
     return;
   }
   try {
@@ -2521,10 +2521,8 @@ function renderSplashLensCommercialSection(commercialPayload = {}) {
           <span style="color:#64748b;font-size:11px;">pilots, teams, partners</span>
         </div>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:10px;">
-        ${storeShell
-          ? `<button type="button" onclick="openExternalWebUpgrade('account_dashboard')" style="border:0;text-align:center;border-radius:9px;background:#0f766e;color:#fff;font-size:12px;font-weight:950;padding:11px 8px;cursor:pointer;">Unlock on web</button>`
-          : `<a data-checkout-plan="monthly" data-checkout-placement="account_dashboard" href="${getCheckoutUrl('monthly', 'account_dashboard')}" onclick="this.href=trackCheckoutIntent('monthly','account_dashboard');trackSplashLensEvent('account_pro_checkout_clicked',{plan:'monthly',source:'account_dashboard'})" style="display:block;text-align:center;text-decoration:none;border-radius:9px;background:#0f766e;color:#fff;font-size:12px;font-weight:950;padding:11px 8px;">Get Pro</a>`}
+      <div style="display:grid;grid-template-columns:${storeShell ? '1fr' : '1fr 1fr'};gap:7px;margin-bottom:10px;">
+        ${storeShell ? '' : `<a data-checkout-plan="monthly" data-checkout-placement="account_dashboard" href="${getCheckoutUrl('monthly', 'account_dashboard')}" onclick="this.href=trackCheckoutIntent('monthly','account_dashboard');trackSplashLensEvent('account_pro_checkout_clicked',{plan:'monthly',source:'account_dashboard'})" style="display:block;text-align:center;text-decoration:none;border-radius:9px;background:#0f766e;color:#fff;font-size:12px;font-weight:950;padding:11px 8px;">Get Pro</a>`}
         <button type="button" onclick="requestSplashLensCommercialAccess('teams')" style="border:1px solid #0369a1;border-radius:9px;background:#fff;color:#0369a1;font-size:12px;font-weight:950;padding:11px 8px;cursor:pointer;">Request team</button>
       </div>
       <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin-bottom:10px;">
@@ -7706,7 +7704,6 @@ const SCAN_ENTITLEMENT_TOKEN_KEY = 'sl_scan_entitlement_token';
 const SCAN_ENTITLEMENT_META_KEY = 'sl_scan_entitlement_meta';
 const PARTSNAP_MONTHLY_LINK = '/api/checkout?plan=monthly';
 const PARTSNAP_YEARLY_LINK = '/api/checkout?plan=yearly';
-const SPLASHLENS_WEB_UPGRADE_URL = 'https://splashlens.com/?upgrade=splashlens-pro';
 const PARTSNAP_RESTORE_ENDPOINT = '/api/restore-entitlement';
 const SPLASHLENS_EVENT_ENDPOINT = '/api/events';
 const SPLASHLENS_FREE_PROFILE_ENDPOINT = '/api/free-profile';
@@ -8248,7 +8245,6 @@ async function analyzeNativeGalleryPhoto(picked = {}) {
   const comma = dataUrl.indexOf(',');
   const format = /^data:(image\/[a-z0-9.+-]+);base64$/i.exec(dataUrl.slice(0, comma));
   if (comma < 0 || !format || dataUrl.length > 14 * 1024 * 1024) throw new Error('native_gallery_invalid_image');
-  // Decode locally: production connect-src intentionally disallows data: fetches.
   const bytes = Uint8Array.from(atob(dataUrl.slice(comma + 1)), character => character.charCodeAt(0));
   const blob = new Blob([bytes], { type: format[1] });
   const name = String(picked.name || 'splashlens-gallery-photo.jpg').slice(0, 120);
@@ -8794,28 +8790,6 @@ function isStoreShellMode() {
   return !!getStoreShellMode();
 }
 
-function openExternalWebUpgrade(placement = 'native_shell') {
-  const store = getStoreShellMode() || 'web';
-  trackSplashLensEvent('store_web_upgrade_click', { store, placement });
-  const link = document.createElement('a');
-  link.href = SPLASHLENS_WEB_UPGRADE_URL;
-  link.target = '_blank';
-  link.rel = 'noopener noreferrer';
-  link.click();
-}
-
-function renderStoreWebUpgradeBridge(placement = 'native_shell') {
-  const store = getStoreShellMode() || 'native';
-  trackSplashLensEvent('store_web_upgrade_shown', { store, placement });
-  return `
-    <div style="background:#082f49;border:1px solid #0ea5e9;border-radius:10px;padding:12px;margin:10px 0;">
-      <p style="color:#7dd3fc;font-size:10px;font-weight:950;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;">Web upgrade</p>
-      <p style="color:#f8fafc;font-size:13px;font-weight:950;margin-bottom:5px;">Unlock Pro on splashlens.com.</p>
-      <p style="color:#94a3b8;font-size:11px;line-height:1.4;margin-bottom:9px;">Continue in your browser.</p>
-      <button type="button" onclick="openExternalWebUpgrade('${escAttr(placement)}')" style="width:100%;background:#0ea5e9;color:#082f49;border:0;border-radius:8px;padding:10px 7px;font-size:11px;font-weight:950;cursor:pointer;">Open website</button>
-    </div>`;
-}
-
 function cleanAttributionValue(value, max = 160) {
   return String(value || '')
     .replace(/[\u0000-\u001f\u007f]/g, '')
@@ -9358,7 +9332,6 @@ function showScanLimitModal(result, status) {
           <p style="color:#f1f5f9;font-size:19px;font-weight:900;margin-bottom:6px;">You've used ${usage.count} of ${SCAN_LIMIT_FREE} free AI scans this month.</p>
           <p style="color:#94a3b8;font-size:13px;line-height:1.5;margin-bottom:14px;">Manual code lookup, dosing, reports, filters, and checklists stay free.</p>
           <div style="display:grid;grid-template-columns:1fr;gap:8px;">
-            <button onclick="openExternalWebUpgrade('scan_limit_reached')" style="background:#0284c7;color:#fff;border:0;border-radius:10px;padding:11px 14px;font-size:12px;font-weight:900;cursor:pointer;width:100%;">Unlock on splashlens.com</button>
             <button onclick="setScanMode('lookup');document.getElementById('scan-result').innerHTML=''" style="background:#334155;color:#fff;border:0;border-radius:10px;padding:11px 14px;font-size:12px;font-weight:800;cursor:pointer;width:100%;">Use Manual Lookup</button>
           </div>
         </div>`;
@@ -10314,8 +10287,7 @@ function savePartSnapFieldStop() {
 }
 
 function renderPostValueUpgradeOffer() {
-  if (isPartSnapPro()) return '';
-  if (isStoreShellMode()) return renderStoreWebUpgradeBridge('field_stop_saved');
+  if (isPartSnapPro() || isStoreShellMode()) return '';
   const key = 'splashlens-post-value-upgrade-shown-at';
   const lastShownAt = Date.parse(localStorage.getItem(key) || '');
   if (Number.isFinite(lastShownAt) && Date.now() - lastShownAt < 7 * 86400000) return '';
@@ -10334,8 +10306,7 @@ function renderPostValueUpgradeOffer() {
 }
 
 function renderPartSnapResultUpgradeOffer(placement = 'partsnap_result') {
-  if (isPartSnapPro()) return '';
-  if (isStoreShellMode()) return renderStoreWebUpgradeBridge(placement);
+  if (isPartSnapPro() || isStoreShellMode()) return '';
   const key = `splashlens-post-value-upgrade-${placement}-shown-at`;
   const lastShownAt = Date.parse(localStorage.getItem(key) || '');
   if (Number.isFinite(lastShownAt) && Date.now() - lastShownAt < 24 * 3600000) return '';
@@ -11385,8 +11356,7 @@ function renderScanHits(hits, query) {
 }
 
 function renderManualLookupUpgradeOffer(resultCount, query) {
-  if (resultCount <= 0 || isPartSnapPro()) return '';
-  if (isStoreShellMode()) return renderStoreWebUpgradeBridge('scan_lookup_search');
+  if (resultCount <= 0 || isPartSnapPro() || isStoreShellMode()) return '';
   const safeQuery = String(query || '').replace(/[^a-zA-Z0-9 ._-]/g, '').slice(0, 40);
   try {
     const key = 'splashlens-post-value-upgrade-scan-lookup-shown-at';

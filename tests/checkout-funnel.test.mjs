@@ -186,6 +186,5 @@ test('every web upgrade entry records checkout intent, and zero-result lookups d
   assert.match(intent, /props.client_reference_id = `sl_checkout_/);
   assert.match(intent, /return getCheckoutUrl\(plan, placement, props\)/);
   const lookup = app.slice(app.indexOf('function renderManualLookupUpgradeOffer'), app.indexOf('function renderStripResult'));
-  assert.match(lookup, /if \(resultCount <= 0 \|\| isPartSnapPro\(\)\) return '';/);
-  assert.match(lookup, /if \(isStoreShellMode\(\)\) return renderStoreWebUpgradeBridge\('scan_lookup_search'\);/);
+  assert.match(lookup, /if \(resultCount <= 0 \|\| isPartSnapPro\(\) \|\| isStoreShellMode\(\)\) return '';/);
 });
