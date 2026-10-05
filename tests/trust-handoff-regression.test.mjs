@@ -71,7 +71,7 @@ test('first value requires an opened answer or completed calculation and first-s
 
 test('offline, XSS, analytics privacy, and unverified-family protections fail closed', async () => {
   assert.match(serviceWorker, /e\.request\.mode === 'navigate'/);
-  assert.match(serviceWorker, /caches\.match\('\/index\.html'\)/);
+  assert.match(serviceWorker, /caches\.match\('\/'\)/);
   assert.match(appSource, /description: escHtml\(description \|\| ''\)/);
   assert.match(appSource, /searchTerms: Array\.isArray\(searchTerms\).*escHtml/);
   assert.match(eventsEndpoint, /PERSONAL_PROP_KEYS/);

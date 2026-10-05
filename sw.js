@@ -1,7 +1,6 @@
-const CACHE = 'splashlens-v24-native-gallery-offline';
+const CACHE = 'splashlens-v25-native-gallery-offline';
 const ASSETS = [
   '/',
-  '/index.html',
   '/js/errors.js?v=20261002-trust-fixes-3',
   '/js/data.js?v=20261002-trust-fixes-2',
   '/js/app.js?v=20261005-native-gallery-offline',
@@ -39,13 +38,13 @@ self.addEventListener('fetch', e => {
     e.respondWith(
       fetch(e.request).then(async response => {
         if (response.ok && response.type === 'basic') {
-          caches.open(CACHE).then(cache => cache.put('/index.html', response.clone()));
+          caches.open(CACHE).then(cache => cache.put('/', response.clone()));
         }
         if (response.type === 'error' || response.status === 0) {
-          return (await caches.match('/index.html')) || response;
+          return (await caches.match('/')) || response;
         }
         return response;
-      }).catch(async () => (await caches.match('/index.html')) || Response.error())
+      }).catch(async () => (await caches.match('/')) || Response.error())
     );
     return;
   }
