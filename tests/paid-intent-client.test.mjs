@@ -112,19 +112,20 @@ test('post-value checkout preserves the legacy click and upgrade events', () => 
   assert.deepEqual(names(events), ['checkout_click', 'upgrade_click', 'post_value_upgrade_clicked']);
 });
 
-test('native shells cannot render or initiate web upgrade paths', () => {
+test('native shells render an external website handoff but cannot initiate checkout', () => {
   for (const store of ['ios', 'android', 'native']) {
     const { context, events } = harness([...checkoutFunctions,
-      'renderPostValueUpgradeOffer', 'renderPartSnapResultUpgradeOffer', 'renderManualLookupUpgradeOffer'], {
+      'renderStoreWebUpgradeBridge', 'renderPostValueUpgradeOffer', 'renderPartSnapResultUpgradeOffer', 'renderManualLookupUpgradeOffer'], {
       getStoreShellMode: () => store, isStoreShellMode: () => true, isPartSnapPro: () => false,
     });
     assert.equal(context.getCheckoutUrl('monthly', 'account_dashboard'), '');
     assert.equal(context.trackCheckoutIntent('monthly', 'account_dashboard'), '');
     assert.equal(context.trackPostValueUpgrade('monthly', 'field_stop_saved'), '');
-    assert.equal(context.renderPostValueUpgradeOffer(), '');
-    assert.equal(context.renderPartSnapResultUpgradeOffer(), '');
-    assert.equal(context.renderManualLookupUpgradeOffer(1, 'E05'), '');
-    assert.equal(events.length, 0);
+    for (const html of [context.renderPostValueUpgradeOffer(), context.renderPartSnapResultUpgradeOffer(), context.renderManualLookupUpgradeOffer(1, 'E05')]) {
+      assert.match(html, /openExternalWebUpgrade/);
+      assert.doesNotMatch(html, /\/api\/checkout|data-checkout-plan/);
+    }
+    assert.equal(events.filter(event => event.name === 'checkout_click').length, 0);
   }
 });
 
@@ -256,15 +257,15 @@ test('PartSnap requests permission only after explanation consent', async () => 
   respond({});
   await pending;
   assert.equal(requests, 1);
-  assert.deepEqual(names(events), ['partsnap_camera_explanation_shown', 'scanner_camera_ready']);
+  assert.deepEqual(names(events), ['partsnap_camera_explanation_shown', 'partsnap_camera_requested', 'scanner_camera_ready', 'partsnap_camera_granted']);
   assert.equal(events.some(event => /first_action|first_value/.test(event.name)), false);
 });
 
 test('denial provides photo/manual recovery, records failure, and never records value or first action', async () => {
   const { context, events, elements, paragraphs } = cameraHarness();
   await context.startCamera();
-  assert.deepEqual(names(events), ['partsnap_camera_explanation_shown', 'scanner_camera_denied', 'partsnap_result_fail']);
-  assert.equal(events.at(-1).props.reason, 'camera_denied');
+  assert.deepEqual(names(events), ['partsnap_camera_explanation_shown', 'partsnap_camera_requested', 'scanner_camera_denied', 'partsnap_result_fail', 'partsnap_camera_denied']);
+  assert.equal(events.find(event => event.name === 'partsnap_result_fail').props.reason, 'camera_denied');
   assert.match(paragraphs[0].textContent, /denied/);
   assert.match(paragraphs[1].textContent, /existing photo/);
   assert.match(paragraphs[1].textContent, /Code Lookup/);
@@ -291,7 +292,7 @@ test('skipping camera does not invoke permission or claim activation', async () 
 test('unsupported camera still exposes existing upload/manual fallback', async () => {
   const { context, events, elements } = cameraHarness({ navigator: {} });
   await context.startCamera();
-  assert.deepEqual(names(events), ['scanner_camera_unavailable', 'partsnap_result_fail']);
+  assert.deepEqual(names(events), ['scanner_camera_unavailable', 'partsnap_result_fail', 'partsnap_camera_denied']);
   assert.equal(elements['scan-no-camera'].style.display, 'block');
 });
 

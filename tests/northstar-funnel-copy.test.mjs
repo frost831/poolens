@@ -78,11 +78,11 @@ test('saving job history requires a free save profile signal', () => {
 });
 
 test('service worker cache version ships the newest account bundle', () => {
-  assert.match(shell, /app\.js\?v=20261005-paid-intent/);
+  assert.match(shell, /app\.js\?v=20261005-native-gallery/);
   assert.match(shell, /errors\.js\?v=20261002-trust-fixes-3/);
-  assert.match(sw, /splashlens-v22-paid-intent/);
+  assert.match(sw, /splashlens-v23-native-gallery/);
   assert.match(sw, /errors\.js\?v=20261002-trust-fixes-3/);
-  assert.match(sw, /app\.js\?v=20261005-paid-intent/);
+  assert.match(sw, /app\.js\?v=20261005-native-gallery/);
 });
 
 test('checkout exposes a JSON catalog and Splash Lens Pro Unlimited metadata', () => {

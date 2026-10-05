@@ -1,10 +1,10 @@
-const CACHE = 'splashlens-v22-paid-intent';
+const CACHE = 'splashlens-v23-native-gallery';
 const ASSETS = [
   '/',
   '/index.html',
   '/js/errors.js?v=20261002-trust-fixes-3',
   '/js/data.js?v=20261002-trust-fixes-2',
-  '/js/app.js?v=20261005-paid-intent',
+  '/js/app.js?v=20261005-native-gallery',
   '/js/partsnap-boss-packet.js?v=20261005-boss-draft',
   '/js/field-signals.js?v=20260728-field-signals',
   '/js/analytics.js',

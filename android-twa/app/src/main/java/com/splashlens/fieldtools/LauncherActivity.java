@@ -44,11 +44,19 @@ public class LauncherActivity
 
     @Override
     protected Uri getLaunchingUrl() {
-        // Get the original launch Url.
         Uri uri = super.getLaunchingUrl();
-
-        
-
-        return uri;
+        if (uri == null || !"https".equalsIgnoreCase(uri.getScheme())
+                || !"app.splashlens.com".equalsIgnoreCase(uri.getHost())) {
+            uri = Uri.parse(getString(R.string.launchUrl));
+        }
+        // App links must keep the same store mode as the default launcher URL.
+        Uri.Builder builder = uri.buildUpon().clearQuery();
+        for (String name : uri.getQueryParameterNames()) {
+            if ("store".equalsIgnoreCase(name)) continue;
+            for (String value : uri.getQueryParameters(name)) {
+                builder.appendQueryParameter(name, value);
+            }
+        }
+        return builder.appendQueryParameter("store", "android").build();
     }
 }
