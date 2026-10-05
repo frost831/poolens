@@ -8242,12 +8242,12 @@ async function requestGalleryPhotoFallback() {
       await analyzeNativeGalleryPhoto(picked);
       return;
     } catch (error) {
-      if (String(error?.message || error) !== 'gallery_cancelled') {
-        trackSplashLensEvent('native_gallery_pick_failed', {
-          mode: _scanMode,
-          reason: String(error?.message || error).slice(0, 80),
-        });
-      }
+      const reason = String(error?.message || error);
+      if (reason === 'gallery_cancelled' || reason === 'gallery_busy') return;
+      trackSplashLensEvent('native_gallery_pick_failed', {
+        mode: _scanMode,
+        reason: reason.slice(0, 80),
+      });
     }
   }
 
@@ -8763,8 +8763,11 @@ function isStoreShellMode() {
 function openExternalWebUpgrade(placement = 'native_shell') {
   const store = getStoreShellMode() || 'web';
   trackSplashLensEvent('store_web_upgrade_click', { store, placement });
-  const opened = window.open(SPLASHLENS_WEB_UPGRADE_URL, '_blank', 'noopener');
-  if (!opened) window.location.href = SPLASHLENS_WEB_UPGRADE_URL;
+  const link = document.createElement('a');
+  link.href = SPLASHLENS_WEB_UPGRADE_URL;
+  link.target = '_blank';
+  link.rel = 'noopener noreferrer';
+  link.click();
 }
 
 function renderStoreWebUpgradeBridge(placement = 'native_shell') {
@@ -8774,8 +8777,8 @@ function renderStoreWebUpgradeBridge(placement = 'native_shell') {
     <div style="background:#082f49;border:1px solid #0ea5e9;border-radius:10px;padding:12px;margin:10px 0;">
       <p style="color:#7dd3fc;font-size:10px;font-weight:950;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;">Web upgrade</p>
       <p style="color:#f8fafc;font-size:13px;font-weight:950;margin-bottom:5px;">Unlock Pro on splashlens.com.</p>
-      <p style="color:#94a3b8;font-size:11px;line-height:1.4;margin-bottom:9px;">Native store builds stay FreeCore with no in-app purchase and no in-app Stripe. This opens your browser for web checkout or restore.</p>
-      <button type="button" onclick="openExternalWebUpgrade('${escAttr(placement)}')" style="width:100%;background:#0ea5e9;color:#082f49;border:0;border-radius:8px;padding:10px 7px;font-size:11px;font-weight:950;cursor:pointer;">Open Safari / Chrome</button>
+      <p style="color:#94a3b8;font-size:11px;line-height:1.4;margin-bottom:9px;">Continue in your browser.</p>
+      <button type="button" onclick="openExternalWebUpgrade('${escAttr(placement)}')" style="width:100%;background:#0ea5e9;color:#082f49;border:0;border-radius:8px;padding:10px 7px;font-size:11px;font-weight:950;cursor:pointer;">Open website</button>
     </div>`;
 }
 
@@ -9318,7 +9321,7 @@ function showScanLimitModal(result, status) {
       result.innerHTML = `
         <div style="background:#1e293b;border:1px solid #334155;border-radius:14px;padding:18px;margin:0 0 14px;text-align:center;border-left:4px solid #0284c7;">
           <p style="color:#f1f5f9;font-size:19px;font-weight:900;margin-bottom:6px;">You've used ${usage.count} of ${SCAN_LIMIT_FREE} free AI scans this month.</p>
-          <p style="color:#94a3b8;font-size:13px;line-height:1.5;margin-bottom:14px;">Manual code lookup, dosing, reports, filters, and checklists stay free. Native store builds do not include IAP or in-app Stripe.</p>
+          <p style="color:#94a3b8;font-size:13px;line-height:1.5;margin-bottom:14px;">Manual code lookup, dosing, reports, filters, and checklists stay free.</p>
           <div style="display:grid;grid-template-columns:1fr;gap:8px;">
             <button onclick="openExternalWebUpgrade('scan_limit_reached')" style="background:#0284c7;color:#fff;border:0;border-radius:10px;padding:11px 14px;font-size:12px;font-weight:900;cursor:pointer;width:100%;">Unlock on splashlens.com</button>
             <button onclick="setScanMode('lookup');document.getElementById('scan-result').innerHTML=''" style="background:#334155;color:#fff;border:0;border-radius:10px;padding:11px 14px;font-size:12px;font-weight:800;cursor:pointer;width:100%;">Use Manual Lookup</button>

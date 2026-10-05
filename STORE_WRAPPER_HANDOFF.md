@@ -14,8 +14,9 @@ Updated: October 5, 2026
 
 ## Native Camera / Gallery Contract
 
-- iOS build `8` injects `window.SplashLensNative.pickGalleryPhoto()`.
-- The bridge returns a Promise resolving to `{ name, type, dataUrl }` for one user-selected image from the iOS photo picker.
+- iOS candidate `1.0.11 (18)` injects `window.SplashLensNative.pickGalleryPhoto()`.
+- The bridge returns a Promise resolving to `{ requestId, name, type, dataUrl }` for one user-selected JPEG, normalized to at most 1600 pixels on its longest edge.
+- Cancellation rejects with `gallery_cancelled`; concurrent requests reject with `gallery_busy`. Neither should reopen a browser picker.
 - The PartSnap deny path calls the bridge first when present, then falls back to the browser file picker.
 - Expected events from the PWA deny path: `partsnap_camera_requested`, `partsnap_camera_granted`, `partsnap_camera_denied`, and `partsnap_gallery_picked`.
 - The Android TWA relies on Chrome permission prompts and the browser photo picker fallback; it declares `CAMERA` for scanner use and does not request broad media-library access.
@@ -36,7 +37,7 @@ Short description:
 
 ## iOS Fast Path
 
-Use Capacitor or Median.co to wrap:
+The existing SwiftUI/WKWebView wrapper loads:
 
 `https://app.splashlens.com/?store=ios`
 
@@ -66,6 +67,9 @@ Capture these screens on phone dimensions:
 
 ## Known Launch Constraints
 
+- Current evidence and release blockers: `docs/store/MAC_CODEX_NATIVE_EXECUTION_2026-10-05.md`. A successful archive is not a TestFlight upload.
+- Android candidate is `1.0.9` / code `10`, target SDK `36`; the validated AAB is unsigned pending the existing upload key.
+- PC must publish the native gallery adapter and external upgrade hooks, including PWA cache invalidation, before native releases are sent.
 - Native store submission still needs Mac/Xcode or store-wrapper console access.
 - App Store Connect and Google Play Console final actions cannot be completed from this Windows repo alone.
 - If Apple asks about data collection, use the public privacy page: `https://splashlens.com/privacy.html`.

@@ -1,7 +1,6 @@
 import SwiftUI
 import WebKit
 import PhotosUI
-import UniformTypeIdentifiers
 
 struct ContentView: View {
     var body: some View {
@@ -55,7 +54,7 @@ struct SplashLensWebView: UIViewRepresentable {
         let bridgeScript = WKUserScript(
             source: Self.nativeBridgeScript,
             injectionTime: .atDocumentStart,
-            forMainFrameOnly: false
+            forMainFrameOnly: true
         )
         configuration.userContentController.addUserScript(bridgeScript)
         configuration.userContentController.add(context.coordinator, name: "splashlensNativeGallery")
@@ -73,6 +72,12 @@ struct SplashLensWebView: UIViewRepresentable {
     }
 
     func updateUIView(_ webView: WKWebView, context: Context) {}
+
+    static func dismantleUIView(_ webView: WKWebView, coordinator: Coordinator) {
+        webView.configuration.userContentController.removeScriptMessageHandler(forName: "splashlensNativeGallery")
+        webView.navigationDelegate = nil
+        webView.uiDelegate = nil
+    }
 
     func makeCoordinator() -> Coordinator {
         Coordinator(storeURL: storeURL)
@@ -104,23 +109,12 @@ struct SplashLensWebView: UIViewRepresentable {
                 return
             }
 
-            if url.host == "app.splashlens.com", url.query?.contains("store=ios") != true {
-                var components = URLComponents(url: url, resolvingAgainstBaseURL: false)
-                var items = components?.queryItems ?? []
-                items.append(URLQueryItem(name: "store", value: "ios"))
-                components?.queryItems = items
-                if let adjusted = components?.url {
-                    webView.load(URLRequest(url: adjusted))
-                    decisionHandler(.cancel)
-                    return
-                }
-            }
-
-            decisionHandler(allowedHosts.contains(url.host ?? "") ? .allow : .cancel)
+            decisionHandler(url.scheme == "https" && allowedHosts.contains(url.host?.lowercased() ?? "") ? .allow : .cancel)
         }
 
         func webView(_ webView: WKWebView, createWebViewWith configuration: WKWebViewConfiguration, for navigationAction: WKNavigationAction, windowFeatures: WKWindowFeatures) -> WKWebView? {
-            if let url = navigationAction.request.url {
+            if let url = navigationAction.request.url,
+               url.scheme == "https" || shouldOpenExternally(url) {
                 UIApplication.shared.open(url)
             }
             return nil
@@ -132,8 +126,16 @@ struct SplashLensWebView: UIViewRepresentable {
 
         func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
             guard message.name == "splashlensNativeGallery",
+                  message.frameInfo.isMainFrame,
+                  message.frameInfo.securityOrigin.protocol == "https",
+                  message.frameInfo.securityOrigin.host == "app.splashlens.com",
                   let body = message.body as? [String: Any],
-                  let requestId = body["requestId"] as? String else {
+                  let requestId = body["requestId"] as? String,
+                  requestId.count <= 120 else {
+                return
+            }
+            guard galleryRequestId == nil else {
+                rejectGalleryRequest(requestId: requestId, reason: "gallery_busy")
                 return
             }
             galleryRequestId = requestId
@@ -150,22 +152,29 @@ struct SplashLensWebView: UIViewRepresentable {
                 return
             }
 
-            let typeIdentifier = provider.registeredTypeIdentifiers.first { identifier in
-                UTType(identifier)?.conforms(to: .image) == true
-            } ?? UTType.image.identifier
-
-            provider.loadDataRepresentation(forTypeIdentifier: typeIdentifier) { [weak self] data, error in
+            provider.loadObject(ofClass: UIImage.self) { [weak self] object, error in
                 guard let self else { return }
-                guard let data, error == nil else {
+                guard let image = object as? UIImage, error == nil else {
                     self.rejectGalleryRequest(requestId: requestId, reason: "gallery_read_failed")
                     return
                 }
-                let mimeType = UTType(typeIdentifier)?.preferredMIMEType ?? "image/jpeg"
-                let extensionName = UTType(typeIdentifier)?.preferredFilenameExtension ?? "jpg"
+                // Normalize HEIC and large camera photos for the existing canvas upload path.
+                let scale = min(1, 1600 / max(image.size.width, image.size.height))
+                let size = CGSize(width: max(1, image.size.width * scale), height: max(1, image.size.height * scale))
+                let format = UIGraphicsImageRendererFormat()
+                format.scale = 1
+                format.opaque = true
+                let normalized = UIGraphicsImageRenderer(size: size, format: format).image { _ in
+                    image.draw(in: CGRect(origin: .zero, size: size))
+                }
+                guard let data = normalized.jpegData(compressionQuality: 0.9) else {
+                    self.rejectGalleryRequest(requestId: requestId, reason: "gallery_read_failed")
+                    return
+                }
                 self.resolveGalleryRequest(
                     requestId: requestId,
-                    name: "splashlens-gallery.\(extensionName)",
-                    mimeType: mimeType,
+                    name: "splashlens-gallery.jpg",
+                    mimeType: "image/jpeg",
                     base64: data.base64EncodedString()
                 )
             }
@@ -179,6 +188,7 @@ struct SplashLensWebView: UIViewRepresentable {
             guard let host = url.host?.lowercased() else {
                 return false
             }
+            guard url.scheme == "https" else { return false }
 
             if host == "app.splashlens.com" {
                 let components = URLComponents(url: url, resolvingAgainstBaseURL: false)
