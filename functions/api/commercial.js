@@ -40,14 +40,14 @@ const PLAN_CATALOG = [
   {
     lane: 'pro',
     label: 'Splash Lens Pro',
-    price: '$29/mo or $249/yr',
+    price: '$19/mo or $149/yr',
     status: 'live_checkout',
     included: ['more PartSnap/AI scanning', 'saved job proof', 'customer-ready notes', 'supplier handoff text'],
   },
   {
     lane: 'teams',
     label: 'Team Workspaces',
-    price: '$149/company/mo target',
+    price: '$49-79/owner/mo; techs free',
     status: 'pilot_request',
     included: ['crew invites', 'shared proof history', 'owner usage signals', 'team report exports'],
   },
