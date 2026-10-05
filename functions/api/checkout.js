@@ -2,12 +2,12 @@ import { checkoutAttribution, recordPaymentEvent } from '../_shared/payment-funn
 
 const PLAN_CONFIG = {
   monthly: {
-    amount: 2900,
+    amount: 1900,
     interval: 'month',
     label: 'Splash Lens Pro Unlimited Monthly',
   },
   yearly: {
-    amount: 24900,
+    amount: 14900,
     interval: 'year',
     label: 'Splash Lens Pro Unlimited Annual',
   },
@@ -44,6 +44,23 @@ function paidCheckoutEnabled(env) {
   return !/^(0|false|off|disabled)$/i.test(String(env.SPLASHLENS_PAID_CHECKOUT_ENABLED || '').trim());
 }
 
+async function configuredPriceMatchesPlan(env, priceId, planConfig) {
+  try {
+    const response = await fetch(`https://api.stripe.com/v1/prices/${encodeURIComponent(priceId)}`, {
+      headers: { Authorization: `Bearer ${env.STRIPE_SECRET_KEY}` },
+    });
+    if (!response.ok) return false;
+    const price = await response.json();
+    return price.active === true
+      && price.currency === 'usd'
+      && price.unit_amount === planConfig.amount
+      && price.recurring?.interval === planConfig.interval
+      && price.recurring?.interval_count === 1;
+  } catch {
+    return false;
+  }
+}
+
 async function createCheckoutSession(request, env, plan) {
   if (!env.STRIPE_SECRET_KEY) return null;
 
@@ -51,6 +68,10 @@ async function createCheckoutSession(request, env, plan) {
   const planKey = normalizedPlan(plan);
   const planConfig = PLAN_CONFIG[planKey];
   const configuredPrice = priceForPlan(env, planKey);
+  if (configuredPrice && !(await configuredPriceMatchesPlan(env, configuredPrice, planConfig))) {
+    console.error('SplashLens checkout Price ID does not match the published plan');
+    return { configurationError: true };
+  }
   const params = new URLSearchParams();
   params.set('mode', 'subscription');
   if (configuredPrice) {
@@ -151,19 +172,19 @@ export async function onRequestGet({ request, env }) {
         {
           key: 'partsnap_pro_monthly',
           label: 'Splash Lens Pro Unlimited Monthly',
-          priceLabel: '$29/month',
-          checkoutConfigured: checkoutEnabled && (stripeReady || Boolean(paymentLinkForPlan(env, 'monthly'))),
+          priceLabel: '$19/month',
+          checkoutConfigured: checkoutEnabled && (stripeReady || (Boolean(paymentLinkForPlan(env, 'monthly')) && env.SPLASHLENS_PAYMENT_LINK_PRICING_VERSION === '2026-10-growth')),
         },
         {
           key: 'partsnap_pro_yearly',
           label: 'Splash Lens Pro Unlimited Annual',
-          priceLabel: '$249/year',
-          checkoutConfigured: checkoutEnabled && (stripeReady || Boolean(paymentLinkForPlan(env, 'yearly'))),
+          priceLabel: '$149/year',
+          checkoutConfigured: checkoutEnabled && (stripeReady || (Boolean(paymentLinkForPlan(env, 'yearly')) && env.SPLASHLENS_PAYMENT_LINK_PRICING_VERSION === '2026-10-growth')),
         },
         {
           key: 'team_proof_os_monthly',
           label: 'SplashLens Teams',
-          priceLabel: '$149/company/month pilot target',
+          priceLabel: '$49-79/owner/month; techs free',
           checkoutConfigured: false,
           requestAccessConfigured: true,
         },
@@ -207,6 +228,12 @@ export async function onRequestGet({ request, env }) {
   }
 
   const session = await createCheckoutSession(request, env, plan);
+  if (session?.configurationError) {
+    return Response.json({ ok: false, error: 'Checkout pricing is being updated. Please try again later.' }, {
+      status: 503,
+      headers: { 'Cache-Control': 'no-store' },
+    });
+  }
   if (session) {
     await recordCheckoutStarted(request, env, plan, 'stripe_checkout_session');
     await recordPaymentEvent(env, 'checkout_session_created', session.id, {
@@ -217,7 +244,7 @@ export async function onRequestGet({ request, env }) {
   }
 
   const target = paymentLinkForPlan(env, plan);
-  if (target) {
+  if (target && env.SPLASHLENS_PAYMENT_LINK_PRICING_VERSION === '2026-10-growth') {
     await recordCheckoutStarted(request, env, plan, 'payment_link_direct');
     const attribution = checkoutAttribution(Object.fromEntries(url.searchParams));
     const paymentUrl = new URL(target);

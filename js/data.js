@@ -217,7 +217,7 @@ window.SPLASHLENS_MONETIZATION_LANES = {
       name: "Splash Lens Pro Unlimited",
       planKey: "partsnap_pro_monthly",
       availability: "self_serve",
-      price: "$29/mo or $249/yr target",
+      price: "$19/mo or $149/yr",
       buyer: "Solo techs who want unlimited scanner use and job memory",
       includes: ["Everything in FreeCore", "Unlimited PartSnap and Error Scan usage where paid access is available", "Unlimited saved jobs on this device", "Customer-safe summaries", "Boss/counter packets", "Repeat Issue Watch"],
       guardrail: "Search links are for price checking; verify model, dimensions, and current parts diagram before ordering."
@@ -226,7 +226,7 @@ window.SPLASHLENS_MONETIZATION_LANES = {
       name: "Teams",
       planKey: "team_proof_os_monthly",
       availability: "pilot",
-      price: "$149/company/mo target",
+      price: "$49-79/owner/mo; techs free",
       buyer: "Owners who want field visibility without replacing their route app",
       includes: ["Everything in Pro", "See what techs used, searched, and missed", "Company name on customer summaries and job packets", "Daily check and incident workflows for facility customers", "Team searched/missed reports in plain language"],
       guardrail: "Exports support existing CRMs; SplashLens is not a billing replacement."

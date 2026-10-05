@@ -36,7 +36,9 @@ test('pricing catalog uses the simplified North Star plan ladder', () => {
   assert.match(data, /Free to Start/);
   assert.match(data, /Free Field Profile/);
   assert.match(data, /Splash Lens Pro Unlimited/);
-  assert.match(data, /\$29\/mo or \$249\/yr target/);
+  assert.match(data, /\$19\/mo or \$149\/yr/);
+  assert.match(data, /\$49-79\/owner\/mo; techs free/);
+  assert.doesNotMatch(data, /\$29\/mo or \$249\/yr|\$149\/company\/mo/);
   assert.match(data, /Teams/);
   assert.doesNotMatch(data, /Saved Job Pro/);
   assert.doesNotMatch(data, /Free, No Account/);
