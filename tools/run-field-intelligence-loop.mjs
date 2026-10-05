@@ -489,7 +489,8 @@ function buildRecommendations({ probes, env, stats, admin }) {
     const signals = Object.fromEntries(signalRows.map((row) => [row.key, Number(row.count || 0)]));
     const firstActions = Number(stats.metrics?.firstActions30d ?? signals.first_action ?? 0);
     const firstValues = Number(stats.metrics?.firstValues30d ?? signals.first_value ?? 0);
-    const checkoutClicks = Number(stats.metrics?.checkoutStarts30d ?? stats.metrics?.checkoutClicks30d ?? signals.checkout_intent ?? 0);
+    const checkoutClicks = Number(stats.metrics?.checkoutClicks30d ?? signals.checkout_intent ?? 0);
+    const checkoutStarts = Number(stats.metrics?.checkoutStarts30d ?? checkoutClicks);
     if (firstActions >= 5 && firstValues / firstActions < 0.5) {
       const signalRatio = Math.round((firstValues / firstActions) * 1000) / 10;
       recommendations.push({
@@ -515,11 +516,19 @@ function buildRecommendations({ probes, env, stats, admin }) {
         fix: 'Move the Did this help? trap closer to PartSnap/result completion and make Wrong/Missing one tap.',
       });
     }
-    if (Number(stats.metrics?.checkoutStarts30d ?? stats.metrics?.checkoutClicks30d ?? 0) > 0 && Number(stats.metrics?.splashlensPaidCompletions30d ?? stats.metrics?.splashlensPaidCompletions ?? 0) === 0) {
+    if (checkoutStarts > 0 && checkoutClicks === 0) {
+      recommendations.push({
+        severity: 'medium',
+        issue: 'A Stripe checkout session was created without a tracked app click',
+        evidence: `${checkoutStarts} server-created checkout starts and 0 tracked checkout clicks in 30 days; customer intent is unverified.`,
+        fix: 'Inspect the matching Stripe session status and source before classifying this as a real prospect or payment failure.',
+      });
+    }
+    if (checkoutStarts > 0 && checkoutClicks > 0 && Number(stats.metrics?.splashlensPaidCompletions30d ?? stats.metrics?.splashlensPaidCompletions ?? 0) === 0) {
       recommendations.push({
         severity: 'high',
         issue: 'Checkout intent exists with no paid completion proof',
-        evidence: `${stats.metrics.checkoutStarts30d ?? stats.metrics.checkoutClicks30d} checkout starts and 0 new SplashLens paid completions.`,
+        evidence: `${checkoutStarts} checkout starts, ${checkoutClicks} tracked clicks, and 0 new SplashLens paid completions.`,
         fix: 'Check Stripe dashboard sessions, webhook delivery, and entitlement fulfillment immediately.',
       });
     }

@@ -160,6 +160,30 @@ test('field intelligence runner flags value-without-feedback and checkout-withou
   assert.ok(recommendations.some((item) => /Checkout intent exists/.test(item.issue)));
 });
 
+test('a server checkout start without an app click is not called customer intent', () => {
+  const recommendations = buildRecommendations({
+    env: { statsSecret: false, amplitudeApiKey: false, stripeSecretKey: false },
+    probes: [
+      { label: 'app', ok: true, status: 200 },
+      { label: 'site', ok: true, status: 200 },
+      { label: 'checkoutCatalog', ok: true, status: 200, body: '{"product":"splashlens","plans":[{"key":"partsnap_pro_monthly","checkoutConfigured":true},{"key":"partsnap_pro_yearly","checkoutConfigured":true}]}' },
+      { label: 'amplitudeConfig', ok: true, status: 200, body: '{"ok":true,"enabled":true,"status":"ready"}' },
+      { label: 'statsNoSecret', ok: false, status: 401 },
+    ],
+    stats: {
+      ok: true,
+      metrics: { firstValues30d: 18, feedback30d: 6, checkoutClicks30d: 0, checkoutStarts30d: 1, splashlensPaidCompletions30d: 0 },
+      activitySignals30d: [],
+      storeSignals: [],
+    },
+    admin: null,
+  });
+
+  assert.ok(recommendations.some((item) => /without a tracked app click/.test(item.issue)));
+  assert.ok(recommendations.some((item) => /not producing paid-lane intent/.test(item.issue)));
+  assert.ok(!recommendations.some((item) => /Checkout intent exists/.test(item.issue)));
+});
+
 test('field intelligence arguments default to production SplashLens URLs', () => {
   assert.deepEqual(parseArgs([]), {
     baseUrl: 'https://app.splashlens.com',
