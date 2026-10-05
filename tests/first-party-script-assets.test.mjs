@@ -3,6 +3,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { test } from 'node:test';
+import vm from 'node:vm';
 
 const root = dirname(dirname(fileURLToPath(import.meta.url)));
 const html = readFileSync(join(root, 'index.html'), 'utf8');
@@ -51,6 +52,35 @@ test('service worker supports offline routes and never caches API or authenticat
   assert.match(serviceWorker, /x-splashlens-account-token/);
   assert.match(serviceWorker, /x-splashlens-profile-token/);
   assert.match(serviceWorker, /if \(!sameOrigin \|\| authenticated/);
+});
+
+test('offline store-mode navigation uses the cached shell when fetch returns an error response', async () => {
+  const handlers = {};
+  const shell = new Response('<main>SplashLens offline</main>', { headers: { 'content-type': 'text/html' } });
+  const context = vm.createContext({
+    URL, Response,
+    self: {
+      location: { origin: 'https://app.splashlens.com' },
+      addEventListener: (name, handler) => { handlers[name] = handler; },
+    },
+    caches: {
+      match: async key => key === '/index.html' ? shell.clone() : undefined,
+      open: async () => ({ put: async () => {} }),
+    },
+    fetch: async () => Response.error(),
+  });
+  vm.runInContext(serviceWorker, context);
+  let responsePromise;
+  handlers.fetch({
+    request: {
+      method: 'GET', mode: 'navigate', url: 'https://app.splashlens.com/?store=ios',
+      headers: new Headers(),
+    },
+    respondWith: promise => { responsePromise = promise; },
+  });
+  const response = await responsePromise;
+  assert.equal(response.status, 200);
+  assert.match(await response.text(), /SplashLens offline/);
 });
 
 test('field signals API methods used by app shell are implemented', () => {
