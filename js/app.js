@@ -7706,7 +7706,7 @@ const SCAN_ENTITLEMENT_TOKEN_KEY = 'sl_scan_entitlement_token';
 const SCAN_ENTITLEMENT_META_KEY = 'sl_scan_entitlement_meta';
 const PARTSNAP_MONTHLY_LINK = '/api/checkout?plan=monthly';
 const PARTSNAP_YEARLY_LINK = '/api/checkout?plan=yearly';
-const SPLASHLENS_WEB_UPGRADE_URL = 'https://splashlens.com/?upgrade=splashlens-pro#pricing';
+const SPLASHLENS_WEB_UPGRADE_URL = 'https://splashlens.com/?upgrade=splashlens-pro';
 const PARTSNAP_RESTORE_ENDPOINT = '/api/restore-entitlement';
 const SPLASHLENS_EVENT_ENDPOINT = '/api/events';
 const SPLASHLENS_FREE_PROFILE_ENDPOINT = '/api/free-profile';
@@ -8794,12 +8794,8 @@ function isStoreShellMode() {
 function openExternalWebUpgrade(placement = 'native_shell') {
   const store = getStoreShellMode() || 'web';
   trackSplashLensEvent('store_web_upgrade_click', { store, placement });
-  const url = new URL(SPLASHLENS_WEB_UPGRADE_URL);
-  url.searchParams.set('store', store);
-  url.searchParams.set('utm_source', 'splashlens_native');
-  url.searchParams.set('utm_medium', 'app');
   const link = document.createElement('a');
-  link.href = url.href;
+  link.href = SPLASHLENS_WEB_UPGRADE_URL;
   link.target = '_blank';
   link.rel = 'noopener noreferrer';
   link.click();

@@ -74,8 +74,7 @@ test('the store upgrade opens one external browser handoff and leaves the wrappe
     window,
     getStoreShellMode: () => 'ios',
     trackSplashLensEvent: () => {},
-    SPLASHLENS_WEB_UPGRADE_URL: 'https://splashlens.com/?upgrade=splashlens-pro#pricing',
-    URL,
+    SPLASHLENS_WEB_UPGRADE_URL: 'https://splashlens.com/?upgrade=splashlens-pro',
     document: { createElement: () => {
       const link = { click() { links.push({ href: this.href, target: this.target, rel: this.rel }); } };
       return link;
@@ -84,6 +83,6 @@ test('the store upgrade opens one external browser handoff and leaves the wrappe
   vm.runInContext(app.slice(app.indexOf('function openExternalWebUpgrade'),
     app.indexOf('function renderStoreWebUpgradeBridge')), context);
   context.openExternalWebUpgrade('test');
-  assert.deepEqual(links, [{ href: 'https://splashlens.com/?upgrade=splashlens-pro&store=ios&utm_source=splashlens_native&utm_medium=app#pricing', target: '_blank', rel: 'noopener noreferrer' }]);
+  assert.deepEqual(links, [{ href: 'https://splashlens.com/?upgrade=splashlens-pro', target: '_blank', rel: 'noopener noreferrer' }]);
   assert.equal(window.location.href, 'https://app.splashlens.com/?store=ios');
 });
