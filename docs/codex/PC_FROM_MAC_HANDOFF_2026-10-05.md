@@ -1,5 +1,13 @@
 # PC Handoff From Mac - 2026-10-05
 
+## Resume Update After PC Deployment
+
+The original integration landed in PC revision `bd83d0c`. Read the latest status in `docs/store/MAC_CODEX_NATIVE_EXECUTION_2026-10-05.md`; the earlier checklist below is historical where superseded.
+
+**PC action now:** deploy the small native-gallery adapter correction in this branch. Production CSP blocks the old `fetch(dataUrl)`, so selection currently reopens another picker. Mac changed only the adapter to decode base64 locally and added its regression test; PC must own deployment and script/service-worker cache invalidation. Keep production CSP unchanged.
+
+The iOS distribution IPA exported and passed signing/identity checks, but remains unuploaded. Resolve the native purchase-link policy hold in `docs/ops/native-web-bridge-readiness-2026-10-05.md` before store uploads. ASC confirms 175 available territories; native upgrade links are not storefront-gated. Opening a browser does not prove eligibility. No IAP is authorized. Android still requires the existing upload key, not another app's key or a replacement.
+
 ## Fetch This Work
 
 Repository: `frost831/poolens`.

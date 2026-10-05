@@ -8245,9 +8245,12 @@ async function requestGalleryPhotoFallback() {
 
 async function analyzeNativeGalleryPhoto(picked = {}) {
   const dataUrl = String(picked.dataUrl || '');
-  if (!dataUrl.startsWith('data:image/')) throw new Error('native_gallery_invalid_image');
-  const response = await fetch(dataUrl);
-  const blob = await response.blob();
+  const comma = dataUrl.indexOf(',');
+  const format = /^data:(image\/[a-z0-9.+-]+);base64$/i.exec(dataUrl.slice(0, comma));
+  if (comma < 0 || !format || dataUrl.length > 14 * 1024 * 1024) throw new Error('native_gallery_invalid_image');
+  // Decode locally: production connect-src intentionally disallows data: fetches.
+  const bytes = Uint8Array.from(atob(dataUrl.slice(comma + 1)), character => character.charCodeAt(0));
+  const blob = new Blob([bytes], { type: format[1] });
   const name = String(picked.name || 'splashlens-gallery-photo.jpg').slice(0, 120);
   const type = String(picked.type || blob.type || 'image/jpeg').slice(0, 80);
   const file = typeof File === 'function'

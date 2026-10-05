@@ -2,6 +2,22 @@
 
 Scope: MAC-01 through MAC-05 from `docs/codex/MAC_CODEX_NATIVE_TICKETS_2026-10-05.md`.
 
+## Resumed Testing Status
+
+The sections below retain the earlier build/export snapshot. This section supersedes its release blockers after PC deployment `bd83d0c`:
+
+- PC deployed the gallery/external-upgrade hooks and cache `splashlens-v23-native-gallery`; live script uses `v=20261005-native-gallery`. Mac synced that published revision without modifying PC backend/site/worker work. Native files are unchanged from the audited candidates.
+- Distribution export now succeeded: `/Users/macbookpro/poolens-mac-release-2026-10-05/ios-export-resume/SplashLens.ipa`, SHA256 `d545602cba4ca06d6d3c97b8aafb22192c45057b945fef6fc99c8bba7cb37de4`. Exported app identity is `com.splashlens.app`, `1.0.11 (18)`, Apple Distribution team `2XSLXV9H74`; codesign verification passes, `get-task-allow=false`, `beta-reports-active=true`, permission strings and active App Store profile match. No StoreKit or third-party billing framework is linked. No upload was attempted.
+- Integrated regression suite passed all 195 tests with browser integration enabled, without skips. The new CSP regression raises that total to 196.
+- **New live bug found and corrected locally:** `fetch(dataUrl)` is blocked by production `connect-src`, causing native selection to reopen the browser picker. Installed simulator denial -> Pick Gallery -> actual PHPicker selection reproduced this second-picker failure. The adapter now decodes base64 locally with `atob`/`Uint8Array`/`Blob`; no CSP relaxation or worker changes. A new regression prohibits network fetch during native image decoding.
+- Browser test substituted only the local adapter script under unchanged production response headers: one 512x512 frame, one analysis-path invocation, one `partsnap_gallery_picked`. Backend analysis was isolated; this is not an AI accuracy test. **PC must deploy this correction and invalidate its script/cache version before installed-native gallery acceptance can pass.**
+- Fresh comparison confirms web lookup offer has checkout; iOS/Android have only external handoff. This technical behavior does not establish store-policy eligibility.
+- **Release-policy hold:** PC packet `docs/ops/native-web-bridge-readiness-2026-10-05.md` explicitly holds native external digital-upgrade CTAs. ASC readback shows availability in 175 territories, not US-only. The current native link is not gated by trustworthy storefront/program eligibility. Apple permits a US-storefront exception but restricts other storefronts; Google requires applicable program enrollment and requirements. Safari/Chrome opening alone is not approval. Sources: https://developer.apple.com/app-store/review/guidelines/ and https://support.google.com/googleplay/android-developer/answer/9858738?hl=en.
+- No IAP, regional enrollment, agreement acceptance, territory change, or production deployment was performed. Resolve the purchase-link hold with the user/PC before uploading, while preserving FreeCore/manual fallback.
+- Android existing upload key is still not located on this Mac; unrelated app keys must not be substituted. Android signing/device checks remain open.
+
+New evidence is retained privately alongside the earlier logs: `regression-browser-csp-fix.log`, `ios-export-resume/`, `asc-territories-resume.json`, `ios-native-csp-second-picker.png`, and the resumed browser/simulator receipts.
+
 ## Implemented
 
 - iOS permission strings now describe user-initiated pool/spa equipment label, marking, display, and test-strip scanning.

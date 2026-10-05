@@ -49,6 +49,27 @@ test('an unavailable or failed native picker falls back to the browser picker', 
   }
 });
 
+test('native gallery data decodes locally without a CSP-blocked network fetch', async () => {
+  let analyzed;
+  const context = vm.createContext({
+    Blob, File, Uint8Array, atob,
+    fetch: () => { throw new Error('CSP disallows data: fetch'); },
+    analyzeScanImageFile: async (file, source) => { analyzed = { file, source }; },
+  });
+  vm.runInContext(app.slice(app.indexOf('async function analyzeNativeGalleryPhoto'),
+    app.indexOf('async function analyzeScanImageFile')), context);
+  await context.analyzeNativeGalleryPhoto({
+    name: 'splashlens-gallery.jpg', type: 'image/jpeg', dataUrl: 'data:image/jpeg;base64,dGVzdA==',
+  });
+  assert.equal(analyzed.source, 'native_gallery');
+  assert.equal(analyzed.file.name, 'splashlens-gallery.jpg');
+  assert.equal(analyzed.file.type, 'image/jpeg');
+  assert.equal(await analyzed.file.text(), 'test');
+  await assert.rejects(context.analyzeNativeGalleryPhoto({ dataUrl: 'https://example.com/photo.jpg' }), /invalid_image/);
+  await assert.rejects(context.analyzeNativeGalleryPhoto({ dataUrl: 'data:text/html;base64,dGVzdA==' }), /invalid_image/);
+  await assert.rejects(context.analyzeNativeGalleryPhoto({ dataUrl: 'data:image/jpeg;base64X' }), /invalid_image/);
+});
+
 test('the injected iOS bridge resolves and rejects the matching request and removes its resolver', async () => {
   const script = swift.split('private static let nativeBridgeScript = """')[1].split('"""')[0];
   const requests = [];
