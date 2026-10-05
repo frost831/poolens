@@ -106,6 +106,7 @@ export async function forwardEventToAmplitude(env, record, props = {}) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
+      signal: AbortSignal.timeout(3000),
     });
     return { sent: response.ok, status: response.status };
   } catch (error) {

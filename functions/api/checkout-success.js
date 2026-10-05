@@ -1,3 +1,5 @@
+import { recordPaymentEvent, sessionAttribution } from '../_shared/payment-funnel.mjs';
+
 const TOKEN_PREFIX = 'sl_scan_v1';
 const textEncoder = new TextEncoder();
 
@@ -248,6 +250,10 @@ async function issueActivation(session, env, subscription) {
     await env.SCAN_USAGE_KV.delete(`entitlement_revoked:${subject}`);
   }
 
+  const proof = { plan: payload.plan, path: '/api/checkout-success', props: { ...sessionAttribution(session), payment_status: session.payment_status } };
+  await recordPaymentEvent(env, 'checkout_completed', session.id, proof);
+  await recordPaymentEvent(env, 'subscription_created', String(session.subscription || ''), proof);
+  await recordPaymentEvent(env, 'entitlement_granted', session.id, proof);
   return { activateUrl, subject };
 }
 

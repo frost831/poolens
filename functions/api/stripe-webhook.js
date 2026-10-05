@@ -1,3 +1,5 @@
+import { recordPaymentEvent, sessionAttribution } from '../_shared/payment-funnel.mjs';
+
 const TOKEN_PREFIX = 'sl_scan_v1';
 const ACCEPTED_EVENTS = new Set([
   'checkout.session.completed',
@@ -451,6 +453,11 @@ async function storeLifecycleEvent(object, eventType, env) {
     subscriptionId || customer || eventType,
     JSON.stringify({ event_type: eventType, stripe_customer_id: customer, subscription_id: subscriptionId, status }).slice(0, 2400),
   ).run();
+  if (eventType === 'customer.subscription.created') {
+    await recordPaymentEvent(env, 'subscription_created', subscriptionId, {
+      plan, path: '/api/stripe-webhook', props: sessionAttribution(object),
+    });
+  }
   return { ok: true, stored: true, subject, status };
 }
 
@@ -519,6 +526,10 @@ export async function onRequestPost({ request, env }) {
 
   const stored = await storeEntitlement(session, event.type, env);
   if (!stored.ok) return json({ ok: false, error: stored.error }, 422);
+  const proof = { plan: cleanPlan(session), path: '/api/stripe-webhook', props: { ...sessionAttribution(session), payment_status: session.payment_status } };
+  await recordPaymentEvent(env, 'checkout_completed', session.id, proof);
+  await recordPaymentEvent(env, 'subscription_created', String(session.subscription || ''), proof);
+  await recordPaymentEvent(env, 'entitlement_granted', session.id, proof);
   if (webhookDb) await markWebhookProcessed(webhookDb, receipt.eventId);
   return json({ ok: true, event: event.type, subject: stored.subject, entitlementStored: true });
 }

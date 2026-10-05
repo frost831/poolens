@@ -78,7 +78,7 @@
     <div id="status" class="tiny"></div>
     <section class="grid metrics" id="metrics"></section>
     <section class="section-title">
-      <h2>Conversion Funnel</h2>
+      <h2>Activity Signals</h2>
       <span class="tiny" id="generated"></span>
     </section>
     <section class="grid two">
@@ -145,7 +145,6 @@
       return table(rows || [], [
         { label:'Stage', key:'label' },
         { label:'Count', key:'count' },
-        { label:'From previous', render:(r) => r.conversionFromPrevious == null ? '<span class="tiny">n/a</span>' : `<span class="pill">${esc(r.conversionFromPrevious)}%</span>` },
       ]);
     }
 
@@ -212,9 +211,16 @@
         const t = admin.totals || {};
         document.getElementById('metrics').innerHTML = [
           metric('Events 30d', m.events30d || 0, 'Production-clean app events'),
-          metric('First actions 30d', m.firstActions30d || 0, 'Lookup, scan, challenge, Facility'),
-          metric('Useful results 30d', m.firstValues30d || 0, 'PartSnap, saved proof, summaries'),
-          metric('Checkout clicks 30d', m.checkoutClicks30d || 0, 'Upgrade intent'),
+          metric('First actions 30d', m.firstActions30d || 0, 'Canonical first_action_started events'),
+          metric('Useful results 30d', m.firstValues30d || 0, `${m.qualifiedFirstValueSessions30d || 0} distinct sessions; zero results excluded`),
+          metric('PartSnap results 30d', m.partSnapResults30d || 0, `${m.partSnapResultFailures30d || 0} failed or recovery attempts`),
+          metric('Checkout offers seen 30d', m.checkoutCtaShown30d || 0, 'Visible checkout CTAs'),
+          metric('Checkout clicks 30d', m.checkoutClicks30d || 0, 'Customer checkout intent'),
+          metric('Stripe sessions created 30d', m.checkoutSessionsCreated30d || 0, `${m.unattributedCheckoutSessions30d || 0} without a matching click`),
+          metric('Legacy checkout starts 30d', m.checkoutStarts30d || 0, 'Historical server events, not customer clicks'),
+          metric('Checkouts completed 30d', m.checkoutCompleted30d || 0, 'Server-verified payment stage'),
+          metric('Subscriptions created 30d', m.subscriptionCreated30d || 0, 'Server-verified subscription stage'),
+          metric('Entitlements granted 30d', m.entitlementGranted30d || 0, 'Server-verified access grants'),
           metric('Active entitlements', t.entitlementsActive || 0, `${t.entitlementsTotal || 0} total`),
           metric('Open access requests', t.intakeOpen || 0, 'Teams, facility, partner, training'),
           metric('Proof records 30d', t.proofLast30 || 0, 'Server-side proof metadata'),

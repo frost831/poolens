@@ -620,6 +620,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initProductIntelligenceTracking();
   trackReferralLandingOpen();
   trackSplashLensAppOpen();
+  initCheckoutClientTracking();
 });
 
 // ═══════════════════════════════════════════
@@ -726,12 +727,7 @@ function startFieldChallenge(path = 'partsnap') {
     route: normalized,
     source: 'homepage_challenge',
   });
-  trackSplashLensEvent('first_action_started', {
-    role: getSplashLensRole() || 'tech',
-    action: `field60_${normalized}`,
-    challenge_path: normalized,
-    workflow_style: getWorkflowStyle(),
-  });
+  trackFirstActionStarted(getSplashLensRole() || 'tech', `field60_${normalized}`);
 
   if (normalized === 'closing') {
     enterSplashLensApp('report');
@@ -1021,7 +1017,7 @@ function renderRoleNextAction(role = getSplashLensRole()) {
         <h2>${escHtml(cfg.title)}</h2>
         <p>${escHtml(cfg.body)}</p>
         <div class="role-next-actions">
-          ${cfg.actions.map(([label, variant, action]) => `<button type="button" class="${variant}" onclick="trackFirstActionStarted('${escAttr(role)}','${escAttr(label)}');${action}">${escHtml(label)}</button>`).join('')}
+          ${cfg.actions.map(([label, variant, action]) => `<button type="button" class="${variant}" onclick="${action}">${escHtml(label)}</button>`).join('')}
         </div>
       </div>
       <div class="role-next-payoff">
@@ -1031,14 +1027,21 @@ function renderRoleNextAction(role = getSplashLensRole()) {
     </div>`;
 }
 
-function trackFirstActionStarted(role, action) {
+function trackFirstActionStarted(role, action, props = {}) {
+  if (/partsnap|identify part/i.test(action) && !props.has_frame) return;
+  const key = 'splashlens-first-action-started-v1';
+  if (trackFirstActionStarted.completed) return;
+  try { if (sessionStorage.getItem(key)) return; } catch {}
   const challenge = getFieldChallengeContext();
   trackSplashLensEvent('first_action_started', {
     role: normalizeSplashLensRole(role) || getSplashLensRole() || '',
     action,
     workflow_style: getWorkflowStyle(),
     challenge_path: challenge.challenge_path || '',
+    ...props,
   });
+  trackFirstActionStarted.completed = true;
+  try { sessionStorage.setItem(key, '1'); } catch {}
 }
 
 function showFacilityTools() {
@@ -2115,7 +2118,7 @@ function renderVerifiedProofNetwork() {
         ${plan.planKey === 'free_save_profile'
           ? `<button type="button" class="brain-action green" style="width:100%;margin-top:8px;" onclick="ensureFieldSaveAccount('pricing_catalog')">Create free save profile</button>`
           : plan.planKey && plan.planKey !== 'free_core'
-            ? `<button type="button" class="brain-action green" style="width:100%;margin-top:8px;" onclick="openSplashLensPaidLane('${escHtml(plan.planKey)}','${escHtml(plan.name)}')">${plan.availability === 'self_serve' ? 'Start paid plan' : 'Request Teams access'}</button>`
+            ? `<button type="button" ${plan.availability === 'self_serve' && !isStoreShellMode() ? `data-checkout-plan="${escAttr(plan.planKey)}" data-checkout-placement="paid_lane"` : ''} class="brain-action green" style="width:100%;margin-top:8px;" onclick="openSplashLensPaidLane('${escHtml(plan.planKey)}','${escHtml(plan.name)}')">${plan.availability === 'self_serve' ? 'Start paid plan' : 'Request Teams access'}</button>`
             : ''}
       </div>
     </details>
@@ -2142,12 +2145,7 @@ async function openSplashLensPaidLane(planKey, label) {
     const payload = await response.json();
     const plan = (payload.plans || []).find(item => item.key === safePlan);
     if (plan && plan.checkoutConfigured) {
-      trackSplashLensEvent('checkout_click', {
-        plan: /year|annual/i.test(safePlan) ? 'yearly' : 'monthly',
-        feature: 'unlimited_partsnap',
-        placement: 'paid_lane',
-      });
-      window.location.href = `/api/checkout?plan=${encodeURIComponent(safePlan)}`;
+      window.location.href = trackCheckoutIntent(safePlan, 'paid_lane');
       return;
     }
   } catch {}
@@ -2526,7 +2524,7 @@ function renderSplashLensCommercialSection(commercialPayload = {}) {
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:10px;">
         ${storeShell
           ? `<button type="button" onclick="openExternalWebUpgrade('account_dashboard')" style="border:0;text-align:center;border-radius:9px;background:#0f766e;color:#fff;font-size:12px;font-weight:950;padding:11px 8px;cursor:pointer;">Unlock on web</button>`
-          : `<a href="/api/checkout?plan=monthly" onclick="trackSplashLensEvent('checkout_click',{plan:'monthly',source:'account_dashboard'});trackSplashLensEvent('account_pro_checkout_clicked',{plan:'monthly',source:'account_dashboard'})" style="display:block;text-align:center;text-decoration:none;border-radius:9px;background:#0f766e;color:#fff;font-size:12px;font-weight:950;padding:11px 8px;">Get Pro</a>`}
+          : `<a data-checkout-plan="monthly" data-checkout-placement="account_dashboard" href="${getCheckoutUrl('monthly', 'account_dashboard')}" onclick="this.href=trackCheckoutIntent('monthly','account_dashboard');trackSplashLensEvent('account_pro_checkout_clicked',{plan:'monthly',source:'account_dashboard'})" style="display:block;text-align:center;text-decoration:none;border-radius:9px;background:#0f766e;color:#fff;font-size:12px;font-weight:950;padding:11px 8px;">Get Pro</a>`}
         <button type="button" onclick="requestSplashLensCommercialAccess('teams')" style="border:1px solid #0369a1;border-radius:9px;background:#fff;color:#0369a1;font-size:12px;font-weight:950;padding:11px 8px;cursor:pointer;">Request team</button>
       </div>
       <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin-bottom:10px;">
@@ -3479,6 +3477,7 @@ function toggleCode(uid) {
   const open = det.classList.toggle('open');
   chev.style.transform = open ? 'rotate(180deg)' : '';
   if (open) {
+    trackFirstActionStarted(getSplashLensRole(), 'manual_code_lookup');
     const card = det.closest('.error-card');
     const code = card?.dataset.code || '';
     const answerName = card?.dataset.answerName || '';
@@ -7824,9 +7823,11 @@ async function capturePartSnapEvidenceFrame(canvas, result, status) {
     if (status) status.textContent = 'ADD DIMENSIONS OR MARK THEM UNAVAILABLE';
     if (result) result.innerHTML = `<div style="background:#431407;border:1px solid #b45309;border-radius:10px;padding:12px;margin:8px 0;color:#fed7aa;font-size:12px;font-weight:850;line-height:1.45;">Add a dimension or fit note above, or mark dimensions unavailable. An unavailable dimension keeps the final result on order hold.</div>`;
     trackSplashLensEvent('partsnap_evidence_blocked', { step: step.key, reason: 'dimension_status_missing' });
+    trackPartSnapResultFailure('dimension_status_missing');
     return false;
   }
   _partSnapEvidenceSession.captures[step.key] = canvas.toDataURL('image/jpeg', 0.82);
+  trackFirstActionStarted(getSplashLensRole(), 'partsnap_evidence_capture', { has_frame: true });
   trackSplashLensEvent('partsnap_evidence_step_completed', {
     step: step.key,
     step_number: currentIndex + 1,
@@ -7920,6 +7921,7 @@ function updateAIStatusBar() {
 }
 
 function setScanMode(mode) {
+  if (mode !== _scanMode) stopCamera();
   _scanMode = mode;
   if (getSplashLensRole() === 'facility') {
     trackFacilityEvent('scan_used', { lane: 'manual', mode });
@@ -7985,11 +7987,6 @@ function openLivePartSnap() {
     if (result) result.innerHTML = '';
     startPartSnapEvidenceSession('primary_identify_part');
     setScanMode('parts');
-    trackSplashLensEvent('first_action_started', {
-      role: getSplashLensRole(),
-      action: 'Use real PartSnap',
-      workflow_style: getWorkflowStyle(),
-    });
     requestAnimationFrame(() => {
       document.documentElement.scrollTop = 0;
       document.body.scrollTop = 0;
@@ -8004,20 +8001,11 @@ function openFieldCodeLookup() {
   setTimeout(() => {
     setScanMode('lookup');
     document.getElementById('scan-code-input')?.focus();
-    trackSplashLensEvent('first_action_started', {
-      role: getSplashLensRole(),
-      action: 'Look Up Code',
-      workflow_style: getWorkflowStyle(),
-    });
   }, 80);
 }
 
 function openFieldProofPacket() {
-  trackSplashLensEvent('first_action_started', {
-    role: getSplashLensRole(),
-    action: 'Build Proof Packet',
-    workflow_style: getWorkflowStyle(),
-  });
+  trackFirstActionStarted(getSplashLensRole(), 'Build Proof Packet');
   startServiceProofWorkflow('part');
 }
 
@@ -8189,22 +8177,23 @@ async function deletePartSnapFieldStop(id) {
 
 // ── Camera ──────────────────────────────────
 
-function revealNoCameraFallback(noCam, vWrap) {
+function revealNoCameraFallback(noCam, vWrap, reason = 'camera_unavailable') {
   if (vWrap) vWrap.style.display = 'none';
   const controls = document.getElementById('scan-camera-controls');
   if (controls) controls.style.display = 'none';
   if (!noCam) return;
   noCam.style.display = 'block';
+  noCam.parentElement?.prepend(noCam);
+  // A library upload must not reopen the denied camera via the capture hint.
+  document.getElementById('scan-photo-upload')?.removeAttribute('capture');
+  const messages = noCam.querySelectorAll('p');
+  if (messages[0]) messages[0].textContent = reason === 'permission_denied' ? 'Camera permission was denied.' : 'Camera is not available.';
+  if (messages[1]) messages[1].textContent = 'Allow Camera in device or browser settings, then tap Retry Camera. You can also upload an existing photo or use free manual Code Lookup without camera access.';
   const status = document.getElementById('scan-camera-status');
   if (status) status.textContent = 'CAMERA UNAVAILABLE - RETRY OR UPLOAD A PHOTO';
   noCam.style.scrollMarginBottom = 'calc(184px + env(safe-area-inset-bottom))';
-  setTimeout(() => {
-    if (_scanMode === 'parts') {
-      document.getElementById('partsnap-evidence-guide')?.scrollIntoView({ block: 'start', inline: 'nearest', behavior: 'auto' });
-      return;
-    }
-    noCam.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-  }, 60);
+  noCam.style.scrollMarginTop = '100px';
+  requestAnimationFrame(() => noCam.scrollIntoView({ block: 'start', inline: 'nearest', behavior: 'auto' }));
 }
 
 function retryCameraAccess() {
@@ -8215,7 +8204,7 @@ function retryCameraAccess() {
   if (vWrap) vWrap.style.display = 'block';
   if (controls) controls.style.display = 'flex';
   trackSplashLensEvent('scanner_camera_retry_clicked', { mode: _scanMode });
-  startCamera();
+  return startCamera();
 }
 
 function showSplashLensCameraSettingsHelp() {
@@ -8359,14 +8348,22 @@ function renderPartSnapReviewTickets() {
     </div>`;
 }
 
-function startCamera() {
+let partSnapCameraExplained = false;
+let cameraRequestPending = false;
+let cameraRequestGeneration = 0;
+
+async function startCamera() {
+  if (cameraRequestPending) return;
+  const requestedMode = _scanMode;
+  const generation = cameraRequestGeneration;
   const video  = document.getElementById('scan-video');
   const noCam  = document.getElementById('scan-no-camera');
   const vWrap  = document.getElementById('scan-viewfinder-wrap');
   if (!video) return;
   if (!navigator.mediaDevices?.getUserMedia) {
     trackSplashLensEvent('scanner_camera_unavailable', { mode: _scanMode, reason: 'media_devices_unsupported' });
-    if (_scanMode === 'parts') {
+    if (requestedMode === 'parts') {
+      trackPartSnapResultFailure('camera_unavailable');
       trackSplashLensEvent('partsnap_camera_denied', { reason: 'media_devices_unsupported', store: getStoreShellMode() || 'web' });
     }
     revealNoCameraFallback(noCam, vWrap);
@@ -8379,11 +8376,33 @@ function startCamera() {
     if (noCam)  noCam.style.display = 'none';
     return;
   }
-  if (_scanMode === 'parts') {
-    trackSplashLensEvent('partsnap_camera_requested', { store: getStoreShellMode() || 'web' });
-  }
-  navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } } })
-    .then(stream => {
+  cameraRequestPending = true;
+  try {
+    if (requestedMode === 'parts' && !partSnapCameraExplained) {
+      trackSplashLensEvent('partsnap_camera_explanation_shown', { source: 'app', mode: 'parts' });
+      const consent = await openSplashLensSheet({
+        eyebrow: 'PartSnap camera',
+        title: 'Capture proof of the part',
+        body: 'PartSnap uses the camera for equipment, model plate, marking, and fit photos. Captured photos are sent for AI analysis after the evidence set is ready and your scan profile is verified. Possible matches still need manufacturer verification. Camera access is optional: upload existing photos or use free Code Lookup.',
+        primaryLabel: 'Continue to camera',
+        secondaryLabel: 'Use photo or lookup',
+      });
+      if (generation !== cameraRequestGeneration || _scanMode !== requestedMode) return;
+      if (!consent) {
+        trackSplashLensEvent('partsnap_camera_explanation_dismissed', { source: 'app', mode: 'parts' });
+        revealNoCameraFallback(noCam, vWrap, 'camera_skipped');
+        return;
+      }
+      partSnapCameraExplained = true;
+    }
+    if (requestedMode === 'parts') {
+      trackSplashLensEvent('partsnap_camera_requested', { store: getStoreShellMode() || 'web' });
+    }
+    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } } });
+    if (generation !== cameraRequestGeneration || _scanMode !== requestedMode) {
+      stream.getTracks().forEach(track => track.stop());
+      return;
+    }
       _scanStream = stream;
       _flashTrack = stream.getVideoTracks()[0] || null;
       video.srcObject = stream;
@@ -8391,24 +8410,29 @@ function startCamera() {
       if (noCam)  noCam.style.display = 'none';
       const controls = document.getElementById('scan-camera-controls');
       if (controls) controls.style.display = 'flex';
-      trackSplashLensEvent('scanner_camera_ready', { mode: _scanMode });
-      if (_scanMode === 'parts') {
+      trackSplashLensEvent('scanner_camera_ready', { mode: requestedMode });
+      if (requestedMode === 'parts') {
         trackSplashLensEvent('partsnap_camera_granted', { store: getStoreShellMode() || 'web' });
       }
-    })
-    .catch((error) => {
+  } catch (error) {
+      if (generation !== cameraRequestGeneration || _scanMode !== requestedMode) return;
       trackSplashLensEvent('scanner_camera_denied', {
-        mode: _scanMode,
+        mode: requestedMode,
         reason: error?.name || 'camera_request_failed',
       });
-      if (_scanMode === 'parts') {
+      const denied = ['NotAllowedError', 'PermissionDeniedError'].includes(error?.name);
+      if (requestedMode === 'parts') {
+        trackPartSnapResultFailure(denied ? 'camera_denied' : 'camera_unavailable');
         trackSplashLensEvent('partsnap_camera_denied', {
           reason: error?.name || 'camera_request_failed',
           store: getStoreShellMode() || 'web',
         });
       }
-      revealNoCameraFallback(noCam, vWrap);
-    });
+      revealNoCameraFallback(noCam, vWrap, denied ? 'permission_denied' : 'camera_unavailable');
+  } finally {
+    cameraRequestPending = false;
+    if (generation !== cameraRequestGeneration && S.tab === 'scan' && ['parts', 'camera', 'strip'].includes(_scanMode)) startCamera();
+  }
 }
 
 function toggleFlashlight() {
@@ -8422,6 +8446,7 @@ function toggleFlashlight() {
 }
 
 function stopCamera() {
+  cameraRequestGeneration += 1;
   if (_flashOn && _flashTrack) {
     _flashTrack.applyConstraints({ advanced: [{ torch: false }] }).catch(() => {});
     _flashOn = false;
@@ -8442,12 +8467,15 @@ async function captureAndAnalyze() {
   const result = document.getElementById('scan-result');
   if (!video || !canvas) return;
 
-  if (_scanUploadedFrameReady) {
+  if (_scanMode === 'parts' && getPartSnapEvidenceSummary().complete) {
+    _scanUploadedFrameReady = false;
+  } else if (_scanUploadedFrameReady) {
     _scanUploadedFrameReady = false;
   } else {
     if (!video.videoWidth || !video.videoHeight) {
       if (status) status.textContent = 'CAMERA IS NOT READY - RETRY OR UPLOAD A PHOTO';
       trackSplashLensEvent('scanner_capture_blocked_no_frame', { mode: _scanMode });
+      if (_scanMode === 'parts') trackPartSnapResultFailure('no_camera_frame');
       return;
     }
     canvas.width = video.videoWidth;
@@ -8485,6 +8513,7 @@ async function captureAndAnalyze() {
       await composePartSnapEvidenceSheet(canvas);
     } catch {
       trackSplashLensEvent('partsnap_evidence_compose_failed', { capture_count: getPartSnapEvidenceSummary().captureCount });
+      trackPartSnapResultFailure('evidence_compose_failed');
       if (status) status.textContent = 'EVIDENCE SET COULD NOT BE COMBINED - RETRY';
       return;
     }
@@ -8506,6 +8535,7 @@ async function captureAndAnalyze() {
 
   // Offline strip and parts need AI — show message
   if (isStripScan || isPartsScan) {
+    if (isPartsScan) trackPartSnapResultFailure('offline');
     if (status) status.textContent = 'INTERNET REQUIRED FOR AI SCAN';
     if (result) result.innerHTML = `<div style="background:#1e293b;border:1px solid #334155;border-radius:10px;padding:20px;text-align:center;">
       <p style="color:#fbbf24;font-size:14px;font-weight:700;margin-bottom:8px;">${isStripScan ? '🧪 Test Strip' : '🔧 PartSnap'} requires AI</p>
@@ -8604,6 +8634,7 @@ function partSnapPreflightCopy(code) {
 }
 
 function showPartSnapImagePreflight(preflight, result, status) {
+  trackPartSnapResultFailure('photo_quality');
   if (status) status.textContent = 'PHOTO NEEDS PROOF BEFORE AI SCAN';
   const primary = preflight.blockers[0] || preflight.warnings[0] || 'retake';
   const [title, body] = partSnapPreflightCopy(primary);
@@ -8753,7 +8784,7 @@ function getStoreShellMode() {
       return '';
     }
   } catch {}
-  return localStorage.getItem(STORE_SHELL_KEY) || '';
+  try { return localStorage.getItem(STORE_SHELL_KEY) || ''; } catch { return ''; }
 }
 
 function isStoreShellMode() {
@@ -9174,6 +9205,7 @@ function claimActivationCompletion(activationType) {
 }
 
 function maybeTrackActivationCompleted(eventName, props = {}) {
+  if (eventName === 'partsnap_result' && props.useful_result !== true) return;
   const activationType = ACTIVATION_EVENT_TYPES.get(eventName);
   if (!activationType) return;
   const attribution = getSplashLensAttribution();
@@ -9336,8 +9368,8 @@ function showScanLimitModal(result, status) {
         <p style="color:#f1f5f9;font-size:19px;font-weight:900;margin-bottom:6px;">You've used ${usage.count} of ${SCAN_LIMIT_FREE} free AI scans this month.</p>
         <p style="color:#94a3b8;font-size:13px;line-height:1.5;margin-bottom:14px;">Manual code lookup, dosing, reports, filters, and checklists stay free. Your free profile keeps scanner usage tied to you. Upgrade Splash Lens Pro Unlimited for unlimited scanner access and saved job memory where paid access is available.</p>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
-          <a href="${PARTSNAP_MONTHLY_LINK}" target="_blank" rel="noopener" onclick="trackCheckoutIntent('monthly','scan_limit_reached')" style="background:#0284c7;color:#fff;text-decoration:none;border-radius:10px;padding:12px 8px;font-size:13px;font-weight:900;">$29 / mo</a>
-          <a href="${PARTSNAP_YEARLY_LINK}" target="_blank" rel="noopener" onclick="trackCheckoutIntent('yearly','scan_limit_reached')" style="background:#16a34a;color:#fff;text-decoration:none;border-radius:10px;padding:12px 8px;font-size:13px;font-weight:900;">$249 / yr</a>
+          <a data-checkout-plan="monthly" data-checkout-placement="scan_limit_reached" href="${getCheckoutUrl('monthly', 'scan_limit_reached')}" target="_blank" rel="noopener" onclick="this.href=trackCheckoutIntent('monthly','scan_limit_reached')" style="background:#0284c7;color:#fff;text-decoration:none;border-radius:10px;padding:12px 8px;font-size:13px;font-weight:900;">$19 / mo</a>
+          <a data-checkout-plan="yearly" data-checkout-placement="scan_limit_reached" href="${getCheckoutUrl('yearly', 'scan_limit_reached')}" target="_blank" rel="noopener" onclick="this.href=trackCheckoutIntent('yearly','scan_limit_reached')" style="background:#16a34a;color:#fff;text-decoration:none;border-radius:10px;padding:12px 8px;font-size:13px;font-weight:900;">$149 / yr</a>
         </div>
         <button onclick="restorePartSnapPro()" style="width:100%;background:#334155;color:#e2e8f0;border:0;border-radius:10px;padding:10px 8px;font-size:12px;font-weight:900;cursor:pointer;">Restore Pro from checkout email</button>
         <p style="color:#64748b;font-size:10px;line-height:1.4;margin-top:10px;">After web checkout, use the signed activation link. If browser storage is cleared, restore with the checkout email. Store builds remain FreeCore until native billing is added.</p>
@@ -9372,12 +9404,7 @@ function trackSplashLensEvent(name, props = {}) {
   const clientId = getScanClientId();
   const attribution = getSplashLensAttribution();
   const identity = getSplashLensIdentityProfile();
-  const sessionKey = 'splashlens-session-id';
-  let sessionId = sessionStorage.getItem(sessionKey);
-  if (!sessionId) {
-    sessionId = `session-${Date.now().toString(36)}-${clientId.slice(0, 8)}`;
-    sessionStorage.setItem(sessionKey, sessionId);
-  }
+  const sessionId = getAnalyticsSessionId(clientId);
   const eventProps = sanitizeAnalyticsProps({
     client_id: clientId,
     session_id: sessionId,
@@ -9409,7 +9436,7 @@ function trackSplashLensEvent(name, props = {}) {
 
   const payload = JSON.stringify(withLanguageMetadata({
     event: name,
-    source: attribution.source || props.source || 'app',
+    source: /^checkout_(cta_shown|click)$/.test(name) ? 'app' : attribution.source || props.source || 'app',
     path: window.location.pathname,
     props: withLanguageMetadata(eventProps),
   }));
@@ -9649,6 +9676,7 @@ async function callAIScan(canvas, mode, result, status) {
     const payload = await res.json().catch(() => ({}));
     if (!res.ok) {
       if (payload.profileRequired) {
+        if (mode === 'parts_snap') trackPartSnapResultFailure('profile_required');
         trackSplashLensEvent('ai_scan_blocked', { mode, reason: 'profile_required', status: res.status });
         localStorage.removeItem(FREE_PROFILE_TOKEN_KEY);
         localStorage.removeItem(ACCOUNT_TOKEN_KEY);
@@ -9668,6 +9696,7 @@ async function callAIScan(canvas, mode, result, status) {
         return;
       }
       if (res.status === 429 && /free scan limit/i.test(payload.error || '')) {
+        if (mode === 'parts_snap') trackPartSnapResultFailure('free_limit_reached');
         trackSplashLensEvent('ai_scan_blocked', { mode, reason: 'free_limit_reached', status: res.status });
         syncScanUsageFromServer({ source: 'free_metered', count: payload.limit || SCAN_LIMIT_FREE });
         trackSplashLensEvent('scan_limit_reached_server', { mode, limit: payload.limit || SCAN_LIMIT_FREE, upgrade: payload.upgrade || '' });
@@ -9675,6 +9704,7 @@ async function callAIScan(canvas, mode, result, status) {
         return;
       }
       if ([401, 402, 403].includes(res.status) && entitlementToken) {
+        if (mode === 'parts_snap') trackPartSnapResultFailure('entitlement_rejected');
         trackSplashLensEvent('ai_scan_blocked', { mode, reason: 'entitlement_rejected', status: res.status });
         localStorage.removeItem(SCAN_ENTITLEMENT_TOKEN_KEY);
         localStorage.removeItem(SCAN_ENTITLEMENT_META_KEY);
@@ -9749,6 +9779,19 @@ async function callAIScan(canvas, mode, result, status) {
       reason: err && err.name === 'TypeError' ? 'network_or_worker_unavailable' : 'scan_request_failed',
     });
     // Network error or worker unavailable — fall back to offline path
+    if (mode === 'parts_snap') {
+      trackPartSnapResultFailure(err?.name === 'TypeError' ? 'network_or_worker_unavailable' : 'scan_request_failed');
+      if (status) status.textContent = 'PARTSNAP UNAVAILABLE - RETRY OR USE CODE LOOKUP';
+      if (result) result.innerHTML = `<div style="background:#1e293b;border:1px solid #334155;border-radius:8px;padding:16px;color:#e2e8f0;">
+        <p style="font-size:14px;font-weight:800;margin-bottom:8px;">PartSnap could not analyze these photos.</p>
+        <p style="font-size:12px;line-height:1.45;margin-bottom:12px;">Check your connection and retry the evidence set. Free manual Code Lookup is still available.</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <button type="button" onclick="captureAndAnalyze()" style="padding:12px;border:0;border-radius:8px;background:#0284c7;color:#fff;font-weight:800;">Retry analysis</button>
+          <button type="button" onclick="setScanMode('lookup')" style="padding:12px;border:1px solid #7dd3fc;border-radius:8px;background:#fff;color:#0369a1;font-weight:800;">Code Lookup</button>
+        </div>
+      </div>`;
+      return;
+    }
     if (status) status.textContent = 'AI UNAVAILABLE — USING LOCAL SCAN';
     if ('TextDetector' in window) {
       canvas.convertToBlob({ type: 'image/jpeg' }).then(blob =>
@@ -9769,8 +9812,9 @@ async function callAIScan(canvas, mode, result, status) {
 
 function getScanClientId() {
   const key = 'splashlens-scan-client-id';
-  let id = localStorage.getItem(key);
-  if (!id) {
+  let id = getScanClientId.cached || '';
+  try { id = localStorage.getItem(key) || id; } catch {}
+  if (!/^(?:[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}|scan-[a-f0-9]{1,64})$/i.test(id)) {
     if (crypto.randomUUID) {
       id = crypto.randomUUID();
     } else {
@@ -9778,8 +9822,21 @@ function getScanClientId() {
       crypto.getRandomValues(bytes);
       id = `scan-${Array.from(bytes, n => n.toString(16)).join('')}`;
     }
-    localStorage.setItem(key, id);
+    try { localStorage.setItem(key, id); } catch {}
   }
+  getScanClientId.cached = id;
+  return id;
+}
+
+function getAnalyticsSessionId(clientId = getScanClientId()) {
+  const key = 'splashlens-session-id';
+  let id = getAnalyticsSessionId.cached || '';
+  try { id = sessionStorage.getItem(key) || id; } catch {}
+  if (!/^session-[a-z0-9]+-[a-z0-9-]{1,8}$/i.test(id)) {
+    id = `session-${Date.now().toString(36)}-${clientId.slice(0, 8)}`;
+    try { sessionStorage.setItem(key, id); } catch {}
+  }
+  getAnalyticsSessionId.cached = id;
   return id;
 }
 
@@ -9917,6 +9974,7 @@ function renderPartsSnapResult(ai, result, status) {
     status.textContent = status.textContent.replace('POSSIBLE MATCH:', 'POSSIBLE MATCH:');
   }
   trackSplashLensEvent('partsnap_result', {
+    useful_result: !showGuidedRetry && !low && (knownPartSnapComponent(ai) || corpusCandidates.length > 0),
     confidence: confidence || 'unknown',
     category: category || 'unknown',
     risk: risk.level,
@@ -10051,6 +10109,14 @@ function renderPartsSnapResult(ai, result, status) {
     missingProof: missingProof.length ? missingProof : ladder.missing,
   });
   if (!showGuidedRetry && !low && (component || corpusCandidates.length)) {
+    if (!knownPartSnapComponent(ai) && !corpusCandidates.length) {
+      trackPartSnapResultFailure('no_match', { confidence: confidence || 'unknown' });
+      return;
+    }
+    trackSplashLensEvent('partsnap_result_success', {
+      source: 'app', workflow: 'partsnap_result', confidence: confidence || 'unknown',
+      result_count: Math.max(1, corpusCandidates.length), verification_ready: orderGate.verificationReady,
+    });
     trackFirstUsefulResult('partsnap_result', result, {
       role: getSplashLensRole(),
       confidence: confidence || 'unknown',
@@ -10060,7 +10126,13 @@ function renderPartsSnapResult(ai, result, status) {
       proof_missing_count: missingProof.length || (ladder.missing || []).length,
       time_back_message: 'Part path, missing proof, and packet actions are visible.',
     });
+  } else {
+    trackPartSnapResultFailure(showGuidedRetry ? 'more_proof_needed' : low ? 'low_confidence' : 'no_match', { confidence: confidence || 'unknown' });
   }
+}
+
+function trackPartSnapResultFailure(reason, props = {}) {
+  trackSplashLensEvent('partsnap_result_fail', { source: 'app', workflow: 'partsnap_result', reason, ...props });
 }
 
 function renderPartSnapFeedbackTrap(ai = {}, candidates = [], ladder = {}, missingProof = [], risk = {}) {
@@ -10252,8 +10324,8 @@ function renderPostValueUpgradeOffer() {
       <p style="color:#f8fafc;font-size:13px;font-weight:950;margin-bottom:4px;">Need PartSnap throughout the route?</p>
       <p style="color:#94a3b8;font-size:11px;line-height:1.4;margin-bottom:9px;">A free field profile includes 3 AI scans each month. Pro Unlimited unlocks unlimited scanner access, saved job memory, customer-safe summaries, and boss/counter packets where paid access is available. Code lookup, dosing, notes, and core field tools stay free to start.</p>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;">
-        <a href="${PARTSNAP_MONTHLY_LINK}" target="_blank" rel="noopener" onclick="trackPostValueUpgrade('monthly','field_stop_saved')" style="background:#0284c7;color:#fff;text-decoration:none;text-align:center;border-radius:8px;padding:10px 7px;font-size:11px;font-weight:950;">$29 monthly</a>
-        <a href="${PARTSNAP_YEARLY_LINK}" target="_blank" rel="noopener" onclick="trackPostValueUpgrade('yearly','field_stop_saved')" style="background:#16a34a;color:#fff;text-decoration:none;text-align:center;border-radius:8px;padding:10px 7px;font-size:11px;font-weight:950;">$249 yearly</a>
+        <a data-checkout-plan="monthly" data-checkout-placement="field_stop_saved" href="${getCheckoutUrl('monthly', 'field_stop_saved')}" target="_blank" rel="noopener" onclick="this.href=trackPostValueUpgrade('monthly','field_stop_saved')" style="background:#0284c7;color:#fff;text-decoration:none;text-align:center;border-radius:8px;padding:10px 7px;font-size:11px;font-weight:950;">$19 monthly</a>
+        <a data-checkout-plan="yearly" data-checkout-placement="field_stop_saved" href="${getCheckoutUrl('yearly', 'field_stop_saved')}" target="_blank" rel="noopener" onclick="this.href=trackPostValueUpgrade('yearly','field_stop_saved')" style="background:#16a34a;color:#fff;text-decoration:none;text-align:center;border-radius:8px;padding:10px 7px;font-size:11px;font-weight:950;">$149 yearly</a>
       </div>
     </div>`;
 }
@@ -10271,20 +10343,114 @@ function renderPartSnapResultUpgradeOffer(placement = 'partsnap_result') {
       <p style="color:#7dd3fc;font-size:10px;font-weight:950;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;">Keep the result</p>
       <p style="color:#f8fafc;font-size:13px;font-weight:950;margin-bottom:9px;">Save this job, customer summary, and equipment history with Pro.</p>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;">
-        <a href="${PARTSNAP_MONTHLY_LINK}" target="_blank" rel="noopener" onclick="trackPostValueUpgrade('monthly','${escAttr(placement)}')" style="background:#0ea5e9;color:#082f49;text-decoration:none;text-align:center;border-radius:8px;padding:10px 7px;font-size:11px;font-weight:950;">Go Pro $29</a>
-        <a href="${PARTSNAP_YEARLY_LINK}" target="_blank" rel="noopener" onclick="trackPostValueUpgrade('yearly','${escAttr(placement)}')" style="background:#22c55e;color:#052e16;text-decoration:none;text-align:center;border-radius:8px;padding:10px 7px;font-size:11px;font-weight:950;">Save yearly</a>
+        <a data-checkout-plan="monthly" data-checkout-placement="${escAttr(placement)}" href="${getCheckoutUrl('monthly', placement)}" target="_blank" rel="noopener" onclick="this.href=trackPostValueUpgrade('monthly','${escAttr(placement)}')" style="background:#0ea5e9;color:#082f49;text-decoration:none;text-align:center;border-radius:8px;padding:10px 7px;font-size:11px;font-weight:950;">Go Pro $19</a>
+        <a data-checkout-plan="yearly" data-checkout-placement="${escAttr(placement)}" href="${getCheckoutUrl('yearly', placement)}" target="_blank" rel="noopener" onclick="this.href=trackPostValueUpgrade('yearly','${escAttr(placement)}')" style="background:#22c55e;color:#052e16;text-decoration:none;text-align:center;border-radius:8px;padding:10px 7px;font-size:11px;font-weight:950;">Save yearly</a>
       </div>
     </div>`;
 }
 
 function trackCheckoutIntent(plan, placement) {
-  trackSplashLensEvent('checkout_click', { plan, feature: 'unlimited_partsnap', placement });
-  trackSplashLensEvent('upgrade_click', { plan, feature: 'unlimited_partsnap', placement });
+  if (isStoreShellMode()) return '';
+  const props = getCheckoutAttribution(plan, placement);
+  props.client_reference_id = `sl_checkout_${createCheckoutUUID()}`;
+  trackSplashLensEvent('checkout_click', props);
+  trackSplashLensEvent('upgrade_click', props);
+  return getCheckoutUrl(plan, placement, props);
 }
 
 function trackPostValueUpgrade(plan, placement = 'partsnap_result') {
-  trackCheckoutIntent(plan, placement);
+  const url = trackCheckoutIntent(plan, placement);
+  if (!url) return '';
   trackSplashLensEvent('post_value_upgrade_clicked', { plan, feature: 'unlimited_partsnap', placement });
+  return url;
+}
+
+function createCheckoutUUID() {
+  if (typeof crypto.randomUUID === 'function') return crypto.randomUUID();
+  const bytes = crypto.getRandomValues(new Uint8Array(16));
+  bytes[6] = (bytes[6] & 15) | 64;
+  bytes[8] = (bytes[8] & 63) | 128;
+  const hex = Array.from(bytes, value => value.toString(16).padStart(2, '0')).join('');
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
+}
+
+function getCheckoutAttribution(plan, placement) {
+  const clientId = getScanClientId();
+  const store = getStoreShellMode();
+  const safePlacement = String(placement || '').trim().toLowerCase();
+  return {
+    source: 'app',
+    plan: /year|annual/i.test(String(plan || '')) ? 'yearly' : 'monthly',
+    feature: 'unlimited_partsnap',
+    placement: /^[a-z0-9_-]{1,80}$/.test(safePlacement) ? safePlacement : 'app_upgrade',
+    store: ['ios', 'android'].includes(store) ? store : 'web',
+    client_id: clientId,
+    session_id: getAnalyticsSessionId(clientId),
+  };
+}
+
+function getCheckoutUrl(plan, placement, props = getCheckoutAttribution(plan, placement)) {
+  if (isStoreShellMode()) return '';
+  const params = new URLSearchParams({
+    plan: props.plan, source: 'app', placement: props.placement, store: props.store,
+    client_id: props.client_id, session_id: props.session_id,
+  });
+  if (/^sl_checkout_[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(props.client_reference_id || '')) {
+    params.set('client_reference_id', props.client_reference_id);
+  }
+  return `/api/checkout?${params}`;
+}
+
+function initCheckoutClientTracking() {
+  const shown = new WeakSet();
+  const seen = new WeakSet();
+  const selector = '[data-checkout-plan]';
+  function recordShown(element) {
+    if (isStoreShellMode() || shown.has(element) || !element.isConnected || document.visibilityState === 'hidden') return;
+    if (!element.getClientRects().length || getComputedStyle(element).visibility !== 'visible') return;
+    const rect = element.getBoundingClientRect();
+    if (rect.bottom <= 0 || rect.right <= 0 || rect.top >= window.innerHeight || rect.left >= window.innerWidth) return;
+    shown.add(element);
+    trackSplashLensEvent('checkout_cta_shown', getCheckoutAttribution(element.dataset.checkoutPlan, element.dataset.checkoutPlacement));
+  }
+  const observer = typeof IntersectionObserver === 'function'
+    ? new IntersectionObserver(entries => entries.forEach(entry => { if (entry.isIntersecting) recordShown(entry.target); }))
+    : null;
+  function scan() {
+    document.querySelectorAll(selector).forEach(element => {
+      if (!seen.has(element)) {
+        seen.add(element);
+        observer?.observe(element);
+      }
+      recordShown(element);
+    });
+  }
+  let queued = false;
+  function schedule() {
+    if (queued) return;
+    queued = true;
+    requestAnimationFrame(() => { queued = false; scan(); });
+  }
+  new MutationObserver(schedule).observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['class', 'style', 'open'] });
+  window.addEventListener('scroll', schedule, true);
+  window.addEventListener('resize', schedule);
+  document.addEventListener('visibilitychange', schedule);
+  document.addEventListener('click', event => {
+    if (!isStoreShellMode() || !event.target.closest?.(selector)) return;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    showSplashLensNotice('Web checkout is unavailable in this native store build.');
+  }, true);
+  document.addEventListener('auxclick', event => {
+    const link = event.target.closest?.('a[data-checkout-plan]');
+    if (!link || event.button !== 1) return;
+    if (isStoreShellMode()) {
+      event.preventDefault();
+      return;
+    }
+    link.href = trackCheckoutIntent(link.dataset.checkoutPlan, link.dataset.checkoutPlacement);
+  }, true);
+  scan();
 }
 
 function renderPartSnapProofSnapshot(ladder = {}, risk = {}, visibleEvidence = [], missingProof = [], orderGate = {}) {
@@ -11052,6 +11218,7 @@ function scanManualSearch(val) {
   if (!el || !val.trim()) { if (el) el.innerHTML = ''; return; }
   const hits = searchErrorDB(val.trim());
   el.innerHTML = renderScanHits(hits, val.trim());
+  trackFirstActionStarted(getSplashLensRole(), 'manual_code_lookup');
   if (hits.length) trackFirstUsefulResult('scan_manual_code_answer', el, { result_count: hits.length, role: getSplashLensRole() });
 }
 
@@ -11103,6 +11270,7 @@ function scanCodeSearch(val) {
   }
   const safeQuery = query.replace(/[^a-zA-Z0-9 ._-]/g, '').slice(0, 40);
   const hits = searchErrorDB(query, _scanBrand);
+  trackFirstActionStarted(getSplashLensRole(), 'manual_code_lookup');
   el.innerHTML = renderScanHits(hits, query);
   if (!hits.length && _scanBrand && searchErrorDB(query).length) {
     el.innerHTML += `<button type="button" onclick="setScanBrand(null)" style="display:block;width:100%;margin:10px 0;background:#0369a1;color:#fff;border:0;border-radius:6px;padding:10px;font-weight:800;cursor:pointer;">Search all brands</button>`;
@@ -11235,8 +11403,8 @@ function renderManualLookupUpgradeOffer(resultCount, query) {
       <p style="color:#7dd3fc;font-size:10px;font-weight:950;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;">Keep the result</p>
       <p style="color:#f8fafc;font-size:13px;font-weight:950;margin-bottom:9px;">Save this job, customer summary, and equipment history with Pro.</p>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;">
-        <a href="${PARTSNAP_MONTHLY_LINK}" target="_blank" rel="noopener" onclick="trackPostValueUpgrade('monthly','scan_lookup_search')" style="background:#0ea5e9;color:#082f49;text-decoration:none;text-align:center;border-radius:8px;padding:10px 7px;font-size:11px;font-weight:950;">Go Pro $29</a>
-        <a href="${PARTSNAP_YEARLY_LINK}" target="_blank" rel="noopener" onclick="trackPostValueUpgrade('yearly','scan_lookup_search')" style="background:#22c55e;color:#052e16;text-decoration:none;text-align:center;border-radius:8px;padding:10px 7px;font-size:11px;font-weight:950;">Save yearly</a>
+        <a data-checkout-plan="monthly" data-checkout-placement="scan_lookup_search" href="${getCheckoutUrl('monthly', 'scan_lookup_search')}" target="_blank" rel="noopener" onclick="this.href=trackPostValueUpgrade('monthly','scan_lookup_search')" style="background:#0ea5e9;color:#082f49;text-decoration:none;text-align:center;border-radius:8px;padding:10px 7px;font-size:11px;font-weight:950;">Go Pro $19</a>
+        <a data-checkout-plan="yearly" data-checkout-placement="scan_lookup_search" href="${getCheckoutUrl('yearly', 'scan_lookup_search')}" target="_blank" rel="noopener" onclick="this.href=trackPostValueUpgrade('yearly','scan_lookup_search')" style="background:#22c55e;color:#052e16;text-decoration:none;text-align:center;border-radius:8px;padding:10px 7px;font-size:11px;font-weight:950;">Save yearly</a>
       </div>
     </div>`;
 }

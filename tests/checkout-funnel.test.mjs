@@ -58,7 +58,7 @@ test('Pro checkout creates a live subscription route with product metadata and a
   assert.equal(params.get('mode'), 'subscription');
   assert.equal(params.get('metadata[product]'), 'splashlens');
   assert.equal(params.get('metadata[feature]'), 'scanner');
-  assert.equal(params.get('line_items[0][price_data][unit_amount]'), '2900');
+  assert.equal(params.get('line_items[0][price_data][unit_amount]'), '1900');
   assert.equal(params.get('success_url'), 'https://app.splashlens.com/api/checkout-success?session_id={CHECKOUT_SESSION_ID}');
   assert.deepEqual(recorded.filter((entry) => entry.sql.includes("VALUES ('checkout_started'"))[0]?.values, ['monthly', 'stripe_checkout_session', '']);
 });
@@ -76,6 +76,51 @@ test('failed checkout does not report a start', async (t) => {
   });
   assert.equal(response.status, 503);
   assert.equal(recorded.length, 0);
+});
+
+test('stale configured Stripe Price ID fails closed before creating a session', async (t) => {
+  const requests = [];
+  t.mock.method(console, 'error', () => {});
+  t.mock.method(globalThis, 'fetch', async (url) => {
+    requests.push(String(url));
+    return Response.json({ active: true, currency: 'usd', unit_amount: 2900, recurring: { interval: 'month', interval_count: 1 } });
+  });
+  const response = await checkout({
+    request: new Request('https://app.splashlens.com/api/checkout?plan=monthly'),
+    env: {
+      STRIPE_SECRET_KEY: 'sk_test_placeholder',
+      SPLASHLENS_STRIPE_PRICE_MONTHLY_PRO: 'price_old_monthly',
+      SPLASHLENS_STRIPE_LINK_MONTHLY_PRO: 'https://buy.stripe.com/old',
+    },
+  });
+  assert.equal(response.status, 503);
+  assert.deepEqual(requests, ['https://api.stripe.com/v1/prices/price_old_monthly']);
+});
+
+test('matching configured Stripe Price ID is used for checkout', async (t) => {
+  let params;
+  t.mock.method(globalThis, 'fetch', async (url, options) => {
+    if (String(url).includes('/v1/prices/')) {
+      return Response.json({ active: true, currency: 'usd', unit_amount: 14900, recurring: { interval: 'year', interval_count: 1 } });
+    }
+    params = new URLSearchParams(options.body);
+    return Response.json({ id: 'cs_yearly', url: 'https://checkout.stripe.com/c/pay/cs_yearly' });
+  });
+  const response = await checkout({
+    request: new Request('https://app.splashlens.com/api/checkout?plan=yearly'),
+    env: { STRIPE_SECRET_KEY: 'sk_test_placeholder', SPLASHLENS_STRIPE_PRICE_YEARLY_PRO: 'price_new_yearly' },
+  });
+  assert.equal(response.status, 302);
+  assert.equal(params.get('line_items[0][price]'), 'price_new_yearly');
+  assert.equal(params.has('line_items[0][price_data][unit_amount]'), false);
+});
+
+test('unverified payment link cannot bypass the new price', async () => {
+  const response = await checkout({
+    request: new Request('https://app.splashlens.com/api/checkout?plan=monthly'),
+    env: { SPLASHLENS_STRIPE_LINK_MONTHLY_PRO: 'https://buy.stripe.com/old' },
+  });
+  assert.equal(response.status, 503);
 });
 
 test('an old paid checkout cannot reactivate a canceled subscription', async (t) => {
@@ -135,8 +180,11 @@ test('active paid checkout issues a signed token that a verified account can res
 test('every web upgrade entry records checkout intent, and zero-result lookups do not count impressions', () => {
   assert.match(app, /trackCheckoutIntent\('monthly','scan_limit_reached'\)/);
   assert.match(app, /trackCheckoutIntent\('yearly','scan_limit_reached'\)/);
-  assert.match(app, /placement: 'paid_lane'/);
-  assert.match(app, /function trackCheckoutIntent\(plan, placement\) \{\s*trackSplashLensEvent\('checkout_click'/);
+  assert.match(app, /trackCheckoutIntent\(safePlan, 'paid_lane'\)/);
+  const intent = app.slice(app.indexOf('function trackCheckoutIntent('), app.indexOf('function trackPostValueUpgrade('));
+  assert.match(intent, /trackSplashLensEvent\('checkout_click', props\)/);
+  assert.match(intent, /props.client_reference_id = `sl_checkout_/);
+  assert.match(intent, /return getCheckoutUrl\(plan, placement, props\)/);
   const lookup = app.slice(app.indexOf('function renderManualLookupUpgradeOffer'), app.indexOf('function renderStripResult'));
   assert.match(lookup, /if \(resultCount <= 0 \|\| isPartSnapPro\(\)\) return '';/);
   assert.match(lookup, /if \(isStoreShellMode\(\)\) return renderStoreWebUpgradeBridge\('scan_lookup_search'\);/);
