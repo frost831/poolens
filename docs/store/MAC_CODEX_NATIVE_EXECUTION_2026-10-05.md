@@ -2,9 +2,22 @@
 
 Scope: MAC-01 through MAC-05 from `docs/codex/MAC_CODEX_NATIVE_TICKETS_2026-10-05.md`.
 
+## TestFlight Upload Under User Override
+
+This is the latest status and supersedes earlier "not uploaded" statements below. The user explicitly retracted the store-upload hold after the missing installed-native and verified-account full AI evidence had been reported. Mac corrected the "full proof" premise and proceeded with internal testing only; incomplete acceptance is not converted into a pass.
+
+- Uploaded the already validated, unchanged signed IPA for `com.splashlens.app`, **1.0.11 (18)**. `altool` returned **UPLOAD SUCCEEDED with no errors**, exit 0. Delivery UUID / ASC build ID: `979e0aa4-0abc-4c1b-a656-2ad9cc1e54b8`. Upload time: `2026-10-05T20:21:21Z`.
+- ASC readback confirms **VALID** processing and **IN_BETA_TESTING** internal state. The existing all-builds internal group contains build 18. External state is `READY_FOR_BETA_SUBMISSION`, not submitted. No new testers, external beta review, App Review, or public production release were sent.
+- IPA SHA256 is unchanged: `d545602cba4ca06d6d3c97b8aafb22192c45057b945fef6fc99c8bba7cb37de4`. Bundle signature, distribution identity, entitlements, permission strings, active profile expiry, and prior archive validation were checked before upload. No certificate was created or revoked and no native build number changed during this upload.
+- Remote iPhone testing stays paused; the QA simulator remains shut down. Actual installed-native flows and a verified-account full AI scan remain **unverified**. Desktop tests and store processing are not substitutes for that acceptance.
+- Android remains unsigned and unuploaded pending secure transfer of the existing PC key and certificate validation. Live Play Console readback confirmed upload certificate SHA256 `9F:B4:69:CF:41:91:74:BF:76:21:32:34:AF:7A:53:0D:75:02:58:0A:33:77:C9:D8:91:71:E4:E9:4B:17:2E:96` for `com.splashlens.fieldtools`. This is the comparison target, not proof of possession or validation of the absent key. Do not generate a replacement or reset the key.
+- No deployed web, PWA worker, Stripe, site, or production metrics import was changed. No Play publishing action or pre-existing publishing changes were sent.
+
+Private receipts under `/Users/macbookpro/poolens-mac-release-2026-10-05`: `RELEASE_GATE_UPLOAD_OVERRIDE_2026-10-05.md`, `ios-upload-18.json`, `ios-upload-18.log`, `asc-build18-processing.json`, and `asc-internal-builds-post-upload.json`. Signing assets, binaries, tester details, and raw metrics remain outside this public repository.
+
 ## Current Verification After PC Web Clearance
 
-This section supersedes the historical blockers below. Mac fetched `origin/master` at `70cfa0bbf256afb770cdf5f1ce1fea7ecafba27d` and merged it into the Mac branch at `5c708f4`. Native project files are unchanged; the remaining branch diff against master is documentation only.
+This section records pre-upload verification and supersedes the older technical blockers below. The TestFlight result above supersedes its upload hold. Mac fetched `origin/master` at `70cfa0bbf256afb770cdf5f1ce1fea7ecafba27d` and merged it into the Mac branch at `5c708f4`. Native project files are unchanged; the remaining branch diff against master is documentation only.
 
 - Signed iOS `com.splashlens.app`, `1.0.11 (18)` passed `altool --validate-app`: **VERIFY SUCCEEDED with no errors**. IPA SHA256 remains `d545602cba4ca06d6d3c97b8aafb22192c45057b945fef6fc99c8bba7cb37de4`. ZIP integrity, exported bundle signature, entitlements, identity, permission strings, linked frameworks, and executable identity against the IPA were checked. This is validation, not a TestFlight upload or review approval.
 - Serial regression with browser integration passed **198/198**, zero skipped. The initial parallel run passed 197/198 and timed out in an importer subprocess under heavy Mac load; retain both logs rather than hide the first run. Deterministic metadata benchmark also passed; it is not field CV accuracy evidence.

@@ -1,8 +1,20 @@
 # PC Handoff From Mac - 2026-10-05
 
+## Latest: TestFlight Available, Android Transfer Pending
+
+Read this section first; it supersedes earlier upload holds below. Under the user's explicit override after the missing acceptance evidence was reported, Mac uploaded the unchanged validated iOS candidate **1.0.11 (18)** for `com.splashlens.app`. Delivery UUID / ASC build ID: `979e0aa4-0abc-4c1b-a656-2ad9cc1e54b8`. ASC confirms **VALID** processing, **IN_BETA_TESTING**, and membership in the existing internal group. No external beta review, App Review, new testers, or public release was submitted.
+
+PC: review the remaining proof packet in `docs/store/MAC_CODEX_NATIVE_EXECUTION_2026-10-05.md`; do not modify the deployed web app for this native acceptance task or repeat historical repair instructions. Remote iPhone testing remains paused and the QA simulator remains shut down. Installed-native acceptance and a verified-account full AI scan are still unverified, despite the successful upload and 198/198 serial regression. Do not report MAC-04 as fully accepted.
+
+Securely transfer the existing key from `C:\Users\sales\.keystores\splashlens\splashlens-upload.keystore`, alias `splashlens_upload`, into `/Users/macbookpro/SecureKeys/splashlens/` on Mac and provide only the resulting local path. The prepared directory is mode `0700`; Mac must secure the file to `0600` and verify the actual certificate before signing. Supply passwords through a private local credential mechanism, not Git/chat. No secure PC connection or transferred key is available to Mac yet.
+
+Mac read the current Play **upload** certificate for `com.splashlens.fieldtools`: SHA256 `9F:B4:69:CF:41:91:74:BF:76:21:32:34:AF:7A:53:0D:75:02:58:0A:33:77:C9:D8:91:71:E4:E9:4B:17:2E:96`. This matches the historical expected certificate but does not validate the absent keystore. Do not substitute an app-signing certificate, generate another key, reset the upload key, or send pre-existing Play publishing changes. Android `1.0.9` code `10` remains unsigned and unuploaded.
+
+No deployed web, Stripe, PWA worker, site, or production metrics import was changed. Mac continues to own Apple release signing/build numbers/uploads. Private binaries, signing assets, raw metrics, and tester details are not in this public repository. Fetch `origin/mac/native-tickets-2026-10-05` and review PR #3 for this documentation-only status update.
+
 ## Current Status After Web Clearance
 
-Read this section first; earlier deployment/signing/CTA blockers below are historical where superseded. Mac synced `origin/master` at `70cfa0b`. The PC gallery decoding fix, v25 offline root-shell cache, and native purchase-CTA suppression are live. There are no remaining Mac code changes against current master, only status documentation.
+This is the pre-upload verification snapshot; the latest TestFlight result above supersedes its upload hold. Earlier deployment/signing/CTA blockers below are historical where superseded. Mac synced `origin/master` at `70cfa0b`. The PC gallery decoding fix, v25 offline root-shell cache, and native purchase-CTA suppression are live. There are no remaining Mac code changes against current master, only status documentation.
 
 Done: signed iOS `1.0.11 (18)` IPA passed archive validation with no errors; serial regression passed 198/198 with browser integration; fresh desktop iOS/Android store-mode offline reload and opening `CHECK SALT` passed; gallery decoding entered the actual existing capture path once under production CSP with a mocked picker/public fixture; tested store purchase surfaces suppressed checkout and external purchase CTAs; ordinary web checkout remained visible. No IAP added.
 
