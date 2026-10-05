@@ -12,7 +12,7 @@ function opaque(value, pattern) {
 export function checkoutAttribution(input = {}) {
   const reference = opaque(input.client_reference_id, /^sl_checkout_[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i);
   return {
-    source: reference && input.source === 'app' ? 'app' : input.source === 'admin' ? 'admin' : 'server',
+    source: reference && ['app', 'site'].includes(input.source) ? input.source : input.source === 'admin' ? 'admin' : 'server',
     client_reference_id: reference,
     client_id: opaque(input.client_id, /^(?:[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}|scan-[a-f0-9]{1,64})$/i),
     session_id: opaque(input.session_id, /^session-[a-z0-9]+-[a-z0-9-]{1,8}$/i),
