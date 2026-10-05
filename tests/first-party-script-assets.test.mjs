@@ -47,14 +47,14 @@ test('service worker registration and precache use existing app assets', () => {
 
 test('service worker supports offline routes and never caches API or authenticated responses', () => {
   assert.match(serviceWorker, /e\.request\.mode === 'navigate'/);
-  assert.match(serviceWorker, /caches\.match\('\/index\.html'\)/);
+  assert.match(serviceWorker, /caches\.match\('\/'\)/);
   assert.match(serviceWorker, /url\.pathname\.startsWith\('\/api\/'\)/);
   assert.match(serviceWorker, /x-splashlens-account-token/);
   assert.match(serviceWorker, /x-splashlens-profile-token/);
   assert.match(serviceWorker, /if \(!sameOrigin \|\| authenticated/);
 });
 
-test('offline store-mode navigation uses the cached shell when fetch returns an error response', async () => {
+test('offline store-mode navigation uses the nonredirected root shell when fetch returns an error response', async () => {
   const handlers = {};
   const shell = new Response('<main>SplashLens offline</main>', { headers: { 'content-type': 'text/html' } });
   const context = vm.createContext({
@@ -64,7 +64,7 @@ test('offline store-mode navigation uses the cached shell when fetch returns an 
       addEventListener: (name, handler) => { handlers[name] = handler; },
     },
     caches: {
-      match: async key => key === '/index.html' ? shell.clone() : undefined,
+      match: async key => key === '/' ? shell.clone() : undefined,
       open: async () => ({ put: async () => {} }),
     },
     fetch: async () => Response.error(),
