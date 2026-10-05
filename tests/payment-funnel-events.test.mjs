@@ -76,6 +76,29 @@ test('server proof is stored once and strips personal attribution values', async
   assert.equal(JSON.parse(rows[0].props).source, 'server');
   assert.equal(JSON.parse(rows[0].props).attribution_status, 'unattributed_server');
   assert.equal(checkoutAttribution({ source: 'app' }).source, 'server');
+  assert.equal(checkoutAttribution({ source: 'site' }).source, 'server');
+});
+
+test('site checkout reference is preserved through session creation without personal identity', async (t) => {
+  const db = database();
+  t.after(() => db.sql.close());
+  let params;
+  t.mock.method(globalThis, 'fetch', async (_url, options) => {
+    params = new URLSearchParams(options.body);
+    return Response.json({ id: 'cs_live_sitefixture', url: 'https://checkout.stripe.com/c/pay/sitefixture' });
+  });
+  const response = await checkout({
+    request: new Request(`https://app.splashlens.com/api/checkout?plan=yearly&source=site&placement=site_pricing&store=web&client_reference_id=${reference}`),
+    env: { STRIPE_SECRET_KEY: 'fixture', SUBSCRIBERS_DB: db },
+  });
+  assert.equal(response.status, 302);
+  assert.equal(params.get('client_reference_id'), reference);
+  assert.equal(params.get('metadata[source]'), 'site');
+  assert.equal(params.get('metadata[placement]'), 'site_pricing');
+  assert.equal(params.get('line_items[0][price_data][unit_amount]'), '14900');
+  const row = db.sql.prepare("SELECT props FROM events WHERE event = 'checkout_session_created'").get();
+  assert.equal(JSON.parse(row.props).source, 'site');
+  assert.equal(JSON.parse(row.props).client_reference_id, reference);
 });
 
 test('analytics failure cannot prevent a valid checkout redirect', async (t) => {
