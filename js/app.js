@@ -2137,7 +2137,7 @@ async function openSplashLensPaidLane(planKey, label) {
   trackSplashLensEvent('paid_lane_click', { plan_key: safePlan, label: safeLabel });
   if (isStoreShellMode()) {
     trackSplashLensEvent('store_paid_lane_blocked', { plan_key: safePlan, label: safeLabel, store: getStoreShellMode() });
-    window.alert('This native store build is FreeCore. Web subscriptions and paid pilots are not offered inside the app.');
+    openExternalWebUpgrade('paid_lane');
     return;
   }
   try {
@@ -2493,6 +2493,7 @@ function renderSplashLensCommercialSection(commercialPayload = {}) {
   const readiness = commercialPayload.readiness || {};
   const activeEntitlement = entitlements.find((entitlement) => String(entitlement.status || '').toLowerCase() === 'active');
   const pilotPlans = plans.filter((plan) => ['teams', 'facility', 'manufacturer', 'distributor', 'training'].includes(plan.lane));
+  const storeShell = isStoreShellMode();
   const readinessChips = [
     ['Account auth', readiness.accountAuth],
     ['Scan meter', readiness.serverSideScanMetering],
@@ -2521,7 +2522,9 @@ function renderSplashLensCommercialSection(commercialPayload = {}) {
         </div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:10px;">
-        ${isStoreShellMode() ? '' : `<a data-checkout-plan="monthly" data-checkout-placement="account_dashboard" href="${getCheckoutUrl('monthly', 'account_dashboard')}" onclick="this.href=trackCheckoutIntent('monthly','account_dashboard');trackSplashLensEvent('account_pro_checkout_clicked',{plan:'monthly',source:'account_dashboard'})" style="display:block;text-align:center;text-decoration:none;border-radius:9px;background:#0f766e;color:#fff;font-size:12px;font-weight:950;padding:11px 8px;">Get Pro</a>`}
+        ${storeShell
+          ? `<button type="button" onclick="openExternalWebUpgrade('account_dashboard')" style="border:0;text-align:center;border-radius:9px;background:#0f766e;color:#fff;font-size:12px;font-weight:950;padding:11px 8px;cursor:pointer;">Unlock on web</button>`
+          : `<a data-checkout-plan="monthly" data-checkout-placement="account_dashboard" href="${getCheckoutUrl('monthly', 'account_dashboard')}" onclick="this.href=trackCheckoutIntent('monthly','account_dashboard');trackSplashLensEvent('account_pro_checkout_clicked',{plan:'monthly',source:'account_dashboard'})" style="display:block;text-align:center;text-decoration:none;border-radius:9px;background:#0f766e;color:#fff;font-size:12px;font-weight:950;padding:11px 8px;">Get Pro</a>`}
         <button type="button" onclick="requestSplashLensCommercialAccess('teams')" style="border:1px solid #0369a1;border-radius:9px;background:#fff;color:#0369a1;font-size:12px;font-weight:950;padding:11px 8px;cursor:pointer;">Request team</button>
       </div>
       <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin-bottom:10px;">
@@ -7703,6 +7706,7 @@ const SCAN_ENTITLEMENT_TOKEN_KEY = 'sl_scan_entitlement_token';
 const SCAN_ENTITLEMENT_META_KEY = 'sl_scan_entitlement_meta';
 const PARTSNAP_MONTHLY_LINK = '/api/checkout?plan=monthly';
 const PARTSNAP_YEARLY_LINK = '/api/checkout?plan=yearly';
+const SPLASHLENS_WEB_UPGRADE_URL = 'https://splashlens.com/?upgrade=splashlens-pro#pricing';
 const PARTSNAP_RESTORE_ENDPOINT = '/api/restore-entitlement';
 const SPLASHLENS_EVENT_ENDPOINT = '/api/events';
 const SPLASHLENS_FREE_PROFILE_ENDPOINT = '/api/free-profile';
@@ -8205,16 +8209,58 @@ function retryCameraAccess() {
 
 function showSplashLensCameraSettingsHelp() {
   trackSplashLensEvent('scanner_camera_settings_help_opened', { mode: _scanMode });
-  showSplashLensNotice('Open this device Settings, allow Camera access for SplashLens or your browser, then return and tap Retry Camera.');
+  showSplashLensNotice('Open this device Settings, allow Camera access for SplashLens or your browser, then return and tap Retry Camera. For dark pads, turn on the pad light or phone flashlight before scanning.');
 }
 
 async function analyzeUploadedScanPhoto(input) {
   const file = input?.files?.[0];
   if (input) input.value = '';
+  await analyzeScanImageFile(file, 'browser_file_picker');
+}
+
+async function requestGalleryPhotoFallback() {
+  trackSplashLensEvent('scanner_gallery_fallback_clicked', { mode: _scanMode, store: getStoreShellMode() || 'web' });
+  if (_scanMode === 'parts') {
+    trackSplashLensEvent('partsnap_gallery_fallback_clicked', { store: getStoreShellMode() || 'web' });
+  }
+
+  const nativePicker = window.SplashLensNative?.pickGalleryPhoto;
+  if (typeof nativePicker === 'function') {
+    try {
+      const picked = await nativePicker();
+      await analyzeNativeGalleryPhoto(picked);
+      return;
+    } catch (error) {
+      const reason = String(error?.message || error);
+      if (reason === 'gallery_cancelled' || reason === 'gallery_busy') return;
+      trackSplashLensEvent('native_gallery_pick_failed', {
+        mode: _scanMode,
+        reason: reason.slice(0, 80),
+      });
+    }
+  }
+
+  document.getElementById('scan-photo-upload')?.click();
+}
+
+async function analyzeNativeGalleryPhoto(picked = {}) {
+  const dataUrl = String(picked.dataUrl || '');
+  if (!dataUrl.startsWith('data:image/')) throw new Error('native_gallery_invalid_image');
+  const response = await fetch(dataUrl);
+  const blob = await response.blob();
+  const name = String(picked.name || 'splashlens-gallery-photo.jpg').slice(0, 120);
+  const type = String(picked.type || blob.type || 'image/jpeg').slice(0, 80);
+  const file = typeof File === 'function'
+    ? new File([blob], name, { type })
+    : blob;
+  await analyzeScanImageFile(file, 'native_gallery');
+}
+
+async function analyzeScanImageFile(file, source = 'file_picker') {
   if (!file) return;
   if (!String(file.type || '').startsWith('image/') || file.size > 10 * 1024 * 1024) {
     showSplashLensNotice('Choose a JPG, PNG, HEIC, or WebP photo under 10 MB.');
-    trackSplashLensEvent('scanner_photo_upload_rejected', { mode: _scanMode, size: Number(file.size || 0), type: String(file.type || '').slice(0, 60) });
+    trackSplashLensEvent('scanner_photo_upload_rejected', { mode: _scanMode, source, size: Number(file.size || 0), type: String(file.type || '').slice(0, 60) });
     return;
   }
   const canvas = document.getElementById('scan-canvas');
@@ -8235,12 +8281,15 @@ async function analyzeUploadedScanPhoto(input) {
     canvas.getContext('2d').drawImage(image, 0, 0, canvas.width, canvas.height);
     _scanUploadedFrameReady = true;
     if (status) status.textContent = 'PHOTO LOADED - CHECKING EVIDENCE';
-    trackSplashLensEvent('scanner_photo_uploaded', { mode: _scanMode, width: canvas.width, height: canvas.height, size: file.size });
+    trackSplashLensEvent('scanner_photo_uploaded', { mode: _scanMode, source, width: canvas.width, height: canvas.height, size: file.size });
+    if (_scanMode === 'parts') {
+      trackSplashLensEvent('partsnap_gallery_picked', { source, width: canvas.width, height: canvas.height });
+    }
     await captureAndAnalyze();
   } catch {
     _scanUploadedFrameReady = false;
     showSplashLensNotice('SplashLens could not read that photo. Try a JPG, PNG, HEIC, or WebP image.');
-    trackSplashLensEvent('scanner_photo_upload_failed', { mode: _scanMode, type: String(file.type || '').slice(0, 60) });
+    trackSplashLensEvent('scanner_photo_upload_failed', { mode: _scanMode, source, type: String(file.type || '').slice(0, 60) });
   } finally {
     URL.revokeObjectURL(objectUrl);
   }
@@ -8313,7 +8362,10 @@ async function startCamera() {
   if (!video) return;
   if (!navigator.mediaDevices?.getUserMedia) {
     trackSplashLensEvent('scanner_camera_unavailable', { mode: _scanMode, reason: 'media_devices_unsupported' });
-    if (requestedMode === 'parts') trackPartSnapResultFailure('camera_unavailable');
+    if (requestedMode === 'parts') {
+      trackPartSnapResultFailure('camera_unavailable');
+      trackSplashLensEvent('partsnap_camera_denied', { reason: 'media_devices_unsupported', store: getStoreShellMode() || 'web' });
+    }
     revealNoCameraFallback(noCam, vWrap);
     return;
   }
@@ -8343,6 +8395,9 @@ async function startCamera() {
       }
       partSnapCameraExplained = true;
     }
+    if (requestedMode === 'parts') {
+      trackSplashLensEvent('partsnap_camera_requested', { store: getStoreShellMode() || 'web' });
+    }
     const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } } });
     if (generation !== cameraRequestGeneration || _scanMode !== requestedMode) {
       stream.getTracks().forEach(track => track.stop());
@@ -8356,6 +8411,9 @@ async function startCamera() {
       const controls = document.getElementById('scan-camera-controls');
       if (controls) controls.style.display = 'flex';
       trackSplashLensEvent('scanner_camera_ready', { mode: requestedMode });
+      if (requestedMode === 'parts') {
+        trackSplashLensEvent('partsnap_camera_granted', { store: getStoreShellMode() || 'web' });
+      }
   } catch (error) {
       if (generation !== cameraRequestGeneration || _scanMode !== requestedMode) return;
       trackSplashLensEvent('scanner_camera_denied', {
@@ -8363,7 +8421,13 @@ async function startCamera() {
         reason: error?.name || 'camera_request_failed',
       });
       const denied = ['NotAllowedError', 'PermissionDeniedError'].includes(error?.name);
-      if (requestedMode === 'parts') trackPartSnapResultFailure(denied ? 'camera_denied' : 'camera_unavailable');
+      if (requestedMode === 'parts') {
+        trackPartSnapResultFailure(denied ? 'camera_denied' : 'camera_unavailable');
+        trackSplashLensEvent('partsnap_camera_denied', {
+          reason: error?.name || 'camera_request_failed',
+          store: getStoreShellMode() || 'web',
+        });
+      }
       revealNoCameraFallback(noCam, vWrap, denied ? 'permission_denied' : 'camera_unavailable');
   } finally {
     cameraRequestPending = false;
@@ -8727,54 +8791,30 @@ function isStoreShellMode() {
   return !!getStoreShellMode();
 }
 
-function nativePlanProductId(plan) {
-  return plan === 'annual' || plan === 'yearly' ? 'partsnap_pro_annual' : 'partsnap_pro_monthly';
+function openExternalWebUpgrade(placement = 'native_shell') {
+  const store = getStoreShellMode() || 'web';
+  trackSplashLensEvent('store_web_upgrade_click', { store, placement });
+  const url = new URL(SPLASHLENS_WEB_UPGRADE_URL);
+  url.searchParams.set('store', store);
+  url.searchParams.set('utm_source', 'splashlens_native');
+  url.searchParams.set('utm_medium', 'app');
+  const link = document.createElement('a');
+  link.href = url.href;
+  link.target = '_blank';
+  link.rel = 'noopener noreferrer';
+  link.click();
 }
 
-function requestNativePartSnapPurchase(plan = 'monthly') {
-  const store = getStoreShellMode();
-  const productId = nativePlanProductId(plan);
-  trackSplashLensEvent('native_purchase_click', { store, plan, product_id: productId });
-
-  try {
-    if (window.webkit?.messageHandlers?.splashlensNativeBilling) {
-      window.webkit.messageHandlers.splashlensNativeBilling.postMessage({ action: 'purchase', plan, productId });
-      return;
-    }
-  } catch {}
-
-  if (store === 'android') {
-    window.location.href = `intent://billing?plan=${encodeURIComponent(plan)}&productId=${encodeURIComponent(productId)}#Intent;scheme=splashlens;package=com.splashlens.fieldtools;end`;
-    return;
-  }
-
-  const result = document.getElementById('scan-result');
-  if (result) {
-    result.innerHTML = `<div style="background:#1e293b;border:1px solid #334155;border-radius:14px;padding:18px;text-align:center;border-left:4px solid #0284c7;">
-      <p style="color:#f1f5f9;font-size:16px;font-weight:900;margin-bottom:6px;">Native billing is not available in this build yet.</p>
-      <p style="color:#94a3b8;font-size:12px;line-height:1.5;">Update SplashLens from the store when the Splash Lens Pro Unlimited native billing build is approved. Manual tools remain free.</p>
-      <button onclick="setScanMode('lookup');document.getElementById('scan-result').innerHTML=''" style="margin-top:12px;background:#0284c7;color:#fff;border:0;border-radius:10px;padding:11px 14px;font-size:12px;font-weight:800;cursor:pointer;width:100%;">Use Manual Lookup</button>
+function renderStoreWebUpgradeBridge(placement = 'native_shell') {
+  const store = getStoreShellMode() || 'native';
+  trackSplashLensEvent('store_web_upgrade_shown', { store, placement });
+  return `
+    <div style="background:#082f49;border:1px solid #0ea5e9;border-radius:10px;padding:12px;margin:10px 0;">
+      <p style="color:#7dd3fc;font-size:10px;font-weight:950;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;">Web upgrade</p>
+      <p style="color:#f8fafc;font-size:13px;font-weight:950;margin-bottom:5px;">Unlock Pro on splashlens.com.</p>
+      <p style="color:#94a3b8;font-size:11px;line-height:1.4;margin-bottom:9px;">Continue in your browser.</p>
+      <button type="button" onclick="openExternalWebUpgrade('${escAttr(placement)}')" style="width:100%;background:#0ea5e9;color:#082f49;border:0;border-radius:8px;padding:10px 7px;font-size:11px;font-weight:950;cursor:pointer;">Open website</button>
     </div>`;
-  }
-}
-
-function requestNativePartSnapRestore() {
-  const store = getStoreShellMode();
-  trackSplashLensEvent('native_restore_click', { store });
-
-  try {
-    if (window.webkit?.messageHandlers?.splashlensNativeBilling) {
-      window.webkit.messageHandlers.splashlensNativeBilling.postMessage({ action: 'restore' });
-      return;
-    }
-  } catch {}
-
-  if (store === 'android') {
-    window.location.href = 'intent://billing?action=restore#Intent;scheme=splashlens;package=com.splashlens.fieldtools;end';
-    return;
-  }
-
-  restorePartSnapPro();
 }
 
 function cleanAttributionValue(value, max = 160) {
@@ -9317,8 +9357,11 @@ function showScanLimitModal(result, status) {
       result.innerHTML = `
         <div style="background:#1e293b;border:1px solid #334155;border-radius:14px;padding:18px;margin:0 0 14px;text-align:center;border-left:4px solid #0284c7;">
           <p style="color:#f1f5f9;font-size:19px;font-weight:900;margin-bottom:6px;">You've used ${usage.count} of ${SCAN_LIMIT_FREE} free AI scans this month.</p>
-          <p style="color:#94a3b8;font-size:13px;line-height:1.5;margin-bottom:14px;">Manual code lookup, dosing, reports, filters, and checklists stay free. Your free profile keeps scanner usage tied to you instead of disposable browser storage. Paid upgrades are not offered inside this native store build.</p>
-          <button onclick="setScanMode('lookup');document.getElementById('scan-result').innerHTML=''" style="background:#334155;color:#fff;border:0;border-radius:10px;padding:11px 14px;font-size:12px;font-weight:800;cursor:pointer;width:100%;">Use Manual Lookup</button>
+          <p style="color:#94a3b8;font-size:13px;line-height:1.5;margin-bottom:14px;">Manual code lookup, dosing, reports, filters, and checklists stay free.</p>
+          <div style="display:grid;grid-template-columns:1fr;gap:8px;">
+            <button onclick="openExternalWebUpgrade('scan_limit_reached')" style="background:#0284c7;color:#fff;border:0;border-radius:10px;padding:11px 14px;font-size:12px;font-weight:900;cursor:pointer;width:100%;">Unlock on splashlens.com</button>
+            <button onclick="setScanMode('lookup');document.getElementById('scan-result').innerHTML=''" style="background:#334155;color:#fff;border:0;border-radius:10px;padding:11px 14px;font-size:12px;font-weight:800;cursor:pointer;width:100%;">Use Manual Lookup</button>
+          </div>
         </div>`;
     }
     return;
@@ -10272,7 +10315,8 @@ function savePartSnapFieldStop() {
 }
 
 function renderPostValueUpgradeOffer() {
-  if (isPartSnapPro() || isStoreShellMode()) return '';
+  if (isPartSnapPro()) return '';
+  if (isStoreShellMode()) return renderStoreWebUpgradeBridge('field_stop_saved');
   const key = 'splashlens-post-value-upgrade-shown-at';
   const lastShownAt = Date.parse(localStorage.getItem(key) || '');
   if (Number.isFinite(lastShownAt) && Date.now() - lastShownAt < 7 * 86400000) return '';
@@ -10291,7 +10335,8 @@ function renderPostValueUpgradeOffer() {
 }
 
 function renderPartSnapResultUpgradeOffer(placement = 'partsnap_result') {
-  if (isPartSnapPro() || isStoreShellMode()) return '';
+  if (isPartSnapPro()) return '';
+  if (isStoreShellMode()) return renderStoreWebUpgradeBridge(placement);
   const key = `splashlens-post-value-upgrade-${placement}-shown-at`;
   const lastShownAt = Date.parse(localStorage.getItem(key) || '');
   if (Number.isFinite(lastShownAt) && Date.now() - lastShownAt < 24 * 3600000) return '';
@@ -11341,7 +11386,8 @@ function renderScanHits(hits, query) {
 }
 
 function renderManualLookupUpgradeOffer(resultCount, query) {
-  if (resultCount <= 0 || isPartSnapPro() || isStoreShellMode()) return '';
+  if (resultCount <= 0 || isPartSnapPro()) return '';
+  if (isStoreShellMode()) return renderStoreWebUpgradeBridge('scan_lookup_search');
   const safeQuery = String(query || '').replace(/[^a-zA-Z0-9 ._-]/g, '').slice(0, 40);
   try {
     const key = 'splashlens-post-value-upgrade-scan-lookup-shown-at';

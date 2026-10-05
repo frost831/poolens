@@ -20,8 +20,8 @@
     "path": "C:\\Users\\sales\\.keystores\\splashlens\\splashlens-upload.keystore",
     "alias": "splashlens_upload"
   },
-  "appVersionName": "1",
-  "appVersionCode": "1",
+  "appVersionName": "1.0.9",
+  "appVersionCode": "10",
   "shortcuts": [],
   "generatorApp": "bubblewrap-cli",
   "webManifestUrl": "https://app.splashlens.com/manifest.json",
@@ -43,5 +43,5 @@
   "fileHandlers": [],
   "launchHandlerClientMode": "",
   "displayOverride": [],
-  "appVersion": "1"
+  "appVersion": "10"
 }
