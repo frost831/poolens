@@ -8,6 +8,8 @@ The original integration landed in PC revision `bd83d0c`. Read the latest status
 
 The iOS distribution IPA exported and passed signing/identity checks, but remains unuploaded. Resolve the native purchase-link policy hold in `docs/ops/native-web-bridge-readiness-2026-10-05.md` before store uploads. ASC confirms 175 available territories; native upgrade links are not storefront-gated. Opening a browser does not prove eligibility. No IAP is authorized. Android still requires the existing upload key, not another app's key or a replacement.
 
+Also investigate offline cold reload: fresh production browser session, controlling activated worker, cached `/index.html`, but offline `/?store=ios` reload returns `net::ERR_FAILED`. No worker edits were made by Mac. Repeat installed-device/offline acceptance after correction; do not infer a pass from in-memory lookup or unit tests.
+
 ## Fetch This Work
 
 Repository: `frost831/poolens`.
