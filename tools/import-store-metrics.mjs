@@ -8,6 +8,8 @@ import process from 'node:process';
 
 const DEFAULT_ENDPOINT = 'https://app.splashlens.com/api/store-metrics';
 const DEFAULT_D1_DATABASE = 'splashlens-subscribers';
+const APP_STORE_SKU = 'splashlens-ios-2026';
+const PLAY_PACKAGE = 'com.splashlens.fieldtools';
 const ALLOWED_PLATFORMS = new Set(['app_store', 'google_play', 'ios', 'android', 'play_store']);
 const ALLOWED_METRICS = new Set([
   'downloads',
@@ -27,7 +29,7 @@ function parseArgs(argv) {
   const options = {
     file: '',
     endpoint: DEFAULT_ENDPOINT,
-    source: 'manual_console_export',
+    source: '',
     d1Database: DEFAULT_D1_DATABASE,
     format: 'auto',
     dryRun: false,
@@ -83,13 +85,16 @@ function normalizePlatform(value) {
 }
 
 function parseCsv(text) {
+  const firstLine = String(text).replace(/^\uFEFF/, '').split(/\r?\n/, 1)[0];
+  const delimiter = firstLine.includes('\t') ? '\t' : ',';
   const rows = [];
   let row = [];
   let cell = '';
   let quoted = false;
-  for (let index = 0; index < text.length; index += 1) {
-    const ch = text[index];
-    const next = text[index + 1];
+  const input = String(text).replace(/^\uFEFF/, '');
+  for (let index = 0; index < input.length; index += 1) {
+    const ch = input[index];
+    const next = input[index + 1];
     if (quoted) {
       if (ch === '"' && next === '"') {
         cell += '"';
@@ -101,7 +106,7 @@ function parseCsv(text) {
       }
     } else if (ch === '"') {
       quoted = true;
-    } else if (ch === ',') {
+    } else if (ch === delimiter) {
       row.push(cell);
       cell = '';
     } else if (ch === '\n') {
@@ -115,7 +120,25 @@ function parseCsv(text) {
   }
   row.push(cell.replace(/\r$/, ''));
   if (row.some((item) => clean(item))) rows.push(row);
+  if (quoted) throw new Error('Unterminated quoted field in store export.');
   return rows;
+}
+
+function nonnegativeInteger(value, label) {
+  const raw = String(value ?? '').trim().replace(/,/g, '');
+  if (!/^\d+$/.test(raw)) throw new Error(`${label} must be a nonnegative whole number`);
+  const parsed = Number(raw);
+  if (!Number.isSafeInteger(parsed)) throw new Error(`${label} exceeds the safe integer range`);
+  return parsed;
+}
+
+function validDate(value, label) {
+  const date = clean(value, 20);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || Number.isNaN(Date.parse(`${date}T00:00:00Z`)) ||
+      new Date(`${date}T00:00:00Z`).toISOString().slice(0, 10) !== date) {
+    throw new Error(`${label} must be a real YYYY-MM-DD date`);
+  }
+  return date;
 }
 
 function entriesFromCsv(text, source) {
@@ -128,20 +151,18 @@ function entriesFromCsv(text, source) {
   }
   return rows.slice(1).map((row, index) => {
     const record = Object.fromEntries(headers.map((header, col) => [header, row[col] ?? '']));
-    const metricDate = clean(record.date || record.metric_date, 20);
+    const metricDate = validDate(record.date || record.metric_date, `Row ${index + 2}: date`);
     const platform = normalizePlatform(record.platform);
     const metric = clean(record.metric, 80).toLowerCase().replace(/\s+/g, '_');
-    const value = Math.max(0, Math.round(Number(String(record.value || '0').replace(/,/g, ''))));
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(metricDate)) throw new Error(`Row ${index + 2}: date must be YYYY-MM-DD`);
+    const value = nonnegativeInteger(record.value, `Row ${index + 2}: value`);
     if (!ALLOWED_PLATFORMS.has(platform)) throw new Error(`Row ${index + 2}: unsupported platform ${record.platform}`);
     if (!ALLOWED_METRICS.has(metric)) throw new Error(`Row ${index + 2}: unsupported metric ${record.metric}`);
-    if (!Number.isFinite(value)) throw new Error(`Row ${index + 2}: value must be numeric`);
     return {
       platform,
       metric,
       value,
       date: metricDate,
-      source: clean(record.source || source, 120),
+      source: clean(record.source || source || 'manual_console_export', 120),
       notes: clean(record.notes || '', 500),
     };
   });
@@ -153,21 +174,24 @@ function normalizedHeader(value) {
 
 function dateIso(value) {
   const raw = clean(value, 40);
-  if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw;
+  if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return validDate(raw, 'Official store date');
   const us = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(raw);
-  if (us) return `${us[3]}-${us[1].padStart(2, '0')}-${us[2].padStart(2, '0')}`;
+  if (us) return validDate(`${us[3]}-${us[1].padStart(2, '0')}-${us[2].padStart(2, '0')}`, 'Official store date');
   throw new Error(`Unsupported official store date: ${raw}`);
 }
 
 function numeric(value) {
-  const parsed = Number(String(value ?? '').replace(/,/g, '').trim() || '0');
-  return Number.isFinite(parsed) ? Math.max(0, Math.round(parsed)) : 0;
+  return nonnegativeInteger(value, 'Official metric value');
 }
 
 function detectFormat(headers) {
   const set = new Set(headers);
-  if (set.has('provider') && set.has('units') && (set.has('begin_date') || set.has('date'))) return 'app-store-connect';
-  if (set.has('package_name') && (set.has('daily_device_installs') || set.has('install_events') || set.has('crashes'))) return 'google-play';
+  if (set.has('provider') && set.has('units') && set.has('sku') && (set.has('begin_date') || set.has('date'))) return 'app-store-connect';
+  if (set.has('package_name') && [
+    'daily_device_installs', 'install_events', 'daily_device_uninstalls', 'uninstall_events',
+    'daily_device_upgrades', 'update_events', 'crashes', 'store_listing_visitors',
+    'store_listing_acquisitions',
+  ].some((field) => set.has(field))) return 'google-play';
   return 'generic';
 }
 
@@ -175,7 +199,10 @@ function aggregateOfficialRows(rows, platform, source, dateFields, mappings) {
   const totals = new Map();
   for (const row of rows) {
     const dateField = dateFields.find((field) => clean(row[field]));
-    if (!dateField) continue;
+    if (!dateField) {
+      if (mappings.some(([field]) => clean(row[field]))) throw new Error('Official store metric row is missing a date.');
+      continue;
+    }
     const date = dateIso(row[dateField]);
     for (const [field, metric] of mappings) {
       if (!(field in row) || clean(row[field]) === '') continue;
@@ -193,12 +220,23 @@ function entriesFromOfficialCsv(text, requestedFormat, source) {
   const rows = parseCsv(text);
   if (!rows.length) return [];
   const headers = rows[0].map(normalizedHeader);
-  const records = rows.slice(1).map((row) => Object.fromEntries(headers.map((header, index) => [header, row[index] ?? ''])));
+  const records = rows.slice(1).map((row, index) => {
+    if (row.length !== headers.length) throw new Error(`Row ${index + 2}: column count differs from header`);
+    return Object.fromEntries(headers.map((header, column) => [header, row[column] ?? '']));
+  });
   const format = requestedFormat === 'auto' ? detectFormat(headers) : requestedFormat;
   if (format === 'generic') return entriesFromCsv(text, source);
   if (format === 'app-store-connect') {
-    return aggregateOfficialRows(records, 'app_store', source, ['begin_date', 'date'], [
-      ['units', 'downloads'],
+    if (!headers.includes('sku')) throw new Error('App Store export needs SKU to identify SplashLens.');
+    const selected = records.filter((row) => clean(row.sku) === APP_STORE_SKU);
+    const sales = selected.map((row) => {
+      const type = clean(row.product_type_identifier, 30).toUpperCase();
+      const metric = ({ '1': 'downloads', '1F': 'downloads', '1T': 'downloads', '3': 'redownloads', '3F': 'redownloads', '7': 'updates', '7F': 'updates', '7T': 'updates' })[type];
+      if (!metric && type) return { ...row, units: '' };
+      return { ...row, [metric || 'downloads']: row.units, units: '' };
+    });
+    return aggregateOfficialRows(sales, 'app_store', source || 'app_store_connect_export', ['begin_date', 'date'], [
+      ['downloads', 'downloads'],
       ['first_time_downloads', 'first_time_downloads'],
       ['redownloads', 'redownloads'],
       ['product_page_views', 'product_page_views'],
@@ -207,15 +245,17 @@ function entriesFromOfficialCsv(text, requestedFormat, source) {
     ]);
   }
   if (format === 'google-play') {
-    return aggregateOfficialRows(records, 'google_play', source, ['date', 'day'], [
-      ['daily_device_installs', 'installs'],
-      ['daily_user_installs', 'first_time_downloads'],
-      ['install_events', 'installs'],
-      ['daily_device_uninstalls', 'uninstalls'],
-      ['daily_user_uninstalls', 'uninstalls'],
-      ['uninstall_events', 'uninstalls'],
-      ['daily_device_upgrades', 'updates'],
-      ['update_events', 'updates'],
+    if (!headers.includes('package_name')) throw new Error('Google Play export needs Package Name to identify SplashLens.');
+    const selected = records.filter((row) => clean(row.package_name) === PLAY_PACKAGE);
+    const choose = (candidates, metric) => {
+      const field = candidates.find((candidate) => headers.includes(candidate));
+      return field ? [[field, metric]] : [];
+    };
+    return aggregateOfficialRows(selected, 'google_play', source || 'google_play_console_export', ['date', 'day'], [
+      ...choose(['daily_device_installs', 'install_events'], 'installs'),
+      ...choose(['daily_user_installs'], 'first_time_downloads'),
+      ...choose(['daily_device_uninstalls', 'uninstall_events'], 'uninstalls'),
+      ...choose(['daily_device_upgrades', 'update_events'], 'updates'),
       ['crashes', 'crashes'],
       ['store_listing_visitors', 'store_listing_visitors'],
       ['store_listing_acquisitions', 'acquisitions'],

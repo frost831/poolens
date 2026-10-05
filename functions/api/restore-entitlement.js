@@ -122,7 +122,8 @@ async function storedEntitlement(email, env) {
     const row = await env.SUBSCRIBERS_DB.prepare(
       `SELECT email, plan, source, stripe_session_id AS stripeSessionId, stripe_customer_id AS stripeCustomerId, current_period_end AS expiresAt
        FROM commercial_entitlements
-       WHERE lower(email) = lower(?) AND status IN ('active','trialing','pilot')
+       WHERE lower(email) = lower(?) AND status IN ('active','trialing')
+         AND lane = 'pro' AND source IN ('stripe_webhook','stripe_checkout_success')
        ORDER BY updated_at DESC
        LIMIT 1`,
     ).bind(email).first();
@@ -146,7 +147,9 @@ async function storedEntitlement(email, env) {
     if (value) {
       try {
         const parsed = JSON.parse(value);
-        if (parsed && typeof parsed === 'object') return parsed;
+        if (parsed && typeof parsed === 'object'
+          && ['stripe_webhook', 'stripe_checkout'].includes(String(parsed.source || ''))
+          && Date.parse(parsed.expiresAt || '') > Date.now()) return parsed;
       } catch {}
     }
   }
@@ -170,7 +173,7 @@ async function createTokenFromRecord(email, record, env) {
       subject: email,
       plan: String(record.plan || 'Splash Lens Pro Unlimited').slice(0, 100),
       scopes: Array.isArray(record.scopes) && record.scopes.length ? record.scopes : ['scan'],
-      source: 'restore_entitlement',
+      source: record.source === 'stripe_checkout_success' ? 'stripe_checkout' : record.source,
       stripeSessionId: record.stripeSessionId || '',
       stripeCustomerId: record.stripeCustomerId || '',
       issuedAt: new Date(now * 1000).toISOString(),

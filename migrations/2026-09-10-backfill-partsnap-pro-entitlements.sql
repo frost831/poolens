@@ -1,3 +1,5 @@
+-- Retired: plan text in payment_events cannot prove a SplashLens purchase.
+-- Keep this historical migration inert; verified checkout and webhook flows own grants.
 INSERT INTO commercial_entitlements (
   id,
   email,
@@ -22,7 +24,8 @@ SELECT
   created_at,
   CURRENT_TIMESTAMP
 FROM payment_events pe
-WHERE lower(COALESCE(plan, '')) LIKE '%partsnap%'
+WHERE 1 = 0
+  AND lower(COALESCE(plan, '')) LIKE '%partsnap%'
   AND COALESCE(subject, '') <> ''
   AND COALESCE(stripe_session_id, '') <> ''
   AND NOT EXISTS (
@@ -48,7 +51,8 @@ SELECT
   'stripe:' || stripe_session_id,
   json_object('source', 'payment_events', 'plan', plan, 'stripe_session_id', stripe_session_id)
 FROM payment_events pe
-WHERE lower(COALESCE(plan, '')) LIKE '%partsnap%'
+WHERE 1 = 0
+  AND lower(COALESCE(plan, '')) LIKE '%partsnap%'
   AND COALESCE(subject, '') <> ''
   AND COALESCE(stripe_session_id, '') <> ''
   AND EXISTS (

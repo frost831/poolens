@@ -42,6 +42,14 @@ function isPaid(session) {
   return session && ['paid', 'no_payment_required'].includes(String(session.payment_status || ''));
 }
 
+async function activeSubscription(session, env) {
+  const subscriptionId = String(session?.subscription || '').trim();
+  if (session?.mode !== 'subscription' || !/^sub_[A-Za-z0-9]+$/.test(subscriptionId)) return { active: false };
+  const subscription = await stripeGet(`subscriptions/${encodeURIComponent(subscriptionId)}`, env);
+  if (!subscription) return { active: false, unavailable: true };
+  return { active: ['active', 'trialing'].includes(String(subscription.status || '')), subscription };
+}
+
 function cleanSubject(session) {
   const email = String(session?.customer_details?.email || session?.customer_email || '').trim().toLowerCase();
   const customer = String(session?.customer || '').trim();
@@ -123,13 +131,17 @@ async function ensurePaymentTables(db) {
   ).run();
 }
 
-async function persistActivation(session, subject, plan, env) {
+async function persistActivation(session, subject, plan, env, subscription) {
   if (!env.SUBSCRIBERS_DB || typeof env.SUBSCRIBERS_DB.prepare !== 'function') return false;
   const db = env.SUBSCRIBERS_DB;
   await ensurePaymentTables(db);
   const sessionId = String(session.id || '');
   const customerId = String(session.customer || '');
   const fallbackDays = /year|annual/i.test(plan) ? 370 : 35;
+  const periodEnd = Number(subscription.current_period_end || subscription.items?.data?.[0]?.current_period_end || 0);
+  const expiresAt = periodEnd > 0
+    ? new Date(periodEnd * 1000).toISOString()
+    : new Date(Date.now() + fallbackDays * 24 * 60 * 60 * 1000).toISOString();
   await db.prepare(
     `INSERT INTO payment_events (event_type, stripe_session_id, subject, plan)
      SELECT 'checkout.success.recovered', ?, ?, ?
@@ -154,7 +166,7 @@ async function persistActivation(session, subject, plan, env) {
     plan,
     sessionId,
     customerId,
-    new Date(Date.now() + fallbackDays * 24 * 60 * 60 * 1000).toISOString(),
+    expiresAt,
   ).run();
   await db.prepare(
     `INSERT OR IGNORE INTO audit_records (id, actor_email, action, target_type, target_id, payload)
@@ -193,7 +205,7 @@ function base64UrlEncode(bytes) {
   return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
 }
 
-async function issueActivation(session, env) {
+async function issueActivation(session, env, subscription) {
   const secret = tokenSecret(env);
   if (!secret) return { error: 'Scanner entitlement signing is not configured.' };
 
@@ -214,6 +226,8 @@ async function issueActivation(session, env) {
   const token = await signToken(secret, payload);
   const activateUrl = `https://app.splashlens.com/?tab=scan&scan_token=${encodeURIComponent(token)}`;
 
+  await persistActivation(session, subject, payload.plan, env, subscription);
+
   if (env.SCAN_USAGE_KV && typeof env.SCAN_USAGE_KV.put === 'function') {
     await env.SCAN_USAGE_KV.put(`entitlement:${subject}`, JSON.stringify({
       subject,
@@ -233,8 +247,6 @@ async function issueActivation(session, env) {
     }
     await env.SCAN_USAGE_KV.delete(`entitlement_revoked:${subject}`);
   }
-
-  await persistActivation(session, subject, payload.plan, env);
 
   return { activateUrl, subject };
 }
@@ -257,7 +269,15 @@ export async function onRequestGet({ request, env }) {
     return html('<h1>SplashLens checkout</h1><p>Payment is not complete yet. Refresh after Stripe finishes processing.</p>', 402);
   }
 
-  const activation = await issueActivation(session, env);
+  const subscriptionState = await activeSubscription(session, env);
+  if (subscriptionState.unavailable) {
+    return html('<h1>SplashLens checkout</h1><p>Subscription verification is temporarily unavailable. Refresh in a moment or contact support.</p>', 503);
+  }
+  if (!subscriptionState.active) {
+    return html('<h1>SplashLens checkout</h1><p>The subscription is not active. Contact support if this looks wrong.</p>', 403);
+  }
+
+  const activation = await issueActivation(session, env, subscriptionState.subscription);
   if (activation.error) {
     return html(`<h1>SplashLens checkout complete</h1><p>${escapeHtml(activation.error)} Contact support for activation.</p>`, 503);
   }

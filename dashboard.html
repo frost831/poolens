@@ -239,6 +239,7 @@
           { label:'Store', key:'platform' },
           { label:'Metric', key:'metric' },
           { label:'Total', key:'value' },
+          { label:'Source', key:'source' },
           { label:'Last', render:(r) => esc(String(r.lastDate || '').slice(0, 10)) },
         ], 'No official Apple/Google exports imported yet.');
         document.getElementById('teamBilling').innerHTML = table(admin.teamBilling, [

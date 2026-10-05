@@ -97,7 +97,7 @@ test('restore requires a verified matching account and returns a signed entitlem
     SPLASHLENS_ENTITLEMENT_SECRET: secret,
     SCAN_USAGE_KV: {
       async get(key) {
-        if (key === `entitlement:${email}`) return JSON.stringify({ subject: email, plan: 'Splash Lens Pro Unlimited Monthly', scopes: ['scan'] });
+        if (key === `entitlement:${email}`) return JSON.stringify({ subject: email, plan: 'Splash Lens Pro Unlimited Monthly', scopes: ['scan'], source: 'stripe_webhook', expiresAt: new Date(Date.now() + 60_000).toISOString() });
         return null;
       },
       async put(key, value) { writes.push({ key, value }); },
@@ -134,4 +134,5 @@ test('restore requires a verified matching account and returns a signed entitlem
   assert.equal(payload.ok, true);
   assert.match(payload.token, /^sl_scan_v1\./);
   assert.equal(writes.some((entry) => entry.key === `entitlement:${email}`), true);
+  assert.equal(JSON.parse(writes.find((entry) => entry.key === `entitlement:${email}`).value).source, 'stripe_webhook');
 });

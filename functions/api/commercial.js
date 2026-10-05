@@ -475,6 +475,7 @@ async function snapshot(db, env, email) {
            current_period_end AS currentPeriodEnd, created_at AS createdAt, updated_at AS updatedAt
     FROM commercial_entitlements
     WHERE email = ? AND status IN ('active', 'trialing', 'pilot')
+      AND COALESCE(source, '') <> 'd1_payment_backfill'
     ORDER BY created_at DESC
     LIMIT 20
   `, email);
@@ -514,7 +515,9 @@ async function snapshot(db, env, email) {
     LIMIT 10
   `, email);
   const kv = await kvEntitlement(env, email);
-  const entitlements = kv
+  const verifiedKv = kv && (kv.source === 'admin_grant'
+    || storedEntitlements.some((row) => row.stripeSessionId && row.stripeSessionId === kv.stripeSessionId));
+  const entitlements = verifiedKv
     ? [kv, ...storedEntitlements.filter((row) => row.stripeSessionId !== kv.stripeSessionId)]
     : storedEntitlements;
 

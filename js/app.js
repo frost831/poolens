@@ -1199,9 +1199,8 @@ function completeFacilityLane(laneId, outcome) {
     outcome,
     packet_id: packet.id,
   });
-  trackSplashLensEvent('first_value_completed', {
+  trackFirstUsefulResult('facility_assist_packet', document.getElementById('facility-result'), {
     role: getSplashLensRole() || 'facility',
-    workflow: 'facility_assist_packet',
     lane: laneId,
     outcome,
     packet_id: packet.id,
@@ -2143,6 +2142,11 @@ async function openSplashLensPaidLane(planKey, label) {
     const payload = await response.json();
     const plan = (payload.plans || []).find(item => item.key === safePlan);
     if (plan && plan.checkoutConfigured) {
+      trackSplashLensEvent('checkout_click', {
+        plan: /year|annual/i.test(safePlan) ? 'yearly' : 'monthly',
+        feature: 'unlimited_partsnap',
+        placement: 'paid_lane',
+      });
       window.location.href = `/api/checkout?plan=${encodeURIComponent(safePlan)}`;
       return;
     }
@@ -3480,9 +3484,8 @@ function toggleCode(uid) {
       answer_name: answerName,
       workflow: 'manual_code_search',
     });
-    trackSplashLensEvent('first_value_completed', {
+    trackFirstUsefulResult('manual_code_answer', det, {
       role: getSplashLensRole(),
-      workflow: 'manual_code_answer',
       code,
       result_count: 1,
       time_back_message: 'A code answer was opened without leaving the stop.',
@@ -3510,8 +3513,9 @@ function onErrorSearch(q) {
     code: hit,
     i,
   }));
-  if (q.length >= 2 && onErrorSearch._lastTracked !== q) {
-    onErrorSearch._lastTracked = q;
+  const trackingKey = `${S.brand || 'all'}:${q}`;
+  if (q.length >= 2 && onErrorSearch._lastTracked !== trackingKey) {
+    onErrorSearch._lastTracked = trackingKey;
     trackSplashLensEvent('manual_code_search', {
       query: q.slice(0, 40),
       brand: S.brand || 'all',
@@ -3528,8 +3532,12 @@ function onErrorSearch(q) {
     }
   }
   if (!matches.length) {
+    const otherBrandMatches = S.brand ? searchErrorDB(q).length : 0;
     document.getElementById('error-results').innerHTML =
-      `<p style="color:#64748b;text-align:center;padding:40px;font-size:14px;">No results for "${q}"</p>`;
+      `<div style="color:#64748b;text-align:center;padding:32px 16px;font-size:14px;">
+        <p>No results for "${escHtml(q)}"${S.brand ? ' in this brand' : ''}.</p>
+        ${otherBrandMatches ? `<button type="button" onclick="searchAllBrandsForCurrentQuery()" style="margin-top:12px;background:#0369a1;color:#fff;border:0;border-radius:6px;padding:10px 14px;font-weight:800;cursor:pointer;">Search all brands (${otherBrandMatches})</button>` : '<p style="font-size:12px;margin-top:8px;">Try the model number, a shorter code, or a symptom.</p>'}
+      </div>`;
     return;
   }
   document.getElementById('error-results').innerHTML = matches.map(({ brandId, brand, catName, code, i }) =>
@@ -3541,6 +3549,15 @@ function onErrorSearch(q) {
        ${codeCard(code, `srch-${brandId}-${i}`, brand.color)}
      </div>`
   ).join('');
+}
+
+function searchAllBrandsForCurrentQuery() {
+  if (S.brand) resetBrandBtn(S.brand);
+  S.brand = null;
+  S.category = null;
+  document.getElementById('category-strip').style.display = 'none';
+  const input = document.getElementById('error-search');
+  if (input) onErrorSearch(input.value);
 }
 
 function clearSearch() {
@@ -3623,6 +3640,21 @@ function onParamChange() {
   seedLsiFromDoseInputs();
 }
 
+function trackFirstUsefulResult(workflow, resultEl, props = {}) {
+  if (!resultEl || resultEl.isConnected === false || !resultEl.innerHTML?.trim()) return;
+  if (typeof resultEl.getClientRects === 'function' && resultEl.getClientRects().length === 0) return;
+  const key = 'splashlens-first-value-completed-v1';
+  if (trackFirstUsefulResult.completed) return;
+  try {
+    if (sessionStorage.getItem(key)) return;
+  } catch {}
+  trackSplashLensEvent('first_value_completed', { workflow, ...props });
+  trackFirstUsefulResult.completed = true;
+  try {
+    sessionStorage.setItem(key, '1');
+  } catch {}
+}
+
 function trackCalculationCompleted(calculator, props = {}) {
   const eventProps = {
     calculator,
@@ -3631,10 +3663,16 @@ function trackCalculationCompleted(calculator, props = {}) {
     ...props,
   };
   trackSplashLensEvent('calculation_completed', eventProps);
-  trackSplashLensEvent('first_value_completed', {
-    ...eventProps,
-    workflow: `${calculator}_calculator`,
-  });
+  const resultId = {
+    dose: 'dose-result',
+    lsi: 'lsi-result',
+    slam: 'slam-result',
+    volume: 'vol-result',
+    treatment_plan: 'plan-result',
+    drain_refill: 'drain-result',
+    turnover: 'turn-result',
+  }[calculator];
+  trackFirstUsefulResult(`${calculator}_calculator`, document.getElementById(resultId), eventProps);
 }
 
 function calculateDose() {
@@ -5709,11 +5747,6 @@ function calcTurnoverRate() {
                : isOk   ? { label:'Marginal', color:'#92400e', bg:'#fffbeb', border:'#fcd34d' }
                :           { label:'Too Slow', color:'#991b1b', bg:'#fef2f2', border:'#fca5a5' };
   const dailyRec = Math.ceil(8 / hours);
-  trackCalculationCompleted('turnover', {
-    hours: Number(hours.toFixed(2)),
-    status: status.label,
-    time_back_message: 'Turnover answer calculated without a spreadsheet.',
-  });
   setEl('turn-result', `
     <div class="result-wrap">
       <p style="color:#64748b;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;">Turnover Rate</p>
@@ -5729,6 +5762,11 @@ function calcTurnoverRate() {
       </div>
       <p class="result-basis">${vol.toLocaleString()} gal ÷ ${gpm} GPM · Recommended: &le; 8 hrs residential, &le; 6 hrs commercial</p>
     </div>`);
+  trackCalculationCompleted('turnover', {
+    hours: Number(hours.toFixed(2)),
+    status: status.label,
+    time_back_message: 'Turnover answer calculated without a spreadsheet.',
+  });
 }
 
 // ═══════════════════════════════════════════
@@ -9259,8 +9297,8 @@ function showScanLimitModal(result, status) {
         <p style="color:#f1f5f9;font-size:19px;font-weight:900;margin-bottom:6px;">You've used ${usage.count} of ${SCAN_LIMIT_FREE} free AI scans this month.</p>
         <p style="color:#94a3b8;font-size:13px;line-height:1.5;margin-bottom:14px;">Manual code lookup, dosing, reports, filters, and checklists stay free. Your free profile keeps scanner usage tied to you. Upgrade Splash Lens Pro Unlimited for unlimited scanner access and saved job memory where paid access is available.</p>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
-          <a href="${PARTSNAP_MONTHLY_LINK}" target="_blank" rel="noopener" onclick="trackSplashLensEvent('upgrade_click',{plan:'monthly'})" style="background:#0284c7;color:#fff;text-decoration:none;border-radius:10px;padding:12px 8px;font-size:13px;font-weight:900;">$29 / mo</a>
-          <a href="${PARTSNAP_YEARLY_LINK}" target="_blank" rel="noopener" onclick="trackSplashLensEvent('upgrade_click',{plan:'yearly'})" style="background:#16a34a;color:#fff;text-decoration:none;border-radius:10px;padding:12px 8px;font-size:13px;font-weight:900;">$249 / yr</a>
+          <a href="${PARTSNAP_MONTHLY_LINK}" target="_blank" rel="noopener" onclick="trackCheckoutIntent('monthly','scan_limit_reached')" style="background:#0284c7;color:#fff;text-decoration:none;border-radius:10px;padding:12px 8px;font-size:13px;font-weight:900;">$29 / mo</a>
+          <a href="${PARTSNAP_YEARLY_LINK}" target="_blank" rel="noopener" onclick="trackCheckoutIntent('yearly','scan_limit_reached')" style="background:#16a34a;color:#fff;text-decoration:none;border-radius:10px;padding:12px 8px;font-size:13px;font-weight:900;">$249 / yr</a>
         </div>
         <button onclick="restorePartSnapPro()" style="width:100%;background:#334155;color:#e2e8f0;border:0;border-radius:10px;padding:10px 8px;font-size:12px;font-weight:900;cursor:pointer;">Restore Pro from checkout email</button>
         <p style="color:#64748b;font-size:10px;line-height:1.4;margin-top:10px;">After web checkout, use the signed activation link. If browser storage is cleared, restore with the checkout email. Store builds remain FreeCore until native billing is added.</p>
@@ -9906,16 +9944,6 @@ function renderPartsSnapResult(ai, result, status) {
       result_summary: [manufacturer, component, model || partNumber].filter(Boolean).join(' / ') || 'Unknown PartSnap result',
     });
   }
-  trackSplashLensEvent('first_value_completed', {
-    role: getSplashLensRole(),
-    workflow: 'partsnap_result',
-    confidence: confidence || 'unknown',
-    risk: risk.level,
-    proof_visible_count: visibleEvidence.length,
-    proof_missing_count: missingProof.length || (ladder.missing || []).length,
-    time_back_message: 'Part path, missing proof, and packet actions are visible.',
-  });
-
   result.innerHTML = `
     <div style="background:#1e293b;border:1px solid ${low?'#334155':'#14b8a6'};border-radius:12px;padding:16px;margin-bottom:10px;border-left:4px solid ${low?'#334155':'#14b8a6'};">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap;">
@@ -9983,6 +10011,17 @@ function renderPartsSnapResult(ai, result, status) {
     description,
     missingProof: missingProof.length ? missingProof : ladder.missing,
   });
+  if (!showGuidedRetry && !low && (component || corpusCandidates.length)) {
+    trackFirstUsefulResult('partsnap_result', result, {
+      role: getSplashLensRole(),
+      confidence: confidence || 'unknown',
+      risk: risk.level,
+      result_count: 1,
+      proof_visible_count: visibleEvidence.length,
+      proof_missing_count: missingProof.length || (ladder.missing || []).length,
+      time_back_message: 'Part path, missing proof, and packet actions are visible.',
+    });
+  }
 }
 
 function renderPartSnapFeedbackTrap(ai = {}, candidates = [], ladder = {}, missingProof = [], risk = {}) {
@@ -10197,10 +10236,14 @@ function renderPartSnapResultUpgradeOffer(placement = 'partsnap_result') {
     </div>`;
 }
 
-function trackPostValueUpgrade(plan, placement = 'partsnap_result') {
+function trackCheckoutIntent(plan, placement) {
   trackSplashLensEvent('checkout_click', { plan, feature: 'unlimited_partsnap', placement });
-  trackSplashLensEvent('post_value_upgrade_clicked', { plan, feature: 'unlimited_partsnap', placement });
   trackSplashLensEvent('upgrade_click', { plan, feature: 'unlimited_partsnap', placement });
+}
+
+function trackPostValueUpgrade(plan, placement = 'partsnap_result') {
+  trackCheckoutIntent(plan, placement);
+  trackSplashLensEvent('post_value_upgrade_clicked', { plan, feature: 'unlimited_partsnap', placement });
 }
 
 function renderPartSnapProofSnapshot(ladder = {}, risk = {}, visibleEvidence = [], missingProof = [], orderGate = {}) {
@@ -10968,6 +11011,7 @@ function scanManualSearch(val) {
   if (!el || !val.trim()) { if (el) el.innerHTML = ''; return; }
   const hits = searchErrorDB(val.trim());
   el.innerHTML = renderScanHits(hits, val.trim());
+  if (hits.length) trackFirstUsefulResult('scan_manual_code_answer', el, { result_count: hits.length, role: getSplashLensRole() });
 }
 
 function runCodeSearch(code, result, status) {
@@ -10981,6 +11025,7 @@ function runCodeSearch(code, result, status) {
       </div>
       ${renderScanHits(hits, code)}
     `;
+    if (hits.length) trackFirstUsefulResult('scan_detected_code_answer', result, { result_count: hits.length, role: getSplashLensRole() });
   }
 }
 
@@ -11018,6 +11063,9 @@ function scanCodeSearch(val) {
   const safeQuery = query.replace(/[^a-zA-Z0-9 ._-]/g, '').slice(0, 40);
   const hits = searchErrorDB(query, _scanBrand);
   el.innerHTML = renderScanHits(hits, query);
+  if (!hits.length && _scanBrand && searchErrorDB(query).length) {
+    el.innerHTML += `<button type="button" onclick="setScanBrand(null)" style="display:block;width:100%;margin:10px 0;background:#0369a1;color:#fff;border:0;border-radius:6px;padding:10px;font-weight:800;cursor:pointer;">Search all brands</button>`;
+  }
   const trackingKey = `${_scanBrand || 'all'}:${safeQuery}`;
   if (safeQuery.length >= 2 && scanCodeSearch._lastTracked !== trackingKey) {
     scanCodeSearch._lastTracked = trackingKey;
@@ -11032,9 +11080,8 @@ function scanCodeSearch(val) {
         result_count: hits.length,
         workflow: 'scan_lookup_search',
       });
-      trackSplashLensEvent('first_value_completed', {
+      trackFirstUsefulResult('scan_lookup_search', el, {
         role: getSplashLensRole(),
-        workflow: 'scan_lookup_search',
         result_count: hits.length,
         time_back_message: 'Lookup answer found inside scanner mode.',
       });
@@ -11099,7 +11146,7 @@ function searchErrorDB(query, brandFilter) {
 function renderScanHits(hits, query) {
   if (!hits.length) return `
     <div style="background:#1e293b;border:1px solid #334155;border-radius:10px;padding:20px;text-align:center;">
-      <p style="color:#64748b;font-size:13px;">No matches for <strong style="color:#94a3b8">"${query}"</strong></p>
+      <p style="color:#64748b;font-size:13px;">No matches for <strong style="color:#94a3b8">"${escHtml(query)}"</strong></p>
       <p style="color:#475569;font-size:12px;margin-top:6px;">Try the brand name + code, or search a keyword (e.g. "ignition", "flow", "pressure")</p>
     </div>`;
   return hits.map(h => `
@@ -11126,7 +11173,7 @@ function renderScanHits(hits, query) {
 }
 
 function renderManualLookupUpgradeOffer(resultCount, query) {
-  if (isPartSnapPro() || isStoreShellMode()) return '';
+  if (resultCount <= 0 || isPartSnapPro() || isStoreShellMode()) return '';
   const safeQuery = String(query || '').replace(/[^a-zA-Z0-9 ._-]/g, '').slice(0, 40);
   try {
     const key = 'splashlens-post-value-upgrade-scan-lookup-shown-at';
@@ -11141,7 +11188,6 @@ function renderManualLookupUpgradeOffer(resultCount, query) {
       });
     }
   } catch {}
-  if (resultCount <= 0) return '';
   return `
     <div style="background:#082f49;border:1px solid #0ea5e9;border-radius:10px;padding:12px;margin:12px 0 6px;">
       <p style="color:#7dd3fc;font-size:10px;font-weight:950;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;">Keep the result</p>

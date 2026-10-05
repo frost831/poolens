@@ -31,6 +31,8 @@ test('field intelligence runner is non-interactive and safe for heartbeat use', 
   assert.match(toolSource, /countQualifiedFirstValues/);
   assert.match(toolSource, /qualifiedFirstValueSessions30d/);
   assert.match(toolSource, /checkoutStarts30d/);
+  assert.match(toolSource, /checkoutStarts30d: countEvents\(database, 30, \['checkout_started'\]\)/);
+  assert.match(toolSource, /ce\.source IN \('stripe_webhook', 'stripe_checkout_success'\)/);
   assert.match(toolSource, /splashlensPaidCompletions30d/);
   assert.match(packageJson.scripts['intelligence:check'], /run-field-intelligence-loop\.mjs/);
   assert.match(packageJson.scripts['numbers:pull'], /pull-splashlens-numbers\.ps1/);

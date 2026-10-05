@@ -55,7 +55,9 @@ function normalizePlatform(value) {
 
 function normalizeDate(value) {
   const date = clean(value, 20);
-  return /^\d{4}-\d{2}-\d{2}$/.test(date) ? date : new Date().toISOString().slice(0, 10);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return '';
+  const parsed = new Date(`${date}T00:00:00Z`);
+  return !Number.isNaN(parsed.valueOf()) && parsed.toISOString().slice(0, 10) === date ? date : '';
 }
 
 function authOk(request, env) {
@@ -134,19 +136,27 @@ function entriesFromBody(body) {
 }
 
 async function upsertEntries(db, request, body) {
-  const entries = entriesFromBody(body)
+  const rawEntries = entriesFromBody(body);
+  if (!rawEntries.length || rawEntries.length > 500) {
+    return { ok: false, status: 400, error: 'Provide 1 to 500 store metric entries.' };
+  }
+  if (rawEntries.some((entry) => !entry || typeof entry !== 'object' || Array.isArray(entry))) {
+    return { ok: false, status: 400, error: 'Each store metric entry must be an object.' };
+  }
+  const entries = rawEntries
     .map((entry) => ({
       platform: normalizePlatform(entry.platform),
       metric: clean(entry.metric, 80).toLowerCase().replace(/\s+/g, '_'),
-      value: Math.max(0, Math.round(Number(entry.value || 0))),
+      value: Number(entry.value),
+      validValue: /^(0|[1-9]\d*)$/.test(String(entry.value)),
       metricDate: normalizeDate(entry.date || entry.metric_date),
-      source: clean(entry.source || body.source || 'manual_console_export', 120),
+      source: clean(entry.source || body.source, 120),
       notes: clean(entry.notes || body.notes, 500),
-    }))
-    .filter((entry) => ALLOWED_PLATFORMS.has(entry.platform) && ALLOWED_METRICS.has(entry.metric));
+    }));
 
-  if (!entries.length) {
-    return { ok: false, status: 400, error: 'No valid store metric entries were provided.' };
+  if (entries.some((entry) => !ALLOWED_PLATFORMS.has(entry.platform) || !ALLOWED_METRICS.has(entry.metric) ||
+      !entry.validValue || !Number.isSafeInteger(entry.value) || !entry.metricDate || !entry.source)) {
+    return { ok: false, status: 400, error: 'Invalid platform, metric, value, date, or source in store metric entries.' };
   }
 
   for (const entry of entries) {
@@ -175,10 +185,10 @@ async function upsertEntries(db, request, body) {
 async function snapshot(db) {
   const [totals, recent, latest] = await Promise.all([
     all(db, `
-      SELECT platform, metric, SUM(value) AS value, MIN(metric_date) AS firstDate, MAX(metric_date) AS lastDate
+      SELECT platform, metric, source, SUM(value) AS value, MIN(metric_date) AS firstDate, MAX(metric_date) AS lastDate
       FROM store_metric_imports
-      GROUP BY platform, metric
-      ORDER BY platform ASC, metric ASC
+      GROUP BY platform, metric, source
+      ORDER BY platform ASC, metric ASC, source ASC
     `),
     all(db, `
       SELECT platform, metric, value, metric_date AS metricDate, source, notes, updated_at AS updatedAt
@@ -207,6 +217,7 @@ export async function onRequestPost({ request, env }) {
   } catch {
     return json(request, { ok: false, error: 'Valid JSON is required.' }, 400);
   }
+  if (!body || typeof body !== 'object' || Array.isArray(body)) return json(request, { ok: false, error: 'A JSON object is required.' }, 400);
   await ensureTables(env.SUBSCRIBERS_DB);
   const result = await upsertEntries(env.SUBSCRIBERS_DB, request, body);
   if (!result.ok) return json(request, result, result.status || 400);

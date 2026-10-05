@@ -328,12 +328,30 @@ function paymentRows(database) {
 
 function remoteD1Snapshot(database) {
   const payments = paymentRows(database);
-  const splashlensPayments = payments.filter((row) => /partsnap|splashlens|splash lens/i.test(String(row.plan || '')));
+  const verifiedProSession = `EXISTS (
+    SELECT 1 FROM commercial_entitlements ce
+    WHERE ce.stripe_session_id = pe.stripe_session_id
+      AND ce.lane = 'pro'
+      AND ce.source IN ('stripe_webhook', 'stripe_checkout_success')
+  )`;
+  const verifiedPayments = d1Rows(database, `
+    SELECT pe.event_type, COALESCE(pe.plan, 'unknown') AS plan, COUNT(*) AS count,
+      COUNT(DISTINCT pe.stripe_session_id) AS stripeSessions,
+      MIN(pe.created_at) AS firstSeen,
+      MAX(pe.created_at) AS lastSeen
+    FROM payment_events pe
+    WHERE ${verifiedProSession}
+    GROUP BY pe.event_type, COALESCE(pe.plan, 'unknown')
+    ORDER BY count DESC, plan ASC
+  `);
+  const splashlensPayments = verifiedPayments.filter((row) => /partsnap|splashlens|splash lens/i.test(String(row.plan || '')));
   const foreignPayments = payments.filter((row) => !/partsnap|splashlens|splash lens/i.test(String(row.plan || '')));
-  const completedEventTypes = new Set(['checkout.session.completed', 'checkout.session.async_payment_succeeded']);
-  const splashlensCompleted = splashlensPayments
-    .filter((row) => completedEventTypes.has(String(row.event_type || '')))
-    .reduce((sum, row) => sum + Number(row.count || 0), 0);
+  const splashlensCompleted = firstValue(database, `
+    SELECT COUNT(DISTINCT pe.stripe_session_id) AS value FROM payment_events pe
+    WHERE pe.event_type IN ('checkout.session.completed', 'checkout.session.async_payment_succeeded')
+      AND (lower(COALESCE(pe.plan, '')) LIKE '%partsnap%' OR lower(COALESCE(pe.plan, '')) LIKE '%splashlens%' OR lower(COALESCE(pe.plan, '')) LIKE '%splash lens%')
+      AND ${verifiedProSession}
+  `);
   const suspectCompleted = foreignPayments.reduce((sum, row) => sum + Number(row.count || 0), 0);
 
   const storeSignals = d1Rows(database, `
@@ -378,16 +396,16 @@ function remoteD1Snapshot(database) {
       serviceProof30d: countEvents(database, 30, ['service_report_saved', 'service_proof_summary_generated', 'service_proof_share_link_created']),
       feedback30d: countEvents(database, 30, ['partsnap_result_feedback', 'field_feedback_quick_answered', 'field_feedback_submitted', 'field_score_feedback']),
       checkoutClicks30d: countEvents(database, 30, ['checkout_click', 'upgrade_click', 'post_value_upgrade_clicked', 'account_pro_checkout_clicked', 'partsnap_pro_restore_requested', 'native_purchase_click', 'paid_lane_click', 'paid_lane_lead_captured']),
-      checkoutStarts30d: countEvents(database, 30, ['checkout_click']),
+      checkoutStarts30d: countEvents(database, 30, ['checkout_started']),
       subscribersTotal: firstValue(database, 'SELECT COUNT(*) AS value FROM subscribers'),
       freeProfilesTotal: firstValue(database, 'SELECT COUNT(*) AS value FROM free_profiles'),
       verifiedFreeProfilesTotal: firstValue(database, 'SELECT COUNT(*) AS value FROM free_profiles WHERE verified_at IS NOT NULL'),
       userAccountsTotal: firstValue(database, 'SELECT COUNT(*) AS value FROM user_accounts'),
       partnerLeadsTotal: firstValue(database, 'SELECT COUNT(*) AS value FROM partner_intake'),
       commercialEntitlementsTotal: firstValue(database, 'SELECT COUNT(*) AS value FROM commercial_entitlements'),
-      commercialEntitlementsActive: firstValue(database, "SELECT COUNT(*) AS value FROM commercial_entitlements WHERE status IN ('active','trialing','pilot')"),
+      commercialEntitlementsActive: firstValue(database, "SELECT COUNT(*) AS value FROM commercial_entitlements WHERE status IN ('active','trialing','pilot') AND COALESCE(source, '') <> 'd1_payment_backfill'"),
       splashlensPaidCompletions: splashlensCompleted,
-      splashlensPaidCompletions30d: firstValue(database, `SELECT COUNT(DISTINCT stripe_session_id) AS value FROM payment_events WHERE event_type IN ('checkout.session.completed', 'checkout.session.async_payment_succeeded') AND ${whereDays(30)} AND (lower(COALESCE(plan, '')) LIKE '%partsnap%' OR lower(COALESCE(plan, '')) LIKE '%splashlens%' OR lower(COALESCE(plan, '')) LIKE '%splash lens%')`),
+      splashlensPaidCompletions30d: firstValue(database, `SELECT COUNT(DISTINCT pe.stripe_session_id) AS value FROM payment_events pe WHERE pe.event_type IN ('checkout.session.completed', 'checkout.session.async_payment_succeeded') AND pe.${whereDays(30)} AND (lower(COALESCE(pe.plan, '')) LIKE '%partsnap%' OR lower(COALESCE(pe.plan, '')) LIKE '%splashlens%' OR lower(COALESCE(pe.plan, '')) LIKE '%splash lens%') AND ${verifiedProSession}`),
       suspectNonSplashLensPaymentRows: suspectCompleted,
       separatedHeartbeatTotal: tableExists(database, 'engagement_events') ? firstValue(database, "SELECT COUNT(*) AS value FROM engagement_events WHERE event = 'session_heartbeat'") : 0,
     },

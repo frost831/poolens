@@ -263,21 +263,35 @@ async function verifyEntitlementToken(request, env, body) {
       return { present: true, ok: false, status: 403, error: 'Paid scanner access is no longer active. Restore or renew the subscription to continue.' };
     }
   }
-  if (/^stripe_|^restore_entitlement$/.test(String(payload.source || '')) && env.SUBSCRIBERS_DB && typeof env.SUBSCRIBERS_DB.prepare === 'function') {
-    const customerId = String(payload.stripeCustomerId || '').trim();
-    const row = customerId
-      ? await env.SUBSCRIBERS_DB.prepare(
-        `SELECT status FROM commercial_entitlements
-         WHERE stripe_customer_id = ? OR lower(email) = lower(?)
-         ORDER BY updated_at DESC LIMIT 1`,
-      ).bind(customerId, subject).first()
-      : await env.SUBSCRIBERS_DB.prepare(
-        `SELECT status FROM commercial_entitlements
-         WHERE lower(email) = lower(?)
-         ORDER BY updated_at DESC LIMIT 1`,
-      ).bind(subject).first();
-    if (!row || !['active', 'trialing', 'pilot'].includes(String(row.status || '').toLowerCase())) {
-      return { present: true, ok: false, status: 403, error: 'Paid scanner access could not be confirmed. Restore the subscription before continuing.' };
+  if (/^stripe_|^restore_entitlement$/.test(String(payload.source || ''))) {
+    if (env.SUBSCRIBERS_DB && typeof env.SUBSCRIBERS_DB.prepare === 'function') {
+      const customerId = String(payload.stripeCustomerId || '').trim();
+      const row = customerId
+        ? await env.SUBSCRIBERS_DB.prepare(
+          `SELECT status FROM commercial_entitlements
+           WHERE (stripe_customer_id = ? OR lower(email) = lower(?))
+             AND lane = 'pro' AND source IN ('stripe_webhook','stripe_checkout_success')
+           ORDER BY updated_at DESC LIMIT 1`,
+        ).bind(customerId, subject).first()
+        : await env.SUBSCRIBERS_DB.prepare(
+          `SELECT status FROM commercial_entitlements
+           WHERE lower(email) = lower(?)
+             AND lane = 'pro' AND source IN ('stripe_webhook','stripe_checkout_success')
+           ORDER BY updated_at DESC LIMIT 1`,
+        ).bind(subject).first();
+      if (!row || !['active', 'trialing', 'pilot'].includes(String(row.status || '').toLowerCase())) {
+        return { present: true, ok: false, status: 403, error: 'Paid scanner access could not be confirmed. Restore the subscription before continuing.' };
+      }
+    } else {
+      let record = null;
+      if (env.SCAN_USAGE_KV && typeof env.SCAN_USAGE_KV.get === 'function') {
+        try { record = JSON.parse(await env.SCAN_USAGE_KV.get(`entitlement:${subject}`)); } catch {}
+      }
+      if (!record || !['stripe_webhook', 'stripe_checkout'].includes(String(record.source || ''))
+        || !(Date.parse(record.expiresAt || '') > Date.now())
+        || String(record.subject || '').trim().toLowerCase() !== subject) {
+        return { present: true, ok: false, status: 403, error: 'Paid scanner access could not be confirmed. Restore the subscription before continuing.' };
+      }
     }
   }
 

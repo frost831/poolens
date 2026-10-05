@@ -149,9 +149,16 @@ async function funnelStageStats(db, days) {
   });
 }
 
-async function paymentStats(db) {
+export async function paymentStats(db) {
   const table = await first(db, `SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'payment_events'`);
-  if (!table.name) return { byPlan: [], foreignByPlan: [], splashlensCompleted: 0, splashlensCompleted30d: 0, suspectCompleted: 0 };
+  if (!table.name) return { byPlan: [], foreignByPlan: [], splashlensCompleted: 0, splashlensCompleted30d: 0, suspectCompleted: 0, unverifiedSplashLensLabeledCompletions: 0 };
+  const entitlementTable = await first(db, `SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'commercial_entitlements'`);
+  const verifiedProSession = !entitlementTable.name ? '0' : `EXISTS (
+    SELECT 1 FROM commercial_entitlements ce
+    WHERE ce.stripe_session_id = pe.stripe_session_id
+      AND ce.lane = 'pro'
+      AND ce.source IN ('stripe_webhook', 'stripe_checkout_success')
+  )`;
   const allByPlan = await all(db, `
     SELECT event_type, COALESCE(plan, 'unknown') AS plan, COUNT(*) AS count,
       COUNT(DISTINCT stripe_session_id) AS stripeSessions,
@@ -161,21 +168,48 @@ async function paymentStats(db) {
     GROUP BY event_type, COALESCE(plan, 'unknown')
     ORDER BY count DESC, plan ASC
   `);
-  const byPlan = allByPlan.filter((row) => /partsnap|splashlens|splash lens/i.test(String(row.plan || '')));
+  const verifiedByPlan = await all(db, `
+    SELECT pe.event_type, COALESCE(pe.plan, 'unknown') AS plan, COUNT(*) AS count,
+      COUNT(DISTINCT pe.stripe_session_id) AS stripeSessions,
+      MIN(pe.created_at) AS firstSeen,
+      MAX(pe.created_at) AS lastSeen
+    FROM payment_events pe
+    WHERE ${verifiedProSession}
+    GROUP BY pe.event_type, COALESCE(pe.plan, 'unknown')
+    ORDER BY count DESC, plan ASC
+  `);
+  const byPlan = verifiedByPlan.filter((row) => /partsnap|splashlens|splash lens/i.test(String(row.plan || '')));
   const foreignByPlan = allByPlan.filter((row) => !/partsnap|splashlens|splash lens/i.test(String(row.plan || '')));
-  const completionEvents = new Set(['checkout.session.completed', 'checkout.session.async_payment_succeeded']);
-  const splashlensCompleted = byPlan
-    .filter((row) => completionEvents.has(String(row.event_type || '')))
-    .reduce((sum, row) => sum + Number(row.count || 0), 0);
+  const completionFilter = `pe.event_type IN ('checkout.session.completed', 'checkout.session.async_payment_succeeded')
+    AND (lower(COALESCE(pe.plan, '')) LIKE '%partsnap%'
+      OR lower(COALESCE(pe.plan, '')) LIKE '%splashlens%'
+      OR lower(COALESCE(pe.plan, '')) LIKE '%splash lens%')`;
+  const completed = await first(db, `
+    SELECT COUNT(DISTINCT pe.stripe_session_id) AS value
+    FROM payment_events pe
+    WHERE ${completionFilter} AND ${verifiedProSession}
+  `);
   const recent = await first(db, `
-    SELECT COUNT(DISTINCT stripe_session_id) AS value
-    FROM payment_events
-    WHERE event_type IN ('checkout.session.completed', 'checkout.session.async_payment_succeeded')
-      AND created_at >= datetime('now', '-30 days')
-      AND (lower(COALESCE(plan, '')) LIKE '%partsnap%' OR lower(COALESCE(plan, '')) LIKE '%splashlens%' OR lower(COALESCE(plan, '')) LIKE '%splash lens%')
+    SELECT COUNT(DISTINCT pe.stripe_session_id) AS value
+    FROM payment_events pe
+    WHERE ${completionFilter}
+      AND pe.created_at >= datetime('now', '-30 days')
+      AND ${verifiedProSession}
+  `);
+  const unverified = await first(db, `
+    SELECT COUNT(DISTINCT pe.stripe_session_id) AS value
+    FROM payment_events pe
+    WHERE ${completionFilter} AND NOT ${verifiedProSession}
   `);
   const suspectCompleted = foreignByPlan.reduce((sum, row) => sum + Number(row.count || 0), 0);
-  return { byPlan, foreignByPlan, splashlensCompleted, splashlensCompleted30d: Number(recent.value || 0), suspectCompleted };
+  return {
+    byPlan,
+    foreignByPlan,
+    splashlensCompleted: Number(completed.value || 0),
+    splashlensCompleted30d: Number(recent.value || 0),
+    suspectCompleted,
+    unverifiedSplashLensLabeledCompletions: Number(unverified.value || 0),
+  };
 }
 
 async function engagementStats(db) {
@@ -191,10 +225,10 @@ async function storeMetricStats(db) {
   const table = await first(db, `SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'store_metric_imports'`);
   if (!table.name) return { totals: [], latestImportAt: null };
   const totals = await all(db, `
-    SELECT platform, metric, SUM(value) AS value, MIN(metric_date) AS firstDate, MAX(metric_date) AS lastDate
+    SELECT platform, metric, source, SUM(value) AS value, MIN(metric_date) AS firstDate, MAX(metric_date) AS lastDate
     FROM store_metric_imports
-    GROUP BY platform, metric
-    ORDER BY platform ASC, metric ASC
+    GROUP BY platform, metric, source
+    ORDER BY platform ASC, metric ASC, source ASC
   `);
   const latest = await first(db, `SELECT MAX(updated_at) AS latestImportAt FROM store_metric_imports`);
   return { totals, latestImportAt: latest.latestImportAt || null };
@@ -262,11 +296,12 @@ export async function onRequestGet({ request, env }) {
         partSnapResults30d: await count(db, `SELECT COUNT(*) AS value FROM events WHERE event = 'partsnap_result' AND created_at >= datetime('now', '-30 days') ${EXTERNAL_EVENT_FILTER}`),
         feedback30d,
         checkoutClicks30d,
-        checkoutStarts30d: await count(db, `SELECT COUNT(*) AS value FROM events WHERE event = 'checkout_click' AND created_at >= datetime('now', '-30 days') ${EXTERNAL_EVENT_FILTER}`),
+        checkoutStarts30d: await count(db, `SELECT COUNT(*) AS value FROM events WHERE event = 'checkout_started' AND created_at >= datetime('now', '-30 days') ${EXTERNAL_EVENT_FILTER}`),
         subscribersTotal,
         partnerLeadsTotal,
         splashlensPaidCompletions: payments.splashlensCompleted,
         splashlensPaidCompletions30d: payments.splashlensCompleted30d,
+        unverifiedSplashLensLabeledCompletions: payments.unverifiedSplashLensLabeledCompletions,
         suspectNonSplashLensPaymentRows: payments.suspectCompleted,
         legacyHeartbeatRows: engagement.legacyHeartbeatTotal,
         separatedHeartbeatRows: engagement.separatedHeartbeatTotal,

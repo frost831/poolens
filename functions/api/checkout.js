@@ -100,6 +100,34 @@ function checkoutRedirect(location, mode) {
   });
 }
 
+async function recordCheckoutStarted(request, env, plan, mode) {
+  const db = env.SUBSCRIBERS_DB;
+  if (!db || typeof db.prepare !== 'function') return;
+  try {
+    await db.prepare(
+      `CREATE TABLE IF NOT EXISTS events (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        event TEXT NOT NULL,
+        source TEXT,
+        path TEXT,
+        plan TEXT,
+        mode TEXT,
+        props TEXT,
+        user_agent TEXT,
+        referrer TEXT,
+        country TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )`,
+    ).run();
+    await db.prepare(
+      `INSERT INTO events (event, source, path, plan, mode, props, user_agent)
+       VALUES ('checkout_started', 'checkout_api', '/api/checkout', ?, ?, '{}', ?)`,
+    ).bind(normalizedPlan(plan), mode, String(request.headers.get('User-Agent') || '').slice(0, 300)).run();
+  } catch (error) {
+    console.error('SplashLens checkout start tracking failed', error);
+  }
+}
+
 export async function onRequestGet({ request, env }) {
   const url = new URL(request.url);
   const plan = (url.searchParams.get('plan') || 'monthly').toLowerCase();
@@ -168,10 +196,16 @@ export async function onRequestGet({ request, env }) {
   }
 
   const sessionUrl = await createCheckoutSession(request, env, plan);
-  if (sessionUrl) return checkoutRedirect(sessionUrl, 'stripe_checkout_session');
+  if (sessionUrl) {
+    await recordCheckoutStarted(request, env, plan, 'stripe_checkout_session');
+    return checkoutRedirect(sessionUrl, 'stripe_checkout_session');
+  }
 
   const target = paymentLinkForPlan(env, plan);
-  if (target) return checkoutRedirect(target, 'payment_link_direct');
+  if (target) {
+    await recordCheckoutStarted(request, env, plan, 'payment_link_direct');
+    return checkoutRedirect(target, 'payment_link_direct');
+  }
   return Response.json({ ok: false, error: 'Stripe Checkout could not be started. Please try again.' }, {
     status: 503,
     headers: { 'Cache-Control': 'no-store' },
