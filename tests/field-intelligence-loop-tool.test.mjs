@@ -11,6 +11,7 @@ import {
 } from '../tools/run-field-intelligence-loop.mjs';
 
 const toolSource = readFileSync(new URL('../tools/run-field-intelligence-loop.mjs', import.meta.url), 'utf8');
+const statsSource = readFileSync(new URL('../functions/api/stats.js', import.meta.url), 'utf8');
 const numbersPullSource = readFileSync(new URL('../tools/pull-splashlens-numbers.ps1', import.meta.url), 'utf8');
 const packageJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'));
 
@@ -25,6 +26,8 @@ test('field intelligence runner is non-interactive and safe for heartbeat use', 
   assert.match(toolSource, /wrangler/);
   assert.match(toolSource, /splashlens-subscribers/);
   assert.match(toolSource, /REPORTING_EVENT_FILTER/);
+  assert.match(toolSource, /NOT LIKE 'curl\/%'/);
+  assert.match(statsSource, /NOT LIKE 'curl\/%'/);
   assert.match(toolSource, /NOT LIKE 'codex%'/);
   assert.match(toolSource, /'release_gate', 'release-gate'/);
   assert.match(toolSource, /'session_heartbeat'/);

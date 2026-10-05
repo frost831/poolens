@@ -17,6 +17,7 @@ const EXTERNAL_EVENT_FILTER = `
  AND lower(COALESCE(source, '')) NOT LIKE 'codex%'
  AND lower(COALESCE(source, '')) NOT IN ('release_gate', 'release-gate')
  AND lower(COALESCE(user_agent, '')) NOT LIKE '%headless%'
+ AND lower(COALESCE(user_agent, '')) NOT LIKE 'curl/%'
  AND lower(COALESCE(user_agent, '')) NOT LIKE '%bot%'
  AND lower(COALESCE(user_agent, '')) NOT LIKE '%crawler%'
  AND lower(COALESCE(user_agent, '')) NOT LIKE '%spider%'
