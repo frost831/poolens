@@ -2,6 +2,23 @@
 
 Scope: MAC-01 through MAC-05 from `docs/codex/MAC_CODEX_NATIVE_TICKETS_2026-10-05.md`.
 
+## Current Verification After PC Web Clearance
+
+This section supersedes the historical blockers below. Mac fetched `origin/master` at `70cfa0bbf256afb770cdf5f1ce1fea7ecafba27d` and merged it into the Mac branch at `5c708f4`. Native project files are unchanged; the remaining branch diff against master is documentation only.
+
+- Signed iOS `com.splashlens.app`, `1.0.11 (18)` passed `altool --validate-app`: **VERIFY SUCCEEDED with no errors**. IPA SHA256 remains `d545602cba4ca06d6d3c97b8aafb22192c45057b945fef6fc99c8bba7cb37de4`. ZIP integrity, exported bundle signature, entitlements, identity, permission strings, linked frameworks, and executable identity against the IPA were checked. This is validation, not a TestFlight upload or review approval.
+- Serial regression with browser integration passed **198/198**, zero skipped. The initial parallel run passed 197/198 and timed out in an importer subprocess under heavy Mac load; retain both logs rather than hide the first run. Deterministic metadata benchmark also passed; it is not field CV accuracy evidence.
+- Fresh live desktop Chromium sessions used `splashlens-v25-native-gallery-offline` and `app.js?v=20261005-native-gallery-offline`. Offline cold reload and opening the `CHECK SALT` manual answer passed at both `/?store=ios` and `/?store=android`, with `navigator.onLine=false` during lookup. The earlier browser offline blocker is cleared by the PC deployment.
+- Deployed gallery adapter tested under unchanged production CSP: mocked native picker returned a public 512x512 app-icon fixture; one selection produced one invocation of the real existing capture path, one gallery-picked event, and the equipment evidence step advanced to data plate. No CSP-blocked data fetch or second browser picker. This was browser transport testing, **not actual native PHPicker selection, completed four-view AI analysis, or equipment-identification accuracy**. A verified scan profile is required for live AI analysis; no profile, email code, or entitlement was fabricated.
+- Mocked `NotAllowedError` denial exposed Pick Gallery and manual lookup without opening camera hardware. File input has no `capture` attribute. Store lookup/result/post-value/scan-limit/account checks found no checkout or external purchase CTA; manual fallback remains. Ordinary web lookup/account still expose checkout. PC addressed the purchase-link hold by suppression, not by establishing regional eligibility. No IAP was added.
+- Remote iPhone testing is stopped at the user's request. The dedicated QA simulator also remains shut down: startup stayed at a spinner across a restart before SplashLens launched. Installed-native acceptance is **not green** and must not be inferred from desktop tests. No physical iPhone camera was accessed and no physical-device installation was performed during this pass.
+- Android upload key was not located in the checked local transfer locations. `/Users/macbookpro/SecureKeys/splashlens` is prepared with owner-only mode `0700`, but no SplashLens key has been copied, inspected, or signed. Await the actual local transfer path, then verify the existing alias/certificate against Play before signing; do not use another app's key or create a replacement.
+- ASC readback still has build `17` VALID as latest uploaded; build `18` is unuploaded. Apple download/crash report instance reads still returned empty arrays. Existing official Play CSV remains private with its successful 27-record dry-run. No new metrics were invented or imported.
+
+Current private receipts: `ios-validation-current.json`, `ios-validation-current.log`, `regression-current-master.log`, `regression-current-master-serial.log`, `benchmark-current-master.log`, `browser-ios-offline-current.log`, `browser-android-offline-current.log`, `browser-ios-account-current.log`, `browser-camera-denial-current.log`, `browser-gallery-current.log`, and `browser-web-compare-current.log` under `/Users/macbookpro/poolens-mac-release-2026-10-05`.
+
+**Remaining release gate:** actual installed-native acceptance (remote iPhone testing stays stopped unless the user explicitly resumes it), a verified test profile for full live AI analysis, and the existing Android key/device checks. No TestFlight, Play internal, App Review, site deployment, or production import was sent.
+
 ## Resumed Testing Status
 
 The sections below retain the earlier build/export snapshot. This section supersedes its release blockers after PC deployment `bd83d0c`:

@@ -1,5 +1,19 @@
 # PC Handoff From Mac - 2026-10-05
 
+## Current Status After Web Clearance
+
+Read this section first; earlier deployment/signing/CTA blockers below are historical where superseded. Mac synced `origin/master` at `70cfa0b`. The PC gallery decoding fix, v25 offline root-shell cache, and native purchase-CTA suppression are live. There are no remaining Mac code changes against current master, only status documentation.
+
+Done: signed iOS `1.0.11 (18)` IPA passed archive validation with no errors; serial regression passed 198/198 with browser integration; fresh desktop iOS/Android store-mode offline reload and opening `CHECK SALT` passed; gallery decoding entered the actual existing capture path once under production CSP with a mocked picker/public fixture; tested store purchase surfaces suppressed checkout and external purchase CTAs; ordinary web checkout remained visible. No IAP added.
+
+Not done: actual installed-native camera-denial/gallery acceptance and full verified-account AI analysis. Remote iPhone testing is stopped at the user's request, and the QA simulator is shut down after failing to finish startup. Browser transport evidence is not installed-native or AI accuracy evidence. No TestFlight or Play internal upload occurred.
+
+Android: securely transfer the **existing** `splashlens-upload.keystore`, alias `splashlens_upload`, from the documented PC location into `/Users/macbookpro/SecureKeys/splashlens/` on Mac and provide only its local file path. The destination has owner-only `0700` permissions; the actual key has not been located, secured, or verified. Keep passwords out of Git/chat and preserve the existing certificate identity; do not generate a replacement key. Mac will verify against Play before signing.
+
+Metrics: official Play CSV is already retained privately, dry-run accepted 27 records. Apple report definitions still have no download/crash instances. No production import was sent. Do not commit raw metrics or signing assets to this public repository.
+
+Next: supply the secure key path and a verified live-AI test profile; keep remote iPhone testing stopped until the user explicitly resumes it; finish permitted native/device acceptance and artifact gates before store uploads. Details and private evidence paths are in `docs/store/MAC_CODEX_NATIVE_EXECUTION_2026-10-05.md`.
+
 ## Resume Update After PC Deployment
 
 The original integration landed in PC revision `bd83d0c`. Read the latest status in `docs/store/MAC_CODEX_NATIVE_EXECUTION_2026-10-05.md`; the earlier checklist below is historical where superseded.
