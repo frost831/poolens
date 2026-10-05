@@ -64,6 +64,67 @@ test('proof payload is whitelisted and bounded before persistence', () => {
   assert.ok(Buffer.byteLength(serialized) <= 32 * 1024);
 });
 
+test('nested Service Passport survives serialization and public rendering', () => {
+  const input = {
+    customer: 'Jane Private',
+    address: '123 Private Lane',
+    tech: 'Technician Private',
+    visitType: 'Equipment repair',
+    date: '2026-10-05',
+    readings: { source: 'spintouch-edited', fc: '3.2', ph: '7.4' },
+    proof: {
+      complete: true,
+      missing: [],
+      photoProof: 'pump-label.jpg',
+      issueNote: 'Seal leak confirmed on inspection',
+      customerSummary: 'Pump seal inspected and documented.',
+    },
+    equipmentNotes: 'Model plate verified',
+    workPerformed: 'Inspected seal and photographed label',
+    recommendations: 'Schedule seal replacement',
+    callbackRisk: { level: 'medium', flags: ['Repeat pump issue'] },
+  };
+  const { packet, serialized } = serializeProofPacket({ packet: input });
+  assert.equal(packet.summary, input.proof.customerSummary);
+  assert.deepEqual(packet.evidence, ['pump-label.jpg']);
+  assert.deepEqual(packet.workPerformed, [input.workPerformed]);
+  assert.deepEqual(packet.recommendations, [input.recommendations]);
+  assert.deepEqual(packet.warnings, ['Repeat pump issue']);
+  assert.equal(packet.riskLevel, 'medium');
+  assert.equal(packet.proofStatus, 'complete');
+  assert.equal(packet.sourceProof['Reading source'], 'spintouch-edited');
+  assert.equal(packet.sourceProof['Proof checklist'], 'Complete');
+  assert.equal(packet.sourceProof['Issue note'], input.proof.issueNote);
+  assert.equal(packet.equipment.Notes, 'Model plate verified');
+  assert.equal(packet.readings.fc, '3.2');
+  const html = renderProofPacketHtml(JSON.parse(serialized));
+  for (const visible of ['Pump seal inspected', 'pump-label.jpg', 'Inspected seal', 'Schedule seal', 'Repeat pump issue', 'spintouch-edited', 'Callback risk: medium', 'Proof: complete']) {
+    assert.match(html, new RegExp(visible));
+  }
+  for (const privateValue of [input.customer, input.address, input.tech]) {
+    assert.doesNotMatch(serialized, new RegExp(privateValue));
+    assert.doesNotMatch(html, new RegExp(privateValue));
+  }
+});
+
+test('legacy public labels and unknown nested customer fields are never rendered', () => {
+  const packet = sanitizeProofPacket({
+    title: 'Visit',
+    customerLabel: 'Private Customer',
+    customer: 'Private Customer',
+    address: 'Private Address',
+    equipment: { model: 'Pump X', customerPhone: '555-123-4567' },
+    readings: { fc: '3.0', customerEmail: 'private@example.com', techName: 'Private Tech' },
+    sourceProof: { 'Reading source': 'manual', 'Customer address': 'Private Address' },
+    proof: { customerName: 'Nested Private Customer', customerSummary: 'Visit complete' },
+  });
+  const html = renderProofPacketHtml(packet);
+  assert.doesNotMatch(JSON.stringify(packet), /Private Customer|Private Address|Nested Private Customer|Private Tech|555-123-4567|private@example\.com/);
+  assert.doesNotMatch(html, /Private Customer|Private Address|Nested Private Customer|Private Tech|555-123-4567|private@example\.com/);
+  assert.match(html, /Visit complete/);
+  assert.match(html, /Pump X/);
+});
+
 test('public proof renderer escapes content and emits locked-down headers', () => {
   const html = renderProofPacketHtml({
     title: '<script>alert(1)</script>',

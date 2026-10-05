@@ -4893,9 +4893,6 @@ function serviceProofSharePayload() {
     v: 1,
     kind: 'splashlens_service_proof_packet',
     generatedAt: new Date().toISOString(),
-    customer: passport.customer || 'Customer',
-    address: passport.address || '',
-    tech: passport.tech || '',
     date: passport.date || '',
     visitType: passport.visitType || 'Service visit',
     readings: passport.readings || {},
@@ -4929,7 +4926,7 @@ async function submitProofPacketForTeamReview(proofPacketId, payload) {
   const review = await splashLensTeamReviewRequest({
     action: 'create',
     teamId,
-    title: `${payload.customer || 'Customer'} - ${payload.visitType || 'Service visit'}`,
+    title: `Service proof - ${payload.visitType || 'Service visit'}`,
     summary: payload.proof?.customerSummary || payload.workPerformed || 'Field proof packet',
     proofPacketId,
     payload: {
@@ -4966,6 +4963,14 @@ async function createServiceProofShareLink() {
     window.alert('Verify your SplashLens email, then create the proof link again. Server-backed links require a signed account so they can be revoked.');
     return;
   }
+  const confirmed = await openSplashLensSheet({
+    eyebrow: 'Public proof packet',
+    title: 'Share this Service Proof packet?',
+    body: 'Anyone with the link can read it. Customer name, address, and tech are excluded, but review summary and proof notes for personal details before sharing.',
+    primaryLabel: 'Create share link',
+    secondaryLabel: 'Keep private',
+  });
+  if (!confirmed) return;
   const payload = serviceProofSharePayload();
   const teamId = localStorage.getItem(SPLASHLENS_LAST_TEAM_KEY) || '';
   const output = document.getElementById('rpt-proof-os-output');
@@ -4987,11 +4992,11 @@ async function createServiceProofShareLink() {
         <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:10px;">
           <div>
             <p style="color:#0f766e;font-size:10px;font-weight:950;letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px;">Shareable proof packet</p>
-            <h3 style="color:#0f172a;font-size:18px;line-height:1.1;font-weight:950;margin:0;">${escHtml(payload.customer)} - ${escHtml(payload.visitType)}</h3>
+            <h3 style="color:#0f172a;font-size:18px;line-height:1.1;font-weight:950;margin:0;">${escHtml(payload.visitType)}</h3>
           </div>
           <span class="brain-pill ${proof.complete ? 'ready' : 'risk'}">${proof.complete ? 'proof ready' : 'needs proof'}</span>
         </div>
-        <p style="color:#334155;font-size:12px;line-height:1.45;margin-bottom:10px;">This server-backed packet expires ${escHtml(String(stored.expiresAt || '').slice(0, 10))} and can be revoked from the verified account. The link contains no customer details.</p>
+        <p style="color:#334155;font-size:12px;line-height:1.45;margin-bottom:10px;">This server-backed packet expires ${escHtml(String(stored.expiresAt || '').slice(0, 10))} and can be revoked from the verified account. Customer name, address, and tech are excluded; free-text proof notes are shared.</p>
         <input type="text" readonly value="${escAttr(url)}" onclick="this.select()" style="width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:10px;font-size:12px;margin-bottom:10px;">
         <div class="brain-grid">
           <button type="button" id="rpt-proof-copy-link" class="brain-action green">Copy link</button>
@@ -5052,9 +5057,8 @@ function downloadServiceProofJson() {
   const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const anchor = document.createElement('a');
-  const customer = (payload.customer || 'customer').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'customer';
   anchor.href = url;
-  anchor.download = `splashlens-service-proof-${customer}-${Date.now()}.json`;
+  anchor.download = `splashlens-service-proof-${Date.now()}.json`;
   document.body.appendChild(anchor);
   anchor.click();
   anchor.remove();

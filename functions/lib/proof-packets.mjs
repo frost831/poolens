@@ -8,9 +8,8 @@ export const MAX_RETAINED_PROOF_PACKETS_PER_OWNER = 1000;
 export const MAX_PROOF_PACKETS_PER_HOUR = 30;
 
 function cleanList(value, maxItems = 20, maxLength = 500) {
-  return Array.isArray(value)
-    ? value.map((item) => cleanText(item, maxLength)).filter(Boolean).slice(0, maxItems)
-    : [];
+  const items = Array.isArray(value) ? value : (typeof value === 'string' ? [value] : []);
+  return items.map((item) => cleanText(item, maxLength)).filter(Boolean).slice(0, maxItems);
 }
 
 function cleanRecord(value, maxEntries = 20, maxLength = 240) {
@@ -19,26 +18,42 @@ function cleanRecord(value, maxEntries = 20, maxLength = 240) {
     Object.entries(value)
       .slice(0, maxEntries)
       .map(([key, item]) => [cleanText(key, 80), cleanText(item, maxLength)])
-      .filter(([key, item]) => key && item),
+      .filter(([key, item]) => key && item && !/customer|address|tech|phone|email|contact|owner|resident/i.test(key)),
   );
 }
 
 export function sanitizeProofPacket(input = {}) {
-  const source = input.packet && typeof input.packet === 'object' ? input.packet : input;
+  const source = input?.packet && typeof input.packet === 'object' ? input.packet : input || {};
+  const proof = source.proof && !Array.isArray(source.proof) && typeof source.proof === 'object' ? source.proof : {};
+  const callbackRisk = source.callbackRisk && typeof source.callbackRisk === 'object' ? source.callbackRisk : {};
+  const sourceProof = Object.fromEntries(
+    Object.entries(cleanRecord(source.sourceProof, 8, 500))
+      .filter(([key]) => ['Reading source', 'Proof checklist', 'Missing proof', 'Issue note'].includes(key)),
+  );
+  const readings = cleanRecord(source.readings, 24, 120);
+  if (readings.source) {
+    sourceProof['Reading source'] = readings.source;
+    delete readings.source;
+  }
+  if (typeof proof.complete === 'boolean') sourceProof['Proof checklist'] = proof.complete ? 'Complete' : 'Incomplete';
+  if (proof.missing) sourceProof['Missing proof'] = cleanList(proof.missing, 12, 120).join(', ');
+  if (proof.issueNote) sourceProof['Issue note'] = cleanText(proof.issueNote, 500);
+  const equipment = cleanRecord(source.equipment, 20, 240);
+  if (source.equipmentNotes) equipment.Notes = cleanText(source.equipmentNotes, 240);
   return {
     title: cleanText(source.title || 'SplashLens Service Proof Packet', 140),
-    customerLabel: cleanText(source.customerLabel || source.customer || source.pool || '', 140),
     workflow: cleanText(source.workflow || source.visitType || source.type || 'field_stop', 80),
-    summary: cleanText(source.summary || source.customerSummary || source.note || '', 2400),
-    equipment: cleanRecord(source.equipment, 20, 240),
-    readings: cleanRecord(source.readings, 24, 120),
-    evidence: cleanList(source.evidence || source.proof || source.photos, 20, 500),
+    summary: cleanText(source.summary || source.customerSummary || proof.customerSummary || source.note || '', 2400),
+    equipment,
+    readings,
+    sourceProof,
+    evidence: cleanList(source.evidence || proof.photoProof || source.photos || (typeof source.proof === 'string' || Array.isArray(source.proof) ? source.proof : ''), 20, 500),
     workPerformed: cleanList(source.workPerformed || source.work, 20, 500),
     recommendations: cleanList(source.recommendations, 20, 500),
-    warnings: cleanList(source.warnings || source.risks, 12, 500),
-    proofStatus: cleanText(source.proofStatus || source.status || 'saved', 60),
-    riskLevel: cleanText(source.riskLevel || source.risk || 'unknown', 40),
-    completedAt: cleanText(source.completedAt || source.createdAt || '', 40),
+    warnings: cleanList(source.warnings || callbackRisk.flags || source.risks, 12, 500),
+    proofStatus: cleanText(source.proofStatus || (typeof proof.complete === 'boolean' ? (proof.complete ? 'complete' : 'incomplete') : '') || source.status || 'saved', 60),
+    riskLevel: cleanText(source.riskLevel || callbackRisk.level || source.risk || 'unknown', 40),
+    completedAt: cleanText(source.completedAt || source.date || source.createdAt || '', 40),
   };
 }
 
@@ -159,9 +174,9 @@ export function renderProofPacketHtml(packetInput, metadata = {}) {
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow,noarchive"><title>${escapeHtml(packet.title)}</title>
 <style>body{margin:0;background:#eef7fb;color:#0f172a;font:15px/1.55 system-ui,-apple-system,Segoe UI,sans-serif}.wrap{max-width:780px;margin:auto;padding:28px 18px 48px}header{background:#082f49;color:#fff;padding:22px;border-left:5px solid #14b8a6}h1{font-size:25px;margin:0 0 7px}h2{font-size:16px;margin:0 0 9px}section{background:#fff;border:1px solid #cbd5e1;margin-top:12px;padding:16px}p{margin:0;white-space:pre-wrap}ul{margin:0;padding-left:22px}dl{margin:0}dl div{display:grid;grid-template-columns:minmax(120px,1fr) 2fr;gap:12px;padding:7px 0;border-bottom:1px solid #e2e8f0}dt{font-weight:800}dd{margin:0}.meta{color:#cbd5e1;font-size:12px}.notice{background:#fff7ed;border-color:#fdba74;color:#7c2d12}</style></head>
-<body><main class="wrap"><header><h1>${escapeHtml(packet.title)}</h1>${packet.customerLabel ? `<p>${escapeHtml(packet.customerLabel)}</p>` : ''}<p class="meta">Workflow: ${escapeHtml(packet.workflow)}${expiry ? ` | Available until ${escapeHtml(expiry)}` : ''}</p></header>
+<body><main class="wrap"><header><h1>${escapeHtml(packet.title)}</h1><p class="meta">Workflow: ${escapeHtml(packet.workflow)} | Proof: ${escapeHtml(packet.proofStatus)} | Callback risk: ${escapeHtml(packet.riskLevel)}${packet.completedAt ? ` | Visit: ${escapeHtml(packet.completedAt)}` : ''}${expiry ? ` | Available until ${escapeHtml(expiry)}` : ''}</p></header>
 ${packet.summary ? `<section><h2>Customer-safe summary</h2><p>${escapeHtml(packet.summary)}</p></section>` : ''}
-${renderRecord('Equipment', packet.equipment)}${renderRecord('Readings', packet.readings)}${renderList('Evidence captured', packet.evidence)}${renderList('Work performed', packet.workPerformed)}${renderList('Recommendations', packet.recommendations)}${renderList('Risk and verification notes', packet.warnings)}
+${renderRecord('Equipment', packet.equipment)}${renderRecord('Readings', packet.readings)}${renderRecord('Source proof', packet.sourceProof)}${renderList('Evidence captured', packet.evidence)}${renderList('Work performed', packet.workPerformed)}${renderList('Recommendations', packet.recommendations)}${renderList('Risk and verification notes', packet.warnings)}
 <section class="notice"><h2>Reference boundary</h2><p>Verify repair procedures, part fit, chemical safety, electrical work, and local code requirements with current manufacturer documentation and qualified service judgment.</p></section></main></body></html>`;
 }
 
