@@ -1,9 +1,9 @@
-const CACHE = 'splashlens-v25-native-gallery-offline';
+const CACHE = 'splashlens-v26-proof-packet';
 const ASSETS = [
   '/',
   '/js/errors.js?v=20261002-trust-fixes-3',
   '/js/data.js?v=20261002-trust-fixes-2',
-  '/js/app.js?v=20261005-native-gallery-offline',
+  '/js/app.js?v=20261005-proof-packet',
   '/js/partsnap-boss-packet.js?v=20261005-boss-draft',
   '/js/field-signals.js?v=20260728-field-signals',
   '/js/analytics.js',
