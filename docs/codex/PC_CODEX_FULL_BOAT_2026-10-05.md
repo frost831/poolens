@@ -3,7 +3,7 @@
 **Product:** SplashLens · splashlens.com / app.splashlens.com  
 **Repos:** `frost831/poolens` (app) + `frost831/poolens-site` (marketing)  
 **Amplitude:** SplashLens Production · projectId `863388`  
-**Authoritative pricing:** Pro **$29/mo** or **$249/yr** (web Stripe only). Teams **$149/mo** (fix every `$99` mention).  
+**Authoritative pricing (Joshua Frost approved 2026-10-05):** Free core stays fat (codes, dosing, offline, Closing Mode). Solo Pro target **$19/mo** or **$149/yr** (web Stripe only; was ~$29/$249 — open PC ticket to migrate Stripe price IDs). Teams: **owner pays, techs free** — target **$49–79/mo** for miss reports + packet inbox (was $149 primary / kill $99; do not sell tech-seat ARPU). Impulse: **$5–10** per-packet credit packs. Margin/FOMO = OEM verified cards + anonymized heatmaps — not crew seats. See also `docs/codex/PRICING_AND_PARTNER_FRAME_2026-10-05.md`.  
 **Recent context:** `e17f87c` distinguishes unattributed server Stripe sessions from tracked customer `checkout_click`. Funnel: almost no subscribers; free core strong; PartSnap camera denials; first value often `manual_code_search`; D1~0%; monetization events dark; one open unpaid Stripe session = noise.
 
 ---
@@ -22,16 +22,23 @@
 > Route apps run the company. OEM apps run one brand. SplashLens makes the stuck stop proveable — then ships the packet.
 
 ### Mission
-Ship the complete field-proof OS for pool/spa techs: free-core reference (PartSnap, error codes, dosing, checklists, offline tools, Closing/Opening Season Mode) plus Proof Passport packets, Teams visibility, verified partner cards, and web monetization — **without** becoming a CRM/billing/routing product.
+Ship the complete field-proof OS for pool/spa techs: **fat free core** (PartSnap, error codes, dosing, checklists, offline tools, Closing/Opening Season Mode) plus Proof Passport packets, cheap Solo Pro, owner-paid Teams visibility, verified partner cards, and web monetization — **without** becoming a CRM/billing/routing product. Acquisition story: techs buy the **pad-proof OS**; owners buy miss reports + packet inbox; OEMs buy FOMO (verified cards, heatmaps, sponsored Pro).
 
 ### Non-negotiables
-1. **Not a CRM.** Complement Skimmer / Pool Brain / Paythepoolman / Jobber. Export/paste only. Never routes, invoices, autopay, GPS payroll.
+1. **Not a CRM — complement Pool Brain (the innovative CRM) and peers.** Call Pool Brain the innovative CRM; SplashLens is the pad-proof field OS beside it. Paste / export / webhook into Skimmer / Pool Brain / Paythepoolman / Jobber. **Never** routes, invoices, autopay, GPS payroll, or customer billing.
 2. **Web Stripe only.** Native wrappers (`?store=ios|android`) intentionally hide Stripe. No IAP.
 3. **Mac owns native builds.** PC leaves JS bridges + hooks; Mac does camera strings, gallery fallback, rebuild, store CSV export.
 4. **Human verification brand.** PartSnap = possible match + missing proof — never fitment guarantee.
 5. **Privacy for OEM bait.** Failure heatmaps anonymized; no customer PII in partner exports.
-6. **One Teams price:** **$149/mo** everywhere (site currently inconsistent with `$99`).
+6. **Pricing retarget (authoritative):** Solo Pro **$19/mo · $149/yr**; Teams **owner-paid $49–79/mo with free tech seats** (retire primary $149 Teams and kill every `$99` Teams claim). Impulse credits **$5–10**/pack. Stripe product/price IDs may still show old $29/$249/$149 — flag **migrate Stripe prices** as a PC ticket; site + Codex copy use the new targets.
 7. **Do not invent competitor metrics** beyond the competitive brief.
+
+
+### Pool Brain partner framing (GTM)
+- **Pool Brain** = the innovative CRM / route+billing stack. SplashLens = pad-proof OS that makes the stuck stop proveable, then ships the packet.
+- Integration posture: **paste / export / webhook only** — never routes or billing.
+- Acquisition narrative: crews adopt SplashLens for free-core field proof; owners upgrade for miss reports + packet inbox; OEMs/distributors buy verified cards, warranty packs, anonymized heatmaps, authorized badges, and sponsored Pro for dealers.
+- Manufacturer FOMO package: verified cards · warranty photo packs · anonymized heatmaps · authorized-service badge · sponsored Pro for dealers · **one spa or robot pilot** (PC-33/PC-34), not a full CRM displace.
 
 ### Funnel reality to fix
 Almost no paid subs; free lookup works; PartSnap camera denials; first value skewed to manual_code_search; monetization events under-fired; classify unattributed Stripe sessions as ops noise (per `e17f87c`), not demand.
@@ -65,7 +72,7 @@ Almost no paid subs; free lookup works; PartSnap camera denials; first value ske
 | PC-05 | Web Pro offer after any qualified first value | Solo | P0 | M | PC-03 | 28 |
 | PC-06 | Native→web upgrade bridge (no IAP) | Solo | P0 | S | PC-05 | prior |
 | PC-07 | One-button SMS/iMessage proof packet | Tech | P0 | M | PC-40 | 1 |
-| PC-08 | Site Teams $149 + Pro pricing clarity | All | P0 | S | — | prior |
+| PC-08 | Site Pro $19/$149yr + Teams owner-paid $49–79 + Stripe price migrate note | All | P0 | S | — | prior |
 | PC-09 | Landing north-star + not-billing badge + offline hero | All | P0 | S | — | 5,35 |
 | PC-10 | Stripe session read-only classify note (ops) | Ops | P0 | S | PC-01 | prior |
 | PC-11 | Store metrics importer stub + docs | Ops | P1 | S | — | prior |
@@ -76,7 +83,7 @@ Almost no paid subs; free lookup works; PartSnap camera denials; first value ske
 | PC-16 | Spanish-first UI toggle | Tech | P1 | L | — | 8 |
 | PC-17 | Proof Passport as sole shareable artifact | Tech | P0 | M | PC-07 | 36 |
 | PC-18 | Send-to-boss Teams upsell from real stop | Owner | P1 | M | PC-07,17 | 9 |
-| PC-19 | Crew miss report ($149 story) | Owner | P1 | M | PC-01 | 10 |
+| PC-19 | Crew miss report (owner-paid Teams $49–79 story) | Owner | P1 | M | PC-01 | 10 |
 | PC-20 | Skimmer/Jobber/PB export paste templates | Owner | P1 | S | PC-17 | 11 |
 | PC-21 | Callback-risk score on weak proof | Tech+Owner | P1 | M | PC-17 | 12 |
 | PC-22 | New-hire 5-min cards from misses | Trainer | P2 | M | PC-19 | 13 |
@@ -179,7 +186,7 @@ Waves sequence dependencies. **Every wave is required.** Do not treat later wave
 ### PC-05 — Web Pro offer after any qualified first value
 **Maps:** #28  
 **Touch:** post-value surfaces in `js/app.js`.  
-**Do:** After first_value for code/dose/checklist/packet (not only PartSnap), show once-per-session soft Pro offer (`pro_offer_shown`) with benefits tied to wrong-part insurance framing.  
+**Do:** After first_value for code/dose/checklist/packet (not only PartSnap), show once-per-session soft Pro offer (`pro_offer_shown`) with benefits tied to wrong-part insurance framing — **“less than one wrong part / one callback”** at target **Pro $19/mo or $149/yr** (free core stays usable).  
 **Acceptance:** Offer appears after non-PartSnap first value; dismissible; does not block free core; Amplitude sees `source=first_value`.
 
 ### PC-06 — Native→web upgrade bridge
@@ -195,11 +202,16 @@ Waves sequence dependencies. **Every wave is required.** Do not treat later wave
 **Acceptance:** On mobile Safari/Chrome, one tap opens SMS composer with packet summary; event `packet_sms_started` / `packet_shared`. Offline: copy-to-clipboard fallback.  
 **Do not:** Build a messaging CRM inbox.
 
-### PC-08 — Fix Teams $99 vs $149 site inconsistency
-**Maps:** prior  
-**Touch:** `poolens-site` — at minimum `index.html` (price card $149 vs body “starts at $99”), `field-learning-os.html` (“$99+ target”), any teams/FAQ/campaign pages.  
-**Do:** Canonical **Teams $149/mo**. Grep site for `$99` related to Teams and fix. Keep Pro $29/$249 consistent; fix `paid-media.html` if it still shows outdated PartSnap Pro $4.99.  
-**Acceptance:** Site-wide grep for Teams pricing shows only $149; Pro cards consistent; no conflicting `$99` Teams claims.
+### PC-08 — Retarget site + Stripe notes to cheap Pro / owner-paid Teams
+**Maps:** prior · pricing frame 2026-10-05  
+**Touch:** `poolens-site` — `index.html`, `field-learning-os.html`, pricing/FAQ/campaign/`paid-media.html`; Stripe product docs / env price IDs in `poolens` if referenced in copy.  
+**Do:**
+1. **Solo Pro** copy → target **$19/mo · $149/yr** (kill primary $29/$249 as the sell number; “less than one wrong part / one callback”).
+2. **Teams** copy → **owner pays, techs free**; target **$49–79/mo** for miss reports + packet inbox. Explicit line: *was $149; now owner-paid $49–79 with free tech seats.* **Kill every `$99` Teams claim** and retire **$149** as the primary Teams number.
+3. Impulse credit packs **$5–10** (align PC-38).
+4. Free-core callouts stay fat: codes, dosing, offline, Closing Mode.
+5. If live Stripe Price IDs still bill $29/$249/$149, open/track a **PC ticket: migrate Stripe prices** to the new targets — do not leave site copy and Stripe out of sync without a note.
+**Acceptance:** Site grep shows Pro $19/$149yr and Teams $49–79 owner-paid (no $99; no primary $149 Teams); Pro cards consistent; stale $4.99 PartSnap Pro gone; Stripe migrate ticket filed or prices updated.
 
 ### PC-09 — Landing north-star + not-billing badge + offline hero
 **Maps:** #5, #35  
@@ -254,7 +266,7 @@ Waves sequence dependencies. **Every wave is required.** Do not treat later wave
 
 ### PC-14 — Wrong-part insurance calculator copy
 **Maps:** #6  
-**Do:** Simple calculator: callback truck roll cost × risk → “Pro costs less than one callback”; CTA to web checkout.  
+**Do:** Simple calculator: callback truck roll cost × risk → “Pro ($19/mo or $149/yr) costs less than one callback / one wrong part”; CTA to web checkout.  
 **Acceptance:** Interactive on site + in-app offer; no fake ROI statistics beyond user inputs.
 
 ### PC-15 — Truck QR stickers → last pool
@@ -269,18 +281,18 @@ Waves sequence dependencies. **Every wave is required.** Do not treat later wave
 
 ### PC-18 — Send-to-boss Teams upsell from real stop
 **Maps:** #9  
-**Do:** After successful packet share, owner CTA: “Make this visible to your company — Teams $149/mo” with sample miss dashboard screenshot.  
+**Do:** After successful packet share, owner CTA: “Make this visible to your company — Teams $49–79/mo (owner pays; techs free)” with sample miss dashboard screenshot.  
 **Acceptance:** Upsell only post-real-stop; `teams_upsell_shown` / `teams_checkout_click`.
 
-### PC-19 — Crew miss report
+### PC-19 — Crew miss report (owner-paid Teams story)
 **Maps:** #10  
-**Do:** Teams dashboard: searched codes, PartSnap misses, incomplete proof counts by tech (no blame tone — training).  
-**Acceptance:** Owner with Teams entitlement sees weekly miss summary; anonymization option for exports.
+**Do:** Teams dashboard: searched codes, PartSnap misses, incomplete proof counts by tech (no blame tone — training). Monetization story = **owner pays $49–79/mo** for miss reports + packet inbox; **tech seats free** (not tech-seat ARPU; not the old $149 primary).  
+**Acceptance:** Owner with Teams entitlement sees weekly miss summary; anonymization option for exports; upsell/copy matches $49–79 owner-paid frame.
 
 ### PC-20 — Skimmer / Jobber / Pool Brain / PTP paste export
 **Maps:** #11  
-**Do:** “Copy for Skimmer” etc. clipboard templates from Passport (plain text blocks). Landing pointer on `crm-companion.html`.  
-**Acceptance:** Paste into notes field readable; badge “We don’t replace your CRM.”
+**Do:** “Copy for Skimmer” / “Copy for Pool Brain” (call Pool Brain the innovative CRM) / Jobber / PTP clipboard templates from Passport (plain text blocks); webhook stub docs welcome. Landing pointer on `crm-companion.html`.  
+**Acceptance:** Paste into notes field readable; badge “We don’t replace your CRM — we complement Pool Brain & peers”; never routes/billing.
 
 ### PC-21 — Callback-risk score on weak proof
 **Maps:** #12  
@@ -324,7 +336,7 @@ Waves sequence dependencies. **Every wave is required.** Do not treat later wave
 
 ### PC-29 — Verified cards program (paid listing)
 **Maps:** #20  
-**Do:** Data model for OEM-verified troubleshooting cards; admin flag `verified_by`; public badge; rate-card stub page for sales.  
+**Do:** Data model for OEM-verified troubleshooting cards (manufacturer FOMO / paid listing); admin flag `verified_by`; public badge; rate-card stub page for sales. Margin story = OEM paid listings + heatmaps — not tech seats.  
 **Acceptance:** Verified card renders badge; unverified cannot spoof; listing CMS or markdown workflow documented.
 
 ### PC-30 — Warranty photo checklist templates per brand
@@ -370,13 +382,13 @@ Waves sequence dependencies. **Every wave is required.** Do not treat later wave
 
 ### PC-38 — Per-packet credit pack ($5–10)
 **Maps:** #30  
-**Do:** Stripe one-time credit packs for N Passports or N PartSnap scans as alternative to monthly.  
+**Do:** Stripe one-time **impulse** credit packs (**$5–10**) for N Passports or N PartSnap scans as alternative to monthly.  
 **Acceptance:** Checkout plan `credits_*`; entitlement increments; Amplitude `checkout_click` with plan.
 
 ### PC-39 — Company seat free for techs, owner pays visibility
 **Maps:** #31  
 **Do:** Teams billing: unlimited free tech seats for core tools; paid owner visibility/miss reports/review queue.  
-**Acceptance:** Docs + entitlement checks enforce; marketing copy matches $149 owner-pays story.
+**Acceptance:** Docs + entitlement checks enforce; marketing copy matches **$49–79/mo owner-pays, techs free** story (was $149; kill $99).
 
 ### PC-41 — Distributor-sponsored free Pro
 **Maps:** #32  
@@ -410,7 +422,7 @@ Waves sequence dependencies. **Every wave is required.** Do not treat later wave
 
 ### PC-47 — Field Learning OS for distributor counter staff
 **Maps:** #40  
-**Do:** Counter-staff lane: identify from photo/description → packet for will-call; short lessons from wrong-part returns. Extend `field-learning-os.html` with real product hooks + $149 Teams consistency.  
+**Do:** Counter-staff lane: identify from photo/description → packet for will-call; short lessons from wrong-part returns. Extend `field-learning-os.html` with real product hooks + Teams **$49–79 owner-paid / free tech seats** consistency.  
 **Acceptance:** Counter mode + learning cards usable without truck route features.
 
 ### PC-48 — WhatsApp / Telegram bot
@@ -466,6 +478,22 @@ Waves sequence dependencies. **Every wave is required.** Do not treat later wave
 
 ---
 
+
+## 5b. Monetization + OEM FOMO summary (authoritative)
+
+| Lane | Who pays | Target | Notes |
+|------|----------|--------|-------|
+| Free core | Nobody | Fat | Codes, dosing, offline, Closing Mode, checklists — stay generous |
+| Solo Pro | Tech | **$19/mo · $149/yr** | “Less than one wrong part / one callback”; was ~$29/$249 |
+| Teams | Owner | **$49–79/mo** | Owner pays; **techs free**; miss reports + packet inbox; was $149 primary; kill $99 |
+| Impulse | Tech | **$5–10** packs | Per-packet / scan credits (PC-38) |
+| OEM FOMO | Manufacturer / distro | Paid listings + heatmap sub | Verified cards, warranty packs, anonymized heatmaps, authorized badge, sponsored Pro for dealers; one spa/robot pilot |
+| Margin thesis | — | — | **Not** tech-seat ARPU — OEM verified cards + heatmaps + cheap Pro/Teams conversion |
+
+**Pool Brain:** innovative CRM we complement via paste/export/webhook. SplashLens never does routes/billing. Acquisition = pad-proof OS next to their CRM.
+
+**Stripe:** If Price IDs still encode old amounts, PC must open **migrate Stripe prices** alongside site copy (PC-08).
+
 ## 6. Site / marketing changes (poolens-site)
 
 | Change | Pages (non-exhaustive — grep) | Acceptance |
@@ -474,11 +502,13 @@ Waves sequence dependencies. **Every wave is required.** Do not treat later wave
 | “We don’t do billing” badge | `index.html`, `crm-companion.html`, app chrome | Persistent |
 | Offline-first hero | `index.html`, maybe FAQ | Matches product truth |
 | Closing + Opening season push | `closing-season.html`, opening page | CTAs to packs + Closing Pro |
-| Pro pricing clarity | pricing sections, `campaign.html` | $29/mo · $249/yr only |
-| Teams price fix | `index.html` ($99 body copy), `field-learning-os.html`, others | **$149/mo only** |
+| Pro pricing clarity | pricing sections, `campaign.html` | **$19/mo · $149/yr** targets (note Stripe migrate if needed) |
+| Teams price retarget | `index.html`, `field-learning-os.html`, others | **$49–79/mo owner-paid, techs free**; kill $99; retire primary $149 |
 | Kill stale $4.99 PartSnap Pro | `paid-media.html` | Align to current Pro |
 | Proof Passport positioning | `service-proof-passport.html` | Matches app artifact |
 | Not-Skimmer / complement | `crm-companion.html` | Export-first language |
+| Pool Brain complement | `crm-companion.html`, home | Innovative CRM + paste/export/webhook; never routes/billing |
+| OEM FOMO surfaces | partners / verified cards / heatmaps pages | Verified cards, warranty packs, heatmaps, authorized badge, sponsored Pro |
 
 PC Codex should open PRs in `poolens-site` as needed; keep claims consistent with `SPLASHLENS_SITE_CLAIMS` handoff norms (no unverifiable competitor metrics).
 
@@ -544,7 +574,7 @@ Emit via `trackSplashLensEvent` → `/api/events` → Amplitude project **863388
 - Reuse commercial entitlement tables; add `credit_balance`, `credit_ledger` for packet/scan packs and sponsored credits.
 
 ### Teams
-- Free tech seats; paid owner features: miss report, review queue, company packs.
+- Free tech seats; paid owner features (**$49–79/mo target**): miss report, packet inbox, review queue, company packs. Not tech-seat ARPU.
 
 ---
 
@@ -558,7 +588,8 @@ Emit via `trackSplashLensEvent` → `/api/events` → Amplitude project **863388
 | Pentair/Hayward/Jandy apps | Deep link to consumer/pro apps where public URLs exist | Telemetry APIs |
 | SMS | `sms:` URI + optional provider later (Twilio) for server-send | Two-way inbox |
 | WhatsApp | `wa.me` share | Full business API until approved |
-| Stripe | Existing checkout + new credit/Closing Pro products | Native IAP |
+| Stripe | Existing checkout + new credit/Closing Pro products; **migrate prices** to Pro $19/$149yr + Teams $49–79 | Native IAP |
+| Pool Brain | Paste/export/webhook companion (innovative CRM) | Routes, invoices, autopay inside SplashLens |
 
 Document stub URLs in `docs/ops/partner-deeplinks.md` (create).
 
@@ -592,7 +623,7 @@ Mac implements: `docs/codex/MAC_CODEX_NATIVE_TICKETS_2026-10-05.md` / verbal scr
 
 ## 12. Definition of Done — Full Boat
 
-**Wave 0 Done when:** Analytics dark funnel lit; PartSnap deny→gallery path; SMS Passport share; soft gate + first-value Pro offer; site Teams=$149 + north-star + not-billing badge; Stripe session classify note; Proof Passport shareable.
+**Wave 0 Done when:** Analytics dark funnel lit; PartSnap deny→gallery path; SMS Passport share; soft gate + first-value Pro offer; site Pro=$19/$149yr + Teams=$49–79 owner-paid + north-star + not-billing/Pool Brain badge; Stripe session classify note; Proof Passport shareable.
 
 **Full Boat Done when:** Every backlog #1–45 maps to a merged or explicitly implemented ticket PC-01…PC-59; DEFER items only exist as stubs/docs per §10; Mac tickets either done or blocked solely on store console access (documented); Amplitude shows checkout_click→success path; no IAP introduced; CRM complement badges live.
 
@@ -629,7 +660,8 @@ Prior conversion fixes: PartSnap events PC-02 · first_action/value PC-03 · nat
 - Do not promise fitment or diagnosis; keep cautious PartSnap language.
 - Do not ship live OEM bus protocols.
 - Do not put customer PII into OEM heatmap exports.
-- Do not leave Teams priced at $99 anywhere.
+- Do not leave Teams priced at $99 anywhere, and do not keep **$149** as the primary Teams sell number (use owner-paid **$49–79** with free tech seats; note “was $149” only as migration context).
+- Do not keep Solo Pro sold as **$29/mo · $249/yr** once site/Stripe migrate — target **$19/mo · $149/yr** (flag Stripe price-ID migrate ticket until live).
 - Do not invent competitor metrics beyond `docs/research/splashlens-competitive-brief-2026-10-05.md`.
 - Do not implement Mac-only native projects in PC PRs.
 - Do not force-push `master`.

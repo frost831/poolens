@@ -10,6 +10,7 @@ Mac Codex: only native iOS/Android wrapper work for SplashLens / `frost831/poole
 3. Rebuild / TestFlight / Play internal track if needed after web hooks land.
 4. Export App Store Connect + Play Console metrics CSVs into the existing store-metrics import path if available.
 5. Do **not** implement web/Stripe/site/product backlog on Mac.
+6. Pricing/site is **PC Codex** — don’t change App Store price meta beyond what’s needed for wrappers; no IAP SKUs.
 
 Full product backlog lives in `docs/codex/PC_CODEX_FULL_BOAT_2026-10-05.md`.
 Ticket detail for Mac-only work: `docs/codex/MAC_CODEX_NATIVE_TICKETS_2026-10-05.md`.
