@@ -1,4 +1,4 @@
-export const PARTSNAP_CORPUS_VERSION = 'official-family-sources-2026-10-02';
+export const PARTSNAP_CORPUS_VERSION = 'official-family-sources-2026-10-06';
 
 export const PARTSNAP_SOURCES = Object.freeze({
   'pentair-replacement-parts': Object.freeze({
@@ -54,6 +54,12 @@ export const PARTSNAP_SOURCES = Object.freeze({
     publisher: 'Waterway Plastics',
     sourceType: 'official-support',
     url: 'https://waterwayplastics.com/support/',
+  }),
+  'loop-loc-hardware': Object.freeze({
+    title: 'LOOP-LOC official safety-cover hardware catalog',
+    publisher: 'LOOP-LOC',
+    sourceType: 'official-parts-catalog',
+    url: 'https://www.looploc.com/hardware-parts/',
   }),
 });
 
@@ -200,5 +206,13 @@ export const PARTSNAP_FAMILIES = Object.freeze([
     visualClues: ['fixture face ring', 'low-voltage transformer', 'junction box', 'fixture cord'],
     requiredProof: ['fixture model', 'supply voltage', 'transformer label', 'GFCI behavior'],
     warnings: ['Confirm voltage, niche compatibility, bonding, and GFCI requirements before replacement.'],
+  }),
+  family({
+    id: 'loop-loc-safety-cover-hardware', sources: ['loop-loc-hardware'], manufacturer: 'LOOP-LOC', category: 'other',
+    component: 'Safety-cover anchor, spring, buckle, and strap hardware family', models: ['ULTRA-LOC', 'Deck-Loc'],
+    aliases: ['safety cover', 'cover anchor', 'brass anchor', 'cover spring', 'cover buckle', 'cover strap'],
+    visualClues: ['deck anchor', 'spring attached to strap', 'cover webbing', 'cover tag'],
+    requiredProof: ['cover manufacturer tag', 'cover model or order number', 'hardware type and dimensions', 'installed deck and strap context'],
+    warnings: ['A photo cannot establish safety-cover fit, load rating, or compatible replacement hardware. Confirm with the manufacturer or authorized dealer.'],
   }),
 ]);

@@ -15,8 +15,8 @@ import {
 if (!globalThis.crypto) Object.defineProperty(globalThis, 'crypto', { value: webcrypto });
 
 test('PartSnap corpus contains official sources and broad field categories', () => {
-  assert.equal(partsnapCorpusStats.sourceCount, 9);
-  assert.equal(partsnapCorpusStats.familyCount, 16);
+  assert.equal(partsnapCorpusStats.sourceCount, 10);
+  assert.equal(partsnapCorpusStats.familyCount, 17);
   for (const source of Object.values(PARTSNAP_SOURCES)) {
     const url = new URL(source.url);
     assert.equal(url.protocol, 'https:');
@@ -58,6 +58,30 @@ test('PartSnap returns cited family candidates without claiming exact fitment', 
   assert.ok(result.corpusCandidates[0].citations.length >= 1);
   assert.ok(result.corpusCandidates[0].citations.every((citation) => citation.url.startsWith('https://')));
   assert.ok(result.missingProof.length >= 1);
+});
+
+test('closing cover hardware is source-backed only with brand evidence and stays on hold', () => {
+  const result = attachPartSnapCorpusCandidates({
+    manufacturer: 'LOOP-LOC',
+    category: 'other',
+    component: 'brass anchor for safety cover',
+    visibleEvidence: ['LOOP-LOC cover tag', 'deck anchor', 'spring attached to strap'],
+    modelVisible: false,
+    partNumberVisible: false,
+    confidence: 'medium',
+  });
+  assert.equal(result.corpusCandidates[0]?.id, 'loop-loc-safety-cover-hardware');
+  assert.equal(result.corpusCandidates[0]?.citations[0]?.url, 'https://www.looploc.com/hardware-parts/');
+  assert.equal(result.orderingStatus, 'hold-for-verification');
+  assert.equal(result.exactFitmentConfirmed, false);
+  assert.ok(result.missingProof.includes('hardware type and dimensions'));
+
+  const unsupported = attachPartSnapCorpusCandidates({ category: 'other', component: 'cover anchor', confidence: 'high' });
+  assert.equal(unsupported.corpusCandidates.length, 0);
+  assert.equal(unsupported.corpusStatus.label, 'ai-only');
+
+  const unrelatedBrandItem = attachPartSnapCorpusCandidates({ manufacturer: 'LOOP-LOC', category: 'other', component: 'pool liner' });
+  assert.equal(unrelatedBrandItem.corpusCandidates.length, 0);
 });
 
 test('PartSnap withholds an AI-suggested part number without exact visible marking proof', () => {
