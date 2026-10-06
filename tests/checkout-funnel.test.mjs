@@ -63,6 +63,38 @@ test('Pro checkout creates a live subscription route with product metadata and a
   assert.deepEqual(recorded.filter((entry) => entry.sql.includes("VALUES ('checkout_started'"))[0]?.values, ['monthly', 'stripe_checkout_session', '']);
 });
 
+test('link preview crawlers cannot create checkout sessions or starts', async (t) => {
+  const calls = [];
+  t.mock.method(globalThis, 'fetch', async (...args) => {
+    calls.push(args);
+    throw new Error('Crawler must not reach Stripe');
+  });
+  const env = {
+    STRIPE_SECRET_KEY: 'sk_test_placeholder',
+    SUBSCRIBERS_DB: { prepare() { throw new Error('Crawler must not write analytics'); } },
+  };
+  for (const agent of [
+    'Mozilla/5.0 (compatible; meta-externalagent/1.1; +https://developers.facebook.com/docs/sharing/webmasters/crawler)',
+    'Mozilla/5.0 (compatible; bingbot/2.0; +http://www.bing.com/bingbot.htm)',
+    'facebookexternalhit/1.1',
+  ]) {
+    const response = await checkout({
+      request: new Request('https://app.splashlens.com/api/checkout?plan=monthly', { headers: { 'User-Agent': agent } }),
+      env,
+    });
+    assert.equal(response.status, 403);
+    assert.equal(response.headers.get('Cache-Control'), 'no-store');
+  }
+  assert.equal(calls.length, 0);
+
+  const catalog = await checkout({
+    request: new Request('https://app.splashlens.com/api/checkout?catalog=1', { headers: { 'User-Agent': 'facebookexternalhit/1.1' } }),
+    env,
+  });
+  assert.equal(catalog.status, 200);
+  assert.equal((await catalog.json()).product, 'splashlens');
+});
+
 test('failed checkout does not report a start', async (t) => {
   const recorded = [];
   t.mock.method(console, 'error', () => {});

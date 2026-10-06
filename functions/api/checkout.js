@@ -44,6 +44,11 @@ function paidCheckoutEnabled(env) {
   return !/^(0|false|off|disabled)$/i.test(String(env.SPLASHLENS_PAID_CHECKOUT_ENABLED || '').trim());
 }
 
+function isAutomatedPreview(request) {
+  const userAgent = String(request.headers.get('User-Agent') || '');
+  return /bot|crawler|spider|preview|externalagent|facebookexternalhit/i.test(userAgent);
+}
+
 async function configuredPriceMatchesPlan(env, priceId, planConfig) {
   try {
     const response = await fetch(`https://api.stripe.com/v1/prices/${encodeURIComponent(priceId)}`, {
@@ -218,6 +223,13 @@ export async function onRequestGet({ request, env }) {
         },
       ],
     }, { headers: { 'Cache-Control': 'no-store' } });
+  }
+
+  if (isAutomatedPreview(request)) {
+    return Response.json({ ok: false, error: 'Checkout requires a browser action.' }, {
+      status: 403,
+      headers: { 'Cache-Control': 'no-store' },
+    });
   }
 
   if (!paidCheckoutEnabled(env)) {
