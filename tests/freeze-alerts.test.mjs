@@ -8,6 +8,13 @@ import { onRequestGet, onRequestPost, onRequestDelete } from '../functions/api/f
 const token = 'a'.repeat(64);
 const origin = 'https://app.splashlens.com';
 const migration = readFileSync(new URL('../migrations/2026-10-09-freeze-alert-optins.sql', import.meta.url), 'utf8');
+const shell = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+
+test('freeze opt-in controls remain legible and tappable on mobile', () => {
+  assert.match(shell, /\.freeze-settings input\[type=text\] \{[^}]*min-height:44px;/);
+  assert.match(shell, /\.freeze-settings button, \.freeze-banner button \{[^}]*min-height:44px;/);
+  assert.match(shell, /\.freeze-settings label \{[^}]*font-size:13px;/);
+});
 const fixture = { features: [
   { id: 'https://api.weather.gov/alerts/urn:oid:freeze1', properties: { event: 'Freeze Warning', status: 'Actual', expires: '2099-01-01T00:00:00Z' } },
   { id: 'https://api.weather.gov/alerts/urn:oid:watch1', properties: { event: 'Freeze Watch', status: 'Actual', expires: '2099-01-01T00:00:00Z' } },

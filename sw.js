@@ -1,4 +1,4 @@
-const CACHE = 'splashlens-v40-freeze-g0';
+const CACHE = 'splashlens-v41-freeze-controls';
 const ASSETS = [
   '/',
   '/js/errors.js?v=20261002-trust-fixes-3',
