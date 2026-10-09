@@ -17,3 +17,5 @@ Paste-ready implementation briefs for Joshua Frost / SplashLens.
 **Pricing (2026-10-05):** Solo Pro **$19/mo · $149/yr**; Teams **owner-paid $49–79/mo, techs free** (was $149; kill $99); impulse **$5–10** packs. See pricing frame doc. Mac: pricing/site is PC — don’t change App Store price meta beyond what’s needed.
 
 **Paste order for PC Codex:** (1) `PC_CODEX_PASTE_GROWTH_SEO_ASO_AEO_2026-10-05.md`: closing season is live, so Wave G0 goes first. (2) `PC_CODEX_FULL_BOAT_2026-10-05.md` for the full PC-01…PC-59 backlog. Both are in scope; waves are order, not cuts. PC drafts store copy/screenshot scripts into `aso/` + `store-assets/`; Mac ships builds/listings.
+
+**Web cache rule:** Every PR that changes `js/*.js` or `index.html` must bump the `sw.js` cache name and version the changed asset URL in both the service-worker `ASSETS` list and `index.html`. Keep the URLs identical and retain deletion of old caches on activate.
