@@ -278,6 +278,25 @@ function normalizeLanguage(value) {
   return LANGUAGE_OPTIONS.find((lang) => code === lang || code.toLowerCase().startsWith(lang.toLowerCase())) || 'en';
 }
 
+function a3Text(key) {
+  return window.SplashLensI18N?.i18nText(getLanguageProfile().preferredLanguage, key) || key;
+}
+
+function a3ClosingText(source) {
+  return window.SplashLensI18N?.closingText(getLanguageProfile().preferredLanguage, source) || source;
+}
+
+const a3ChromeDictionaries = new Map();
+
+function a3ChromeDictionary(language) {
+  if (a3ChromeDictionaries.has(language)) return a3ChromeDictionaries.get(language);
+  const entries = window.SplashLensI18N?.I18N;
+  if (!entries?.en || !entries?.[language]) return {};
+  const dictionary = Object.fromEntries(Object.keys(entries.en).map(key => [entries.en[key], entries[language][key]]));
+  a3ChromeDictionaries.set(language, dictionary);
+  return dictionary;
+}
+
 function getLanguageProfile() {
   try {
     const stored = localStorage.getItem(LANGUAGE_STORAGE_KEY);
@@ -328,23 +347,63 @@ function getLanguageHeaders() {
   };
 }
 
-function initLanguageLayer() {
+function initLanguageLayer(counterStart) {
   const params = new URLSearchParams(window.location.search);
   if (params.has('lang')) setPreferredLanguage(params.get('lang'));
   const select = document.getElementById('language-select');
   if (select) {
     select.value = getLanguageProfile().preferredLanguage;
     select.addEventListener('change', () => {
-      const profile = setPreferredLanguage(select.value);
-      applySplashLensLocalization();
-      trackSplashLensEvent('language_preference_set', { preferred_language: profile.preferredLanguage, locale: profile.locale });
+      languageSheetSurface = 'header';
+      selectAppLanguage(select.value);
     });
   }
+  const directIntent = ['tab', 'mode', 'workflow', 'checklist', 'challenge', 'activate_scan', 'token', 'session_id', 'sl_login_email', 'sl_login_code', 'upgrade', 'open'].some(key => params.has(key)) || getFacilityDeepLinkParts();
+  let hasProfile = false;
+  try { hasProfile = Boolean(localStorage.getItem(LANGUAGE_STORAGE_KEY)); } catch {}
   refreshFirstUsePreferenceButtons();
   applySplashLensLocalization();
   initLocalizationObserver();
+  if (counterStart.firstOpen && !hasProfile && !params.has('lang') && !directIntent) openLanguageSheet('first_open');
   trackLanguageModeOpen(params);
   trackMarketInterestOpen(params);
+}
+
+let languageSheetSurface = '';
+
+function openLanguageSheet(surface = 'header') {
+  const sheet = document.getElementById('language-sheet');
+  if (!sheet || (surface === 'first_open' && sheet.classList.contains('active'))) return;
+  languageSheetSurface = surface;
+  sheet.classList.add('active');
+  sheet.setAttribute('aria-hidden', 'false');
+  sheet.onkeydown = (event) => {
+    if (event.key !== 'Tab') return;
+    const first = document.getElementById('language-choice-en');
+    const last = document.getElementById('language-choice-es');
+    if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus(); }
+    else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
+  };
+  document.getElementById('language-choice-en')?.focus();
+}
+
+function selectAppLanguage(language) {
+  if (!LANGUAGE_OPTIONS.includes(language)) return;
+  const surface = languageSheetSurface || 'header';
+  const profile = setPreferredLanguage(language);
+  const select = document.getElementById('language-select');
+  if (select) select.value = profile.preferredLanguage;
+  const sheet = document.getElementById('language-sheet');
+  const wasOpen = sheet?.classList.contains('active');
+  sheet?.classList.remove('active');
+  sheet?.setAttribute('aria-hidden', 'true');
+  languageSheetSurface = '';
+  refreshFirstUsePreferenceButtons();
+  applySplashLensLocalization();
+  if (S.clType) switchClType(S.clType);
+  trackSplashLensEvent('language_selected', { language: profile.preferredLanguage, surface });
+  trackSplashLensEvent('language_preference_set', { preferred_language: profile.preferredLanguage, locale: profile.locale, source: surface });
+  (wasOpen ? document.getElementById('counter-language-toggle') : select)?.focus();
 }
 
 function trackLanguageModeOpen(params = new URLSearchParams(window.location.search)) {
@@ -394,9 +453,10 @@ function initLocalizationObserver() {
 
 function translateUiText(value, language = getLanguageProfile().preferredLanguage) {
   if (!value || language === 'en') return value || '';
+  const a3 = a3ChromeDictionary(language);
   const dictionary = LOCALIZED_TEXT[language] || {};
   const compact = String(value).replace(/\s+/g, ' ').trim();
-  return dictionary[compact] || value;
+  return a3[compact] || dictionary[compact] || value;
 }
 
 function translateUiAttr(value, language = getLanguageProfile().preferredLanguage) {
@@ -412,7 +472,7 @@ function walkTextNodes(root, callback) {
     acceptNode(node) {
       if (!node.nodeValue || !node.nodeValue.trim()) return NodeFilter.FILTER_REJECT;
       const parent = node.parentElement;
-      if (!parent || ['SCRIPT', 'STYLE', 'TEXTAREA', 'OPTION'].includes(parent.tagName)) return NodeFilter.FILTER_REJECT;
+      if (!parent || ['SCRIPT', 'STYLE', 'TEXTAREA', 'OPTION'].includes(parent.tagName) || parent.closest('.code-data, [data-no-translate]')) return NodeFilter.FILTER_REJECT;
       return NodeFilter.FILTER_ACCEPT;
     }
   });
@@ -437,8 +497,13 @@ function applySplashLensLocalization() {
     if (head?.title) document.title = head.title;
     const description = document.querySelector('meta[name="description"]');
     if (description && head?.description) description.setAttribute('content', head.description);
+    const reverseA3 = language === 'es' ? Object.fromEntries(Object.entries(a3ChromeDictionary('es')).map(([en, es]) => [es, en])) : {};
     walkTextNodes(document.body, (node) => {
-      if (!localizationTextSources.has(node)) localizationTextSources.set(node, node.nodeValue);
+      if (!localizationTextSources.has(node)) {
+        const initial = node.nodeValue;
+        const compact = initial.replace(/\s+/g, ' ').trim();
+        localizationTextSources.set(node, reverseA3[compact] ? initial.replace(compact, reverseA3[compact]) : initial);
+      }
       const sourceValue = localizationTextSources.get(node);
       if (language === 'en') {
         node.nodeValue = sourceValue;
@@ -470,6 +535,8 @@ function applySplashLensLocalization() {
       const label = LANGUAGE_LABELS[btn.dataset.prefLanguage];
       if (label) btn.textContent = label;
     });
+    const toggle = document.getElementById('counter-language-toggle');
+    if (toggle) toggle.textContent = language === 'es' ? 'ES' : 'EN';
   } finally {
     localizationApplying = false;
   }
@@ -485,15 +552,6 @@ function setWorkflowStyle(style) {
   try { localStorage.setItem(WORKFLOW_STYLE_KEY, clean); } catch {}
   refreshFirstUsePreferenceButtons();
   trackSplashLensEvent('workflow_style_selected', { style: clean, role: getSplashLensRole() });
-}
-
-function chooseRoleLanguage(language) {
-  const profile = setPreferredLanguage(language);
-  const select = document.getElementById('language-select');
-  if (select) select.value = profile.preferredLanguage;
-  refreshFirstUsePreferenceButtons();
-  applySplashLensLocalization();
-  trackSplashLensEvent('language_preference_set', { preferred_language: profile.preferredLanguage, locale: profile.locale, source: 'first_use_role_picker' });
 }
 
 function refreshFirstUsePreferenceButtons() {
@@ -599,7 +657,7 @@ const DOSE_NEED_LABELS = {
 // ═══════════════════════════════════════════
 document.addEventListener('DOMContentLoaded', () => {
   const counterStart = getCounterStartState();
-  initLanguageLayer();
+  initLanguageLayer(counterStart);
   initMarketingGate();
   initSplashLensPersonaMode();
   captureScanEntitlementFromUrl();
@@ -1315,29 +1373,29 @@ function buildFacilityPacket(laneId, outcome) {
 
 function formatFacilityPacket(packet) {
   return [
-    `SplashLens Facility Packet: ${packet.next}`,
+    `SplashLens ${a3Text('packet.facility')} ${a3Text('packet.title')}: ${packet.next}`,
     `ID: ${packet.id}`,
-    `Facility: ${packet.facility.name || packet.facility.id || 'Unspecified'}`,
-    `Pool: ${packet.pool || 'Unspecified'}`,
-    `Time: ${packet.timestamp}`,
-    `Lane: ${packet.laneTitle}`,
-    `Role: ${packet.role}`,
+    `${a3Text('packet.facility')}: ${packet.facility.name || packet.facility.id || 'Unspecified'}`,
+    `${a3Text('packet.pool')}: ${packet.pool || 'Unspecified'}`,
+    `${a3Text('packet.time')}: ${packet.timestamp}`,
+    `${a3Text('packet.lane')}: ${packet.laneTitle}`,
+    `${a3Text('packet.role')}: ${packet.role}`,
     '',
-    'Equipment',
+    a3Text('packet.equipment'),
     `- ID: ${packet.equipment.id || ''}`,
     `- Label: ${packet.equipment.label || ''}`,
     `- Brand/model/code: ${[packet.equipment.brand, packet.equipment.model, packet.equipment.code].filter(Boolean).join(' / ') || 'Needs proof'}`,
     '',
-    'Evidence captured',
-    `- Readings: ${Object.entries(packet.readings || {}).filter(([, value]) => value).map(([key, value]) => `${key.toUpperCase()} ${value}`).join(' / ') || 'Needs reading proof'}`,
-    `- Symptoms/code: ${(packet.symptoms || []).join(' / ') || 'Needs symptom detail'}`,
-    `- Recent changes: ${(packet.recentChanges || []).join(' / ') || 'None recorded'}`,
-    `- Photo refs: ${(packet.photoRefs || []).join(' / ') || 'Needs photo references'}`,
+    a3Text('packet.evidence'),
+    `- ${a3Text('packet.readings')}: ${Object.entries(packet.readings || {}).filter(([, value]) => value).map(([key, value]) => `${key.toUpperCase()} ${value}`).join(' / ') || 'Needs reading proof'}`,
+    `- ${a3Text('packet.symptoms')}: ${(packet.symptoms || []).join(' / ') || 'Needs symptom detail'}`,
+    `- ${a3Text('packet.changes')}: ${(packet.recentChanges || []).join(' / ') || 'None recorded'}`,
+    `- ${a3Text('packet.photoRefs')}: ${(packet.photoRefs || []).join(' / ') || 'Needs photo references'}`,
     '',
-    'Steps checked',
+    a3Text('packet.steps'),
     ...packet.steps.map((step, index) => `${index + 1}. ${step}`),
     '',
-    'Need before repair/order',
+    a3Text('packet.beforeOrder'),
     '- Confirm local code, facility policy, manufacturer manual, and qualified tech judgment.',
     '- Add readings, photos, labels, recent changes, and symptom detail before escalation.',
   ].join('\n');
@@ -2006,23 +2064,23 @@ function startServiceProofWorkflow(kind = 'visit') {
     focusReportField('rpt-photo-proof');
   } else if (kind === 'closing') {
     const proof = window.CLOSING_SEASON_PROOF || {};
-    setReportValueAndNotify('rpt-type', 'Closing / Winterization', { force: true });
+    setReportValueAndNotify('rpt-type', 'Closing', { force: true });
     setReportValueAndNotify('rpt-priority', 'seasonal', { force: true });
-    setReportValueAndNotify('rpt-review-to', 'Customer / owner / spring opening crew', { force: false });
-    setReportValueAndNotify('rpt-work', 'Completed closing-season proof workflow: chemistry recorded, visible equipment checked, winterization proof captured, and follow-up risks documented.', { force: false });
+    setReportValueAndNotify('rpt-review-to', a3Text('closing.reviewTo'), { force: false });
+    setReportValueAndNotify('rpt-work', a3Text('closing.workDone'), { force: false });
     setReportValueAndNotify('rpt-photo-proof', '', { force: false });
-    setReportValueAndNotify('rpt-issue-note', `Repeat issue check: ${(proof.callbackFlags || []).slice(0, 6).join(', ') || 'missing drain-plug proof, unclear cover proof, hard-freeze forecast, or declined work.'}`, { force: false });
-    setReportValueAndNotify('rpt-customer-summary', 'Pool was closed and documented for the season. Photos and notes show the visible work completed today, open items, and any customer-approved or declined follow-up. This record supports future review but does not replace the exact equipment manual, local code, or qualified judgment.', { force: false });
+    setReportValueAndNotify('rpt-issue-note', `${a3Text('closing.repeatIssueCheck')}: ${(proof.callbackFlags || []).slice(0, 6).map(a3ClosingText).join(', ') || a3Text('closing.defaultCallback')}`, { force: false });
+    setReportValueAndNotify('rpt-customer-summary', a3Text('closing.customerSummary'), { force: false });
     setReportCheck('rpt-proof-summary', true);
     renderProofWorkflowOutput(
-      'Closing Season Proof Packet',
-      proof.promise || 'Document water level, equipment pad, drain plugs, winter plugs, cover details, and any repeat-issue risks before leaving the property.',
+      a3Text('closing.proofPacketTitle'),
+      a3ClosingText(proof.promise || 'Document water level, equipment pad, drain plugs, winter plugs, cover details, and any repeat-issue risks before leaving the property.'),
       `<div class="brain-grid">
-        <button type="button" class="brain-action green" onclick="switchClType('closing');showTab('guide')">Open closing checklist</button>
-        <button type="button" class="brain-action secondary" onclick="createServiceProofShareLink()">Build proof packet</button>
-        <button type="button" class="brain-action secondary" onclick="saveReportDraft()">Save closing draft</button>
+        <button type="button" class="brain-action green" onclick="switchClType('closing');showTab('guide')">${a3Text('closing.openChecklist')}</button>
+        <button type="button" class="brain-action secondary" onclick="createServiceProofShareLink()">${a3Text('closing.buildPacket')}</button>
+        <button type="button" class="brain-action secondary" onclick="saveReportDraft()">${a3Text('closing.saveDraft')}</button>
       </div>
-      <p style="color:#64748b;font-size:11px;line-height:1.45;margin-top:10px;">${escHtml(proof.trustBoundary || 'Verify exact model manuals, product labels, company policy, local code, and qualified technician judgment before acting.')}</p>`
+      <p style="color:#64748b;font-size:11px;line-height:1.45;margin-top:10px;">${escHtml(a3ClosingText(proof.trustBoundary || 'Verify exact model manuals, product labels, company policy, local code, and qualified technician judgment before acting.'))}</p>`
     );
     focusReportField('rpt-photo-proof');
   } else {
@@ -3480,9 +3538,9 @@ function renderCodesForBrand(brandId, catFilter) {
       <div style="margin-bottom:20px;">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:9px;">
           <span style="width:10px;height:10px;border-radius:50%;background:${brand.color};flex-shrink:0;display:inline-block;"></span>
-          <span style="color:#0f172a;font-weight:800;font-size:13px;">${catName}</span>
+          <span class="code-data" style="color:#0f172a;font-weight:800;font-size:13px;">${catName}</span>
         </div>
-        ${cat.note ? `<div class="warn-box" style="margin-bottom:8px;font-size:11px;">${cat.note}</div>` : ''}
+        ${cat.note ? `<div class="warn-box code-data" style="margin-bottom:8px;font-size:11px;">${cat.note}</div>` : ''}
         <p style="color:#64748b;font-size:11px;margin-bottom:8px;">Models: ${cat.models.slice(0,5).join(' · ')}${cat.models.length > 5 ? ` +${cat.models.length - 5}` : ''}</p>
         ${cat.codes.map((c, i) => codeCard(c, `${brandId}-${slug(catName)}-${i}`, brand.color)).join('')}
       </div>`;
@@ -3501,25 +3559,25 @@ function codeCard(code, uid, brandColor) {
       <button class="error-toggle" onclick="toggleCode('${uid}')">
         <div style="flex:1;">
           <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:5px;align-items:center;">
-            <span class="badge ${isLED ? 'badge-led' : ''}" style="${!isLED ? `background:#f1f5f9;color:#374151;border:1px solid #e2e8f0;font-size:11px;` : ''}">${code.code}</span>
-            <span class="badge ${sevClass}">${code.severity}</span>
+            <span class="badge code-data ${isLED ? 'badge-led' : ''}" style="${!isLED ? `background:#f1f5f9;color:#374151;border:1px solid #e2e8f0;font-size:11px;` : ''}">${code.code}</span>
+            <span class="badge ${sevClass}">${a3Text(`code.severity${String(code.severity || 'medium').charAt(0).toUpperCase()}${String(code.severity || 'medium').slice(1)}`)}</span>
             ${code.callpro ? `<span class="badge badge-pro">Call Pro</span>` : ''}
           </div>
-          <span style="color:#1e293b;font-size:14px;font-weight:600;">${code.name}</span>
+          <span class="code-data" style="color:#1e293b;font-size:14px;font-weight:600;">${code.name}</span>
         </div>
         <svg id="chev-${uid}" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="2.5" stroke-linecap="round" style="flex-shrink:0;margin-top:3px;transition:transform 0.2s;"><polyline points="6 9 12 15 18 9"/></svg>
       </button>
       <div id="det-${uid}" class="error-detail">
         <div style="padding-top:12px;">
-          <p style="color:#64748b;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;margin-bottom:7px;">Check first</p>
+          <p style="color:#64748b;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;margin-bottom:7px;">${a3Text('code.checkFirst')}</p>
           <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));gap:7px;">
-            ${causes.map((c, i) => `<div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:9px;padding:9px;min-height:62px;"><span style="display:inline-grid;place-items:center;width:22px;height:22px;border-radius:999px;background:#fed7aa;color:#9a3412;font-size:11px;font-weight:950;margin-bottom:5px;">${i+1}</span><p style="font-size:12px;line-height:1.28;color:#7c2d12;font-weight:800;">${c}</p></div>`).join('')}
+            ${causes.map((c, i) => `<div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:9px;padding:9px;min-height:62px;"><span style="display:inline-grid;place-items:center;width:22px;height:22px;border-radius:999px;background:#fed7aa;color:#9a3412;font-size:11px;font-weight:950;margin-bottom:5px;">${i+1}</span><p class="code-data" style="font-size:12px;line-height:1.28;color:#7c2d12;font-weight:800;">${c}</p></div>`).join('')}
           </div>
-          <p style="color:#64748b;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;margin:12px 0 7px;">Do next</p>
+          <p style="color:#64748b;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;margin:12px 0 7px;">${a3Text('code.doNext')}</p>
           <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));gap:7px;">
-            ${fixes.map((f, i) => `<div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:9px;padding:9px;min-height:62px;"><span style="display:inline-grid;place-items:center;width:22px;height:22px;border-radius:999px;background:#0284c7;color:#fff;font-size:11px;font-weight:950;margin-bottom:5px;">${i+1}</span><p style="font-size:12px;line-height:1.28;color:#1e3a8a;font-weight:800;">${f}</p></div>`).join('')}
+            ${fixes.map((f, i) => `<div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:9px;padding:9px;min-height:62px;"><span style="display:inline-grid;place-items:center;width:22px;height:22px;border-radius:999px;background:#0284c7;color:#fff;font-size:11px;font-weight:950;margin-bottom:5px;">${i+1}</span><p class="code-data" style="font-size:12px;line-height:1.28;color:#1e3a8a;font-weight:800;">${f}</p></div>`).join('')}
           </div>
-          ${code.callpro ? `<div class="badge-pro" style="margin-top:10px;padding:8px 10px;border-radius:8px;font-size:12px;font-weight:600;text-transform:none;letter-spacing:0;">⚠ This fault typically requires a licensed technician. Do not bypass safety controls.</div>` : ''}
+          ${code.callpro ? `<div class="badge-pro" style="margin-top:10px;padding:8px 10px;border-radius:8px;font-size:12px;font-weight:600;text-transform:none;letter-spacing:0;">⚠ ${a3Text('code.callProWarning')}</div>` : ''}
         </div>
       </div>
     </div>`;
@@ -3591,8 +3649,8 @@ function onErrorSearch(q) {
     const otherBrandMatches = S.brand ? searchErrorDB(q).length : 0;
     document.getElementById('error-results').innerHTML =
       `<div style="color:#64748b;text-align:center;padding:32px 16px;font-size:14px;">
-        <p>No results for "${escHtml(q)}"${S.brand ? ' in this brand' : ''}.</p>
-        ${otherBrandMatches ? `<button type="button" onclick="searchAllBrandsForCurrentQuery()" style="margin-top:12px;background:#0369a1;color:#fff;border:0;border-radius:6px;padding:10px 14px;font-weight:800;cursor:pointer;">Search all brands (${otherBrandMatches})</button>` : '<p style="font-size:12px;margin-top:8px;">Try the model number, a shorter code, or a symptom.</p>'}
+        <p>${a3Text('code.noResultsFor')} "${escHtml(q)}"${S.brand ? ` ${a3Text('code.inThisBrand')}` : ''}.</p>
+        ${otherBrandMatches ? `<button type="button" onclick="searchAllBrandsForCurrentQuery()" style="margin-top:12px;background:#0369a1;color:#fff;border:0;border-radius:6px;padding:10px 14px;font-weight:800;cursor:pointer;">${a3Text('code.searchAll')} (${otherBrandMatches})</button>` : `<p style="font-size:12px;margin-top:8px;">${a3Text('code.tryModel')}</p>`}
       </div>`;
     return;
   }
@@ -3600,7 +3658,7 @@ function onErrorSearch(q) {
     `<div style="margin-bottom:4px;">
        <p style="color:#64748b;font-size:11px;margin-bottom:3px;display:flex;align-items:center;gap:5px;">
          <span style="width:7px;height:7px;border-radius:50%;background:${brand.color};display:inline-block;"></span>
-         ${brand.label} — ${catName}
+         <span class="code-data">${brand.label} — ${catName}</span>
        </p>
        ${codeCard(code, `srch-${brandId}-${i}`, brand.color)}
      </div>`
@@ -4616,9 +4674,9 @@ function switchClType(type) {
     if (btn) btn.classList.toggle('active', t === type);
   });
   const meta = CL_MAP[type];
-  setEl('cl-title', meta.label);
+  setEl('cl-title', type === 'closing' ? a3Text('closing.title') : meta.label);
   const freq = document.getElementById('cl-freq-label');
-  if (freq) freq.textContent = meta.freq;
+  if (freq) freq.textContent = meta.freq === 'Season Progress' ? a3Text('closing.seasonProgress') : meta.freq;
   renderChecklist();
 }
 
@@ -4629,14 +4687,14 @@ function renderChecklist() {
     phases.map((phase, pi) => `
       <div style="margin-bottom:16px;">
         <div style="border-left:3px solid #0284c7;padding:9px 12px;background:#eff6ff;border-radius:0 8px 8px 0;margin-bottom:8px;">
-          <p style="color:#0369a1;font-weight:800;font-size:13px;">${phase.phase}</p>
+          <p style="color:#0369a1;font-weight:800;font-size:13px;">${S.clType === 'closing' ? a3Text(`closing.phase${pi + 1}`) : phase.phase}</p>
         </div>
         ${phase.steps.map((step, si) => {
           const k = `${pi}-${si}`;
           const done = !!cl[k];
           return `<div id="cli-${k}" class="cl-item${done ? ' done' : ''}" onclick="toggleItem(${pi},${si})">
             <input type="checkbox" id="chk-${k}" ${done ? 'checked' : ''} onclick="event.stopPropagation();toggleItem(${pi},${si})">
-            <span class="cl-text">${step}</span>
+            <span class="cl-text code-data">${S.clType === 'closing' ? a3ClosingText(step) : step}</span>
           </div>`;
         }).join('')}
       </div>`).join(''));
@@ -5041,22 +5099,22 @@ async function createServiceProofShareLink() {
   }
   const url = stored.shareUrl;
   _lastSecureProofPacket = { proofPacketId: stored.proofPacketId, payload };
-  const message = `SplashLens Service Proof Packet\n${url}\n\nReference only. Verify repairs, part fit, chemical safety, and code requirements with qualified service judgment.`;
+  const message = `SplashLens ${a3Text('packet.title')}\n${url}\n\n${a3Text('packet.shareCaution')}`;
   if (output) {
     output.innerHTML = `
       <section class="brain-card" aria-label="Service Proof share link">
         <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:10px;">
           <div>
-            <p style="color:#0f766e;font-size:10px;font-weight:950;letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px;">Shareable proof packet</p>
+            <p style="color:#0f766e;font-size:10px;font-weight:950;letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px;">${a3Text('packet.shareable')}</p>
             <h3 style="color:#0f172a;font-size:18px;line-height:1.1;font-weight:950;margin:0;">${escHtml(payload.visitType)}</h3>
           </div>
-          <span class="brain-pill ${proof.complete ? 'ready' : 'risk'}">${proof.complete ? 'proof ready' : 'needs proof'}</span>
+          <span class="brain-pill ${proof.complete ? 'ready' : 'risk'}">${proof.complete ? a3Text('packet.proofReady') : a3Text('packet.needsProof')}</span>
         </div>
         <p style="color:#334155;font-size:12px;line-height:1.45;margin-bottom:10px;">This server-backed packet expires ${escHtml(String(stored.expiresAt || '').slice(0, 10))} and can be revoked from the verified account. Customer name, address, and tech are excluded; free-text proof notes are shared.</p>
         <input type="text" readonly value="${escAttr(url)}" onclick="this.select()" style="width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:10px;font-size:12px;margin-bottom:10px;">
         <div class="brain-grid">
-          <button type="button" id="rpt-proof-copy-link" class="brain-action green">Copy link</button>
-          <a class="brain-action secondary" href="${escAttr(url)}" target="_blank" rel="noopener" style="text-align:center;text-decoration:none;">Open packet</a>
+          <button type="button" id="rpt-proof-copy-link" class="brain-action green">${a3Text('packet.copyLink')}</button>
+          <a class="brain-action secondary" href="${escAttr(url)}" target="_blank" rel="noopener" style="text-align:center;text-decoration:none;">${a3Text('packet.open')}</a>
         </div>
         ${teamId ? `<button type="button" class="brain-action secondary" style="width:100%;margin-top:8px;" onclick="submitLastProofPacketForTeamReview().catch((error)=>window.alert(error.message))">Send to team review</button>` : ''}
       </section>`;
@@ -5065,7 +5123,7 @@ async function createServiceProofShareLink() {
     });
   }
   if (navigator.share) {
-    navigator.share({ title: 'SplashLens Service Proof Packet', text: message, url }).catch(() => {});
+    navigator.share({ title: `SplashLens ${a3Text('packet.title')}`, text: message, url }).catch(() => {});
   } else if (navigator.clipboard?.writeText) {
     navigator.clipboard.writeText(message).catch(() => {});
   }
@@ -5260,32 +5318,32 @@ function buildReportText() {
 
   const HR = '─'.repeat(42);
   const lines = [
-    `POOL SERVICE REPORT`, date,
+    a3Text('packet.report').toUpperCase(), date,
     HR,
-    `Customer : ${customer}`,
-    ...(address ? [`Address  : ${address}`] : []),
-    `Tech     : ${tech}`,
-    `Visit    : ${type}`,
-    `Priority : ${priority}`,
-    ...(reviewTo ? [`Review   : ${reviewTo}`] : []),
+    `${a3Text('packet.customer')}: ${customer}`,
+    ...(address ? [`${a3Text('packet.address')}: ${address}`] : []),
+    `${a3Text('packet.tech')}: ${tech}`,
+    `${a3Text('packet.visit')}: ${type === 'Closing' ? a3Text('closing.reportType') : type}`,
+    `${a3Text('packet.priority')}: ${priority}`,
+    ...(reviewTo ? [`${a3Text('packet.review')}: ${reviewTo}`] : []),
     '',
-    ...(readings ? ['WATER READINGS:', readings, `Source: ${readingSource}`, ''] : []),
-    'STOP PROOF:',
-    `Status   : ${proof.complete ? 'Proof ready' : 'Incomplete'}`,
-    ...(proof.missing.length ? [`Missing  : ${proof.missing.join(', ')}`] : []),
-    ...(photoProof ? [`Photos   : ${photoProof}`] : []),
-    ...(issueNote ? [`Tech note : ${issueNote}`] : []),
-    ...(customerSummary ? [`Customer : ${customerSummary}`] : []),
+    ...(readings ? [`${a3Text('packet.waterReadings')}:`, readings, `${a3Text('packet.source')}: ${readingSource}`, ''] : []),
+    `${a3Text('packet.stopProof')}:`,
+    `${a3Text('packet.status')}: ${proof.complete ? a3Text('packet.proofReadyTitle') : a3Text('packet.incomplete')}`,
+    ...(proof.missing.length ? [`${a3Text('packet.missing')}: ${proof.missing.join(', ')}`] : []),
+    ...(photoProof ? [`${a3Text('packet.photos')}: ${photoProof}`] : []),
+    ...(issueNote ? [`${a3Text('packet.techNote')}: ${issueNote}`] : []),
+    ...(customerSummary ? [`${a3Text('packet.customer')}: ${customerSummary}`] : []),
     '',
-    ...(chems.length ? ['CHEMICALS ADDED:', ...chems, ''] : []),
-    ...(chemRows.length ? [`EST. CHEMICAL COST: $${totalCost.toFixed(2)}`, ''] : []),
-    ...(doseBasis ? [`DOSE BASIS: ${doseBasis}`, ''] : []),
-    ...(work  ? ['WORK PERFORMED:', work, '']  : []),
-    ...(equip ? ['EQUIPMENT NOTES:', equip, ''] : []),
-    ...(rec   ? ['RECOMMENDATIONS:', rec, '']  : []),
-    ...(next  ? [`NEXT VISIT: ${next}`, '']    : []),
+    ...(chems.length ? [`${a3Text('packet.chemicals')}:`, ...chems, ''] : []),
+    ...(chemRows.length ? [`${a3Text('packet.chemicalCost')}: $${totalCost.toFixed(2)}`, ''] : []),
+    ...(doseBasis ? [`${a3Text('packet.doseBasis')}: ${doseBasis}`, ''] : []),
+    ...(work  ? [`${a3Text('packet.work')}:`, work, '']  : []),
+    ...(equip ? [`${a3Text('packet.equipmentNotes')}:`, equip, ''] : []),
+    ...(rec   ? [`${a3Text('packet.recommendations')}:`, rec, '']  : []),
+    ...(next  ? [`${a3Text('packet.nextVisit')}: ${next}`, '']    : []),
     HR,
-    'Generated by SplashLens Field Reference',
+    a3Text('packet.generated'),
   ];
   return lines.join('\n');
 }
@@ -6463,34 +6521,34 @@ function buildPoolCRMPacket(pool) {
   const next = pool.nextVisitReminder || {};
   const missing = passports.flatMap(p => (p.proof && Array.isArray(p.proof.missing)) ? p.proof.missing : []).slice(-8);
   const lines = [
-    `SplashLens Field Intelligence Packet`,
-    `Pool: ${pool.name || 'Unnamed pool'}`,
-    pool.address ? `Address: ${pool.address}` : '',
-    `Profile: ${[pool.gallons ? `${pool.gallons} gal` : '', pool.type, pool.sanitizer, pool.filter].filter(Boolean).join(' | ') || 'Not set'}`,
-    pool.heater ? `Primary equipment note: ${pool.heater}` : '',
+    a3Text('packet.fieldIntelligence'),
+    `${a3Text('packet.pool')}: ${pool.name || a3Text('packet.unnamedPool')}`,
+    pool.address ? `${a3Text('packet.address')}: ${pool.address}` : '',
+    `${a3Text('packet.profile')}: ${[pool.gallons ? `${pool.gallons} gal` : '', pool.type, pool.sanitizer, pool.filter].filter(Boolean).join(' | ') || a3Text('packet.notSet')}`,
+    pool.heater ? `${a3Text('packet.primaryEquipment')}: ${pool.heater}` : '',
     '',
-    `Repeat issue watch: ${intel.callbackRisk.label}`,
-    trendFlags.length ? `Trend flags: ${trendFlags.join(' | ')}` : '',
-    next.date || next.note ? `Next visit: ${[next.date, next.note].filter(Boolean).join(' - ')}` : 'Next visit: Not set',
+    `${a3Text('packet.repeatWatch')}: ${intel.callbackRisk.label}`,
+    trendFlags.length ? `${a3Text('packet.trendFlags')}: ${trendFlags.join(' | ')}` : '',
+    next.date || next.note ? `${a3Text('packet.nextVisit')}: ${[next.date, next.note].filter(Boolean).join(' - ')}` : `${a3Text('packet.nextVisit')}: ${a3Text('packet.notSet')}`,
     '',
-    latestPassport ? `Latest proof (${latestPassport.date || 'undated'}): ${latestPassport.proof?.customerSummary || latestPassport.workPerformed || latestPassport.equipmentNotes || 'Saved service proof.'}` : 'Latest proof: none saved',
-    latestPassport?.proof ? `Proof status: ${latestPassport.proof.complete ? 'complete' : 'incomplete'}` : '',
-    missing.length ? `Open proof items: ${missing.join('; ')}` : '',
-    latestReading ? `Latest chemistry (${latestReading.date || 'undated'}): ${[
+    latestPassport ? `${a3Text('packet.latestProof')} (${latestPassport.date || 'undated'}): ${latestPassport.proof?.customerSummary || latestPassport.workPerformed || latestPassport.equipmentNotes || 'Saved service proof.'}` : `${a3Text('packet.latestProof')}: ${a3Text('packet.noneSaved')}`,
+    latestPassport?.proof ? `${a3Text('packet.proofStatus')}: ${latestPassport.proof.complete ? a3Text('packet.proofReadyTitle') : a3Text('packet.incomplete')}` : '',
+    missing.length ? `${a3Text('packet.openProof')}: ${missing.join('; ')}` : '',
+    latestReading ? `${a3Text('packet.latestChemistry')} (${latestReading.date || 'undated'}): ${[
       latestReading.fc ? `FC ${latestReading.fc}` : '',
       latestReading.cc ? `CC ${latestReading.cc}` : '',
       latestReading.ph ? `pH ${latestReading.ph}` : '',
       latestReading.ta ? `TA ${latestReading.ta}` : '',
       latestReading.ch ? `CH ${latestReading.ch}` : '',
       latestReading.cya ? `CYA ${latestReading.cya}` : '',
-    ].filter(Boolean).join(' | ') || 'saved'}` : 'Latest chemistry: none saved',
+    ].filter(Boolean).join(' | ') || a3Text('packet.saved')}` : `${a3Text('packet.latestChemistry')}: ${a3Text('packet.noneSaved')}`,
     '',
-    'Equipment tree:',
+    `${a3Text('packet.equipmentTree')}:`,
     ...(equipment.length ? equipment.slice(-10).reverse().map(item => `- ${[item.manufacturer, item.hardware, item.model].filter(Boolean).join(' / ') || 'Unknown equipment'}${item.symptom ? `: ${item.symptom}` : ''}${item.confidence ? ` (${item.confidence})` : ''}`) : ['- None saved yet']),
     '',
-    pool.notes ? `Site notes: ${pool.notes}` : '',
-    'Use this as a field packet for your service CRM, accounting notes, office notes, a senior tech, or a vendor counter.',
-    'SplashLens is a reference aid. Verify with model numbers, manuals, qualified tech judgment, and manufacturer guidance before ordering parts or diagnosing.',
+    pool.notes ? `${a3Text('packet.siteNotes')}: ${pool.notes}` : '',
+    a3Text('packet.fieldUse'),
+    a3Text('packet.fieldCaution'),
   ];
   return lines.filter(line => line !== '').join('\n');
 }
@@ -8093,12 +8151,12 @@ function renderCounterSamplePacket() {
 
 function copyCounterSamplePacket() {
   const text = [
-    'SplashLens counter sample packet - DEMO TEST',
-    'Possible family: pump lid / strainer cover',
-    'Visible proof: lid profile, molded ribs',
-    'Missing proof: pump model plate, lid outside diameter, union size, current parts diagram',
-    'Watch: medium repeat issue watch until proof improves',
-    'Language: do not confirm fitment or order until manufacturer diagram and model proof agree.',
+    a3Text('packet.sampleTitle'),
+    a3Text('packet.sampleFamily'),
+    a3Text('packet.sampleVisible'),
+    a3Text('packet.sampleMissing'),
+    a3Text('packet.sampleWatch'),
+    a3Text('packet.sampleCaution'),
   ].join('\n');
   navigator.clipboard?.writeText(text);
   trackSplashLensEvent('counter_sample_packet_copied', { role: getSplashLensRole(), demo: true });
@@ -10367,11 +10425,11 @@ function renderPostValueUpgradeOffer() {
   return `
     <div style="background:#0f172a;border:1px solid #334155;border-radius:10px;padding:12px;margin:0 0 16px;">
       <p style="color:#7dd3fc;font-size:10px;font-weight:950;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;">Splash Lens Pro Unlimited</p>
-      <p style="color:#f8fafc;font-size:13px;font-weight:950;margin-bottom:4px;">Need PartSnap throughout the route?</p>
-      <p style="color:#94a3b8;font-size:11px;line-height:1.4;margin-bottom:9px;">A free field profile includes 3 AI scans each month. Pro Unlimited unlocks unlimited scanner access, saved job memory, customer-safe summaries, and boss/counter packets where paid access is available. Code lookup, dosing, notes, and core field tools stay free to start.</p>
+      <p style="color:#f8fafc;font-size:13px;font-weight:950;margin-bottom:4px;">${a3Text('upgrade.needRoute')}</p>
+      <p style="color:#94a3b8;font-size:11px;line-height:1.4;margin-bottom:9px;">${a3Text('upgrade.freeProfile')}</p>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;">
-        <a data-checkout-plan="monthly" data-checkout-placement="field_stop_saved" href="${getCheckoutUrl('monthly', 'field_stop_saved')}" target="_blank" rel="noopener" onclick="this.href=trackPostValueUpgrade('monthly','field_stop_saved')" style="background:#0284c7;color:#fff;text-decoration:none;text-align:center;border-radius:8px;padding:10px 7px;font-size:11px;font-weight:950;">$19 monthly</a>
-        <a data-checkout-plan="yearly" data-checkout-placement="field_stop_saved" href="${getCheckoutUrl('yearly', 'field_stop_saved')}" target="_blank" rel="noopener" onclick="this.href=trackPostValueUpgrade('yearly','field_stop_saved')" style="background:#16a34a;color:#fff;text-decoration:none;text-align:center;border-radius:8px;padding:10px 7px;font-size:11px;font-weight:950;">$149 yearly</a>
+        <a data-checkout-plan="monthly" data-checkout-placement="field_stop_saved" href="${getCheckoutUrl('monthly', 'field_stop_saved')}" target="_blank" rel="noopener" onclick="this.href=trackPostValueUpgrade('monthly','field_stop_saved')" style="background:#0284c7;color:#fff;text-decoration:none;text-align:center;border-radius:8px;padding:10px 7px;font-size:11px;font-weight:950;">${a3Text('upgrade.monthlyPrice')}</a>
+        <a data-checkout-plan="yearly" data-checkout-placement="field_stop_saved" href="${getCheckoutUrl('yearly', 'field_stop_saved')}" target="_blank" rel="noopener" onclick="this.href=trackPostValueUpgrade('yearly','field_stop_saved')" style="background:#16a34a;color:#fff;text-decoration:none;text-align:center;border-radius:8px;padding:10px 7px;font-size:11px;font-weight:950;">${a3Text('upgrade.yearlyPrice')}</a>
       </div>
     </div>`;
 }
@@ -10385,11 +10443,11 @@ function renderPartSnapResultUpgradeOffer(placement = 'partsnap_result') {
   trackSplashLensEvent('post_value_upgrade_shown', { feature: 'unlimited_partsnap', placement });
   return `
     <div style="background:#082f49;border:1px solid #0ea5e9;border-radius:10px;padding:12px;margin:10px 0;">
-      <p style="color:#7dd3fc;font-size:10px;font-weight:950;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;">Keep the result</p>
-      <p style="color:#f8fafc;font-size:13px;font-weight:950;margin-bottom:9px;">Save this job, customer summary, and equipment history with Pro.</p>
+      <p style="color:#7dd3fc;font-size:10px;font-weight:950;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;">${a3Text('upgrade.keepResult')}</p>
+      <p style="color:#f8fafc;font-size:13px;font-weight:950;margin-bottom:9px;">${a3Text('upgrade.saveJob')}</p>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;">
-        <a data-checkout-plan="monthly" data-checkout-placement="${escAttr(placement)}" href="${getCheckoutUrl('monthly', placement)}" target="_blank" rel="noopener" onclick="this.href=trackPostValueUpgrade('monthly','${escAttr(placement)}')" style="background:#0ea5e9;color:#082f49;text-decoration:none;text-align:center;border-radius:8px;padding:10px 7px;font-size:11px;font-weight:950;">Go Pro $19</a>
-        <a data-checkout-plan="yearly" data-checkout-placement="${escAttr(placement)}" href="${getCheckoutUrl('yearly', placement)}" target="_blank" rel="noopener" onclick="this.href=trackPostValueUpgrade('yearly','${escAttr(placement)}')" style="background:#22c55e;color:#052e16;text-decoration:none;text-align:center;border-radius:8px;padding:10px 7px;font-size:11px;font-weight:950;">Save yearly</a>
+        <a data-checkout-plan="monthly" data-checkout-placement="${escAttr(placement)}" href="${getCheckoutUrl('monthly', placement)}" target="_blank" rel="noopener" onclick="this.href=trackPostValueUpgrade('monthly','${escAttr(placement)}')" style="background:#0ea5e9;color:#082f49;text-decoration:none;text-align:center;border-radius:8px;padding:10px 7px;font-size:11px;font-weight:950;">${a3Text('upgrade.goProPrice')}</a>
+        <a data-checkout-plan="yearly" data-checkout-placement="${escAttr(placement)}" href="${getCheckoutUrl('yearly', placement)}" target="_blank" rel="noopener" onclick="this.href=trackPostValueUpgrade('yearly','${escAttr(placement)}')" style="background:#22c55e;color:#052e16;text-decoration:none;text-align:center;border-radius:8px;padding:10px 7px;font-size:11px;font-weight:950;">${a3Text('upgrade.saveYearly')}</a>
       </div>
     </div>`;
 }
@@ -10939,9 +10997,9 @@ function partSnapPartnerCardText(type) {
     ].join('\n');
   }
   return [
-    'SplashLens senior tech / vendor packet',
+    a3Text('packet.unverified'),
     '',
-    'Use this for a distributor counter, vendor support, or senior tech review. It is not a final diagnosis or fitment guarantee.',
+    a3Text('packet.unverifiedCaution'),
     '',
     base,
   ].join('\n');
@@ -10952,15 +11010,15 @@ function partSnapEscalationText() {
   const evidence = Array.isArray(ai.visibleEvidence) ? ai.visibleEvidence.join('; ') : '';
   const missing = Array.isArray(ai.missingProof) ? ai.missingProof.join('; ') : '';
   return [
-    'SplashLens PartSnap escalation',
-    `Possible part: ${[ai.manufacturer, ai.component].filter(Boolean).join(' ') || 'unknown'}`,
-    `Model/family: ${ai.model || 'needs model proof'}`,
-    `Possible number: ${ai.partNumber || 'not visible'}`,
-    `Confidence: ${ai.confidence || 'unknown'}`,
-    evidence ? `Visible proof: ${evidence}` : '',
-    missing ? `Still needed: ${missing}` : '',
-    ai.escalationSummary ? `Summary: ${ai.escalationSummary}` : '',
-    'Verify against current manufacturer parts diagram before ordering.'
+    a3Text('packet.escalation'),
+    `${a3Text('packet.possiblePart')}: ${[ai.manufacturer, ai.component].filter(Boolean).join(' ') || a3Text('packet.unknown')}`,
+    `${a3Text('packet.modelFamily')}: ${ai.model || a3Text('packet.needsModel')}`,
+    `${a3Text('packet.possibleNumber')}: ${ai.partNumber || a3Text('packet.notVisible')}`,
+    `${a3Text('packet.confidence')}: ${ai.confidence || a3Text('packet.unknown')}`,
+    evidence ? `${a3Text('packet.visibleProof')}: ${evidence}` : '',
+    missing ? `${a3Text('packet.stillNeeded')}: ${missing}` : '',
+    ai.escalationSummary ? `${a3Text('packet.summary')}: ${ai.escalationSummary}` : '',
+    a3Text('packet.verifyDiagram')
   ].filter(Boolean).join('\n');
 }
 
@@ -11453,28 +11511,28 @@ function searchErrorDB(query, brandFilter) {
 function renderScanHits(hits, query) {
   if (!hits.length) return `
     <div style="background:#1e293b;border:1px solid #334155;border-radius:10px;padding:20px;text-align:center;">
-      <p style="color:#64748b;font-size:13px;">No matches for <strong style="color:#94a3b8">"${escHtml(query)}"</strong></p>
-      <p style="color:#475569;font-size:12px;margin-top:6px;">Try the brand name + code, or search a keyword (e.g. "ignition", "flow", "pressure")</p>
+      <p style="color:#64748b;font-size:13px;">${a3Text('code.noMatches')}: <strong class="code-data" style="color:#94a3b8">"${escHtml(query)}"</strong></p>
+      <p style="color:#475569;font-size:12px;margin-top:6px;">${a3Text('code.tryAgain')}</p>
     </div>`;
   return hits.map(h => `
     <div style="background:#1e293b;border:1px solid #334155;border-radius:12px;padding:14px;margin-bottom:10px;border-left:4px solid ${h.brandColor};">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap;">
-        <span style="background:${h.brandColor};color:#fff;padding:2px 10px;border-radius:100px;font-size:11px;font-weight:700;">${h.brandLabel}</span>
-        <span style="color:#94a3b8;font-size:11px;">${h.category}</span>
-        <span style="margin-left:auto;background:${h.severity==='high'?'#dc2626':h.severity==='medium'?'#d97706':'#16a34a'};color:#fff;padding:2px 8px;border-radius:100px;font-size:10px;font-weight:700;">${(h.severity||'').toUpperCase()}</span>
+        <span class="code-data" style="background:${h.brandColor};color:#fff;padding:2px 10px;border-radius:100px;font-size:11px;font-weight:700;">${h.brandLabel}</span>
+        <span class="code-data" style="color:#94a3b8;font-size:11px;">${h.category}</span>
+        <span style="margin-left:auto;background:${h.severity==='high'?'#dc2626':h.severity==='medium'?'#d97706':'#16a34a'};color:#fff;padding:2px 8px;border-radius:100px;font-size:10px;font-weight:700;">${a3Text(`code.severity${(h.severity || 'low').charAt(0).toUpperCase()}${(h.severity || 'low').slice(1)}`).toUpperCase()}</span>
       </div>
-      <div style="font-size:20px;font-weight:900;color:#f1f5f9;letter-spacing:.08em;margin-bottom:4px;">${h.code}</div>
-      <div style="font-size:14px;font-weight:700;color:#7dd3fc;margin-bottom:10px;">${h.name}</div>
+      <div class="code-data" style="font-size:20px;font-weight:900;color:#f1f5f9;letter-spacing:.08em;margin-bottom:4px;">${h.code}</div>
+      <div class="code-data" style="font-size:14px;font-weight:700;color:#7dd3fc;margin-bottom:10px;">${h.name}</div>
       ${h.causes?.length ? `
-        <p style="color:#64748b;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;">Likely Causes</p>
-        <ul style="margin:0 0 10px;padding-left:16px;">${h.causes.map(c=>`<li style="color:#94a3b8;font-size:13px;line-height:1.5;">${c}</li>`).join('')}</ul>
+        <p style="color:#64748b;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;">${a3Text('code.likelyCauses')}</p>
+        <ul style="margin:0 0 10px;padding-left:16px;">${h.causes.map(c=>`<li class="code-data" style="color:#94a3b8;font-size:13px;line-height:1.5;">${c}</li>`).join('')}</ul>
       ` : ''}
       ${h.fix?.length ? `
-        <p style="color:#64748b;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;">Next Checks</p>
-        <ol style="margin:0;padding-left:16px;">${h.fix.map(f=>`<li style="color:#e2e8f0;font-size:13px;line-height:1.6;margin-bottom:2px;">${f}</li>`).join('')}</ol>
+        <p style="color:#64748b;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;">${a3Text('code.nextChecks')}</p>
+        <ol style="margin:0;padding-left:16px;">${h.fix.map(f=>`<li class="code-data" style="color:#e2e8f0;font-size:13px;line-height:1.6;margin-bottom:2px;">${f}</li>`).join('')}</ol>
       ` : ''}
-      ${h.callpro ? `<p style="color:#fbbf24;font-size:12px;font-weight:700;margin-top:10px;">⚠ Recommend calling a certified technician for this fault.</p>` : ''}
-      <p style="color:#64748b;font-size:10px;line-height:1.45;margin-top:10px;">Reference only. Confirm the code, model, and procedure against the current manufacturer manual before repair or parts ordering.</p>
+      ${h.callpro ? `<p style="color:#fbbf24;font-size:12px;font-weight:700;margin-top:10px;">⚠ ${a3Text('code.callPro')}</p>` : ''}
+      <p style="color:#64748b;font-size:10px;line-height:1.45;margin-top:10px;">${a3Text('code.referenceOnly')}</p>
     </div>
   `).join('') + renderManualLookupUpgradeOffer(hits.length, query);
 }
@@ -11497,11 +11555,11 @@ function renderManualLookupUpgradeOffer(resultCount, query) {
   } catch {}
   return `
     <div style="background:#082f49;border:1px solid #0ea5e9;border-radius:10px;padding:12px;margin:12px 0 6px;">
-      <p style="color:#7dd3fc;font-size:10px;font-weight:950;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;">Keep the result</p>
-      <p style="color:#f8fafc;font-size:13px;font-weight:950;margin-bottom:9px;">Save this job, customer summary, and equipment history with Pro.</p>
+      <p style="color:#7dd3fc;font-size:10px;font-weight:950;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;">${a3Text('upgrade.keepResult')}</p>
+      <p style="color:#f8fafc;font-size:13px;font-weight:950;margin-bottom:9px;">${a3Text('upgrade.saveJob')}</p>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;">
-        <a data-checkout-plan="monthly" data-checkout-placement="scan_lookup_search" href="${getCheckoutUrl('monthly', 'scan_lookup_search')}" target="_blank" rel="noopener" onclick="this.href=trackPostValueUpgrade('monthly','scan_lookup_search')" style="background:#0ea5e9;color:#082f49;text-decoration:none;text-align:center;border-radius:8px;padding:10px 7px;font-size:11px;font-weight:950;">Go Pro $19</a>
-        <a data-checkout-plan="yearly" data-checkout-placement="scan_lookup_search" href="${getCheckoutUrl('yearly', 'scan_lookup_search')}" target="_blank" rel="noopener" onclick="this.href=trackPostValueUpgrade('yearly','scan_lookup_search')" style="background:#22c55e;color:#052e16;text-decoration:none;text-align:center;border-radius:8px;padding:10px 7px;font-size:11px;font-weight:950;">Save yearly</a>
+        <a data-checkout-plan="monthly" data-checkout-placement="scan_lookup_search" href="${getCheckoutUrl('monthly', 'scan_lookup_search')}" target="_blank" rel="noopener" onclick="this.href=trackPostValueUpgrade('monthly','scan_lookup_search')" style="background:#0ea5e9;color:#082f49;text-decoration:none;text-align:center;border-radius:8px;padding:10px 7px;font-size:11px;font-weight:950;">${a3Text('upgrade.goProPrice')}</a>
+        <a data-checkout-plan="yearly" data-checkout-placement="scan_lookup_search" href="${getCheckoutUrl('yearly', 'scan_lookup_search')}" target="_blank" rel="noopener" onclick="this.href=trackPostValueUpgrade('yearly','scan_lookup_search')" style="background:#22c55e;color:#052e16;text-decoration:none;text-align:center;border-radius:8px;padding:10px 7px;font-size:11px;font-weight:950;">${a3Text('upgrade.saveYearly')}</a>
       </div>
     </div>`;
 }
