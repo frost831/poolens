@@ -82,15 +82,16 @@ test('service worker cache version ships the newest account bundle', () => {
   const precacheAppUrl = sw.match(/'(\/js\/app\.js\?v=[^']+)'/)?.[1];
   assert.equal(shellAppUrl, '/js/app.js?v=20261009-freeze-g0');
   assert.equal(precacheAppUrl, shellAppUrl);
-  assert.match(shell, /\/js\/i18n\.js\?v=20261009-restart-a7/);
-  assert.match(sw, /\/js\/i18n\.js\?v=20261009-restart-a7/);
+  assert.match(shell, /\/js\/i18n\.js\?v=20261009-cost-unknown/);
+  assert.match(sw, /\/js\/i18n\.js\?v=20261009-cost-unknown/);
   assert.match(app, /import\('\.\/truck-qr\.js\?v=20261009-restart-a5'\)/);
   assert.match(sw, /\/js\/truck-qr\.js\?v=20261009-restart-a5/);
   assert.match(sw, /\/js\/vendor\/qrcode-generator\.mjs\?v=20261009-restart-a5/);
   assert.match(app, /import\('\.\/packet-share\.js\?v=20261009-restart-a4'\)/);
   assert.match(sw, /\/js\/packet-share\.js\?v=20261009-restart-a4/);
   assert.match(shell, /errors\.js\?v=20261002-trust-fixes-3/);
-  assert.match(sw, /const CACHE = 'splashlens-v37-freeze-g0'/);
+  assert.match(sw, /const CACHE = 'splashlens-v39-freeze-g0'/);
+  assert.match(sw, /\/js\/crm-proof-export\.js\?v=20261009-pc20/);
   assert.match(sw, /errors\.js\?v=20261002-trust-fixes-3/);
   assert.match(sw, /keys\.filter\(k => k !== CACHE\)/);
 });
@@ -98,7 +99,7 @@ test('service worker cache version ships the newest account bundle', () => {
 test('store-visible free-tools copy contains no promotional dollar amount', () => {
   assert.match(shell, /<strong>Free<\/strong><span>No card<\/span>/);
   assert.doesNotMatch(shell, /<strong>\$0<\/strong><span>No card<\/span>/);
-  assert.match(shell, /id="rpt-cost-total"[^>]*>\$0\.00<\/span>/);
+  assert.match(shell, /id="rpt-cost-total"[^>]*>Not entered<\/span>/);
 });
 
 test('checkout exposes a JSON catalog and Splash Lens Pro Unlimited metadata', () => {

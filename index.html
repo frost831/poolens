@@ -1379,6 +1379,13 @@
         <p style="color:#0f766e;font-size:10px;font-weight:950;letter-spacing:.12em;text-transform:uppercase;margin-bottom:5px;">CRM companion</p>
         <h2 style="color:#0f172a;font-size:18px;line-height:1.1;font-weight:950;margin-bottom:7px;">Export the proof into whatever system runs the company.</h2>
         <p style="color:#64748b;font-size:12px;line-height:1.45;margin-bottom:10px;">SplashLens does the field proof. Jobber, Skimmer, Pool Brain, Paythepoolman, spreadsheets, or the office can keep the schedule and invoice.</p>
+        <p class="brain-pill ready" style="display:inline-flex;margin-bottom:10px;">We don't replace your CRM; we complement Pool Brain &amp; peers.</p>
+        <div class="brain-grid" style="margin-bottom:8px;">
+          <button type="button" class="brain-action secondary" onclick="copyCrmProofPacket('skimmer')">Copy for Skimmer</button>
+          <button type="button" class="brain-action secondary" onclick="copyCrmProofPacket('poolBrain')">Copy for Pool Brain</button>
+          <button type="button" class="brain-action secondary" onclick="copyCrmProofPacket('jobber')">Copy for Jobber</button>
+          <button type="button" class="brain-action secondary" onclick="copyCrmProofPacket('ptp')">Copy for PTP</button>
+        </div>
         <div class="brain-grid">
           <button type="button" class="brain-action green" onclick="copyCustomerSafeSummary()">Copy Customer Summary</button>
           <button type="button" class="brain-action secondary" onclick="downloadServiceProofJson()">Download Proof JSON</button>
@@ -1503,7 +1510,7 @@
       <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:12px;margin:10px 0 14px;box-shadow:0 1px 3px rgba(0,0,0,0.05);">
         <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px;">
           <p style="color:#0369a1;font-weight:900;font-size:13px;">Chemical Cost + Truck Inventory</p>
-          <span id="rpt-cost-total" style="background:#dcfce7;color:#166534;border-radius:999px;padding:3px 8px;font-size:10px;font-weight:900;">$0.00</span>
+          <span id="rpt-cost-total" style="background:#dcfce7;color:#166534;border-radius:999px;padding:3px 8px;font-size:10px;font-weight:900;">Not entered</span>
         </div>
         <p id="rpt-inventory-summary" style="color:#64748b;font-size:12px;line-height:1.45;">Add chemical costs and stock source to estimate stop cost.</p>
         <div class="field-group" style="margin:10px 0 0;">
@@ -1771,7 +1778,7 @@
 
   <script src="/js/errors.js?v=20261002-trust-fixes-3"></script>
   <script src="/js/data.js?v=20261002-trust-fixes-2"></script>
-  <script type="module" src="/js/i18n.js?v=20261009-restart-a7"></script>
+  <script type="module" src="/js/i18n.js?v=20261009-cost-unknown"></script>
   <script src="/js/app.js?v=20261009-freeze-g0"></script>
   <script type="module" src="/js/partsnap-boss-packet.js?v=20261005-boss-draft"></script>
   <script type="module" src="/js/field-signals.js?v=20260728-field-signals"></script>

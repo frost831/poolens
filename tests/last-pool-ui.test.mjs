@@ -108,7 +108,7 @@ test('deep link opens local pool or routes to Counter without customer data in t
   assert.doesNotMatch('https://app.splashlens.com/?open=last_pool&utm_source=truck_qr', /Private Pool|pool-3/);
 });
 
-test('Counter card exposes QR actions and does not change script or cache versions', () => {
+test('Counter card exposes QR actions in the current app bundle', () => {
   assert.match(html, /id="last-pool-counter-card"/);
   assert.match(html, /id="tab-counter"[\s\S]*id="last-pool-counter-card"[\s\S]*id="tab-errors"/);
   assert.match(html, /id="code-pool-select" onchange="setCodeLookupPool\(this.value\)"/);
