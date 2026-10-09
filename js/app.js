@@ -598,6 +598,7 @@ const DOSE_NEED_LABELS = {
 // BOOT
 // ═══════════════════════════════════════════
 document.addEventListener('DOMContentLoaded', () => {
+  const counterStart = getCounterStartState();
   initLanguageLayer();
   initMarketingGate();
   initSplashLensPersonaMode();
@@ -617,6 +618,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initRoute();
   checkOfflineStatus();
   initDeepLink();
+  initCounterModeHome(counterStart);
   initProductIntelligenceTracking();
   trackReferralLandingOpen();
   trackSplashLensAppOpen();
@@ -627,21 +629,74 @@ document.addEventListener('DOMContentLoaded', () => {
 // ═══════════════════════════════════════════
 // TABS
 // ═══════════════════════════════════════════
+const COUNTER_SEEN_KEY = 'splashlens-counter-home-seen-v1';
+const FIELD_TABS = new Set(['counter', 'errors', 'dosing', 'report', 'guide', 'pools', 'scan', 'volume', 'sand', 'route']);
+let counterFirstOpen = false;
+
+function getCounterStartState() {
+  try {
+    const lastTab = localStorage.getItem('splashlens-last-field-tab') || '';
+    let hasPriorPoolensData = false;
+    for (let i = 0; i < localStorage.length; i++) {
+      if (localStorage.key(i)?.startsWith('poolens-')) {
+        hasPriorPoolensData = true;
+        break;
+      }
+    }
+    return {
+      lastTab: FIELD_TABS.has(lastTab) ? lastTab : '',
+      firstOpen: !hasPriorPoolensData && !lastTab && !localStorage.getItem(COUNTER_SEEN_KEY),
+    };
+  } catch {
+    return { lastTab: '', firstOpen: true };
+  }
+}
+
+function initCounterModeHome(start) {
+  const params = new URLSearchParams(window.location.search);
+  if (['tab', 'mode', 'workflow', 'checklist', 'challenge', 'activate_scan', 'token', 'session_id', 'sl_login_email', 'sl_login_code', 'upgrade'].some(key => params.has(key)) || getFacilityDeepLinkParts()) return;
+  counterFirstOpen = Boolean(start.firstOpen);
+  if (start.lastTab) showTab(start.lastTab);
+  else if (start.firstOpen) showTab('counter');
+}
+
+function openCounterTool(button) {
+  if (!['code', 'part', 'chem'].includes(button)) return;
+  trackSplashLensEvent('counter_button_tapped', { button });
+  if (button === 'code') {
+    showTab('errors');
+    const input = document.getElementById('error-search');
+    input?.focus();
+    input?.scrollIntoView({ block: 'center' });
+  } else if (button === 'part') {
+    showTab('scan');
+    setScanMode('parts');
+  } else {
+    showTab('dosing');
+  }
+}
+
 function showTab(name) {
+  const panel = document.getElementById(`tab-${name}`);
+  if (!FIELD_TABS.has(name) || !panel) return;
   trackProductTabChange(name);
-  if (PRODUCT_INTELLIGENCE.startedAt) {
+  try {
     localStorage.setItem('splashlens-last-field-tab', name);
     localStorage.setItem('splashlens-last-field-tab-at', new Date().toISOString());
-  }
+  } catch {}
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-  const panel = document.getElementById(`tab-${name}`);
   const btn   = document.getElementById(`nav-${name}`);
-  if (panel) panel.classList.add('active');
+  panel.classList.add('active');
   if (btn)   btn.classList.add('active');
   if (S.tab === 'scan' && name !== 'scan') stopCamera();
   S.tab = name;
   window.scrollTo(0, 0);
+  if (name === 'counter' && panel) {
+    trackSplashLensEvent('counter_mode_opened', { first_open: counterFirstOpen });
+    counterFirstOpen = false;
+    try { localStorage.setItem(COUNTER_SEEN_KEY, '1'); } catch {}
+  }
   if (name === 'route')  renderRoute();
   if (name === 'scan')   initScanTab();
   if (name === 'dosing') renderSlamBanner();
