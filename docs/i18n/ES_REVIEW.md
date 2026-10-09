@@ -18,5 +18,8 @@ Review against a pool-service technician's usage, including US Spanish and regio
 | Possible match / fit | Posible coincidencia / compatibilidad | Preserve uncertainty before parts ordering. |
 | Qualified technician | Técnico calificado | Check appropriate trade/safety meaning. |
 | Closing Pro pass | Pase Closing Pro | Confirm offer name only after the offer exists and is approved. |
+| Closing photo references | Referencias de fotos del cierre | Explain clearly that only a local filename/reference is saved, not the image. |
+| Text closing proof packet | Enviar paquete de cierre por mensaje | Check whether this suggests a server send; the tech opens their SMS composer. |
+| 3 of 3 free AI scans | Usaste las 3 de 3 lecturas de IA gratis | Confirm readable short copy and that an unsuccessful scan never triggers this offer. |
 
 The code-answer causes, fixes, and manufacturer data can remain English under A3. A reviewer should also inspect mixed-language packets containing that data. Upgrade strings deliberately omit prices; the integrated UI must obtain current prices from server configuration and suppress offers in store shells.

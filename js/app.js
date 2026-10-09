@@ -4687,10 +4687,10 @@ function initGuide() {
 }
 
 const CLOSING_PHOTO_PROOFS = [
-  { key: 'cover', label: 'Cover installed' },
-  { key: 'plugs', label: 'Winter and drain plugs' },
-  { key: 'equipment', label: 'Equipment drained' },
-  { key: 'chemistry', label: 'Closing chemistry record' },
+  { key: 'cover', labelKey: 'closing.coverInstalled' },
+  { key: 'plugs', labelKey: 'closing.winterPlugs' },
+  { key: 'equipment', labelKey: 'closing.equipment' },
+  { key: 'chemistry', labelKey: 'closing.chemistryRecord' },
 ];
 let closingChecklistStarted = false;
 let closingPassOfferShown = false;
@@ -4739,13 +4739,13 @@ function renderClosingProof() {
   const cl = S.checklists.closing || {};
   const status = closingChecklistStatus();
   el.innerHTML = `<section style="border-top:1px solid #cbd5e1;padding-top:14px;margin-top:4px;">
-    <h3 style="font-size:14px;color:#0f172a;margin:0 0 5px;">Closing photo references</h3>
-    <p style="font-size:12px;color:#475569;margin:0 0 12px;">Record where each photo is saved. References are local to this device; images are not attached to the text packet.</p>
-    ${CLOSING_PHOTO_PROOFS.map(({ key, label }) => `<label style="display:block;font-size:12px;font-weight:700;color:#334155;margin:0 0 10px;">${label}
-      <input type="text" maxlength="120" value="${escAttr(cl._photos?.[key] || '')}" placeholder="Photo filename or job record reference" onchange="setClosingPhotoReference('${key}',this.value)" style="display:block;width:100%;box-sizing:border-box;padding:10px;margin-top:4px;border:1px solid #cbd5e1;border-radius:6px;font:inherit;">
+    <h3 style="font-size:14px;color:#0f172a;margin:0 0 5px;">${a3Text('closing.photoReferences')}</h3>
+    <p style="font-size:12px;color:#475569;margin:0 0 12px;">${a3Text('closing.photoReferencesHelp')}</p>
+    ${CLOSING_PHOTO_PROOFS.map(({ key, labelKey }) => `<label style="display:block;font-size:12px;font-weight:700;color:#334155;margin:0 0 10px;">${a3Text(labelKey)}
+      <input type="text" maxlength="120" value="${escAttr(cl._photos?.[key] || '')}" placeholder="${escAttr(a3Text('closing.photoReferencePlaceholder'))}" onchange="setClosingPhotoReference('${key}',this.value)" style="display:block;width:100%;box-sizing:border-box;padding:10px;margin-top:4px;border:1px solid #cbd5e1;border-radius:6px;font:inherit;">
     </label>`).join('')}
-    <p style="font-size:12px;color:#475569;margin:0 0 10px;">${status.photos} / ${CLOSING_PHOTO_PROOFS.length} photo references</p>
-    ${status.complete ? '<button type="button" class="brain-action green" onclick="textClosingProofPacket()">Text closing proof packet</button><div id="closing-pass-offer"></div>' : '<p style="font-size:12px;color:#475569;margin:0;">Complete every step and photo reference to text the closing packet.</p>'}
+    <p style="font-size:12px;color:#475569;margin:0 0 10px;">${status.photos} / ${CLOSING_PHOTO_PROOFS.length} ${a3Text('closing.photoReferencesCount')}</p>
+    ${status.complete ? `<button type="button" class="brain-action green" onclick="textClosingProofPacket()">${a3Text('closing.textPacket')}</button><div id="closing-pass-offer"></div>` : `<p style="font-size:12px;color:#475569;margin:0;">${a3Text('closing.completeToText')}</p>`}
   </section>`;
   if (status.complete) loadClosingPassOffer();
   else closingOfferRequest++;
@@ -4757,8 +4757,8 @@ async function textClosingProofPacket() {
   const refs = S.checklists.closing._photos;
   return shareFieldPacket({
     surface: 'closing_checklist',
-    summary: `Closing checklist complete: ${status.checked} steps recorded. Verify site conditions and company method.`,
-    evidence: CLOSING_PHOTO_PROOFS.map(({ key, label }) => `${label}: ${refs[key].slice(0, 18)}`).join('; '),
+    summary: a3Text('closing.packetSummary').replace('{count}', status.checked),
+    evidence: CLOSING_PHOTO_PROOFS.map(({ key, labelKey }) => `${a3Text(labelKey)}: ${refs[key].slice(0, 18)}`).join('; '),
   });
 }
 
@@ -4776,9 +4776,9 @@ async function loadClosingPassOffer() {
     const el = document.getElementById('closing-pass-offer');
     if (!el) return;
     el.innerHTML = `<div style="border-top:1px solid #cbd5e1;margin-top:14px;padding-top:12px;">
-      <p style="font-size:13px;font-weight:800;color:#0f172a;margin:0 0 5px;">Closing Pro 60-day pass</p>
+      <p style="font-size:13px;font-weight:800;color:#0f172a;margin:0 0 5px;">${a3Text('upgrade.closingPass')}</p>
       <p style="font-size:12px;color:#475569;margin:0 0 10px;">${escHtml(item.priceLabel)}</p>
-      <button type="button" class="brain-action green" data-checkout-plan="closing_pass_60d" data-checkout-placement="closing_checklist" onclick="startWebCheckout('closing_pass_60d','closing_checklist')">Review pass checkout</button>
+      <button type="button" class="brain-action green" data-checkout-plan="closing_pass_60d" data-checkout-placement="closing_checklist" onclick="startWebCheckout('closing_pass_60d','closing_checklist')">${a3Text('closing.reviewPassCheckout')}</button>
     </div>`;
     if (!closingPassOfferShown) {
       closingPassOfferShown = true;
@@ -10159,20 +10159,21 @@ async function callAIScan(canvas, mode, result, status) {
       priorFreeScanCount < SCAN_LIMIT_FREE && getScanUsage().count === SCAN_LIMIT_FREE;
 
     if (mode === 'parts_snap') {
-      renderPartsSnapResult({
+      const usefulResult = renderPartsSnapResult({
         ...(aiResult || {}),
         guidedEvidence: getPartSnapEvidenceSummary(),
       }, result, status);
-      if (thirdFreeScan) showThirdScanSoftGate(result, mode);
+      if (thirdFreeScan && usefulResult) showThirdScanSoftGate(result, mode);
       return;
     }
     if (mode === 'test_strip') {
       renderStripResult(aiResult, result, status);
-      if (result && aiResult && ['fc', 'ph', 'ta', 'ch', 'cya'].some(key => aiResult[key] != null)) {
+      const usefulResult = result && aiResult && ['fc', 'ph', 'ta', 'ch', 'cya'].some(key => aiResult[key] != null);
+      if (usefulResult) {
         trackFirstUsefulResult('test_strip_result', result, { result_count: 1, role: getSplashLensRole() });
       }
-      if (thirdFreeScan) showThirdScanSoftGate(result, mode);
-      else if (result && aiResult && ['fc', 'ph', 'ta', 'ch', 'cya'].some(key => aiResult[key] != null)) {
+      if (thirdFreeScan && usefulResult) showThirdScanSoftGate(result, mode);
+      else if (usefulResult) {
         result.insertAdjacentHTML('beforeend', renderPartSnapResultUpgradeOffer('test_strip_result'));
       }
       return;
@@ -10199,7 +10200,7 @@ async function callAIScan(canvas, mode, result, status) {
       if (hits.length) trackFirstUsefulResult('scan_detected_code_answer', result, {
         result_count: hits.length, role: getSplashLensRole(),
       });
-      if (thirdFreeScan) showThirdScanSoftGate(result, mode);
+      if (thirdFreeScan && hits.length) showThirdScanSoftGate(result, mode);
       else if (result && hits.length) {
         result.insertAdjacentHTML('beforeend', renderPartSnapResultUpgradeOffer('scan_code_result'));
       }
@@ -10213,16 +10214,13 @@ async function callAIScan(canvas, mode, result, status) {
               const found = extractErrorCodes(raw);
               if (found.length) runCodeSearch(found[0], result, status, thirdFreeScan);
               else showCaptureWithManualEntry(canvas, context || raw, result, status);
-              if (thirdFreeScan) showThirdScanSoftGate(result, mode);
             }).catch(() => {
               showCaptureWithManualEntry(canvas, context || '', result, status);
-              if (thirdFreeScan) showThirdScanSoftGate(result, mode);
             })
           )
         );
       } else {
         showCaptureWithManualEntry(canvas, context || '', result, status);
-        if (thirdFreeScan) showThirdScanSoftGate(result, mode);
       }
     }
   } catch (err) {
@@ -10562,7 +10560,7 @@ function renderPartsSnapResult(ai, result, status) {
   if (!showGuidedRetry && !low && (component || corpusCandidates.length)) {
     if (!knownPartSnapComponent(ai) && !corpusCandidates.length) {
       trackPartSnapResultFailure('no_match', { confidence: confidence || 'unknown' });
-      return;
+      return false;
     }
     trackSplashLensEvent('partsnap_result_success', {
       source: 'app', workflow: 'partsnap_result', confidence: confidence || 'unknown',
@@ -10580,8 +10578,10 @@ function renderPartsSnapResult(ai, result, status) {
     if (getScanUsage().count < SCAN_LIMIT_FREE) {
       result.insertAdjacentHTML('beforeend', renderPartSnapResultUpgradeOffer('partsnap_result'));
     }
+    return true;
   } else {
     trackPartSnapResultFailure(showGuidedRetry ? 'more_proof_needed' : low ? 'low_confidence' : 'no_match', { confidence: confidence || 'unknown' });
+    return false;
   }
 }
 
@@ -10808,25 +10808,31 @@ function claimPostValueOffer() {
 }
 
 function showThirdScanSoftGate(result, mode) {
-  if (!result || isPartSnapPro() || isStoreShellMode() || !claimPostValueOffer()) return;
-  const placement = 'third_scan_gate';
+  if (!result || isPartSnapPro() || isStoreShellMode() || showThirdScanSoftGate.shown) return;
+  const key = 'splashlens-soft-gate-scan3-session-v1';
+  try {
+    if (sessionStorage.getItem(key)) return;
+    sessionStorage.setItem(key, '1');
+  } catch {}
+  showThirdScanSoftGate.shown = true;
+  const placement = 'soft_gate_scan3';
   result.insertAdjacentHTML('beforeend', `
     <div id="third-scan-soft-gate" style="background:#082f49;border:1px solid #0ea5e9;border-radius:8px;padding:14px;margin:12px 0 6px;">
       <div style="display:flex;align-items:start;gap:8px;">
         <div style="flex:1;min-width:0;">
-          <p style="color:#7dd3fc;font-size:11px;font-weight:900;margin:0 0 4px;">3 of 3 free AI scans used this month</p>
-          <p style="color:#f8fafc;font-size:14px;font-weight:900;margin:0 0 5px;">Your result is yours. Keep scanning with Pro.</p>
-          <p style="color:#cbd5e1;font-size:12px;line-height:1.45;margin:0 0 12px;">Pro unlocks unlimited AI scans and saved job memory. Manual lookup and core field tools stay free.</p>
+          <p style="color:#7dd3fc;font-size:11px;font-weight:900;margin:0 0 4px;">${a3Text('upgrade.softGateCount')}</p>
+          <p style="color:#f8fafc;font-size:14px;font-weight:900;margin:0 0 5px;">${a3Text('upgrade.softGateTitle')}</p>
+          <p style="color:#cbd5e1;font-size:12px;line-height:1.45;margin:0 0 12px;">${a3Text('upgrade.softGateBody')}</p>
         </div>
-        <button type="button" aria-label="Dismiss Pro offer" title="Dismiss Pro offer" onclick="dismissThirdScanSoftGate()" style="background:transparent;border:0;color:#cbd5e1;font-size:22px;line-height:1;cursor:pointer;">&times;</button>
+        <button type="button" aria-label="${escAttr(a3Text('upgrade.softGateDismiss'))}" title="${escAttr(a3Text('upgrade.softGateDismiss'))}" onclick="dismissThirdScanSoftGate()" style="background:transparent;border:0;color:#cbd5e1;font-size:22px;line-height:1;cursor:pointer;">&times;</button>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-        <a data-checkout-plan="monthly" data-checkout-placement="${placement}" href="${getCheckoutUrl('monthly', placement)}" target="_blank" rel="noopener" onclick="this.href=trackPostValueUpgrade('monthly','third_scan_gate')" style="background:#0ea5e9;color:#082f49;text-decoration:none;text-align:center;border-radius:8px;padding:10px 7px;font-size:12px;font-weight:900;">Pro $19 monthly</a>
-        <a data-checkout-plan="yearly" data-checkout-placement="${placement}" href="${getCheckoutUrl('yearly', placement)}" target="_blank" rel="noopener" onclick="this.href=trackPostValueUpgrade('yearly','third_scan_gate')" style="background:#22c55e;color:#052e16;text-decoration:none;text-align:center;border-radius:8px;padding:10px 7px;font-size:12px;font-weight:900;">$149 yearly</a>
+        <a data-checkout-plan="monthly" data-checkout-placement="${placement}" href="${getCheckoutUrl('monthly', placement)}" target="_blank" rel="noopener" onclick="this.href=trackPostValueUpgrade('monthly','soft_gate_scan3')" style="background:#0ea5e9;color:#082f49;text-decoration:none;text-align:center;border-radius:8px;padding:10px 7px;font-size:12px;font-weight:900;">${a3Text('upgrade.monthly')}</a>
+        <a data-checkout-plan="yearly" data-checkout-placement="${placement}" href="${getCheckoutUrl('yearly', placement)}" target="_blank" rel="noopener" onclick="this.href=trackPostValueUpgrade('yearly','soft_gate_scan3')" style="background:#22c55e;color:#052e16;text-decoration:none;text-align:center;border-radius:8px;padding:10px 7px;font-size:12px;font-weight:900;">${a3Text('upgrade.yearly')}</a>
       </div>
-      <button type="button" onclick="dismissThirdScanSoftGate();setScanMode('lookup')" style="background:transparent;border:0;color:#cbd5e1;padding:10px 0 0;font-size:12px;font-weight:800;cursor:pointer;">Continue with manual tools</button>
+      <button type="button" onclick="dismissThirdScanSoftGate();setScanMode('lookup')" style="background:transparent;border:0;color:#cbd5e1;padding:10px 0 0;font-size:12px;font-weight:800;cursor:pointer;">${a3Text('upgrade.softGateManual')}</button>
     </div>`);
-  trackSplashLensEvent('soft_gate_shown', { placement, mode, remaining_scans: 0, limit: SCAN_LIMIT_FREE });
+  trackSplashLensEvent('soft_gate_shown', { placement, mode, scan_count: SCAN_LIMIT_FREE, remaining_scans: 0, limit: SCAN_LIMIT_FREE });
   trackSplashLensEvent('post_value_upgrade_shown', { feature: 'unlimited_partsnap', placement });
 }
 
@@ -10834,7 +10840,7 @@ function dismissThirdScanSoftGate() {
   const gate = document.getElementById('third-scan-soft-gate');
   if (!gate) return;
   gate.remove();
-  trackSplashLensEvent('soft_gate_dismissed', { placement: 'third_scan_gate', remaining_scans: 0 });
+  trackSplashLensEvent('soft_gate_dismissed', { placement: 'soft_gate_scan3', scan_count: SCAN_LIMIT_FREE, remaining_scans: 0 });
 }
 
 function trackCheckoutIntent(plan, placement) {
@@ -11779,7 +11785,8 @@ function runCodeSearch(code, result, status, suppressOffer = false) {
     `;
     if (hits.length) {
       trackFirstUsefulResult('scan_detected_code_answer', result, { result_count: hits.length, role: getSplashLensRole() });
-      if (!suppressOffer) result.insertAdjacentHTML('beforeend', renderManualLookupUpgradeOffer(hits.length, code));
+      if (suppressOffer) showThirdScanSoftGate(result, 'error_code');
+      else result.insertAdjacentHTML('beforeend', renderManualLookupUpgradeOffer(hits.length, code));
     }
   }
 }

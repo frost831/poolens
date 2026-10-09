@@ -178,21 +178,21 @@ test('third free scan gate follows result, can be dismissed, and uses A1 placeme
   });
   context.showThirdScanSoftGate(result, 'parts_snap');
   assert.ok(html.indexOf('Complete scan result') < html.indexOf('third-scan-soft-gate'));
-  assert.match(html, /data-checkout-placement="third_scan_gate"/);
-  assert.match(html, /trackPostValueUpgrade\('monthly','third_scan_gate'\)/);
-  assert.match(html, /Continue with manual tools/);
+  assert.match(html, /data-checkout-placement="soft_gate_scan3"/);
+  assert.match(html, /trackPostValueUpgrade\('monthly','soft_gate_scan3'\)/);
+  assert.match(html, /upgrade.softGateManual/);
   assert.equal(events[0].name, 'soft_gate_shown');
   assert.equal(events[0].props.remaining_scans, 0);
   assert.equal(events[0].props.mode, 'parts_snap');
-  const checkoutUrl = new URL(context.trackPostValueUpgrade('monthly', 'third_scan_gate'), 'https://app.test');
-  assert.equal(checkoutUrl.searchParams.get('placement'), 'third_scan_gate');
-  assert.equal(events.find(event => event.name === 'checkout_click').props.placement, 'third_scan_gate');
+  const checkoutUrl = new URL(context.trackPostValueUpgrade('monthly', 'soft_gate_scan3'), 'https://app.test');
+  assert.equal(checkoutUrl.searchParams.get('placement'), 'soft_gate_scan3');
+  assert.equal(events.find(event => event.name === 'checkout_click').props.placement, 'soft_gate_scan3');
   assert.equal(context.showThirdScanSoftGate(result, 'parts_snap'), undefined);
   assert.equal(events.filter(event => event.name === 'soft_gate_shown').length, 1);
   context.dismissThirdScanSoftGate();
   assert.equal(removed, true);
   assert.equal(events.at(-1).name, 'soft_gate_dismissed');
-  assert.equal(events.at(-1).props.placement, 'third_scan_gate');
+  assert.equal(events.at(-1).props.placement, 'soft_gate_scan3');
 });
 
 test('store shell cannot show a third-scan card or claim the session offer', () => {
@@ -202,6 +202,43 @@ test('store shell cannot show a third-scan card or claim the session offer', () 
   });
   context.showThirdScanSoftGate(result, 'test_strip');
   assert.equal(events.length, 0);
+});
+
+test('a prior post-value offer does not suppress the third-scan gate', () => {
+  let html = '';
+  const result = { insertAdjacentHTML: (_position, markup) => { html += markup; } };
+  const { context, events } = harness([...checkoutFunctions, 'showThirdScanSoftGate'], {
+    SCAN_LIMIT_FREE: 3, isPartSnapPro: () => false,
+    sessionStorage: storage({ 'splashlens-post-value-offer-session-v1': '1' }),
+  });
+  context.showThirdScanSoftGate(result, 'parts_snap');
+  assert.match(html, /soft_gate_scan3/);
+  assert.equal(events.filter(event => event.name === 'soft_gate_shown').length, 1);
+});
+
+test('a failed third scan does not show an upgrade card', async () => {
+  let count = 2;
+  let html = '';
+  const result = {
+    get innerHTML() { return html; },
+    set innerHTML(value) { html = value; },
+    insertAdjacentHTML: (_position, markup) => { html += markup; },
+  };
+  const { context, events } = harness([...checkoutFunctions, 'callAIScan', 'showThirdScanSoftGate'], {
+    SCAN_LIMIT_FREE: 3, isPartSnapPro: () => false,
+    getScanUsage: () => ({ count }), recordAIScan: (_mode, usage) => { count = usage.count; },
+    renderPartsSnapResult: (_ai, element) => { element.innerHTML = '<div>More evidence needed</div>'; return false; },
+    getLanguageHeaders: () => ({}), getScanEntitlementToken: () => '',
+    getPartSnapRecoveryContext: () => null, getSplashLensIdentityProfile: () => ({}),
+    getFieldSaveAccount: () => ({}), getPartSnapEvidenceSummary: () => ({}),
+    getScanClientId: () => uuid, withLanguageMetadata: value => value,
+    FREE_PROFILE_TOKEN_KEY: 'profile', ACCOUNT_TOKEN_KEY: 'account',
+    fetch: async () => ({ ok: true, json: async () => ({ result: {}, usage: { source: 'free_metered', count: 3 } }) }),
+  });
+  await context.callAIScan({ toDataURL: () => 'data:image/jpeg;base64,AA==' }, 'parts_snap', result, {});
+  assert.match(html, /More evidence needed/);
+  assert.doesNotMatch(html, /soft_gate_scan3/);
+  assert.equal(events.some(event => event.name === 'soft_gate_shown'), false);
 });
 
 test('successful free scans show the soft gate only after the third complete result', async () => {
@@ -216,7 +253,7 @@ test('successful free scans show the soft gate only after the third complete res
     SCAN_LIMIT_FREE: 3, isPartSnapPro: () => false,
     getScanUsage: () => ({ count }),
     recordAIScan: (_mode, usage) => { count = usage.count; },
-    renderPartsSnapResult: (_ai, element) => { element.innerHTML = '<div>Full PartSnap result and actions</div>'; },
+    renderPartsSnapResult: (_ai, element) => { element.innerHTML = '<div>Full PartSnap result and actions</div>'; return true; },
     getLanguageHeaders: () => ({}), getScanEntitlementToken: () => '',
     getPartSnapRecoveryContext: () => null, getSplashLensIdentityProfile: () => ({}),
     getFieldSaveAccount: () => ({}), getPartSnapEvidenceSummary: () => ({ complete: true }),

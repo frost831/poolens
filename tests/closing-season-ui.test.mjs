@@ -27,7 +27,12 @@ function harness({ storeShell = false, plans = [] } = {}) {
     shareFieldPacket: async packet => { shared.push(packet); return { channel: 'share_sheet' }; },
     renderChecklist: () => {},
     setEl: () => {},
-    a3Text: () => 'Closing checklist',
+    a3Text: key => ({
+      'closing.coverInstalled': 'Cover installed',
+      'closing.winterPlugs': 'Winter and drain plugs',
+      'closing.equipment': 'Equipment drained',
+      'closing.chemistryRecord': 'Closing chemistry record',
+    })[key] || key,
     updateProgress: () => {},
     startWebCheckout: (...args) => checkoutCalls.push(args),
   });
@@ -94,7 +99,7 @@ test('closing requires all steps and four photo references before text packet', 
   const h = harness();
   assert.match(html, /id="closing-proof-content" hidden/);
   h.context.renderClosingProof();
-  assert.doesNotMatch(h.elements.get('closing-proof-content').innerHTML, /Text closing proof packet/);
+  assert.doesNotMatch(h.elements.get('closing-proof-content').innerHTML, /onclick="textClosingProofPacket\(\)"/);
   await h.context.textClosingProofPacket();
   assert.equal(h.shared.length, 0);
   await finishChecklist(h);
