@@ -63,7 +63,7 @@ test('first screen runs a measurable 60-second field challenge', () => {
   assert.match(appSource, /field_challenge_routed/);
   assert.match(appSource, /closing_season_challenge_started/);
   assert.match(appSource, /challenge_type: challengeType/);
-  assert.match(appSource, /startServiceProofWorkflow\('closing'\)/);
+  assert.match(appSource, /enterSplashLensApp\('guide'\);\s*setTimeout\(\(\) => switchClType\('closing'\), 120\)/);
   assert.match(appSource, /field60_/);
   assert.match(appSource, /FIELD_CHALLENGE_CONTEXT_KEY/);
 });
