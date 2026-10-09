@@ -1,9 +1,9 @@
-const CACHE = 'splashlens-v27-restart-a0';
+const CACHE = 'splashlens-v28-restart-a1';
 const ASSETS = [
   '/',
   '/js/errors.js?v=20261002-trust-fixes-3',
   '/js/data.js?v=20261002-trust-fixes-2',
-  '/js/app.js?v=20261009-restart-a0',
+  '/js/app.js?v=20261009-restart-a1',
   '/js/partsnap-boss-packet.js?v=20261005-boss-draft',
   '/js/field-signals.js?v=20260728-field-signals',
   '/js/analytics.js',

@@ -1,7 +1,8 @@
 import { forwardEventToAmplitude } from './amplitude.mjs';
+import { classifyTraffic } from './traffic-class.mjs';
 
 export const SERVER_PAYMENT_EVENTS = new Set([
-  'checkout_session_created', 'checkout_completed', 'subscription_created', 'entitlement_granted',
+  'checkout_click_server', 'checkout_session_created', 'checkout_completed', 'subscription_created', 'entitlement_granted',
 ]);
 
 function opaque(value, pattern) {
@@ -37,6 +38,8 @@ export async function recordPaymentEvent(env, event, reference, { plan = '', pat
     payment_status: ['paid', 'no_payment_required', 'unpaid'].includes(props.payment_status) ? props.payment_status : '',
     attribution_status: attribution.client_reference_id ? 'reference_present' : 'unattributed_server',
   };
+  safeProps.traffic_class = classifyTraffic({ source: safeProps.source, userAgent, props: safeProps, serverOrigin: true });
+  safeProps.is_internal = safeProps.traffic_class !== 'real';
   const eventKey = `${event}:${reference}`;
   try {
     await db.prepare(`CREATE TABLE IF NOT EXISTS events (

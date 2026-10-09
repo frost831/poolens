@@ -1,4 +1,5 @@
 import { checkoutAttribution, recordPaymentEvent } from '../_shared/payment-funnel.mjs';
+import { classifyTraffic } from '../_shared/traffic-class.mjs';
 
 const PLAN_CONFIG = {
   monthly: {
@@ -46,7 +47,9 @@ function paidCheckoutEnabled(env) {
 
 function isAutomatedPreview(request) {
   const userAgent = String(request.headers.get('User-Agent') || '');
-  return /bot|crawler|spider|preview|externalagent|facebookexternalhit/i.test(userAgent);
+  return /bot|crawler|spider|preview|externalagent|facebookexternalhit|headless|curl|python-requests|node-fetch/i.test(userAgent)
+    || /prefetch/i.test(`${request.headers.get('Purpose') || ''} ${request.headers.get('Sec-Purpose') || ''}`)
+    || (request.headers.has('Sec-Fetch-Mode') && !['navigate', 'cors'].includes(request.headers.get('Sec-Fetch-Mode')));
 }
 
 async function configuredPriceMatchesPlan(env, priceId, planConfig) {
@@ -66,7 +69,7 @@ async function configuredPriceMatchesPlan(env, priceId, planConfig) {
   }
 }
 
-async function createCheckoutSession(request, env, plan) {
+async function createCheckoutSession(request, env, plan, attributionInput) {
   if (!env.STRIPE_SECRET_KEY) return null;
 
   const origin = appOrigin(request, env);
@@ -97,7 +100,7 @@ async function createCheckoutSession(request, env, plan) {
   params.set('subscription_data[metadata][product]', 'splashlens');
   params.set('subscription_data[metadata][feature]', 'scanner');
   params.set('subscription_data[metadata][plan]', params.get('metadata[plan]'));
-  const attribution = checkoutAttribution(Object.fromEntries(new URL(request.url).searchParams));
+  const attribution = checkoutAttribution(attributionInput);
   // Public callers cannot claim an administrative checkout source.
   if (attribution.source === 'admin') attribution.source = 'server';
   if (attribution.client_reference_id) params.set('client_reference_id', attribution.client_reference_id);
@@ -113,6 +116,7 @@ async function createCheckoutSession(request, env, plan) {
     headers: {
       Authorization: `Bearer ${env.STRIPE_SECRET_KEY}`,
       'Content-Type': 'application/x-www-form-urlencoded',
+      'Idempotency-Key': `splashlens-${attribution.client_reference_id}`,
     },
     body: params,
   });
@@ -126,18 +130,16 @@ async function createCheckoutSession(request, env, plan) {
   return session?.url ? { ...session, attribution } : null;
 }
 
-function checkoutRedirect(location, mode) {
-  return new Response(null, {
-    status: 302,
+function checkoutResponse(location, mode) {
+  return Response.json({ ok: true, url: location, mode }, {
     headers: {
-      Location: location,
       'Cache-Control': 'no-store',
       'X-SplashLens-Checkout-Mode': mode,
     },
   });
 }
 
-async function recordCheckoutStarted(request, env, plan, mode) {
+async function recordCheckoutStarted(request, env, plan, mode, attribution) {
   const db = env.SUBSCRIBERS_DB;
   if (!db || typeof db.prepare !== 'function') return;
   try {
@@ -156,10 +158,12 @@ async function recordCheckoutStarted(request, env, plan, mode) {
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
       )`,
     ).run();
+    const userAgent = String(request.headers.get('User-Agent') || '').slice(0, 300);
+    const trafficClass = classifyTraffic({ source: attribution.source, userAgent, props: attribution, serverOrigin: true });
     await db.prepare(
       `INSERT INTO events (event, source, path, plan, mode, props, user_agent)
-       VALUES ('checkout_started', 'checkout_api', '/api/checkout', ?, ?, '{}', ?)`,
-    ).bind(normalizedPlan(plan), mode, String(request.headers.get('User-Agent') || '').slice(0, 300)).run();
+       VALUES ('checkout_started', ?, '/api/checkout', ?, ?, ?, ?)`,
+    ).bind(attribution.source, normalizedPlan(plan), mode, JSON.stringify({ ...attribution, traffic_class: trafficClass, is_internal: trafficClass !== 'real' }), userAgent).run();
   } catch (error) {
     console.error('SplashLens checkout start tracking failed', error);
   }
@@ -167,7 +171,6 @@ async function recordCheckoutStarted(request, env, plan, mode) {
 
 export async function onRequestGet({ request, env }) {
   const url = new URL(request.url);
-  const plan = (url.searchParams.get('plan') || 'monthly').toLowerCase();
   if (url.searchParams.has('catalog')) {
     const checkoutEnabled = paidCheckoutEnabled(env);
     const stripeReady = checkoutEnabled && Boolean(env.STRIPE_SECRET_KEY);
@@ -225,11 +228,33 @@ export async function onRequestGet({ request, env }) {
     }, { headers: { 'Cache-Control': 'no-store' } });
   }
 
+  const plan = normalizedPlan(url.searchParams.get('plan'));
+  const placement = /^[a-z0-9_-]{1,80}$/i.test(url.searchParams.get('placement') || '')
+    ? url.searchParams.get('placement') : 'direct_checkout';
+  const upgradeUrl = `/?upgrade=${plan}&placement=${encodeURIComponent(placement)}`;
+  return new Response(`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="robots" content="noindex,nofollow"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Continue to SplashLens checkout</title></head><body><main><h1>Continue to secure checkout</h1><p>Review your SplashLens plan before leaving for Stripe.</p><a href="${upgradeUrl}">Continue in SplashLens</a></main></body></html>`, {
+    headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store', 'X-Robots-Tag': 'noindex, nofollow' },
+  });
+}
+
+export async function onRequestPost({ request, env }) {
   if (isAutomatedPreview(request)) {
     return Response.json({ ok: false, error: 'Checkout requires a browser action.' }, {
-      status: 403,
-      headers: { 'Cache-Control': 'no-store' },
+      status: 403, headers: { 'Cache-Control': 'no-store' },
     });
+  }
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return Response.json({ ok: false, error: 'Invalid checkout request.' }, { status: 400 });
+  }
+  if (!['monthly', 'yearly'].includes(body?.plan) || body?.store !== 'web') {
+    return Response.json({ ok: false, error: 'Web plan required.' }, { status: 400 });
+  }
+  const attribution = checkoutAttribution(body);
+  if (!attribution.client_reference_id || !attribution.placement || !['app', 'site'].includes(attribution.source)) {
+    return Response.json({ ok: false, error: 'Checkout reference and placement required.' }, { status: 400 });
   }
 
   if (!paidCheckoutEnabled(env)) {
@@ -239,7 +264,11 @@ export async function onRequestGet({ request, env }) {
     });
   }
 
-  const session = await createCheckoutSession(request, env, plan);
+  await recordPaymentEvent(env, 'checkout_click_server', attribution.client_reference_id, {
+    plan: body.plan, path: '/api/checkout', props: attribution,
+    userAgent: String(request.headers.get('User-Agent') || ''),
+  });
+  const session = await createCheckoutSession(request, env, body.plan, attribution);
   if (session?.configurationError) {
     return Response.json({ ok: false, error: 'Checkout pricing is being updated. Please try again later.' }, {
       status: 503,
@@ -247,21 +276,20 @@ export async function onRequestGet({ request, env }) {
     });
   }
   if (session) {
-    await recordCheckoutStarted(request, env, plan, 'stripe_checkout_session');
+    await recordCheckoutStarted(request, env, body.plan, 'stripe_checkout_session', attribution);
     await recordPaymentEvent(env, 'checkout_session_created', session.id, {
-      plan: normalizedPlan(plan), path: '/api/checkout', props: session.attribution,
+      plan: body.plan, path: '/api/checkout', props: session.attribution,
       userAgent: String(request.headers.get('User-Agent') || ''),
     });
-    return checkoutRedirect(session.url, 'stripe_checkout_session');
+    return checkoutResponse(session.url, 'stripe_checkout_session');
   }
 
-  const target = paymentLinkForPlan(env, plan);
+  const target = paymentLinkForPlan(env, body.plan);
   if (target && env.SPLASHLENS_PAYMENT_LINK_PRICING_VERSION === '2026-10-growth') {
-    await recordCheckoutStarted(request, env, plan, 'payment_link_direct');
-    const attribution = checkoutAttribution(Object.fromEntries(url.searchParams));
+    await recordCheckoutStarted(request, env, body.plan, 'payment_link_direct', attribution);
     const paymentUrl = new URL(target);
     if (attribution.client_reference_id) paymentUrl.searchParams.set('client_reference_id', attribution.client_reference_id);
-    return checkoutRedirect(paymentUrl.href, 'payment_link_direct');
+    return checkoutResponse(paymentUrl.href, 'payment_link_direct');
   }
   return Response.json({ ok: false, error: 'Stripe Checkout could not be started. Please try again.' }, {
     status: 503,

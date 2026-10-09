@@ -37,6 +37,7 @@ function harness(names, overrides = {}) {
     escHtml: value => String(value), escAttr: value => String(value),
     ...overrides,
   });
+  if (names.includes('startWebCheckout')) vm.runInContext('let checkoutPending = false;', context);
   vm.runInContext(names.map(functionSource).join('\n'), context);
   return { context, events };
 }
@@ -146,16 +147,26 @@ test('all rendered web upgrade links replace their href with the attributed inte
   assert.match(source, /this.href=trackCheckoutIntent\('monthly','account_dashboard'\)/);
 });
 
-test('paid lane checks configuration and redirects with the same click identity', async () => {
-  const { context, events } = harness([...checkoutFunctions, 'openSplashLensPaidLane'], {
-    window: { location: { href: '' } },
-    fetch: async () => ({ json: async () => ({ plans: [{ key: 'partsnap_pro_yearly', checkoutConfigured: true }] }) }),
+test('paid lane checks configuration and posts the same click identity before navigation', async () => {
+  let posted;
+  let navigated = '';
+  const { context, events } = harness([...checkoutFunctions, 'startWebCheckout', 'openSplashLensPaidLane'], {
+    window: { location: { origin: 'https://app.splashlens.com', assign: value => { navigated = value; } } },
+    showSplashLensNotice: () => {},
+    fetch: async (_url, options) => {
+      if (options?.method === 'POST') {
+        posted = JSON.parse(options.body);
+        return { ok: true, json: async () => ({ url: 'https://checkout.stripe.com/c/pay/test' }) };
+      }
+      return { json: async () => ({ plans: [{ key: 'partsnap_pro_yearly', checkoutConfigured: true }] }) };
+    },
   });
   await context.openSplashLensPaidLane('partsnap_pro_yearly', 'Pro');
   const click = events.find(event => event.name === 'checkout_click');
   assert.equal(click.props.placement, 'paid_lane');
   assert.equal(click.props.plan, 'yearly');
-  assert.equal(new URL(context.window.location.href, 'https://app.test').searchParams.get('client_reference_id'), click.props.client_reference_id);
+  assert.equal(posted.client_reference_id, click.props.client_reference_id);
+  assert.equal(navigated, 'https://checkout.stripe.com/c/pay/test');
 });
 
 test('store paid lane does not open a purchase path while native link-out is on hold', async () => {
@@ -202,6 +213,25 @@ test('CTA shown waits for visible viewport content and deduplicates each actual 
   document.visibilityState = 'visible';
   callbacks.visibilitychange();
   assert.equal(events.length, 2);
+});
+
+test('rendered checkout links use the central POST helper before navigation', () => {
+  const callbacks = {};
+  const calls = [];
+  const link = { dataset: { checkoutPlan: 'yearly', checkoutPlacement: 'field_stop_saved' } };
+  const document = { body: {}, visibilityState: 'visible', querySelectorAll: () => [],
+    addEventListener: (name, callback) => { callbacks[name] = callback; } };
+  const { context } = harness(['initCheckoutClientTracking'], {
+    document, startWebCheckout: (...args) => { calls.push(args); },
+    window: { addEventListener: () => {} },
+    MutationObserver: class { observe() {} },
+    requestAnimationFrame: callback => callback(),
+  });
+  context.initCheckoutClientTracking();
+  let prevented = false;
+  callbacks.click({ target: { closest: () => link }, preventDefault: () => { prevented = true; }, stopImmediatePropagation: () => {} });
+  assert.equal(prevented, true);
+  assert.deepEqual(calls, [['yearly', 'field_stop_saved']]);
 });
 
 test('manual answers count first action and first value when opened, not when closed', () => {

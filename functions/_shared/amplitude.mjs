@@ -91,6 +91,8 @@ export async function forwardEventToAmplitude(env, record, props = {}) {
       }),
       user_properties: pruneObject({
         product: 'splashlens',
+        traffic_class: safeProps.traffic_class || 'server',
+        is_internal: safeProps.is_internal !== false,
         source: clean(record.source || safeProps.source || safeProps.attribution_source || 'app', 80),
         role: clean(safeProps.known_role || safeProps.role || safeProps.audience || safeProps.persona || safeProps.splashlens_role || '', 80),
         identity_source: clean(safeProps.identity_source || safeProps.attribution_source || record.source || 'app', 80),

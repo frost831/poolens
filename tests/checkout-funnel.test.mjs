@@ -2,12 +2,20 @@ import assert from 'node:assert/strict';
 import { createHmac } from 'node:crypto';
 import fs from 'node:fs';
 import test from 'node:test';
-import { onRequestGet as checkout } from '../functions/api/checkout.js';
+import { onRequestGet as checkoutGet, onRequestPost as checkout } from '../functions/api/checkout.js';
 import { onRequestGet as checkoutSuccess } from '../functions/api/checkout-success.js';
 import { onRequestPost as restoreEntitlement } from '../functions/api/restore-entitlement.js';
 
 const app = fs.readFileSync(new URL('../js/app.js', import.meta.url), 'utf8');
 const entitlementSecret = 'checkout-funnel-test-secret-is-long-enough';
+const reference = 'sl_checkout_5d46a1e0-a882-4c96-9c93-6558d2e34149';
+function checkoutRequest(plan = 'monthly', extra = {}, headers = {}) {
+  return new Request('https://app.splashlens.com/api/checkout', {
+    method: 'POST', headers: { 'Content-Type': 'application/json', ...headers },
+    body: JSON.stringify({ plan, source: 'app', placement: 'test_checkout', client_reference_id: reference,
+      client_id: '5d46a1e0-a882-4c96-9c93-6558d2e34149', store: 'web', ...extra }),
+  });
+}
 
 function accountToken(email) {
   const now = Math.floor(Date.now() / 1000);
@@ -45,25 +53,30 @@ test('Pro checkout creates a live subscription route with product metadata and a
   };
   t.mock.method(globalThis, 'fetch', async (url, options) => {
     assert.equal(url, 'https://api.stripe.com/v1/checkout/sessions');
+    assert.equal(options.headers['Idempotency-Key'], `splashlens-${reference}`);
     params = new URLSearchParams(options.body);
     return Response.json({ url: 'https://checkout.stripe.com/c/pay/cs_live_valid123' });
   });
   const response = await checkout({
-    request: new Request('https://app.splashlens.com/api/checkout?plan=monthly'),
+    request: checkoutRequest(),
     env: { STRIPE_SECRET_KEY: 'sk_test_placeholder', SPLASHLENS_APP_ORIGIN: 'https://app.splashlens.com', SUBSCRIBERS_DB: db },
   });
-  assert.equal(response.status, 302);
+  assert.equal(response.status, 200);
   assert.equal(response.headers.get('X-SplashLens-Checkout-Mode'), 'stripe_checkout_session');
-  assert.match(response.headers.get('Location'), /^https:\/\/checkout\.stripe\.com\//);
+  assert.match((await response.json()).url, /^https:\/\/checkout\.stripe\.com\//);
   assert.equal(params.get('mode'), 'subscription');
   assert.equal(params.get('metadata[product]'), 'splashlens');
   assert.equal(params.get('metadata[feature]'), 'scanner');
   assert.equal(params.get('line_items[0][price_data][unit_amount]'), '1900');
   assert.equal(params.get('success_url'), 'https://app.splashlens.com/api/checkout-success?session_id={CHECKOUT_SESSION_ID}');
-  assert.deepEqual(recorded.filter((entry) => entry.sql.includes("VALUES ('checkout_started'"))[0]?.values, ['monthly', 'stripe_checkout_session', '']);
+  const started = recorded.find((entry) => entry.sql.includes("VALUES ('checkout_started'"));
+  assert.equal(started?.values[0], 'app');
+  assert.equal(started?.values[1], 'monthly');
+  assert.equal(started?.values[2], 'stripe_checkout_session');
+  assert.equal(JSON.parse(started?.values[3]).traffic_class, 'real');
 });
 
-test('link preview crawlers cannot create checkout sessions or starts', async (t) => {
+test('GET checkout and link previews cannot create Stripe sessions or starts', async (t) => {
   const calls = [];
   t.mock.method(globalThis, 'fetch', async (...args) => {
     calls.push(args);
@@ -78,16 +91,19 @@ test('link preview crawlers cannot create checkout sessions or starts', async (t
     'Mozilla/5.0 (compatible; bingbot/2.0; +http://www.bing.com/bingbot.htm)',
     'facebookexternalhit/1.1',
   ]) {
-    const response = await checkout({
+    const response = await checkoutGet({
       request: new Request('https://app.splashlens.com/api/checkout?plan=monthly', { headers: { 'User-Agent': agent } }),
       env,
     });
-    assert.equal(response.status, 403);
+    assert.equal(response.status, 200);
     assert.equal(response.headers.get('Cache-Control'), 'no-store');
   }
+  const normalGet = await checkoutGet({ request: new Request('https://app.splashlens.com/api/checkout?plan=monthly', { headers: { 'User-Agent': 'Mozilla/5.0 Safari/605.1' } }), env });
+  assert.equal(normalGet.status, 200);
+  assert.match(await normalGet.text(), /Continue to secure checkout/);
   assert.equal(calls.length, 0);
 
-  const catalog = await checkout({
+  const catalog = await checkoutGet({
     request: new Request('https://app.splashlens.com/api/checkout?catalog=1', { headers: { 'User-Agent': 'facebookexternalhit/1.1' } }),
     env,
   });
@@ -100,14 +116,14 @@ test('failed checkout does not report a start', async (t) => {
   t.mock.method(console, 'error', () => {});
   t.mock.method(globalThis, 'fetch', async () => new Response('unavailable', { status: 503 }));
   const response = await checkout({
-    request: new Request('https://app.splashlens.com/api/checkout?plan=monthly'),
+    request: checkoutRequest(),
     env: {
       STRIPE_SECRET_KEY: 'sk_test_placeholder',
-      SUBSCRIBERS_DB: { prepare(sql) { recorded.push(sql); return { run: async () => ({}) }; } },
+      SUBSCRIBERS_DB: { prepare(sql) { recorded.push(sql); return { run: async () => ({}), bind() { return this; } }; } },
     },
   });
   assert.equal(response.status, 503);
-  assert.equal(recorded.length, 0);
+  assert.equal(recorded.some(sql => sql.includes("VALUES ('checkout_started'")), false);
 });
 
 test('stale configured Stripe Price ID fails closed before creating a session', async (t) => {
@@ -118,7 +134,7 @@ test('stale configured Stripe Price ID fails closed before creating a session', 
     return Response.json({ active: true, currency: 'usd', unit_amount: 2900, recurring: { interval: 'month', interval_count: 1 } });
   });
   const response = await checkout({
-    request: new Request('https://app.splashlens.com/api/checkout?plan=monthly'),
+    request: checkoutRequest(),
     env: {
       STRIPE_SECRET_KEY: 'sk_test_placeholder',
       SPLASHLENS_STRIPE_PRICE_MONTHLY_PRO: 'price_old_monthly',
@@ -139,17 +155,17 @@ test('matching configured Stripe Price ID is used for checkout', async (t) => {
     return Response.json({ id: 'cs_yearly', url: 'https://checkout.stripe.com/c/pay/cs_yearly' });
   });
   const response = await checkout({
-    request: new Request('https://app.splashlens.com/api/checkout?plan=yearly'),
+    request: checkoutRequest('yearly'),
     env: { STRIPE_SECRET_KEY: 'sk_test_placeholder', SPLASHLENS_STRIPE_PRICE_YEARLY_PRO: 'price_new_yearly' },
   });
-  assert.equal(response.status, 302);
+  assert.equal(response.status, 200);
   assert.equal(params.get('line_items[0][price]'), 'price_new_yearly');
   assert.equal(params.has('line_items[0][price_data][unit_amount]'), false);
 });
 
 test('unverified payment link cannot bypass the new price', async () => {
   const response = await checkout({
-    request: new Request('https://app.splashlens.com/api/checkout?plan=monthly'),
+    request: checkoutRequest(),
     env: { SPLASHLENS_STRIPE_LINK_MONTHLY_PRO: 'https://buy.stripe.com/old' },
   });
   assert.equal(response.status, 503);
@@ -212,7 +228,7 @@ test('active paid checkout issues a signed token that a verified account can res
 test('every web upgrade entry records checkout intent, and zero-result lookups do not count impressions', () => {
   assert.match(app, /trackCheckoutIntent\('monthly','scan_limit_reached'\)/);
   assert.match(app, /trackCheckoutIntent\('yearly','scan_limit_reached'\)/);
-  assert.match(app, /trackCheckoutIntent\(safePlan, 'paid_lane'\)/);
+  assert.match(app, /startWebCheckout\(safePlan, 'paid_lane'\)/);
   const intent = app.slice(app.indexOf('function trackCheckoutIntent('), app.indexOf('function trackPostValueUpgrade('));
   assert.match(intent, /trackSplashLensEvent\('checkout_click', props\)/);
   assert.match(intent, /props.client_reference_id = `sl_checkout_/);
