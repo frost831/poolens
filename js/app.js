@@ -916,6 +916,9 @@ function initDeepLink() {
   }
   if (challenge === 'field60' && challengePath === 'closing') {
     setTimeout(() => startFieldChallenge('closing'), 120);
+  } else if (tab === 'report' && workflow === 'closing') {
+    showTab('report');
+    setTimeout(() => startServiceProofWorkflow('closing'), 120);
   } else if (workflow === 'closing' || checklist === 'closing') {
     showTab('guide');
     setTimeout(() => switchClType('closing'), 120);
