@@ -68,7 +68,7 @@ test('opt-in stores only ZIP3; official active payload displays eligible alerts 
     assert.ok(body.alerts.every(alert => alert.url.startsWith('https://api.weather.gov/alerts/')));
     assert.match(calls[0].url, /^https:\/\/api\.weather\.gov\/alerts\/active\?point=/);
     assert.match(calls[0].options.headers['User-Agent'], /SplashLens.*hello@splashlens\.com/);
-    assert.deepEqual(puts, [{ key: 'freeze-alerts:v1:606', options: { expirationTtl: 3600 } }]);
+    assert.deepEqual(puts, [{ key: 'freeze-alerts:v1:606', options: { expirationTtl: 300 } }]);
     await onRequestGet({ request: request('GET'), env });
     assert.equal(calls.length, 1);
   } finally { globalThis.fetch = oldFetch; sqlite.close(); }
@@ -106,7 +106,7 @@ test('rejects extra personal fields, invalid ZIP and cross-site mutations', asyn
   sqlite.close();
 });
 
-test('client banner only renders an NWS-issued matching alert and tracks ZIP3', () => {
+test('client banner only renders an NWS-issued matching alert without tracking ZIP3', () => {
   const source = readFileSync(new URL('../js/app.js', import.meta.url), 'utf8');
   const code = source.slice(source.indexOf('const FREEZE_SUBSCRIPTION_KEY'), source.indexOf('function renderChecklist()', source.indexOf('const FREEZE_SUBSCRIPTION_KEY')));
   const elements = new Map();
@@ -117,7 +117,7 @@ test('client banner only renders an NWS-issued matching alert and tracks ZIP3', 
   assert.equal(elements.get('freeze-banner').hidden, false);
   assert.match(elements.get('freeze-banner-title').textContent, /NWS Freeze Warning near ZIP 606/);
   assert.deepEqual(events.map(event => event.name), ['freeze_alert_shown']);
-  assert.equal(events[0].props.zip3, '606');
+  assert.equal(Object.hasOwn(events[0].props, 'zip3'), false);
   runInNewContext(`showFreezeAlerts([{event:'Freeze Warning',url:'https://evil.example/alerts/fake'}]);`, context);
   assert.equal(elements.get('freeze-banner').hidden, true);
 });
@@ -126,7 +126,7 @@ test('client keeps opt-out available when NWS lookup fails', async () => {
   const source = readFileSync(new URL('../js/app.js', import.meta.url), 'utf8');
   const code = source.slice(source.indexOf('const FREEZE_SUBSCRIPTION_KEY'), source.indexOf('function renderChecklist()', source.indexOf('const FREEZE_SUBSCRIPTION_KEY')));
   const elements = new Map();
-  for (const id of ['freeze-banner', 'freeze-optin-form', 'freeze-optout', 'freeze-banner-optout', 'freeze-status']) {
+  for (const id of ['freeze-banner', 'freeze-banner-title', 'freeze-banner-detail', 'freeze-nws-link', 'freeze-optin-form', 'freeze-optout', 'freeze-banner-optout', 'freeze-status']) {
     elements.set(id, { hidden: true, textContent: '', addEventListener() {} });
   }
   const context = {
@@ -137,6 +137,7 @@ test('client keeps opt-out available when NWS lookup fails', async () => {
   runInNewContext(`${code}\ninitFreezeAlerts();`, context);
   await new Promise(resolve => setImmediate(resolve));
   assert.equal(elements.get('freeze-optout').hidden, false);
-  assert.equal(elements.get('freeze-banner').hidden, true);
+  assert.equal(elements.get('freeze-banner').hidden, false);
+  assert.equal(elements.get('freeze-nws-link').href, 'https://www.weather.gov/alerts');
   assert.match(elements.get('freeze-status').textContent, /NWS alerts are unavailable/);
 });

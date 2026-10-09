@@ -2,7 +2,7 @@ import zip3Points from '../_shared/freeze-zip3.json' with { type: 'json' };
 
 const ORIGINS = new Set(['https://app.splashlens.com', 'http://localhost:8788', 'http://localhost:8787', 'http://localhost:5173', 'http://127.0.0.1:8788', 'http://127.0.0.1:8787', 'http://127.0.0.1:5173']);
 const EVENTS = new Set(['Freeze Warning', 'Hard Freeze Warning', 'Freeze Watch']);
-const CACHE_SECONDS = 3600;
+const CACHE_SECONDS = 300;
 const encoder = new TextEncoder();
 
 function reply(request, status, data) {
@@ -98,7 +98,7 @@ export async function onRequestPost({ request, env }) {
   if (!body || typeof body.zip !== 'string' || !/^\d{3}(?:\d{2})?$/.test(body.zip)) return reply(request, 400, { ok: false, error: 'Enter a 3- or 5-digit US ZIP.' });
   const zip3 = body.zip.slice(0, 3);
   if (!Object.hasOwn(zip3Points, zip3)) return reply(request, 400, { ok: false, error: 'This ZIP prefix is not supported.' });
-  if (!env.SUBSCRIBERS_DB) return reply(request, 503, { ok: false, error: 'Freeze alerts unavailable.' });
+  if (!env.SUBSCRIBERS_DB || !env.SCAN_USAGE_KV) return reply(request, 503, { ok: false, error: 'Freeze alerts unavailable.' });
   try {
     await env.SUBSCRIBERS_DB.prepare(`INSERT INTO freeze_alert_optins (subscriber_hash, zip3) VALUES (?, ?)
       ON CONFLICT(subscriber_hash) DO UPDATE SET zip3 = excluded.zip3, updated_at = CURRENT_TIMESTAMP`).bind(hash, zip3).run();

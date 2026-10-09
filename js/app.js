@@ -4852,7 +4852,15 @@ function showFreezeAlerts(alerts) {
   document.getElementById('freeze-banner-detail').textContent = 'Issued for the representative ZIP3 point, not your exact address. Verify the alert area and instructions with NWS.';
   document.getElementById('freeze-nws-link').href = source.href;
   banner.hidden = false;
-  trackSplashLensEvent('freeze_alert_shown', { zip3: freezeZip3, event_type: alert.event });
+  trackSplashLensEvent('freeze_alert_shown', { event_type: alert.event });
+}
+
+function showFreezeAlertUnavailable() {
+  if (!freezeToken()) return;
+  document.getElementById('freeze-banner-title').textContent = 'NWS alerts unavailable';
+  document.getElementById('freeze-banner-detail').textContent = 'SplashLens could not check alerts. Check your exact location with the National Weather Service before closing.';
+  document.getElementById('freeze-nws-link').href = 'https://www.weather.gov/alerts';
+  document.getElementById('freeze-banner').hidden = false;
 }
 
 async function fetchFreezeAlerts(token) {
@@ -4893,10 +4901,10 @@ async function optInFreezeAlerts(event) {
     input.value = '';
     consent.checked = false;
     renderFreezeSubscription(true, data.zip3);
-    trackSplashLensEvent('freeze_alert_optin', { zip3: data.zip3, event_type: 'opt_in' });
+    trackSplashLensEvent('freeze_alert_optin', { event_type: 'opt_in' });
     await fetchFreezeAlerts(token);
   } catch (error) {
-    document.getElementById('freeze-banner').hidden = true;
+    showFreezeAlertUnavailable();
     setFreezeStatus(error.message || 'NWS alerts are unavailable. Check weather.gov directly.');
   }
 }
@@ -4921,14 +4929,14 @@ function initFreezeAlerts() {
   document.getElementById('freeze-optout')?.addEventListener('click', optOutFreezeAlerts);
   document.getElementById('freeze-banner-optout')?.addEventListener('click', optOutFreezeAlerts);
   document.querySelectorAll('[data-freeze-link], #freeze-nws-link').forEach(link => link.addEventListener('click', () => {
-    trackSplashLensEvent('freeze_alert_clicked', { zip3: freezeZip3, event_type: document.getElementById('freeze-banner-title').textContent.replace(/^NWS (.*?) near ZIP.*$/, '$1'), destination: link.dataset.freezeLink || 'nws' });
+    trackSplashLensEvent('freeze_alert_clicked', { event_type: document.getElementById('freeze-banner-title').textContent.replace(/^NWS (.*?) near ZIP.*$/, '$1'), destination: link.dataset.freezeLink || 'nws' });
   }));
   const token = freezeToken();
   if (token) {
     renderFreezeSubscription(true);
     fetchFreezeAlerts(token).catch(() => {
       if (!freezeToken()) return;
-      document.getElementById('freeze-banner').hidden = true;
+      showFreezeAlertUnavailable();
       setFreezeStatus('NWS alerts are unavailable. You can still turn off alerts or check weather.gov directly.');
     });
   }
