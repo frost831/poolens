@@ -1,4 +1,4 @@
-const CACHE = 'splashlens-v35-restart-a8';
+const CACHE = 'splashlens-v36-store-promo';
 const ASSETS = [
   '/',
   '/js/errors.js?v=20261002-trust-fixes-3',
