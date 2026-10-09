@@ -35,6 +35,7 @@ function harness(names, overrides = {}) {
     trackSplashLensEvent: (name, props = {}) => events.push({ name, props: { ...props } }),
     navigator: { onLine: true }, window: {},
     escHtml: value => String(value), escAttr: value => String(value),
+    a3Text: key => key,
     ...overrides,
   });
   if (names.includes('startWebCheckout')) vm.runInContext('let checkoutPending = false;', context);

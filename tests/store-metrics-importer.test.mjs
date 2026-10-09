@@ -205,7 +205,7 @@ test('PartSnap is the default scanner path and has an immediate post-result upgr
   assert.match(appSource, /renderPartSnapResultUpgradeOffer\('partsnap_result'\)/);
   assert.match(appSource, /post_value_upgrade_shown/);
   assert.match(appSource, /post_value_upgrade_clicked/);
-  assert.match(appSource, /Save this job, customer summary, and equipment history with Pro\./);
+  assert.match(readFileSync(new URL('../js/i18n.js', import.meta.url), 'utf8'), /Save this job, customer summary, and equipment history with Pro\./);
   assert.match(appSource, /ai_scan_attempted/);
   assert.match(appSource, /ai_scan_completed/);
   assert.match(appSource, /ai_scan_failed/);

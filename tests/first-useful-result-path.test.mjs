@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { test } from 'node:test';
 import vm from 'node:vm';
+import { i18nText } from '../js/i18n.js';
 
 const source = readFileSync(join(import.meta.dirname, '..', 'js', 'app.js'), 'utf8');
 
@@ -54,6 +55,7 @@ test('first useful value survives blocked browser storage', () => {
 test('scanner no-result message escapes the typed query', () => {
   const context = {
     escHtml: (value) => String(value).replace(/</g, '&lt;').replace(/>/g, '&gt;'),
+    a3Text: (key) => i18nText('en', key),
   };
   vm.runInNewContext(functionSource('renderScanHits', 'renderManualLookupUpgradeOffer'), context);
   const html = context.renderScanHits([], '<img src=x>');
@@ -109,6 +111,7 @@ test('brand-filtered zero result offers an all-brand retry without losing the qu
     trackSplashLensEvent: (name, props) => events.push({ name, props }),
     getSplashLensRole: () => 'tech',
     escHtml: (value) => value,
+    a3Text: (key) => i18nText('en', key),
     codeCard: () => '<div class="error-card">Answer</div>',
     resetBrandBtn: () => {},
   };

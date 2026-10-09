@@ -1,6 +1,6 @@
 # Spanish UI review (A3 assets)
 
-All `es` entries in `js/i18n.js` are machine-drafted and need native-speaker review before release. This sidecar does not wire the picker or toggle into the app, translate code-library data, or establish that the Spanish UI works in production.
+All `es` entries in `js/i18n.js`, including the 36 exact closing steps and closing proof-photo/callback labels, are machine-drafted and need native-speaker review before release. A3 wires the first-open picker and Counter toggle into the app; code-library data remains English. Production behavior still needs native-speaker review.
 
 Review against a pool-service technician's usage, including US Spanish and regional differences. Check the short labels on a phone in bright light and read the cautionary copy aloud. Keep manufacturer names, PartSnap, Pro, and code values unchanged unless product naming is deliberately changed.
 

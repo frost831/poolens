@@ -21,7 +21,7 @@ test('first open goes straight to field workflow instead of forcing persona pick
 test('free scan allowance is three in browser and server code', () => {
   assert.match(app, /const SCAN_LIMIT_FREE = 3;/);
   assert.match(scan, /const FREE_SCAN_LIMIT = 3;/);
-  assert.match(app, /A free field profile includes 3 AI scans each month/);
+  assert.match(fs.readFileSync(new URL('../js/i18n.js', import.meta.url), 'utf8'), /A free field profile includes 3 AI scans each month/);
   assert.match(app, /ensureFreeScanProfile\(aiMode, result, status\)/);
   assert.match(scan, /Create a free SplashLens profile before using AI scans/);
   assert.match(scan, /Verify your free SplashLens profile email before using AI scans/);
@@ -80,10 +80,12 @@ test('saving job history requires a free save profile signal', () => {
 test('service worker cache version ships the newest account bundle', () => {
   const shellAppUrl = shell.match(/<script src="(\/js\/app\.js\?v=[^"]+)"/ )?.[1];
   const precacheAppUrl = sw.match(/'(\/js\/app\.js\?v=[^']+)'/)?.[1];
-  assert.equal(shellAppUrl, '/js/app.js?v=20261009-restart-a2');
+  assert.equal(shellAppUrl, '/js/app.js?v=20261009-restart-a3');
   assert.equal(precacheAppUrl, shellAppUrl);
+  assert.match(shell, /\/js\/i18n\.js\?v=20261009-restart-a3/);
+  assert.match(sw, /\/js\/i18n\.js\?v=20261009-restart-a3/);
   assert.match(shell, /errors\.js\?v=20261002-trust-fixes-3/);
-  assert.match(sw, /const CACHE = 'splashlens-v29-restart-a2'/);
+  assert.match(sw, /const CACHE = 'splashlens-v30-restart-a3'/);
   assert.match(sw, /errors\.js\?v=20261002-trust-fixes-3/);
   assert.match(sw, /keys\.filter\(k => k !== CACHE\)/);
 });
