@@ -273,11 +273,11 @@ export async function onRequestGet({ request, env }) {
     return html('<h1>SplashLens checkout</h1><p>Checkout verification failed.</p>', 503);
   }
   if (isClosingPass(session)) {
-    const paidAt = await verifiedClosingPassPayment(session, env);
-    if (!paidAt) {
+    const payment = await verifiedClosingPassPayment(session, env);
+    if (!payment) {
       return html('<h1>SplashLens checkout</h1><p>Closing Pro payment could not be verified yet.</p>', 503);
     }
-    const activation = await grantClosingPass(session, paidAt, env, 'stripe_checkout_success');
+    const activation = await grantClosingPass(session, payment.paidAt, env, 'stripe_checkout_success', payment.chargeId);
     if (!activation.ok) {
       return html(`<h1>SplashLens checkout</h1><p>${escapeHtml(activation.error)}</p>`, activation.status);
     }

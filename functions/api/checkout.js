@@ -1,5 +1,6 @@
 import { checkoutAttribution, recordPaymentEvent } from '../_shared/payment-funnel.mjs';
 import { classifyTraffic } from '../_shared/traffic-class.mjs';
+import { closingPassAmount, recordClosingPassCheckout } from '../_shared/closing-pass.mjs';
 
 const PLAN_CONFIG = {
   monthly: {
@@ -16,17 +17,6 @@ const PLAN_CONFIG = {
     label: 'SplashLens Closing Pro 60-Day Pass',
   },
 };
-
-const CLOSING_PASS_MIN_CENTS = 100;
-const CLOSING_PASS_MAX_CENTS = 14900;
-
-function closingPassAmount(env) {
-  const raw = String(env.SPLASHLENS_CLOSING_PASS_60D_AMOUNT_CENTS || '').trim();
-  if (!/^[1-9]\d*$/.test(raw)) return null;
-  const amount = Number(raw);
-  return Number.isSafeInteger(amount) && amount >= CLOSING_PASS_MIN_CENTS && amount <= CLOSING_PASS_MAX_CENTS
-    ? amount : null;
-}
 
 function normalizedPlan(plan) {
   return /year|annual/i.test(String(plan || '')) ? 'yearly' : 'monthly';
@@ -298,7 +288,8 @@ export async function onRequestPost({ request, env }) {
     });
   }
 
-  if (body.plan === 'closing_pass_60d' && (!closingPassAmount(env) || !env.STRIPE_SECRET_KEY)) {
+  if (body.plan === 'closing_pass_60d' && (!closingPassAmount(env) || !env.STRIPE_SECRET_KEY
+    || !env.SUBSCRIBERS_DB || typeof env.SUBSCRIBERS_DB.prepare !== 'function')) {
     return Response.json({ ok: false, error: 'Closing Pro pass is unavailable.' }, {
       status: 503, headers: { 'Cache-Control': 'no-store' },
     });
@@ -316,6 +307,12 @@ export async function onRequestPost({ request, env }) {
     });
   }
   if (session) {
+    if (body.plan === 'closing_pass_60d'
+      && !(await recordClosingPassCheckout(env, session.id, closingPassAmount(env), attribution.client_reference_id))) {
+      return Response.json({ ok: false, error: 'Closing Pro checkout could not be recorded.' }, {
+        status: 503, headers: { 'Cache-Control': 'no-store' },
+      });
+    }
     await recordCheckoutStarted(request, env, body.plan, 'stripe_checkout_session', attribution);
     await recordPaymentEvent(env, 'checkout_session_created', session.id, {
       plan: body.plan, path: '/api/checkout', props: session.attribution,
