@@ -5059,7 +5059,7 @@ function currentProofPassportUrl() {
 
 async function shareFieldPacket({ surface, kind = 'proof', code = '', summary = '', evidence = '', passportUrl = '' }) {
   try {
-    const { composeProofPacket, shareProofPacket } = await import('./packet-share.js');
+    const { composeProofPacket, shareProofPacket } = await import('./packet-share.js?v=20261009-restart-a4');
     const packet = composeProofPacket({ language: getLanguageProfile().preferredLanguage, kind, code, summary, evidence, passportUrl });
     const result = await shareProofPacket({ packet, surface, navigator, document, onEvent: trackSplashLensEvent });
     if (!result.channel && !result.canceled) showSplashLensNotice('Text sharing is unavailable on this device.');
@@ -5088,6 +5088,19 @@ function textSavedProofStop(button) {
     surface: 'proof_stop', summary: passport.proof.customerSummary || passport.workPerformed || passport.visitType,
     evidence: passport.proof.photoProof || passport.proof.issueNote || '',
     passportUrl: passport.passportExpiresAt && !(Date.parse(passport.passportExpiresAt) > Date.now()) ? '' : passport.passportUrl || '',
+  });
+}
+
+function textPartSnapProofStop(id = '') {
+  const stop = id ? getPartSnapFieldStops().find((item) => item.id === id) : null;
+  const ai = stop?.partSnap || _lastPartSnapResult || {};
+  const summary = [ai.manufacturer, ai.component, ai.model].filter(Boolean).join(' ') || a3Text('packet.unknown');
+  const visible = Array.isArray(ai.visibleEvidence) ? ai.visibleEvidence.filter(Boolean).slice(0, 2) : [];
+  const missing = Array.isArray(ai.missingProof) ? ai.missingProof.filter(Boolean).slice(0, 2) : [];
+  return shareFieldPacket({
+    surface: 'partsnap_stop',
+    summary: `${a3Text('packet.possiblePart')}: ${summary}. ${a3Text('packet.verifyDiagram')}`,
+    evidence: [...visible, ...missing.map((item) => `${a3Text('packet.stillNeeded')}: ${item}`)].join('; '),
   });
 }
 
@@ -8303,8 +8316,9 @@ function renderPartSnapFieldStops() {
             <div style="min-width:0;"><strong style="display:block;color:#0f172a;font-size:12px;">${escHtml(stop.title || 'PartSnap field stop')}</strong><span style="display:block;color:#64748b;font-size:10px;margin-top:3px;">${escHtml(stop.model || 'Model proof still needed')} - ${new Date(stop.savedAt).toLocaleString()}</span></div>
             <span style="background:${stop.risk === 'high' ? '#dc2626' : stop.risk === 'medium' ? '#d97706' : '#16a34a'};color:#fff;border-radius:999px;padding:3px 7px;font-size:9px;font-weight:950;white-space:nowrap;">${escHtml((stop.risk || 'unknown').toUpperCase())}</span>
           </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:6px;margin-top:9px;">
+          <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin-top:9px;">
             <button onclick="openPartSnapFieldStop('${escAttr(stop.id)}')" style="background:#0369a1;color:#fff;border:0;border-radius:8px;padding:9px;font-size:10px;font-weight:900;cursor:pointer;">Open stop</button>
+            <button onclick="textPartSnapProofStop('${escAttr(stop.id)}')" style="background:#fff;color:#0f766e;border:1px solid #0f766e;border-radius:8px;padding:9px;font-size:10px;font-weight:900;cursor:pointer;">Text it</button>
             <button onclick="assignPartSnapFieldStop('${escAttr(stop.id)}')" style="background:#0f766e;color:#fff;border:0;border-radius:8px;padding:9px;font-size:10px;font-weight:900;cursor:pointer;">Assign</button>
             <button onclick="deletePartSnapFieldStop('${escAttr(stop.id)}')" aria-label="Delete saved stop" title="Delete saved stop" style="background:#fff;color:#991b1b;border:1px solid #fecaca;border-radius:8px;padding:9px 11px;font-size:11px;font-weight:900;cursor:pointer;">X</button>
           </div>
@@ -8328,6 +8342,7 @@ function openPartSnapFieldStop(id) {
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;">
         <button onclick="savePartSnapToPool()" style="background:#0f766e;color:#fff;border:0;border-radius:9px;padding:11px;font-size:11px;font-weight:900;cursor:pointer;">Assign customer</button>
         <button onclick="sharePartSnapPacket()" style="background:#0369a1;color:#fff;border:0;border-radius:9px;padding:11px;font-size:11px;font-weight:900;cursor:pointer;">Share packet</button>
+        <button onclick="textPartSnapProofStop('${escAttr(stop.id)}')" style="background:#fff;color:#0f766e;border:1px solid #0f766e;border-radius:9px;padding:11px;font-size:11px;font-weight:900;cursor:pointer;">Text it</button>
         <button onclick="requestPartSnapSecondProof()" style="background:#fff;color:#075985;border:1px solid #bae6fd;border-radius:9px;padding:10px;font-size:11px;font-weight:900;cursor:pointer;">Add proof photo</button>
         <button onclick="renderPartSnapFieldStops()" style="background:#fff;color:#334155;border:1px solid #cbd5e1;border-radius:9px;padding:10px;font-size:11px;font-weight:900;cursor:pointer;">All saved stops</button>
       </div>
@@ -10476,6 +10491,7 @@ function savePartSnapFieldStop() {
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;">
         <button onclick="savePartSnapToPool()" style="background:#0f766e;color:#fff;border:0;border-radius:8px;padding:10px;font-size:11px;font-weight:900;cursor:pointer;">Assign customer</button>
         <button onclick="sharePartSnapPacket()" style="background:#fff;color:#0f766e;border:1px solid #0f766e;border-radius:8px;padding:10px;font-size:11px;font-weight:900;cursor:pointer;">Share packet</button>
+        <button onclick="textPartSnapProofStop()" style="grid-column:1/-1;background:#fff;color:#0f766e;border:1px solid #0f766e;border-radius:8px;padding:10px;font-size:11px;font-weight:900;cursor:pointer;">Text it</button>
       </div>
     </div>${renderPostValueUpgradeOffer()}`;
   window.SplashLensFieldSignals?.offerSystemNotificationsAfterValue('partsnap_field_stop_saved');

@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import { test } from 'node:test';
 import vm from 'node:vm';
 import * as packetShare from '../js/packet-share.js';
+import { i18nText } from '../js/i18n.js';
 
 const app = readFileSync(join(import.meta.dirname, '..', 'js', 'app.js'), 'utf8');
 const html = readFileSync(join(import.meta.dirname, '..', 'index.html'), 'utf8');
@@ -23,6 +24,7 @@ function sharingContext() {
     navigator: { userAgent: 'Desktop', async share(payload) { shared.push(payload.text); } },
     document: {},
     getLanguageProfile: () => ({ preferredLanguage: 'es' }),
+    a3Text: (key) => i18nText('es', key),
     trackSplashLensEvent: (name, props) => events.push([name, props]),
     showSplashLensNotice: (message) => notices.push(message),
     validateReportProof: () => ({ complete: true }),
@@ -35,7 +37,7 @@ function sharingContext() {
     escHtml: escape,
   });
   const integration = slice('let _lastSecureProofPacket = null;', 'async function submitProofPacketForTeamReview')
-    .replace("await import('./packet-share.js')", 'await Promise.resolve(packetShare)');
+    .replace("await import('./packet-share.js?v=20261009-restart-a4')", 'await Promise.resolve(packetShare)');
   vm.runInContext(integration, context);
   vm.runInContext(slice('function codeCard(', 'function toggleCode('), context);
   vm.runInContext(slice('function renderServicePassportHistory(', 'function servicePassportDetail('), context);
@@ -84,6 +86,19 @@ test('every opened code card has Text it and shares the selected-language answer
   await context.textCodeAnswer({ closest: () => ({ dataset: { code: 'E01', answerName: 'Pump fault', answerProof: 'Flow low \/ Check filter' } }) });
   assert.match(shared[0], /^Respuesta de código de SplashLens\nCódigo: E01\nResultado: Pump fault\nEvidencia: Flow low \/ Check filter$/);
   assert.equal(events[1][1].surface, 'code_answer');
+});
+
+test('saved PartSnap stops have a short Spanish text handoff without a fitment claim', async () => {
+  const { context, shared, events } = sharingContext();
+  context.getPartSnapFieldStops = () => [{
+    id: 'field-stop-1',
+    partSnap: { manufacturer: 'Hayward', component: 'pump lid', visibleEvidence: ['Molded mark'], missingProof: ['Model plate'] },
+  }];
+  await context.textPartSnapProofStop('field-stop-1');
+  assert.match(shared[0], /Pieza posible: Hayward pump lid/);
+  assert.match(shared[0], /Aún se necesita: Model plate/);
+  assert.equal(events[1][1].surface, 'partsnap_stop');
+  assert.match(app, /onclick="textPartSnapProofStop\('\$\{escAttr\(stop.id\)\}'\)"/);
 });
 
 test('live Text it is completion-gated and no new send or commerce UI is introduced', () => {
