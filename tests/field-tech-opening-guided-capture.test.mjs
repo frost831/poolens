@@ -58,3 +58,13 @@ test('PartSnap verification and buying links fail closed', () => {
   assert.match(app, /ORDER HOLD/);
   assert.match(app, /manufacturer parts diagram/);
 });
+
+test('blocked PartSnap photo offers a manual proof path without inventing a result', () => {
+  const preflight = app.match(/function showPartSnapImagePreflight[\s\S]*?\n}/)?.[0] || '';
+  const fallback = app.match(/function openPartSnapPreflightManualFallback[\s\S]*?\n}/)?.[0] || '';
+  assert.match(preflight, /Document manually/);
+  assert.match(preflight, /openPartSnapPreflightManualFallback\(\)/);
+  assert.doesNotMatch(preflight, /requestPartSnapSecondProof\(\)/);
+  assert.match(fallback, /partsnap_manual_fallback/);
+  assert.match(fallback, /startServiceProofWorkflow\('part'\)/);
+});

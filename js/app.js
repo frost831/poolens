@@ -8672,10 +8672,15 @@ function showPartSnapImagePreflight(preflight, result, status) {
         </div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-        <button onclick="captureAndAnalyze()" style="background:#ea580c;color:#fff;border:0;border-radius:9px;padding:12px 9px;font-size:12px;font-weight:950;cursor:pointer;">Retake now</button>
-        <button onclick="requestPartSnapSecondProof()" style="background:#0f172a;color:#fed7aa;border:1px solid #92400e;border-radius:9px;padding:12px 9px;font-size:12px;font-weight:950;cursor:pointer;">Show proof tips</button>
+        <button type="button" onclick="captureAndAnalyze()" style="background:#ea580c;color:#fff;border:0;border-radius:9px;padding:12px 9px;font-size:12px;font-weight:950;cursor:pointer;">Retake now</button>
+        <button type="button" onclick="openPartSnapPreflightManualFallback()" style="background:#0f172a;color:#fed7aa;border:1px solid #92400e;border-radius:9px;padding:12px 9px;font-size:12px;font-weight:950;cursor:pointer;">Document manually</button>
       </div>
     </div>`;
+}
+
+function openPartSnapPreflightManualFallback() {
+  trackSplashLensEvent('partsnap_manual_fallback', { source: 'photo_preflight' });
+  startServiceProofWorkflow('part');
 }
 
 function aiScanLabel() {
