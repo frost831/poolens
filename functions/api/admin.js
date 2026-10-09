@@ -256,7 +256,7 @@ async function dashboardSnapshot(db) {
     safeAll(db, `SELECT id, actor_email AS actorEmail, action, target_type AS targetType, target_id AS targetId, created_at AS createdAt FROM audit_records ORDER BY created_at DESC LIMIT 30`),
     safeAll(db, `SELECT "trigger" AS "trigger", brand, model, query, status, COUNT(*) AS count,
       MAX(created_at) AS lastSeen
-      FROM library_misses WHERE created_at >= datetime('now', '-7 days')
+      FROM library_misses WHERE traffic_class = 'real' AND created_at >= datetime('now', '-7 days')
       GROUP BY "trigger", brand, model, query, status
       ORDER BY count DESC, lastSeen DESC LIMIT 50`),
   ]);
@@ -296,7 +296,7 @@ async function updateLibraryMissStatus(db, request, body) {
   }
   const result = await db.prepare(
     `UPDATE library_misses SET status = ? WHERE "trigger" = ? AND brand = ? AND model = ? AND query = ?
-     AND created_at >= datetime('now', '-7 days')`,
+     AND traffic_class = 'real' AND created_at >= datetime('now', '-7 days')`,
   ).bind(status, trigger, brand, model, query).run();
   if (!result.meta?.changes) return { ok: false, statusCode: 404, error: 'Library miss not found.' };
   await logAudit(db, request, 'admin_library_miss_status_updated', 'library_miss', '', { status, count: result.meta.changes });

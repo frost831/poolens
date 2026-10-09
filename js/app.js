@@ -3631,6 +3631,7 @@ function toggleCode(uid) {
 
 function onErrorSearch(q) {
   q = q.trim().toLowerCase();
+  clearTimeout(onErrorSearch._missTimer);
   if (q.length >= 3) window.SplashLensFieldSignals?.onSearch(q);
   const clearBtn = document.getElementById('search-clear');
   clearBtn.style.display = q ? '' : 'none';
@@ -3666,6 +3667,13 @@ function onErrorSearch(q) {
   }
   if (!matches.length) {
     const otherBrandMatches = S.brand ? searchErrorDB(q).length : 0;
+    if (!otherBrandMatches && q.length >= 3) {
+      onErrorSearch._missTimer = setTimeout(() => {
+        if (document.getElementById('error-search')?.value.trim().toLowerCase() === q && !searchErrorDB(q).length) {
+          reportLibraryMiss('code_no_hit', { brand: S.brand || '', query: q });
+        }
+      }, 650);
+    }
     document.getElementById('error-results').innerHTML =
       `<div style="color:#64748b;text-align:center;padding:32px 16px;font-size:14px;">
         <p>${a3Text('code.noResultsFor')} "${escHtml(q)}"${S.brand ? ` ${a3Text('code.inThisBrand')}` : ''}.</p>
@@ -9118,6 +9126,7 @@ function showPartSnapImagePreflight(preflight, result, status) {
 
 function openPartSnapPreflightManualFallback() {
   trackSplashLensEvent('partsnap_manual_fallback', { source: 'photo_preflight' });
+  reportLibraryMiss('manual_fallback', { query: 'photo preflight manual ID' });
   startServiceProofWorkflow('part');
 }
 
@@ -10587,6 +10596,43 @@ function renderPartsSnapResult(ai, result, status) {
 
 function trackPartSnapResultFailure(reason, props = {}) {
   trackSplashLensEvent('partsnap_result_fail', { source: 'app', workflow: 'partsnap_result', reason, ...props });
+  if (reason === 'low_confidence' || reason === 'no_match') {
+    const part = _lastPartSnapResult || {};
+    reportLibraryMiss(reason === 'low_confidence' ? 'partsnap_low' : 'partsnap_no_match', {
+      brand: part.manufacturer || '', model: part.model || '',
+      query: part.partNumber || part.component || 'unidentified pool part',
+    });
+  }
+}
+
+function libraryMissText(value, maxLength) {
+  const text = String(value || '').trim().replace(/\s+/g, ' ').slice(0, maxLength);
+  if (!text || !/^[\p{L}\p{N}][\p{L}\p{N} #._/+\-]*$/u.test(text)) return '';
+  if (/@|\b(?:https?|www|street|st|avenue|ave|road|rd|drive|dr|lane|ln|boulevard|blvd|apt|suite)\b|(?:\d[\s().-]*){7,}/i.test(text)) return '';
+  return text;
+}
+
+function reportLibraryMiss(trigger, details = {}) {
+  const brand = libraryMissText(details.brand, 60);
+  const model = libraryMissText(details.model, 80);
+  const query = libraryMissText(details.query, 120);
+  if (!brand && !model && !query) return false;
+  if (trigger === 'code_no_hit' && (!query || !(/[0-9]/.test(query) || /\b(?:pump|filter|heater|salt|robot|light|spa|automation|cleaner|code)\b/i.test(query)))) return false;
+  const key = `${trigger}:${brand}:${model}:${query}`.toLowerCase();
+  reportLibraryMiss.sent ||= new Set();
+  if (reportLibraryMiss.sent.has(key)) return false;
+  reportLibraryMiss.sent.add(key);
+  const payload = {
+    trigger, brand, model, query, source: 'app',
+    utm_source: new URLSearchParams(window.location.search).get('utm_source') || '',
+    webdriver: navigator.webdriver === true,
+  };
+  trackSplashLensEvent('library_miss', { trigger, brand, model, query });
+  fetch('/api/library-miss', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload), keepalive: true,
+  }).catch(() => {});
+  return true;
 }
 
 function renderPartSnapFeedbackTrap(ai = {}, candidates = [], ladder = {}, missingProof = [], risk = {}) {
@@ -11817,6 +11863,7 @@ function setScanBrand(brand) {
 function scanCodeSearch(val) {
   const el = document.getElementById('scan-lookup-results');
   if (!el) return;
+  clearTimeout(scanCodeSearch._missTimer);
   const query = val.trim();
   if (!query) {
     el.innerHTML = `<p style="color:#475569;font-size:13px;text-align:center;padding:24px 0;">Enter an error code to search</p>`;
@@ -11828,6 +11875,13 @@ function scanCodeSearch(val) {
   el.innerHTML = renderScanHits(hits, query, true);
   if (!hits.length && _scanBrand && searchErrorDB(query).length) {
     el.innerHTML += `<button type="button" onclick="setScanBrand(null)" style="display:block;width:100%;margin:10px 0;background:#0369a1;color:#fff;border:0;border-radius:6px;padding:10px;font-weight:800;cursor:pointer;">Search all brands</button>`;
+  }
+  if (!hits.length && safeQuery.length >= 3 && !searchErrorDB(query).length) {
+    scanCodeSearch._missTimer = setTimeout(() => {
+      if (document.getElementById('scan-code-input')?.value.trim() === query && !searchErrorDB(query).length) {
+        reportLibraryMiss('code_no_hit', { brand: _scanBrand || '', query });
+      }
+    }, 650);
   }
   const trackingKey = `${_scanBrand || 'all'}:${safeQuery}`;
   if (safeQuery.length >= 2 && scanCodeSearch._lastTracked !== trackingKey) {

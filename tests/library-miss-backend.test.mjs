@@ -78,6 +78,7 @@ test('admin lists seven-day top misses only with secret and updates status', asy
   t.after(() => sql.close());
   await saveMiss({ request: missRequest(miss), env });
   await saveMiss({ request: missRequest(miss), env });
+  await saveMiss({ request: missRequest({ ...miss, source: 'qa' }, { 'CF-Connecting-IP': '203.0.113.44' }), env });
   sql.prepare(`INSERT INTO library_misses (id, created_at, "trigger", brand, model, query, client_hash, traffic_class)
     VALUES ('old', datetime('now', '-8 days'), 'code_no_hit', 'Hayward', 'SP2600', 'old-query', 'hash', 'real')`).run();
   const unauthorized = new Request('https://app.splashlens.com/api/admin');
@@ -99,6 +100,7 @@ test('admin lists seven-day top misses only with secret and updates status', asy
   assert.equal((await postAdmin({ request: update, env })).status, 200);
   assert.equal(sql.prepare("SELECT status FROM library_misses WHERE id = 'old'").get().status, 'new');
   assert.equal(sql.prepare("SELECT COUNT(*) AS count FROM library_misses WHERE status = 'reviewing'").get().count, 2);
+  assert.equal(sql.prepare("SELECT status FROM library_misses WHERE traffic_class = 'qa'").get().status, 'new');
   assert.equal((await getAdmin({ request: authorized(), env }).then((r) => r.json())).libraryMisses[0].status, 'reviewing');
 });
 

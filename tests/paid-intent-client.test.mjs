@@ -36,6 +36,7 @@ function harness(names, overrides = {}) {
     navigator: { onLine: true }, window: {},
     escHtml: value => String(value), escAttr: value => String(value),
     a3Text: key => key,
+    reportLibraryMiss: () => {},
     ...overrides,
   });
   if (names.includes('startWebCheckout')) vm.runInContext('let checkoutPending = false;', context);

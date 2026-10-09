@@ -145,6 +145,7 @@ test('bundled code answer renders offline without fetching', () => {
     S: { brand: null, category: null },
     document: { getElementById: (id) => elements[id] },
     fetch: () => { fetches++; throw new Error('network unavailable'); },
+    clearTimeout: () => {},
     trackSplashLensEvent: () => {},
     getSplashLensRole: () => 'tech',
     escHtml: (value) => String(value),
