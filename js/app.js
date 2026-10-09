@@ -684,6 +684,7 @@ document.addEventListener('DOMContentLoaded', () => {
   trackSplashLensAppOpen();
   initCheckoutClientTracking();
   initUpgradeHandoff();
+  initFreezeAlerts();
 });
 
 // ═══════════════════════════════════════════
@@ -4801,6 +4802,8 @@ async function loadClosingPassOffer() {
 function switchClType(type) {
   if (type === 'closing') trackClosingChecklistStart();
   S.clType = type;
+  const freezeSettings = document.getElementById('freeze-settings');
+  if (freezeSettings) freezeSettings.hidden = type !== 'closing';
   ['opening','closing','weekly','monthly'].forEach(t => {
     const btn = document.getElementById(`cl-btn-${t}`);
     if (btn) btn.classList.toggle('active', t === type);
@@ -4810,6 +4813,136 @@ function switchClType(type) {
   const freq = document.getElementById('cl-freq-label');
   if (freq) freq.textContent = meta.freq === 'Season Progress' ? a3Text('closing.seasonProgress') : meta.freq;
   renderChecklist();
+}
+
+const FREEZE_SUBSCRIPTION_KEY = 'splashlens-freeze-subscription-v1';
+let freezeZip3 = '';
+let freezeRequestVersion = 0;
+
+function freezeToken() {
+  try {
+    const token = localStorage.getItem(FREEZE_SUBSCRIPTION_KEY) || '';
+    return /^[a-f0-9]{64}$/.test(token) ? token : '';
+  } catch { return ''; }
+}
+
+function newFreezeToken() {
+  return Array.from(crypto.getRandomValues(new Uint8Array(32)), byte => byte.toString(16).padStart(2, '0')).join('');
+}
+
+function setFreezeStatus(message) {
+  const status = document.getElementById('freeze-status');
+  if (status) status.textContent = message;
+}
+
+function renderFreezeSubscription(optedIn, zip3 = '') {
+  freezeZip3 = optedIn ? zip3 : '';
+  document.getElementById('freeze-optin-form').hidden = optedIn;
+  document.getElementById('freeze-optout').hidden = !optedIn;
+  if (!optedIn) document.getElementById('freeze-banner').hidden = true;
+}
+
+function showFreezeAlerts(alerts) {
+  const banner = document.getElementById('freeze-banner');
+  banner.hidden = true;
+  if (!Array.isArray(alerts) || !alerts.length) return;
+  const alert = alerts[0];
+  if (!['Freeze Warning', 'Hard Freeze Warning', 'Freeze Watch'].includes(alert.event)) return;
+  let source;
+  try { source = new URL(alert.url); } catch { return; }
+  if (source.protocol !== 'https:' || source.hostname !== 'api.weather.gov' || !source.pathname.startsWith('/alerts/')) return;
+  document.getElementById('freeze-banner-title').textContent = `NWS ${alert.event} near ZIP ${freezeZip3}`;
+  document.getElementById('freeze-banner-detail').textContent = 'Issued for the representative ZIP3 point, not your exact address. Verify the alert area and instructions with NWS.';
+  document.getElementById('freeze-nws-link').href = source.href;
+  banner.hidden = false;
+  trackSplashLensEvent('freeze_alert_shown', { event_type: alert.event });
+}
+
+function showFreezeAlertUnavailable() {
+  if (!freezeToken()) return;
+  document.getElementById('freeze-banner-title').textContent = 'NWS alerts unavailable';
+  document.getElementById('freeze-banner-detail').textContent = 'SplashLens could not check alerts. Check your exact location with the National Weather Service before closing.';
+  document.getElementById('freeze-nws-link').href = 'https://www.weather.gov/alerts';
+  document.getElementById('freeze-banner').hidden = false;
+}
+
+async function fetchFreezeAlerts(token) {
+  const version = ++freezeRequestVersion;
+  const response = await fetch('/api/freeze-alerts', { headers: { 'X-Freeze-Subscription': token }, cache: 'no-store' });
+  const data = await response.json();
+  if (version !== freezeRequestVersion) return;
+  if (!response.ok || !data.ok) throw new Error(data.error || 'NWS alerts are unavailable.');
+  renderFreezeSubscription(data.optedIn, data.zip3 || '');
+  if (!data.optedIn) {
+    localStorage.removeItem(FREEZE_SUBSCRIPTION_KEY);
+    setFreezeStatus('Freeze warnings are off.');
+    return;
+  }
+  showFreezeAlerts(data.alerts);
+  setFreezeStatus(data.alerts?.length ? `NWS alert for ZIP ${data.zip3}.` : `On for ZIP ${data.zip3}. No matching NWS alert at the representative point right now.`);
+}
+
+async function optInFreezeAlerts(event) {
+  event.preventDefault();
+  const input = document.getElementById('freeze-zip');
+  const consent = document.getElementById('freeze-consent');
+  const zip = input.value.trim();
+  if (!consent.checked || !/^\d{3}(?:\d{2})?$/.test(zip)) {
+    setFreezeStatus('Enter a 3- or 5-digit ZIP and check the consent box.');
+    return;
+  }
+  const token = freezeToken() || newFreezeToken();
+  setFreezeStatus('Saving...');
+  try {
+    const response = await fetch('/api/freeze-alerts', {
+      method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Freeze-Subscription': token },
+      body: JSON.stringify({ zip }), cache: 'no-store',
+    });
+    const data = await response.json();
+    if (!response.ok || !data.ok) throw new Error(data.error || 'Could not save opt-in.');
+    localStorage.setItem(FREEZE_SUBSCRIPTION_KEY, token);
+    input.value = '';
+    consent.checked = false;
+    renderFreezeSubscription(true, data.zip3);
+    trackSplashLensEvent('freeze_alert_optin', { event_type: 'opt_in' });
+    await fetchFreezeAlerts(token);
+  } catch (error) {
+    showFreezeAlertUnavailable();
+    setFreezeStatus(error.message || 'NWS alerts are unavailable. Check weather.gov directly.');
+  }
+}
+
+async function optOutFreezeAlerts() {
+  const token = freezeToken();
+  if (!token) return;
+  freezeRequestVersion++;
+  document.getElementById('freeze-banner').hidden = true;
+  setFreezeStatus('Turning off...');
+  try {
+    const response = await fetch('/api/freeze-alerts', { method: 'DELETE', headers: { 'X-Freeze-Subscription': token }, cache: 'no-store' });
+    if (!response.ok) throw new Error('Could not turn off alerts. Try again.');
+    localStorage.removeItem(FREEZE_SUBSCRIPTION_KEY);
+    renderFreezeSubscription(false);
+    setFreezeStatus('Freeze warnings are off.');
+  } catch (error) { setFreezeStatus(error.message); }
+}
+
+function initFreezeAlerts() {
+  document.getElementById('freeze-optin-form')?.addEventListener('submit', optInFreezeAlerts);
+  document.getElementById('freeze-optout')?.addEventListener('click', optOutFreezeAlerts);
+  document.getElementById('freeze-banner-optout')?.addEventListener('click', optOutFreezeAlerts);
+  document.querySelectorAll('[data-freeze-link], #freeze-nws-link').forEach(link => link.addEventListener('click', () => {
+    trackSplashLensEvent('freeze_alert_clicked', { event_type: document.getElementById('freeze-banner-title').textContent.replace(/^NWS (.*?) near ZIP.*$/, '$1'), destination: link.dataset.freezeLink || 'nws' });
+  }));
+  const token = freezeToken();
+  if (token) {
+    renderFreezeSubscription(true);
+    fetchFreezeAlerts(token).catch(() => {
+      if (!freezeToken()) return;
+      showFreezeAlertUnavailable();
+      setFreezeStatus('NWS alerts are unavailable. You can still turn off alerts or check weather.gov directly.');
+    });
+  }
 }
 
 function renderChecklist() {

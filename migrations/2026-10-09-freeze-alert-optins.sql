@@ -1,0 +1,6 @@
+CREATE TABLE IF NOT EXISTS freeze_alert_optins (
+  subscriber_hash TEXT PRIMARY KEY,
+  zip3 TEXT NOT NULL CHECK (length(zip3) = 3 AND zip3 NOT GLOB '*[^0-9]*'),
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
