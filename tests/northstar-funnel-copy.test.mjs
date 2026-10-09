@@ -78,11 +78,14 @@ test('saving job history requires a free save profile signal', () => {
 });
 
 test('service worker cache version ships the newest account bundle', () => {
-  assert.match(shell, /app\.js\?v=20261005-proof-packet/);
+  const shellAppUrl = shell.match(/<script src="(\/js\/app\.js\?v=[^"]+)"/ )?.[1];
+  const precacheAppUrl = sw.match(/'(\/js\/app\.js\?v=[^']+)'/)?.[1];
+  assert.equal(shellAppUrl, '/js/app.js?v=20261009-restart-a0');
+  assert.equal(precacheAppUrl, shellAppUrl);
   assert.match(shell, /errors\.js\?v=20261002-trust-fixes-3/);
-  assert.match(sw, /splashlens-v26-proof-packet/);
+  assert.match(sw, /const CACHE = 'splashlens-v27-restart-a0'/);
   assert.match(sw, /errors\.js\?v=20261002-trust-fixes-3/);
-  assert.match(sw, /app\.js\?v=20261005-proof-packet/);
+  assert.match(sw, /keys\.filter\(k => k !== CACHE\)/);
 });
 
 test('checkout exposes a JSON catalog and Splash Lens Pro Unlimited metadata', () => {
