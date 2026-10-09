@@ -1,10 +1,10 @@
-const CACHE = 'splashlens-v36-store-promo';
+const CACHE = 'splashlens-v37-freeze-g0';
 const ASSETS = [
   '/',
   '/js/errors.js?v=20261002-trust-fixes-3',
   '/js/data.js?v=20261002-trust-fixes-2',
   '/js/i18n.js?v=20261009-restart-a7',
-  '/js/app.js?v=20261009-restart-a8',
+  '/js/app.js?v=20261009-freeze-g0',
   '/js/packet-share.js?v=20261009-restart-a4',
   '/js/truck-qr.js?v=20261009-restart-a5',
   '/js/vendor/qrcode-generator.mjs?v=20261009-restart-a5',

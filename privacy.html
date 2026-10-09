@@ -145,7 +145,7 @@
   </header>
 
   <main class="wrap">
-    <div class="date">Effective date: May 28, 2026</div>
+    <div class="date">Effective date: October 9, 2026</div>
     <div class="summary">
       Short version: most SplashLens field data stays on your device. We do not sell personal data. Camera images are only sent for analysis when you choose to use the online scan feature.
     </div>
@@ -159,6 +159,7 @@
     <section>
       <h2>2. Data Stored On Your Device</h2>
       <p>SplashLens stores core field information locally in your browser or app webview, including pool profiles, chemistry entries, route notes, checklist progress, and service report drafts.</p>
+      <p>If you opt into in-app freeze warnings, your device stores a random subscription token. Our server stores only a hash of that token and your first three ZIP digits; the full ZIP you enter is not retained. You can turn warnings off in Closing Mode, which deletes the server subscription. No email or text messages are sent for this feature.</p>
       <ul>
         <li>This local field data is not synced to a SplashLens account by default unless you choose an account-backed save, proof, team, or pilot workflow.</li>
         <li>We cannot recover local field data if you clear browser/app storage or change devices.</li>
@@ -191,6 +192,7 @@
       <p>SplashLens may use these service providers to operate the app:</p>
       <ul>
         <li>Cloudflare for hosting, security, serverless functions, and basic request logs.</li>
+        <li>The National Weather Service public API for active alerts at a representative point for your ZIP prefix; we send that point, not your ZIP or address.</li>
         <li>Anthropic or another AI analysis provider for optional online scan processing.</li>
         <li>Stripe, Apple, or Google for checkout, subscription, purchase, or store operations if paid features are offered.</li>
         <li>Email providers for user support, waitlist, or transactional messages.</li>
