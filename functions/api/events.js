@@ -1,4 +1,5 @@
 import { amplitudeEnabled, forwardEventToAmplitude } from '../_shared/amplitude.mjs';
+import { classifyTraffic } from '../_shared/traffic-class.mjs';
 
 const LOW_SIGNAL_EVENTS = new Set(['session_heartbeat']);
 
@@ -150,7 +151,7 @@ export async function onRequestPost({ request, env }) {
   if (!event) {
     return new Response(JSON.stringify({ ok: false, error: 'Event name required' }), { status: 400, headers });
   }
-  if (['checkout_session_created', 'checkout_completed', 'subscription_created', 'entitlement_granted'].includes(event)) {
+  if (['checkout_click_server', 'checkout_session_created', 'checkout_completed', 'subscription_created', 'entitlement_granted'].includes(event)) {
     return new Response(JSON.stringify({ ok: false, error: 'Payment proof is recorded by the server.' }), { status: 403, headers });
   }
 
@@ -164,6 +165,8 @@ export async function onRequestPost({ request, env }) {
   const referrer = safeUrlField(request.headers.get('Referer') || body.referrer || props.referrer, '');
   const userAgent = clean(request.headers.get('User-Agent'), 300);
   const country = clean(request.cf && request.cf.country, 10);
+  props.traffic_class = classifyTraffic({ source, utmSource: rawProps.attribution_source || rawProps.utm_source, userAgent, path: rawPath, props: rawProps, webdriver: rawProps.webdriver === true });
+  props.is_internal = props.traffic_class !== 'real';
   const propsJson = JSON.stringify(props).slice(0, 2400);
 
   if (isInternalNoise({ event, source, path: rawPath, userAgent, props })) {

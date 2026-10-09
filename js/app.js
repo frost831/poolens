@@ -621,6 +621,7 @@ document.addEventListener('DOMContentLoaded', () => {
   trackReferralLandingOpen();
   trackSplashLensAppOpen();
   initCheckoutClientTracking();
+  initUpgradeHandoff();
 });
 
 // ═══════════════════════════════════════════
@@ -649,7 +650,7 @@ function showTab(name) {
 
 function initMarketingGate() {
   const params = new URLSearchParams(window.location.search);
-  const hasToolIntent = params.has('tab') || params.has('activate_scan') || params.has('token') || params.has('session_id') || params.has('sl_login_email') || params.has('sl_login_code');
+  const hasToolIntent = params.has('tab') || params.has('upgrade') || params.has('activate_scan') || params.has('token') || params.has('session_id') || params.has('sl_login_email') || params.has('sl_login_code');
   if (hasToolIntent || window.matchMedia('(display-mode: standalone)').matches || navigator.standalone) {
     revealSplashLensApp();
   }
@@ -2145,7 +2146,7 @@ async function openSplashLensPaidLane(planKey, label) {
     const payload = await response.json();
     const plan = (payload.plans || []).find(item => item.key === safePlan);
     if (plan && plan.checkoutConfigured) {
-      window.location.href = trackCheckoutIntent(safePlan, 'paid_lane');
+      await startWebCheckout(safePlan, 'paid_lane');
       return;
     }
   } catch {}
@@ -9411,6 +9412,12 @@ function trackSplashLensEvent(name, props = {}) {
     ...getFieldChallengeContext(),
     ...props,
   });
+  const campaignSource = new URLSearchParams(window.location.search).get('utm_source') || attribution.source || '';
+  const ua = String(navigator.userAgent || '').toLowerCase();
+  const qaSources = new Set(['qa', 'codex', 'codex_smoke', 'launch-gate-test']);
+  eventProps.traffic_class = qaSources.has(String(campaignSource).toLowerCase()) || props.test === true || props.synthetic === true ? 'qa'
+    : navigator.webdriver === true || /bot|crawler|spider|preview|headless|curl|python-requests|node-fetch/i.test(ua) ? 'bot' : 'real';
+  eventProps.is_internal = eventProps.traffic_class !== 'real';
   window.dataLayer = window.dataLayer || [];
   window.dataLayer.push({ event: name, ...eventProps, ts: new Date().toISOString() });
   if (window.plausible) window.plausible(name, { props: eventProps });
@@ -10348,6 +10355,55 @@ function trackPostValueUpgrade(plan, placement = 'partsnap_result') {
   return url;
 }
 
+let checkoutPending = false;
+async function startWebCheckout(plan, placement) {
+  if (isStoreShellMode() || checkoutPending) return false;
+  const url = trackCheckoutIntent(plan, placement);
+  const body = Object.fromEntries(new URL(url, window.location.origin).searchParams);
+  checkoutPending = true;
+  try {
+    const response = await fetch('/api/checkout', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+      credentials: 'same-origin',
+    });
+    const result = await response.json();
+    const target = new URL(result.url || '', window.location.origin);
+    if (!response.ok || !['checkout.stripe.com', 'buy.stripe.com'].includes(target.hostname) || target.protocol !== 'https:') {
+      throw new Error(result.error || 'Secure checkout is unavailable. Please try again.');
+    }
+    window.location.assign(target.href);
+    return true;
+  } catch (error) {
+    showSplashLensNotice(error.message || 'Secure checkout is unavailable. Please try again.');
+    return false;
+  } finally {
+    checkoutPending = false;
+  }
+}
+
+async function initUpgradeHandoff() {
+  const params = new URLSearchParams(window.location.search);
+  if (!params.has('upgrade') || isStoreShellMode()) return;
+  const plan = /year|annual/i.test(params.get('upgrade') || '') ? 'yearly' : 'monthly';
+  const placement = /^[a-z0-9_-]{1,80}$/.test(params.get('placement') || '') ? params.get('placement') : 'site_upgrade';
+  let label = plan === 'yearly' ? 'Splash Lens Pro Unlimited Annual' : 'Splash Lens Pro Unlimited Monthly';
+  try {
+    const response = await fetch('/api/checkout?catalog=1', { cache: 'no-store' });
+    const catalog = await response.json();
+    const item = catalog.plans?.find(candidate => candidate.key === `partsnap_pro_${plan}`);
+    if (item) label = `${item.label} - ${item.priceLabel}`;
+  } catch {}
+  revealSplashLensApp();
+  await openSplashLensSheet({
+    eyebrow: 'Secure web checkout', title: label,
+    body: 'Continue to Stripe to review the plan and payment details. Manual lookup stays free.',
+    primaryLabel: 'Continue to Stripe', secondaryLabel: 'Not now',
+    submit: () => startWebCheckout(plan, placement),
+  });
+}
+
 function createCheckoutUUID() {
   if (typeof crypto.randomUUID === 'function') return crypto.randomUUID();
   const bytes = crypto.getRandomValues(new Uint8Array(16));
@@ -10419,6 +10475,13 @@ function initCheckoutClientTracking() {
   window.addEventListener('resize', schedule);
   document.addEventListener('visibilitychange', schedule);
   document.addEventListener('click', event => {
+    const link = event.target.closest?.('a[data-checkout-plan]');
+    if (link && !isStoreShellMode()) {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      startWebCheckout(link.dataset.checkoutPlan, link.dataset.checkoutPlacement);
+      return;
+    }
     if (!isStoreShellMode() || !event.target.closest?.(selector)) return;
     event.preventDefault();
     event.stopImmediatePropagation();
@@ -10427,11 +10490,8 @@ function initCheckoutClientTracking() {
   document.addEventListener('auxclick', event => {
     const link = event.target.closest?.('a[data-checkout-plan]');
     if (!link || event.button !== 1) return;
-    if (isStoreShellMode()) {
-      event.preventDefault();
-      return;
-    }
-    link.href = trackCheckoutIntent(link.dataset.checkoutPlan, link.dataset.checkoutPlacement);
+    event.preventDefault();
+    if (!isStoreShellMode()) startWebCheckout(link.dataset.checkoutPlan, link.dataset.checkoutPlacement);
   }, true);
   scan();
 }

@@ -80,10 +80,10 @@ test('saving job history requires a free save profile signal', () => {
 test('service worker cache version ships the newest account bundle', () => {
   const shellAppUrl = shell.match(/<script src="(\/js\/app\.js\?v=[^"]+)"/ )?.[1];
   const precacheAppUrl = sw.match(/'(\/js\/app\.js\?v=[^']+)'/)?.[1];
-  assert.equal(shellAppUrl, '/js/app.js?v=20261009-restart-a0');
+  assert.equal(shellAppUrl, '/js/app.js?v=20261009-restart-a1');
   assert.equal(precacheAppUrl, shellAppUrl);
   assert.match(shell, /errors\.js\?v=20261002-trust-fixes-3/);
-  assert.match(sw, /const CACHE = 'splashlens-v27-restart-a0'/);
+  assert.match(sw, /const CACHE = 'splashlens-v28-restart-a1'/);
   assert.match(sw, /errors\.js\?v=20261002-trust-fixes-3/);
   assert.match(sw, /keys\.filter\(k => k !== CACHE\)/);
 });

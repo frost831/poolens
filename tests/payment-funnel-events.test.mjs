@@ -3,7 +3,7 @@ import { DatabaseSync } from 'node:sqlite';
 import { createHmac } from 'node:crypto';
 import test from 'node:test';
 import { checkoutAttribution, recordPaymentEvent } from '../functions/_shared/payment-funnel.mjs';
-import { onRequestGet as checkout } from '../functions/api/checkout.js';
+import { onRequestPost as checkout } from '../functions/api/checkout.js';
 import { onRequestGet as checkoutSuccess } from '../functions/api/checkout-success.js';
 import { onRequestPost as webhook } from '../functions/api/stripe-webhook.js';
 import { onRequestPost as events } from '../functions/api/events.js';
@@ -35,6 +35,12 @@ function database() {
 
 const reference = 'sl_checkout_5d46a1e0-a882-4c96-9c93-6558d2e34149';
 const attribution = { source: 'app', client_reference_id: reference, client_id: '5d46a1e0-a882-4c96-9c93-6558d2e34149', session_id: 'session-qa123-5d46a1e0', placement: 'helpful_lookup', store: 'web' };
+function checkoutRequest(plan = 'monthly', props = attribution) {
+  return new Request('https://app.splashlens.com/api/checkout', {
+    method: 'POST', headers: { 'Content-Type': 'application/json', 'User-Agent': 'Mozilla/5.0 Safari/605.1' },
+    body: JSON.stringify({ plan, ...props }),
+  });
+}
 
 test('checkout carries anonymous click attribution into Stripe and records the created session', async (t) => {
   const db = database();
@@ -50,17 +56,23 @@ test('checkout carries anonymous click attribution into Stripe and records the c
     return Response.json({ code: 200 });
   });
   const response = await checkout({
-    request: new Request(`https://app.splashlens.com/api/checkout?plan=monthly&${new URLSearchParams(attribution)}`),
+    request: checkoutRequest(),
     env: { STRIPE_SECRET_KEY: 'fixture', SUBSCRIBERS_DB: db, AMPLITUDE_API_KEY: 'fixture' },
   });
-  assert.equal(response.status, 302);
+  assert.equal(response.status, 200);
+  const retry = await checkout({
+    request: checkoutRequest(),
+    env: { STRIPE_SECRET_KEY: 'fixture', SUBSCRIBERS_DB: db, AMPLITUDE_API_KEY: 'fixture' },
+  });
+  assert.equal(retry.status, 200);
   assert.equal(params.get('client_reference_id'), reference);
   assert.equal(params.get('metadata[source]'), 'app');
   assert.equal(params.get('subscription_data[metadata][client_id]'), attribution.client_id);
   const row = db.sql.prepare("SELECT * FROM events WHERE event = 'checkout_session_created'").get();
   assert.equal(JSON.parse(row.props).client_reference_id, reference);
-  assert.equal(amplitudeEvents[0].device_id, attribution.client_id);
-  assert.equal(amplitudeEvents[0].event_type, 'checkout_session_created');
+  assert.deepEqual(amplitudeEvents.map(event => event.event_type), ['checkout_click_server', 'checkout_session_created']);
+  assert.equal(amplitudeEvents[1].device_id, attribution.client_id);
+  assert.equal(db.sql.prepare("SELECT COUNT(*) AS count FROM events WHERE event = 'checkout_click_server'").get().count, 1);
 });
 
 test('server proof is stored once and strips personal attribution values', async (t) => {
@@ -88,10 +100,10 @@ test('site checkout reference is preserved through session creation without pers
     return Response.json({ id: 'cs_live_sitefixture', url: 'https://checkout.stripe.com/c/pay/sitefixture' });
   });
   const response = await checkout({
-    request: new Request(`https://app.splashlens.com/api/checkout?plan=yearly&source=site&placement=site_pricing&store=web&client_reference_id=${reference}`),
+    request: checkoutRequest('yearly', { source: 'site', placement: 'site_pricing', store: 'web', client_reference_id: reference }),
     env: { STRIPE_SECRET_KEY: 'fixture', SUBSCRIBERS_DB: db },
   });
-  assert.equal(response.status, 302);
+  assert.equal(response.status, 200);
   assert.equal(params.get('client_reference_id'), reference);
   assert.equal(params.get('metadata[source]'), 'site');
   assert.equal(params.get('metadata[placement]'), 'site_pricing');
@@ -105,14 +117,14 @@ test('analytics failure cannot prevent a valid checkout redirect', async (t) => 
   t.mock.method(console, 'warn', () => {});
   t.mock.method(console, 'error', () => {});
   t.mock.method(globalThis, 'fetch', async () => Response.json({ id: 'cs_local', url: 'https://checkout.stripe.com/c/pay/local' }));
-  const response = await checkout({ request: new Request('https://app.splashlens.com/api/checkout'), env: {
+  const response = await checkout({ request: checkoutRequest(), env: {
     STRIPE_SECRET_KEY: 'fixture', SUBSCRIBERS_DB: { prepare() { throw new Error('analytics offline'); } },
   } });
-  assert.equal(response.status, 302);
+  assert.equal(response.status, 200);
 });
 
 test('public event ingestion cannot forge any server payment proof', async () => {
-  for (const event of ['checkout_session_created', 'checkout_completed', 'subscription_created', 'entitlement_granted']) {
+  for (const event of ['checkout_click_server', 'checkout_session_created', 'checkout_completed', 'subscription_created', 'entitlement_granted']) {
     const response = await events({ request: new Request('https://app.splashlens.com/api/events', { method: 'POST', body: JSON.stringify({ event }) }), env: {} });
     assert.equal(response.status, 403);
   }
