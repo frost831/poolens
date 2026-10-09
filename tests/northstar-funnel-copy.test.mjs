@@ -90,7 +90,7 @@ test('service worker cache version ships the newest account bundle', () => {
   assert.match(app, /import\('\.\/packet-share\.js\?v=20261009-restart-a4'\)/);
   assert.match(sw, /\/js\/packet-share\.js\?v=20261009-restart-a4/);
   assert.match(shell, /errors\.js\?v=20261002-trust-fixes-3/);
-  assert.match(sw, /const CACHE = 'splashlens-v39-freeze-g0'/);
+  assert.match(sw, /const CACHE = 'splashlens-v40-freeze-g0'/);
   assert.match(sw, /\/js\/crm-proof-export\.js\?v=20261009-pc20/);
   assert.match(sw, /errors\.js\?v=20261002-trust-fixes-3/);
   assert.match(sw, /keys\.filter\(k => k !== CACHE\)/);

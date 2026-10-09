@@ -1,5 +1,7 @@
 # SplashLens App Store Metadata
 
+PC-G-08 draft handoff (not submitted): see `2026-10-growth-listing-drafts.md` for en-US and es-MX candidate copy. The existing listing and native metadata remain unchanged. Spanish copy requires native-speaker review and Mac/store policy approval before use.
+
 Generated: 2026-09-02
 
 App: SplashLens
