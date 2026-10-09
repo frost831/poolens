@@ -14,7 +14,7 @@ test('all four localized listings have complete in-limit fields', () => {
     new Set(['ios/en-US', 'ios/es-MX', 'play/en-US', 'play/es-419']));
 });
 
-test('counts Unicode characters, including Spanish accents, exactly', () => {
+test('counts localized fields as characters and iOS keywords as UTF-8 bytes', () => {
   const { counts } = validateDrafts(drafts);
   const byField = Object.fromEntries(counts.map(({ id, field, count }) => [`${id}.${field}`, count]));
   assert.deepEqual(byField, {
@@ -26,16 +26,19 @@ test('counts Unicode characters, including Spanish accents, exactly', () => {
     'ios/es-MX.name': 27,
     'ios/es-MX.subtitle': 22,
     'ios/es-MX.keywords': 79,
-    'ios/es-MX.promotionalText': 124,
-    'ios/es-MX.description': 1034,
+    'ios/es-MX.promotionalText': 114,
+    'ios/es-MX.description': 1035,
     'play/en-US.title': 27,
     'play/en-US.shortDescription': 71,
     'play/en-US.fullDescription': 893,
     'play/es-419.title': 27,
     'play/es-419.shortDescription': 71,
-    'play/es-419.fullDescription': 1001,
+    'play/es-419.fullDescription': 1002,
   });
   assert.equal([...'Códigos'].length, 7);
+  const accented = structuredClone(drafts);
+  accented[1].keywords = 'á'.repeat(51);
+  assert.ok(validateDrafts(accented).errors.some(error => error.includes('ios/es-MX.keywords: 102 > 100')));
 });
 
 test('rejects over-limit copy, missing fields, and disallowed promises', () => {

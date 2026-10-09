@@ -51,7 +51,9 @@ export function validateDrafts(drafts) {
         errors.push(`${id}.${key}: missing text`);
         continue;
       }
-      const count = [...value].length;
+      const count = draft.platform === 'ios' && key === 'keywords'
+        ? Buffer.byteLength(value, 'utf8')
+        : [...value].length;
       counts.push({ id, field: key, count, max });
       if (count > max) errors.push(`${id}.${key}: ${count} > ${max}`);
       if (value !== value.trim()) errors.push(`${id}.${key}: leading or trailing whitespace`);
