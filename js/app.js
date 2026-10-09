@@ -714,7 +714,7 @@ function getCounterStartState() {
 
 function initCounterModeHome(start) {
   const params = new URLSearchParams(window.location.search);
-  if (['tab', 'mode', 'workflow', 'checklist', 'challenge', 'activate_scan', 'token', 'session_id', 'sl_login_email', 'sl_login_code', 'upgrade'].some(key => params.has(key)) || getFacilityDeepLinkParts()) return;
+  if (params.get('open') === 'last_pool' || ['tab', 'mode', 'workflow', 'checklist', 'challenge', 'activate_scan', 'token', 'session_id', 'sl_login_email', 'sl_login_code', 'upgrade'].some(key => params.has(key)) || getFacilityDeepLinkParts()) return;
   counterFirstOpen = Boolean(start.firstOpen);
   if (start.lastTab) showTab(start.lastTab);
   else if (start.firstOpen) showTab('counter');

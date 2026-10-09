@@ -119,7 +119,7 @@ test('Counter card exposes QR actions and does not change script or cache versio
   assert.equal((app.match(/trackSplashLensEvent\('truck_qr_created'/g) || []).length, 3);
   assert.doesNotMatch(app, /trackSplashLensEvent\('(last_pool_saved|last_pool_fallback|truck_qr_opened|truck_qr_printed|truck_qr_downloaded)'/);
   assert.match(app, /import\('\.\/truck-qr\.js\?v=20261009-restart-a5'\)/);
-  assert.match(html, /<script src="\/js\/app\.js\?v=20261009-restart-a5"><\/script>/);
+  assert.match(html, /<script src="\/js\/app\.js\?v=20261009-restart-a5-fallback"><\/script>/);
 });
 
 test('Last pool card stays hidden until a valid local pool pointer exists', () => {
@@ -130,4 +130,17 @@ test('Last pool card stays hidden until a valid local pool pointer exists', () =
   h.context.savePools([{ id: 'pool-4', name: 'Maple', servicePassports: [] }]);
   h.context.saveLastPoolPointer('pool-4', 'completed_stop');
   assert.equal(h.elements['last-pool-counter-card'].classList.active, true);
+});
+
+test('last-pool deep link is not overwritten by a previously saved tab', () => {
+  const tabs = [];
+  const context = vm.createContext({
+    URLSearchParams,
+    window: { location: { search: '?open=last_pool&utm_source=truck_qr' } },
+    getFacilityDeepLinkParts: () => null,
+    showTab: tab => tabs.push(tab),
+  });
+  vm.runInContext("let counterFirstOpen = false;" + section('function initCounterModeHome(', 'function openCounterTool('), context);
+  context.initCounterModeHome({ firstOpen: false, lastTab: 'errors' });
+  assert.deepEqual(tabs, []);
 });
