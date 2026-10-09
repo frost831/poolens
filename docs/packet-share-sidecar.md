@@ -1,0 +1,7 @@
+# A4 packet share sidecar
+
+`js/packet-share.js` is an opt-in browser module. It does not mount UI or send a request. The coordinator can call `composeProofPacket({ language, kind, code, summary, evidence, passportUrl })`, then call `shareProofPacket({ packet, surface, onEvent })` directly inside the Text it button handler. `kind` is `proof` or `code`; `language` is `en` or `es`. The event callback receives only `packet_share_tapped` or `packet_shared` with `{ channel, surface }`, never the packet body.
+
+The module accepts only HTTPS Passport links at the existing `/api/proof-packets/<32-character-id>` route on allowed SplashLens hosts. Input fields containing commerce language or currency markers are omitted; all output is bounded to 480 UTF-16 code units. It does not accept a recipient, store a phone number, or send SMS from a server.
+
+The default SMS opener dispatches a temporary `sms:` anchor. Browsers do not provide a reliable callback confirming that the external messaging app launched; `packet_shared` for SMS means the link click was dispatched without an exception, not that a recipient received a message. For deterministic testing or a host-native launch contract, inject `openSms(url, document)` and return `true` only when that launcher accepts the URL; `false` or a thrown error continues to the share sheet, then clipboard. Share-sheet cancellation stops the sequence without copying. `packet_shared` for those latter channels fires only when their promises resolve.
