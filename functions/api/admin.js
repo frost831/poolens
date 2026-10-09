@@ -233,6 +233,7 @@ async function dashboardSnapshot(db) {
     learning,
     teamBilling,
     audit,
+    libraryMisses,
   ] = await Promise.all([
     count(db, `SELECT COUNT(*) AS value FROM commercial_entitlements`),
     count(db, `SELECT COUNT(*) AS value FROM commercial_entitlements WHERE status IN ('active','trialing','pilot') AND COALESCE(source, '') <> 'd1_payment_backfill'`),
@@ -253,6 +254,11 @@ async function dashboardSnapshot(db) {
     safeAll(db, `SELECT id, title, lane, audience, source_proof_id AS sourceProofId, status, created_by AS createdBy, created_at AS createdAt FROM learning_modules ORDER BY created_at DESC LIMIT 25`),
     safeAll(db, `SELECT tb.team_id AS teamId, t.name AS teamName, tb.plan, tb.status, tb.seat_limit AS seatLimit, tb.billing_email AS billingEmail, tb.current_period_end AS currentPeriodEnd FROM team_billing tb LEFT JOIN teams t ON t.id = tb.team_id ORDER BY tb.updated_at DESC LIMIT 25`),
     safeAll(db, `SELECT id, actor_email AS actorEmail, action, target_type AS targetType, target_id AS targetId, created_at AS createdAt FROM audit_records ORDER BY created_at DESC LIMIT 30`),
+    safeAll(db, `SELECT "trigger" AS "trigger", brand, model, query, status, COUNT(*) AS count,
+      MAX(created_at) AS lastSeen
+      FROM library_misses WHERE traffic_class = 'real' AND created_at >= datetime('now', '-7 days')
+      GROUP BY "trigger", brand, model, query, status
+      ORDER BY count DESC, lastSeen DESC LIMIT 50`),
   ]);
   return {
     totals: {
@@ -273,7 +279,28 @@ async function dashboardSnapshot(db) {
     learning,
     teamBilling,
     audit,
+    libraryMisses,
   };
+}
+
+async function updateLibraryMissStatus(db, request, body) {
+  const trigger = clean(body.trigger, 40);
+  const brand = clean(body.brand, 60);
+  const model = clean(body.model, 80);
+  const query = clean(body.query, 120);
+  const status = clean(body.status, 20).toLowerCase();
+  if (!['code_no_hit', 'partsnap_low', 'partsnap_no_match', 'manual_fallback'].includes(trigger)
+      || !['new', 'reviewing', 'resolved', 'dismissed'].includes(status)
+      || (!brand && !model && !query)) {
+    return { ok: false, statusCode: 400, error: 'Invalid library miss update.' };
+  }
+  const result = await db.prepare(
+    `UPDATE library_misses SET status = ? WHERE "trigger" = ? AND brand = ? AND model = ? AND query = ?
+     AND traffic_class = 'real' AND created_at >= datetime('now', '-7 days')`,
+  ).bind(status, trigger, brand, model, query).run();
+  if (!result.meta?.changes) return { ok: false, statusCode: 404, error: 'Library miss not found.' };
+  await logAudit(db, request, 'admin_library_miss_status_updated', 'library_miss', '', { status, count: result.meta.changes });
+  return { ok: true };
 }
 
 async function updateEntitlement(db, request, body) {
@@ -369,6 +396,7 @@ export async function onRequestPost({ request, env }) {
   else if (action === 'update_team_billing') result = await updateTeamBilling(env.SUBSCRIBERS_DB, request, body);
   else if (action === 'approve_partner_card') result = await approvePartnerCard(env.SUBSCRIBERS_DB, request, body);
   else if (action === 'publish_learning_module') result = await publishLearningModule(env.SUBSCRIBERS_DB, request, body);
+  else if (action === 'update_library_miss_status') result = await updateLibraryMissStatus(env.SUBSCRIBERS_DB, request, body);
   else result = { ok: false, statusCode: 400, error: 'Unknown admin action.' };
   if (!result.ok) return json(result, result.statusCode || 400, headers);
   return json({ ...result, ...(await dashboardSnapshot(env.SUBSCRIBERS_DB)) }, 200, headers);

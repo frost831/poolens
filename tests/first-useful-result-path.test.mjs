@@ -108,6 +108,7 @@ test('brand-filtered zero result offers an all-brand retry without losing the qu
     document: { getElementById: (id) => elements[id] },
     window: { ERROR_DB: { pentair: { label: 'Pentair', color: '#000' } } },
     searchErrorDB: (_query, brand) => brand ? [] : [{ brandKey: 'pentair', category: 'Pump', code: 'E05' }],
+    clearTimeout: () => {},
     trackSplashLensEvent: (name, props) => events.push({ name, props }),
     getSplashLensRole: () => 'tech',
     escHtml: (value) => value,

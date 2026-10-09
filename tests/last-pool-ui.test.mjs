@@ -119,7 +119,7 @@ test('Counter card exposes QR actions and does not change script or cache versio
   assert.equal((app.match(/trackSplashLensEvent\('truck_qr_created'/g) || []).length, 3);
   assert.doesNotMatch(app, /trackSplashLensEvent\('(last_pool_saved|last_pool_fallback|truck_qr_opened|truck_qr_printed|truck_qr_downloaded)'/);
   assert.match(app, /import\('\.\/truck-qr\.js\?v=20261009-restart-a5'\)/);
-  assert.match(html, /<script src="\/js\/app\.js\?v=20261009-restart-a7"><\/script>/);
+  assert.match(html, /<script src="\/js\/app\.js\?v=20261009-restart-a8"><\/script>/);
 });
 
 test('Last pool card stays hidden until a valid local pool pointer exists', () => {
