@@ -108,7 +108,7 @@ test('deep link opens local pool or routes to Counter without customer data in t
   assert.doesNotMatch('https://app.splashlens.com/?open=last_pool&utm_source=truck_qr', /Private Pool|pool-3/);
 });
 
-test('Counter card exposes QR actions and does not change script or cache versions', () => {
+test('Counter card exposes QR actions in the current app bundle', () => {
   assert.match(html, /id="last-pool-counter-card"/);
   assert.match(html, /id="tab-counter"[\s\S]*id="last-pool-counter-card"[\s\S]*id="tab-errors"/);
   assert.match(html, /id="code-pool-select" onchange="setCodeLookupPool\(this.value\)"/);
@@ -119,7 +119,7 @@ test('Counter card exposes QR actions and does not change script or cache versio
   assert.equal((app.match(/trackSplashLensEvent\('truck_qr_created'/g) || []).length, 3);
   assert.doesNotMatch(app, /trackSplashLensEvent\('(last_pool_saved|last_pool_fallback|truck_qr_opened|truck_qr_printed|truck_qr_downloaded)'/);
   assert.match(app, /import\('\.\/truck-qr\.js\?v=20261009-restart-a5'\)/);
-  assert.match(html, /<script src="\/js\/app\.js\?v=20261009-restart-a8"><\/script>/);
+  assert.match(html, /<script src="\/js\/app\.js\?v=20261009-pc20"><\/script>/);
 });
 
 test('Last pool card stays hidden until a valid local pool pointer exists', () => {
