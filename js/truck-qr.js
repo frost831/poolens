@@ -1,4 +1,4 @@
-import qrcode from './vendor/qrcode-generator.mjs';
+import qrcode from './vendor/qrcode-generator.mjs?v=20261009-restart-a5';
 
 export const TRUCK_QR_URL = 'https://app.splashlens.com/?open=last_pool&utm_source=truck_qr';
 export const TRUCK_QR_FILENAME = 'splashlens-truck-qr.svg';

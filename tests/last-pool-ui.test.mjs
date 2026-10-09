@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
 import vm from 'node:vm';
+import { i18nText } from '../js/i18n.js';
 
 const app = readFileSync(new URL('../js/app.js', import.meta.url), 'utf8');
 const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
@@ -18,7 +19,7 @@ function harness(initialPools = []) {
   const events = [];
   const elements = {
     'code-pool-select': { innerHTML: '', value: '' },
-    'last-pool-counter-card': { innerHTML: '' },
+    'last-pool-counter-card': { innerHTML: '', classList: { active: false, toggle(name, enabled) { if (name === 'has-pool') this.active = enabled; } } },
   };
   const tabs = [];
   const roles = [];
@@ -32,6 +33,7 @@ function harness(initialPools = []) {
     escHtml: value => String(value).replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;'),
     escAttr: value => String(value).replaceAll('"', '&quot;'),
     showSplashLensNotice: () => {},
+    a3Text: key => i18nText('en', key),
     revealSplashLensApp: () => {},
     renderPoolDetail: id => tabs.push(`detail:${id}`),
     showTab: tab => tabs.push(tab),
@@ -48,6 +50,7 @@ test('completed stop writes Last pool only after proof-ready save to an attached
     validateReportProof: () => ({ complete: false, missing: ['water'] }),
     findPoolForReport: () => h.context.getPools()[0],
     buildServicePassport: () => ({ id: 'proof-1', date: '2026-10-09', proof: { complete: true } }),
+    currentProofPassportUrl: () => '',
     saveSplashLensCommercialProof: () => Promise.resolve({ ok: false }),
     window: { SplashLensFieldSignals: { offerSystemNotificationsAfterValue() {} } },
   });
@@ -100,20 +103,31 @@ test('deep link opens local pool or routes to Counter without customer data in t
 
   h.context.savePools([]);
   h.context.initDeepLink();
-  assert.equal(h.roles.at(-1).role, 'counter');
+  assert.equal(h.tabs.at(-1), 'counter');
   assert.equal(h.events.filter(event => event.name === 'last_pool_opened').length, 2);
   assert.doesNotMatch('https://app.splashlens.com/?open=last_pool&utm_source=truck_qr', /Private Pool|pool-3/);
 });
 
 test('Counter card exposes QR actions and does not change script or cache versions', () => {
   assert.match(html, /id="last-pool-counter-card"/);
+  assert.match(html, /id="tab-counter"[\s\S]*id="last-pool-counter-card"[\s\S]*id="tab-errors"/);
   assert.match(html, /id="code-pool-select" onchange="setCodeLookupPool\(this.value\)"/);
-  assert.match(html, /\.counter-mode \.last-pool-card \{ display:block; \}/);
+  assert.match(html, /\.last-pool-card\.has-pool \{ display:block; \}/);
   for (const action of ['createTruckQr', 'printTruckQrSticker', 'downloadTruckQrSticker']) {
     assert.match(app, new RegExp(`function ${action}\\(`));
   }
   assert.equal((app.match(/trackSplashLensEvent\('truck_qr_created'/g) || []).length, 3);
   assert.doesNotMatch(app, /trackSplashLensEvent\('(last_pool_saved|last_pool_fallback|truck_qr_opened|truck_qr_printed|truck_qr_downloaded)'/);
-  assert.match(app, /import\('\.\/truck-qr\.js'\)/);
-  assert.match(html, /<script src="\/js\/app\.js\?v=20261009-restart-a1"><\/script>/);
+  assert.match(app, /import\('\.\/truck-qr\.js\?v=20261009-restart-a5'\)/);
+  assert.match(html, /<script src="\/js\/app\.js\?v=20261009-restart-a5"><\/script>/);
+});
+
+test('Last pool card stays hidden until a valid local pool pointer exists', () => {
+  const h = harness();
+  h.context.renderLastPoolCounterCard();
+  assert.equal(h.elements['last-pool-counter-card'].classList.active, false);
+  assert.equal(h.elements['last-pool-counter-card'].innerHTML, '');
+  h.context.savePools([{ id: 'pool-4', name: 'Maple', servicePassports: [] }]);
+  h.context.saveLastPoolPointer('pool-4', 'completed_stop');
+  assert.equal(h.elements['last-pool-counter-card'].classList.active, true);
 });

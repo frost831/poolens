@@ -400,6 +400,8 @@ function selectAppLanguage(language) {
   languageSheetSurface = '';
   refreshFirstUsePreferenceButtons();
   applySplashLensLocalization();
+  renderCodePoolSelector();
+  renderLastPoolCounterCard();
   if (S.clType) switchClType(S.clType);
   trackSplashLensEvent('language_selected', { language: profile.preferredLanguage, surface });
   trackSplashLensEvent('language_preference_set', { preferred_language: profile.preferredLanguage, locale: profile.locale, source: surface });
@@ -6196,7 +6198,7 @@ function renderCodePoolSelector() {
   if (!select) return;
   const pools = getPools();
   const attachedPoolId = pools.some(pool => pool.id === select.value) ? select.value : '';
-  select.innerHTML = '<option value="">No pool attached</option>' + pools.map(pool =>
+  select.innerHTML = `<option value="">${a3Text('counter.noPoolAttached')}</option>` + pools.map(pool =>
     `<option value="${escAttr(pool.id)}">${escHtml(pool.name || 'Unnamed pool')}</option>`
   ).join('');
   select.value = attachedPoolId;
@@ -6218,21 +6220,26 @@ function renderLastPoolCounterCard() {
   if (!card) return;
   const entry = getLastPool();
   const pool = entry?.pool;
+  card.classList.toggle('has-pool', Boolean(pool));
+  if (!pool) {
+    card.innerHTML = '';
+    return;
+  }
   const visits = pool?.servicePassports || [];
   const readings = pool?.history || [];
   const latestVisit = visits.at(-1);
   const latestProof = visits.filter(visit => visit.proof?.complete).at(-1);
   const visitDate = latestVisit?.date || latestVisit?.savedAt || readings.at(-1)?.date;
   card.innerHTML = `
-    <h2>Last pool</h2>
-    <p><strong>${pool ? escHtml(pool.name || 'Unnamed pool') : 'No pool saved yet'}</strong></p>
-    <p>Last visit: ${escHtml(pool ? lastPoolDate(visitDate) : 'Not recorded')}</p>
-    <p>Last proof: ${escHtml(latestProof ? `Proof ready ${lastPoolDate(latestProof.savedAt || latestProof.date)}` : 'No saved proof yet')}</p>
+    <h2>${a3Text('counter.lastPool')}</h2>
+    <p><strong>${escHtml(pool.name || a3Text('packet.unnamedPool'))}</strong></p>
+    <p>${a3Text('counter.lastVisit')}: ${escHtml(visitDate ? lastPoolDate(visitDate) : a3Text('counter.notRecorded'))}</p>
+    <p>${a3Text('counter.lastProof')}: ${escHtml(latestProof ? `${a3Text('counter.proofReady')} ${lastPoolDate(latestProof.savedAt || latestProof.date)}` : a3Text('counter.noProof'))}</p>
     <div class="last-pool-actions">
-      ${pool ? '<button type="button" onclick="openLastPool(\'card\')">Open pool</button>' : '<button type="button" onclick="showTab(\'pools\')">Add pool</button>'}
-      <button type="button" onclick="createTruckQr()">Create truck QR</button>
-      <button type="button" onclick="printTruckQrSticker()">Print QR</button>
-      <button type="button" onclick="downloadTruckQrSticker()">Download SVG</button>
+      <button type="button" onclick="openLastPool('card')">${a3Text('counter.openPool')}</button>
+      <button type="button" onclick="createTruckQr()">${a3Text('counter.truckQr')}</button>
+      <button type="button" onclick="printTruckQrSticker()">${a3Text('counter.printQr')}</button>
+      <button type="button" onclick="downloadTruckQrSticker()">${a3Text('counter.downloadQr')}</button>
     </div>
     <div id="truck-qr-preview" aria-live="polite"></div>`;
 }
@@ -6246,13 +6253,14 @@ function openLastPool(source = 'card') {
     trackSplashLensEvent('last_pool_opened', { source });
     return true;
   }
-  setSplashLensRole('counter', { persist: false, source: 'last_pool_fallback' });
+  revealSplashLensApp();
+  showTab('counter');
   return false;
 }
 
 async function createTruckQr() {
   try {
-    const { createTruckQrSvg } = await import('./truck-qr.js');
+    const { createTruckQrSvg } = await import('./truck-qr.js?v=20261009-restart-a5');
     const preview = document.getElementById('truck-qr-preview');
     if (!preview) return;
     preview.innerHTML = createTruckQrSvg();
@@ -6264,7 +6272,7 @@ async function createTruckQr() {
 
 async function printTruckQrSticker() {
   try {
-    const { printTruckQr } = await import('./truck-qr.js');
+    const { printTruckQr } = await import('./truck-qr.js?v=20261009-restart-a5');
     if (!printTruckQr()) {
       showSplashLensNotice('Allow the print window to open, then try again.');
       return;
@@ -6277,7 +6285,7 @@ async function printTruckQrSticker() {
 
 async function downloadTruckQrSticker() {
   try {
-    const { downloadTruckQr } = await import('./truck-qr.js');
+    const { downloadTruckQr } = await import('./truck-qr.js?v=20261009-restart-a5');
     downloadTruckQr();
     trackSplashLensEvent('truck_qr_created');
   } catch {

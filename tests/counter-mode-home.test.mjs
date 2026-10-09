@@ -119,6 +119,7 @@ test('showTab persists real tab transitions and ignores invalid tabs or blocked 
     getFacilityDeepLinkParts: () => null,
     trackProductTabChange: () => {},
     trackSplashLensEvent: () => {},
+    renderCodePoolSelector: () => {},
   };
   vm.runInNewContext('const COUNTER_SEEN_KEY = "splashlens-counter-home-seen-v1"; const FIELD_TABS = new Set(["counter", "errors"]); let counterFirstOpen = true;' + section('getCounterStartState', 'showTab') + section('showTab', 'initMarketingGate'), context);
   context.showTab('counter');

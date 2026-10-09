@@ -1,11 +1,13 @@
-const CACHE = 'splashlens-v31-restart-a4';
+const CACHE = 'splashlens-v32-restart-a5';
 const ASSETS = [
   '/',
   '/js/errors.js?v=20261002-trust-fixes-3',
   '/js/data.js?v=20261002-trust-fixes-2',
-  '/js/i18n.js?v=20261009-restart-a4',
-  '/js/app.js?v=20261009-restart-a4',
+  '/js/i18n.js?v=20261009-restart-a5',
+  '/js/app.js?v=20261009-restart-a5',
   '/js/packet-share.js?v=20261009-restart-a4',
+  '/js/truck-qr.js?v=20261009-restart-a5',
+  '/js/vendor/qrcode-generator.mjs?v=20261009-restart-a5',
   '/js/partsnap-boss-packet.js?v=20261005-boss-draft',
   '/js/field-signals.js?v=20260728-field-signals',
   '/js/analytics.js',
