@@ -1356,6 +1356,13 @@
         <p style="color:#0f766e;font-size:10px;font-weight:950;letter-spacing:.12em;text-transform:uppercase;margin-bottom:5px;">CRM companion</p>
         <h2 style="color:#0f172a;font-size:18px;line-height:1.1;font-weight:950;margin-bottom:7px;">Export the proof into whatever system runs the company.</h2>
         <p style="color:#64748b;font-size:12px;line-height:1.45;margin-bottom:10px;">SplashLens does the field proof. Jobber, Skimmer, Pool Brain, Paythepoolman, spreadsheets, or the office can keep the schedule and invoice.</p>
+        <p class="brain-pill ready" style="display:inline-flex;margin-bottom:10px;">We don't replace your CRM; we complement Pool Brain &amp; peers.</p>
+        <div class="brain-grid" style="margin-bottom:8px;">
+          <button type="button" class="brain-action secondary" onclick="copyCrmProofPacket('skimmer')">Copy for Skimmer</button>
+          <button type="button" class="brain-action secondary" onclick="copyCrmProofPacket('poolBrain')">Copy for Pool Brain</button>
+          <button type="button" class="brain-action secondary" onclick="copyCrmProofPacket('jobber')">Copy for Jobber</button>
+          <button type="button" class="brain-action secondary" onclick="copyCrmProofPacket('ptp')">Copy for PTP</button>
+        </div>
         <div class="brain-grid">
           <button type="button" class="brain-action green" onclick="copyCustomerSafeSummary()">Copy Customer Summary</button>
           <button type="button" class="brain-action secondary" onclick="downloadServiceProofJson()">Download Proof JSON</button>
@@ -1737,7 +1744,7 @@
   <script src="/js/errors.js?v=20261002-trust-fixes-3"></script>
   <script src="/js/data.js?v=20261002-trust-fixes-2"></script>
   <script type="module" src="/js/i18n.js?v=20261009-restart-a7"></script>
-  <script src="/js/app.js?v=20261009-restart-a8"></script>
+  <script src="/js/app.js?v=20261009-pc20"></script>
   <script type="module" src="/js/partsnap-boss-packet.js?v=20261005-boss-draft"></script>
   <script type="module" src="/js/field-signals.js?v=20260728-field-signals"></script>
   <script src="/js/analytics.js"></script>

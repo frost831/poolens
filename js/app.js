@@ -5403,6 +5403,34 @@ function copyRouteNote() {
   });
 }
 
+async function copyCrmProofPacket(destination, passport = null) {
+  try {
+    const { formatCrmProofPacket } = await import('./crm-proof-export.js?v=20261009-pc20');
+    const text = formatCrmProofPacket(passport || buildServicePassport(), destination);
+    copyTextToClipboard(text, 'CRM proof note copied.');
+    trackSplashLensEvent('service_proof_crm_copy_tapped', {
+      destination,
+      source: passport ? 'saved_passport' : 'current_report',
+      proof_ready: (passport || null)?.proof?.complete === true || (!passport && validateReportProof({ quiet: true }).complete),
+    });
+    return text;
+  } catch {
+    showSplashLensNotice('CRM proof note could not be prepared.');
+    return '';
+  }
+}
+
+function copySavedCrmProofPacket(button) {
+  const pool = findPoolById(button.dataset.poolId);
+  const index = Number(button.dataset.passportIndex);
+  const passport = Number.isSafeInteger(index) && index >= 0 ? pool?.servicePassports?.[index] : null;
+  if (!passport) {
+    showSplashLensNotice('Saved Service Passport is unavailable.');
+    return;
+  }
+  return copyCrmProofPacket(button.dataset.destination, passport);
+}
+
 const SERVICE_PROOF_FAQ = [
   {
     keys: ['crm', 'jobber', 'skimmer', 'pool brain', 'replace'],
@@ -7016,6 +7044,9 @@ function renderServicePassportHistory(pool) {
         <div id="${uid}" class="pool-reading-detail">
           ${servicePassportDetail(r)}
           ${r.proof?.complete ? `<button type="button" class="brain-action secondary" data-pool-id="${escAttr(pool.id)}" data-passport-index="${passports.length - 1 - i}" onclick="event.stopPropagation();textSavedProofStop(this)">Text it</button>` : ''}
+          <div class="brain-grid" style="margin-top:8px;">
+            ${[['skimmer', 'Skimmer'], ['poolBrain', 'Pool Brain'], ['jobber', 'Jobber'], ['ptp', 'PTP']].map(([destination, label]) => `<button type="button" class="brain-action secondary" data-pool-id="${escAttr(pool.id)}" data-passport-index="${passports.length - 1 - i}" data-destination="${destination}" onclick="event.stopPropagation();copySavedCrmProofPacket(this)">Copy for ${label}</button>`).join('')}
+          </div>
         </div>
       </div>`;
   }).join('');
