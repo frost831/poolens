@@ -300,6 +300,16 @@
     .role-pref-row button.active { background:#0369a1; color:#ffffff; border-color:#0284c7; }
     .role-next-action { display:none; background:#ffffff; border:1px solid #99f6e4; border-left:4px solid #0f766e; border-radius:12px; padding:12px; margin-bottom:12px; box-shadow:var(--field-shadow-tight); }
     .role-next-action.active { display:block; }
+    .last-pool-card { display:none; background:#fff; border:1px solid #cbd5e1; border-left:4px solid #0f766e; border-radius:8px; padding:12px; margin:12px; }
+    .last-pool-card.has-pool { display:block; }
+    .last-pool-card h2 { color:#0f172a; font-size:16px; line-height:1.2; margin:0 0 6px; }
+    .last-pool-card p { color:#475569; font-size:12px; line-height:1.4; margin:3px 0; overflow-wrap:anywhere; }
+    .last-pool-actions { display:flex; flex-wrap:wrap; gap:7px; margin-top:10px; }
+    .last-pool-actions button { min-height:44px; padding:9px 11px; border-radius:8px; border:1px solid #94a3b8; background:#f8fafc; color:#0f172a; font-size:12px; font-weight:800; cursor:pointer; }
+    .last-pool-actions button:first-child { background:#0f766e; border-color:#0f766e; color:#fff; }
+    #truck-qr-preview svg { display:block; width:min(220px,100%); height:auto; margin:12px auto 2px; }
+    .code-pool-attach { display:flex; align-items:center; gap:8px; margin-bottom:10px; color:#475569; font-size:12px; font-weight:700; }
+    .code-pool-attach select { flex:1; min-width:0; min-height:44px; border:1px solid #cbd5e1; border-radius:8px; background:#fff; padding:8px; color:#0f172a; }
     .role-next-grid { display:grid; grid-template-columns:1.1fr .9fr; gap:10px; align-items:stretch; }
     .role-next-action h2 { color:#0f172a; font-size:20px; line-height:1.08; font-weight:950; margin-bottom:5px; }
     .role-next-action p { color:#475569; font-size:12px; line-height:1.4; margin-bottom:9px; }
@@ -912,6 +922,7 @@
           <button type="button" class="counter-action" onclick="openCounterTool('part')">Part<span>Open PartSnap</span></button>
           <button type="button" class="counter-action" onclick="openCounterTool('chem')">Chem<span>Calculate a dose</span></button>
         </div>
+        <section id="last-pool-counter-card" class="last-pool-card" aria-label="Last pool" aria-live="polite"></section>
       </section>
     </div>
 
@@ -950,6 +961,7 @@
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
           </button>
         </div>
+        <label class="code-pool-attach" for="code-pool-select"><span>Pool for lookup</span><select id="code-pool-select" onchange="setCodeLookupPool(this.value)"><option value="">No pool attached</option></select></label>
         <div id="brand-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:10px;"></div>
         <div id="category-strip" style="display:none;margin-bottom:12px;" class="scroll-x"></div>
         <div id="error-results">
@@ -1723,8 +1735,8 @@
 
   <script src="/js/errors.js?v=20261002-trust-fixes-3"></script>
   <script src="/js/data.js?v=20261002-trust-fixes-2"></script>
-  <script type="module" src="/js/i18n.js?v=20261009-restart-a4"></script>
-  <script src="/js/app.js?v=20261009-restart-a4"></script>
+  <script type="module" src="/js/i18n.js?v=20261009-restart-a5"></script>
+  <script src="/js/app.js?v=20261009-restart-a5"></script>
   <script type="module" src="/js/partsnap-boss-packet.js?v=20261005-boss-draft"></script>
   <script type="module" src="/js/field-signals.js?v=20260728-field-signals"></script>
   <script src="/js/analytics.js"></script>

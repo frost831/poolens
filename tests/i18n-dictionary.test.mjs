@@ -106,6 +106,7 @@ test('sheet and legacy select persist choice and emit the required language even
     S: { clType: '' },
     setPreferredLanguage: language => { profile.setItem('splashlens_language_profile', JSON.stringify({ preferredLanguage: language })); return { preferredLanguage: language, locale: language }; },
     refreshFirstUsePreferenceButtons() {}, applySplashLensLocalization() {},
+    renderCodePoolSelector() {}, renderLastPoolCounterCard() {},
     trackSplashLensEvent: (name, props) => events.push([name, props]),
   });
   vm.runInContext("let languageSheetSurface = '';" + functionSource('openLanguageSheet') + functionSource('selectAppLanguage'), context);

@@ -400,6 +400,8 @@ function selectAppLanguage(language) {
   languageSheetSurface = '';
   refreshFirstUsePreferenceButtons();
   applySplashLensLocalization();
+  renderCodePoolSelector();
+  renderLastPoolCounterCard();
   if (S.clType) switchClType(S.clType);
   trackSplashLensEvent('language_selected', { language: profile.preferredLanguage, surface });
   trackSplashLensEvent('language_preference_set', { preferred_language: profile.preferredLanguage, locale: profile.locale, source: surface });
@@ -756,6 +758,7 @@ function showTab(name) {
     try { localStorage.setItem(COUNTER_SEEN_KEY, '1'); } catch {}
   }
   if (name === 'route')  renderRoute();
+  if (name === 'errors') renderCodePoolSelector();
   if (name === 'scan')   initScanTab();
   if (name === 'dosing') renderSlamBanner();
   window.SplashLensFieldSignals?.onTabShown(name);
@@ -763,7 +766,7 @@ function showTab(name) {
 
 function initMarketingGate() {
   const params = new URLSearchParams(window.location.search);
-  const hasToolIntent = params.has('tab') || params.has('upgrade') || params.has('activate_scan') || params.has('token') || params.has('session_id') || params.has('sl_login_email') || params.has('sl_login_code');
+  const hasToolIntent = params.has('tab') || params.get('open') === 'last_pool' || params.has('upgrade') || params.has('activate_scan') || params.has('token') || params.has('session_id') || params.has('sl_login_email') || params.has('sl_login_code');
   if (hasToolIntent || window.matchMedia('(display-mode: standalone)').matches || navigator.standalone) {
     revealSplashLensApp();
   }
@@ -876,6 +879,11 @@ function startFieldChallenge(path = 'partsnap') {
 
 function initDeepLink() {
   const params = new URLSearchParams(window.location.search);
+  if (params.get('open') === 'last_pool') {
+    revealSplashLensApp();
+    openLastPool('truck_qr');
+    return;
+  }
   const tab = params.get('tab');
   const mode = params.get('mode');
   const workflow = params.get('workflow');
@@ -967,7 +975,8 @@ function initSplashLensPersonaMode() {
     params.has('token') ||
     params.has('session_id') ||
     params.has('workflow') ||
-    params.has('checklist')
+    params.has('checklist') ||
+    params.get('open') === 'last_pool'
   );
   if (hasDirectToolIntent) {
     revealSplashLensApp();
@@ -1043,6 +1052,7 @@ function setSplashLensRole(role, options = {}) {
   document.body.classList.toggle('facility-tools-hidden', cleanRole === 'facility');
   document.body.classList.toggle('trainer-mode', cleanRole === 'trainer');
   document.body.classList.toggle('counter-mode', cleanRole === 'counter');
+  renderLastPoolCounterCard();
   if (cleanRole === 'facility') {
     renderFacilityHome();
     trackFacilityEvent('wizard_open', { lane: '', role: cleanRole, forced: facilityForcedMode });
@@ -3608,6 +3618,8 @@ function toggleCode(uid) {
       answer_name: answerName,
       workflow: 'manual_code_search',
     });
+    const attachedPoolId = document.getElementById('code-pool-select')?.value;
+    if (attachedPoolId) saveLastPoolPointer(attachedPoolId, 'code_lookup');
     trackFirstUsefulResult('manual_code_answer', det, {
       role: getSplashLensRole(),
       code,
@@ -5638,6 +5650,7 @@ function saveReportToPoolHistory() {
   if (target.servicePassports.length > 100) target.servicePassports = target.servicePassports.slice(-100);
   savePools(pools);
   _reportPoolId = target.id;
+  saveLastPoolPointer(target.id, 'completed_stop');
 
   trackSplashLensEvent('service_report_saved', {
     proof_ready: proof.complete,
@@ -6140,6 +6153,7 @@ function interpMuriatic(ta) {
 // POOLS — CUSTOMER PROFILES
 // ═══════════════════════════════════════════
 const POOLS_KEY = 'poolens-pools';
+const LAST_POOL_KEY = 'splashlens-last-pool-v1';
 
 function getPools() {
   try { return JSON.parse(localStorage.getItem(POOLS_KEY) || '[]'); }
@@ -6148,10 +6162,135 @@ function getPools() {
 
 function savePools(pools) {
   localStorage.setItem(POOLS_KEY, JSON.stringify(pools));
+  renderCodePoolSelector();
+  renderLastPoolCounterCard();
 }
 
 function initPools() {
   renderPoolList();
+  renderCodePoolSelector();
+  renderLastPoolCounterCard();
+}
+
+function getLastPool() {
+  let pointer;
+  try { pointer = JSON.parse(localStorage.getItem(LAST_POOL_KEY) || 'null'); }
+  catch { return null; }
+  if (!pointer || typeof pointer.poolId !== 'string') return null;
+  const pool = getPools().find(item => item.id === pointer.poolId);
+  return pool ? { pool, pointer } : null;
+}
+
+function saveLastPoolPointer(poolId, source) {
+  if (!getPools().some(pool => pool.id === poolId)) return false;
+  try {
+    localStorage.setItem(LAST_POOL_KEY, JSON.stringify({ poolId, savedAt: new Date().toISOString(), source }));
+  } catch {
+    showSplashLensNotice('Last pool could not be saved on this device. Check available storage.');
+    return false;
+  }
+  renderLastPoolCounterCard();
+  return true;
+}
+
+function renderCodePoolSelector() {
+  const select = document.getElementById('code-pool-select');
+  if (!select) return;
+  const pools = getPools();
+  const attachedPoolId = pools.some(pool => pool.id === select.value) ? select.value : '';
+  select.innerHTML = `<option value="">${a3Text('counter.noPoolAttached')}</option>` + pools.map(pool =>
+    `<option value="${escAttr(pool.id)}">${escHtml(pool.name || 'Unnamed pool')}</option>`
+  ).join('');
+  select.value = attachedPoolId;
+}
+
+function setCodeLookupPool(poolId) {
+  const select = document.getElementById('code-pool-select');
+  if (select) select.value = getPools().some(pool => pool.id === poolId) ? poolId : '';
+}
+
+function lastPoolDate(value) {
+  const calendarDate = typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value);
+  const date = value ? new Date(calendarDate ? `${value}T12:00:00` : value) : null;
+  return date && !Number.isNaN(date.getTime()) ? date.toLocaleDateString() : 'Not recorded';
+}
+
+function renderLastPoolCounterCard() {
+  const card = document.getElementById('last-pool-counter-card');
+  if (!card) return;
+  const entry = getLastPool();
+  const pool = entry?.pool;
+  card.classList.toggle('has-pool', Boolean(pool));
+  if (!pool) {
+    card.innerHTML = '';
+    return;
+  }
+  const visits = pool?.servicePassports || [];
+  const readings = pool?.history || [];
+  const latestVisit = visits.at(-1);
+  const latestProof = visits.filter(visit => visit.proof?.complete).at(-1);
+  const visitDate = latestVisit?.date || latestVisit?.savedAt || readings.at(-1)?.date;
+  card.innerHTML = `
+    <h2>${a3Text('counter.lastPool')}</h2>
+    <p><strong>${escHtml(pool.name || a3Text('packet.unnamedPool'))}</strong></p>
+    <p>${a3Text('counter.lastVisit')}: ${escHtml(visitDate ? lastPoolDate(visitDate) : a3Text('counter.notRecorded'))}</p>
+    <p>${a3Text('counter.lastProof')}: ${escHtml(latestProof ? `${a3Text('counter.proofReady')} ${lastPoolDate(latestProof.savedAt || latestProof.date)}` : a3Text('counter.noProof'))}</p>
+    <div class="last-pool-actions">
+      <button type="button" onclick="openLastPool('card')">${a3Text('counter.openPool')}</button>
+      <button type="button" onclick="createTruckQr()">${a3Text('counter.truckQr')}</button>
+      <button type="button" onclick="printTruckQrSticker()">${a3Text('counter.printQr')}</button>
+      <button type="button" onclick="downloadTruckQrSticker()">${a3Text('counter.downloadQr')}</button>
+    </div>
+    <div id="truck-qr-preview" aria-live="polite"></div>`;
+}
+
+function openLastPool(source = 'card') {
+  const entry = getLastPool();
+  if (entry) {
+    revealSplashLensApp();
+    renderPoolDetail(entry.pool.id);
+    showTab('pools');
+    trackSplashLensEvent('last_pool_opened', { source });
+    return true;
+  }
+  revealSplashLensApp();
+  showTab('counter');
+  return false;
+}
+
+async function createTruckQr() {
+  try {
+    const { createTruckQrSvg } = await import('./truck-qr.js?v=20261009-restart-a5');
+    const preview = document.getElementById('truck-qr-preview');
+    if (!preview) return;
+    preview.innerHTML = createTruckQrSvg();
+    trackSplashLensEvent('truck_qr_created');
+  } catch {
+    showSplashLensNotice('Truck QR is unavailable on this device right now.');
+  }
+}
+
+async function printTruckQrSticker() {
+  try {
+    const { printTruckQr } = await import('./truck-qr.js?v=20261009-restart-a5');
+    if (!printTruckQr()) {
+      showSplashLensNotice('Allow the print window to open, then try again.');
+      return;
+    }
+    trackSplashLensEvent('truck_qr_created');
+  } catch {
+    showSplashLensNotice('Truck QR could not be printed on this device.');
+  }
+}
+
+async function downloadTruckQrSticker() {
+  try {
+    const { downloadTruckQr } = await import('./truck-qr.js?v=20261009-restart-a5');
+    downloadTruckQr();
+    trackSplashLensEvent('truck_qr_created');
+  } catch {
+    showSplashLensNotice('Truck QR could not be downloaded on this device.');
+  }
 }
 
 // ─── POOL LIST VIEW ───────────────────────
