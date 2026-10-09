@@ -1,5 +1,5 @@
 import { recordPaymentEvent, sessionAttribution } from '../_shared/payment-funnel.mjs';
-import { grantClosingPass, isClosingPass, verifiedClosingPassPayment } from '../_shared/closing-pass.mjs';
+import { closingPassRevocationStatus, grantClosingPass, isClosingPass, revokeClosingPassPayment, verifiedClosingPassPayment } from '../_shared/closing-pass.mjs';
 
 const TOKEN_PREFIX = 'sl_scan_v1';
 const ACCEPTED_EVENTS = new Set([
@@ -497,6 +497,14 @@ export async function onRequestPost({ request, env }) {
   }
 
   if (event.type !== 'checkout.session.completed' && event.type !== 'checkout.session.async_payment_succeeded') {
+    if (event.type === 'charge.refunded' || event.type === 'charge.dispute.created') {
+      const passRevocation = await revokeClosingPassPayment(event?.data?.object, event.type, env);
+      if (passRevocation.error) return json({ ok: false, error: 'Closing Pro revocation could not be completed.' }, 503);
+      if (passRevocation.handled) {
+        if (webhookDb) await markWebhookProcessed(webhookDb, receipt.eventId);
+        return json({ ok: true, event: event.type, closingPassRevoked: true, status: passRevocation.status });
+      }
+    }
     const storedLifecycle = await storeLifecycleEvent(event?.data?.object, event.type, env);
     if (webhookDb) await markWebhookProcessed(webhookDb, receipt.eventId);
     return json({
@@ -514,9 +522,18 @@ export async function onRequestPost({ request, env }) {
     if (session?.payment_status !== 'paid') {
       return json({ ok: true, ignored: true, event: event.type, reason: 'checkout_not_paid' });
     }
-    const paidAt = await verifiedClosingPassPayment(session, env);
-    if (!paidAt) return json({ ok: false, error: 'Closing Pro Stripe payment verification failed.' }, 503);
-    const stored = await grantClosingPass(session, paidAt, env, 'stripe_webhook');
+    const revokedStatus = await closingPassRevocationStatus(session, env);
+    if (revokedStatus) {
+      if (webhookDb) await markWebhookProcessed(webhookDb, receipt.eventId);
+      return json({ ok: true, ignored: true, event: event.type, reason: `closing_pass_${revokedStatus}` });
+    }
+    const payment = await verifiedClosingPassPayment(session, env);
+    if (!payment) return json({ ok: false, error: 'Closing Pro Stripe payment verification failed.' }, 503);
+    const stored = await grantClosingPass(session, payment.paidAt, env, 'stripe_webhook', payment.chargeId);
+    if (stored.reason === 'expired') {
+      if (webhookDb) await markWebhookProcessed(webhookDb, receipt.eventId);
+      return json({ ok: true, ignored: true, event: event.type, reason: 'closing_pass_expired' });
+    }
     if (!stored.ok) return json({ ok: false, error: stored.error }, stored.status);
     const proof = { plan: 'closing_pass_60d', path: '/api/stripe-webhook', props: { ...sessionAttribution(session), payment_status: session.payment_status } };
     await recordPaymentEvent(env, 'checkout_completed', session.id, proof);
