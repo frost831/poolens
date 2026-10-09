@@ -657,10 +657,7 @@ function initCounterModeHome(start) {
   if (['tab', 'mode', 'workflow', 'checklist', 'challenge', 'activate_scan', 'token', 'session_id', 'sl_login_email', 'sl_login_code', 'upgrade'].some(key => params.has(key)) || getFacilityDeepLinkParts()) return;
   counterFirstOpen = Boolean(start.firstOpen);
   if (start.lastTab) showTab(start.lastTab);
-  else if (start.firstOpen) {
-    showTab('counter');
-    try { localStorage.setItem('splashlens-last-field-tab', 'counter'); } catch {}
-  }
+  else if (start.firstOpen) showTab('counter');
 }
 
 function openCounterTool(button) {
@@ -680,16 +677,17 @@ function openCounterTool(button) {
 }
 
 function showTab(name) {
+  const panel = document.getElementById(`tab-${name}`);
+  if (!FIELD_TABS.has(name) || !panel) return;
   trackProductTabChange(name);
-  if (PRODUCT_INTELLIGENCE.startedAt) {
+  try {
     localStorage.setItem('splashlens-last-field-tab', name);
     localStorage.setItem('splashlens-last-field-tab-at', new Date().toISOString());
-  }
+  } catch {}
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-  const panel = document.getElementById(`tab-${name}`);
   const btn   = document.getElementById(`nav-${name}`);
-  if (panel) panel.classList.add('active');
+  panel.classList.add('active');
   if (btn)   btn.classList.add('active');
   if (S.tab === 'scan' && name !== 'scan') stopCamera();
   S.tab = name;

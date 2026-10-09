@@ -25,6 +25,13 @@ test('Counter home has three full-width field actions and a one-tap nav entry', 
   assert.match(shell, /id="tab-counter"/);
   assert.match(shell, /\.counter-action \{[^}]*width:100%; min-height:72px;/);
   assert.match(shell, /id="nav-counter" onclick="showTab\('counter'\)"/);
+  assert.ok(shell.indexOf('id="nav-counter"') < shell.indexOf('id="nav-errors"'));
+  assert.ok(shell.indexOf('id="nav-errors"') < shell.indexOf('id="nav-scan"'));
+  assert.ok(shell.indexOf('id="nav-scan"') < shell.indexOf('id="nav-dosing"'));
+  assert.match(shell, /field tools"\] \{ overflow-x:auto; overflow-y:hidden;/);
+  assert.match(shell, /\.nav-btn \{ flex:0 0 66px; min-width:66px; \}/);
+  assert.match(shell, /\.nav-btn span \{ font-size:10px; white-space:nowrap; \}/);
+  assert.match(shell, /#nav-counter \{ position:sticky; left:0;/);
   for (const button of ['code', 'part', 'chem']) {
     assert.match(shell, new RegExp(`onclick="openCounterTool\\('${button}'\\)"`));
   }
@@ -43,9 +50,8 @@ test('new users start at Counter, returning users restore their last tab, deep l
   vm.runInNewContext("const COUNTER_SEEN_KEY = 'splashlens-counter-home-seen-v1'; const FIELD_TABS = new Set(['counter', 'errors', 'dosing', 'scan']); let counterFirstOpen = false;" + section('getCounterStartState', 'showTab'), context);
   context.initCounterModeHome(context.getCounterStartState());
   assert.deepEqual(shown, ['counter']);
-  assert.equal(localStorage.getItem('splashlens-last-field-tab'), 'counter');
   shown.length = 0;
-  localStorage.setItem('splashlens-last-field-tab', 'dosing');
+  context.localStorage = storage({ 'poolens-pools': '[]', 'splashlens-last-field-tab': 'dosing' });
   context.initCounterModeHome(context.getCounterStartState());
   assert.deepEqual(shown, ['dosing']);
   shown.length = 0;
@@ -91,11 +97,40 @@ test('Counter open event marks only the first visit as first_open', () => {
     trackProductTabChange: () => {},
     trackSplashLensEvent: (name, props) => events.push([name, props.first_open]),
   };
-  vm.runInNewContext('let counterFirstOpen = true; const COUNTER_SEEN_KEY = "splashlens-counter-home-seen-v1";' + section('showTab', 'initMarketingGate'), context);
+  vm.runInNewContext('let counterFirstOpen = true; const COUNTER_SEEN_KEY = "splashlens-counter-home-seen-v1"; const FIELD_TABS = new Set(["counter"]);' + section('showTab', 'initMarketingGate'), context);
   context.showTab('counter');
   context.showTab('counter');
   assert.deepEqual(events, [['counter_mode_opened', true], ['counter_mode_opened', false]]);
   assert.equal(context.localStorage.getItem('splashlens-counter-home-seen-v1'), '1');
+});
+
+test('showTab persists real tab transitions and ignores invalid tabs or blocked storage', () => {
+  const localStorage = storage();
+  const panel = { classList: { add() {}, remove() {} } };
+  const context = {
+    S: { tab: 'errors' },
+    localStorage,
+    document: {
+      querySelectorAll: () => [panel],
+      getElementById: (id) => ['tab-counter', 'tab-errors', 'nav-counter', 'nav-errors'].includes(id) ? panel : null,
+    },
+    window: { scrollTo() {}, location: { search: '' } },
+    URLSearchParams,
+    getFacilityDeepLinkParts: () => null,
+    trackProductTabChange: () => {},
+    trackSplashLensEvent: () => {},
+  };
+  vm.runInNewContext('const COUNTER_SEEN_KEY = "splashlens-counter-home-seen-v1"; const FIELD_TABS = new Set(["counter", "errors"]); let counterFirstOpen = true;' + section('getCounterStartState', 'showTab') + section('showTab', 'initMarketingGate'), context);
+  context.showTab('counter');
+  assert.equal(localStorage.getItem('splashlens-last-field-tab'), 'counter');
+  context.showTab('errors');
+  assert.equal(localStorage.getItem('splashlens-last-field-tab'), 'errors');
+  assert.ok(Number.isFinite(Date.parse(localStorage.getItem('splashlens-last-field-tab-at'))));
+  assert.equal(context.getCounterStartState().lastTab, 'errors');
+  context.showTab('missing');
+  assert.equal(localStorage.getItem('splashlens-last-field-tab'), 'errors');
+  context.localStorage = { setItem() { throw new Error('blocked'); } };
+  assert.doesNotThrow(() => context.showTab('counter'));
 });
 
 test('bundled code answer renders offline without fetching', () => {
