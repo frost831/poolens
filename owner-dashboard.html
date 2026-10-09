@@ -86,6 +86,11 @@
       <div class="card"><p class="label">Last 30 days</p><div id="funnel30"></div></div>
     </section>
     <section class="section-title">
+      <h2>Library misses</h2>
+      <span class="tiny">Top queries, last 7 days</span>
+    </section>
+    <section class="card"><div id="libraryMisses"></div></section>
+    <section class="section-title">
       <h2>Commercial Control Room</h2>
       <div class="actions">
         <button type="button" class="secondary" onclick="seedLearningModule()">Publish learning module</button>
@@ -105,6 +110,7 @@
   <script>
     const storageKey = 'splashlens-dashboard-secret-v1';
     const secretInput = document.getElementById('secret');
+    let libraryMissRows = [];
     secretInput.value = localStorage.getItem(storageKey) || '';
 
     function esc(value) {
@@ -157,6 +163,19 @@
     async function postAdmin(body) {
       await api('/api/admin', { method:'POST', body:JSON.stringify(body) });
       await loadDashboard();
+    }
+
+    async function changeLibraryMissStatus(select) {
+      const row = libraryMissRows[Number(select.dataset.missIndex)];
+      if (!row) return;
+      select.disabled = true;
+      try {
+        await postAdmin({ action:'update_library_miss_status', trigger:row.trigger,
+          brand:row.brand, model:row.model, query:row.query, status:select.value });
+      } catch (error) {
+        document.getElementById('status').textContent = error.message || String(error);
+        select.disabled = false;
+      }
     }
 
     function changeSeats(teamId, currentSeats) {
@@ -229,6 +248,15 @@
         document.getElementById('generated').textContent = `Generated ${stats.generatedAt || admin.generatedAt || ''}`;
         document.getElementById('funnel7').innerHTML = funnel(stats.funnel7d);
         document.getElementById('funnel30').innerHTML = funnel(stats.funnel30d);
+        libraryMissRows = admin.libraryMisses || [];
+        document.getElementById('libraryMisses').innerHTML = table(libraryMissRows.map((row, index) => ({ ...row, index })), [
+          { label:'Query', render:(r) => esc(r.query || r.model || r.brand) },
+          { label:'Brand / model', render:(r) => esc([r.brand, r.model].filter(Boolean).join(' / ')) },
+          { label:'Trigger', key:'trigger' },
+          { label:'Count', key:'count' },
+          { label:'Last seen', render:(r) => esc(String(r.lastSeen || '').slice(0, 16)) },
+          { label:'Status', render:(r) => `<select data-miss-index="${r.index}" onchange="changeLibraryMissStatus(this)" aria-label="Library miss status for ${esc(r.query || r.model || r.brand)}">${['new','reviewing','resolved','dismissed'].map((value) => `<option value="${value}" ${r.status === value ? 'selected' : ''}>${value}</option>`).join('')}</select>` },
+        ]);
         document.getElementById('entitlements').innerHTML = table(admin.recentEntitlements, [
           { label:'Email', key:'email' },
           { label:'Plan', key:'plan' },
