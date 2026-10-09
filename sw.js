@@ -1,10 +1,10 @@
-const CACHE = 'splashlens-v38-cost-unknown';
+const CACHE = 'splashlens-v39-closing-nav';
 const ASSETS = [
   '/',
   '/js/errors.js?v=20261002-trust-fixes-3',
   '/js/data.js?v=20261002-trust-fixes-2',
   '/js/i18n.js?v=20261009-cost-unknown',
-  '/js/app.js?v=20261009-cost-unknown',
+  '/js/app.js?v=20261009-closing-nav',
   '/js/crm-proof-export.js?v=20261009-pc20',
   '/js/packet-share.js?v=20261009-restart-a4',
   '/js/truck-qr.js?v=20261009-restart-a5',

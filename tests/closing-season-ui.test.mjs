@@ -53,9 +53,9 @@ async function finishChecklist(h) {
   await h.context.textClosingProofPacket();
 }
 
-test('site closing links land in closing checklist even without tab and with a competing tab', () => {
+test('closing checklist links land in the guide while field60 remains a checklist challenge', () => {
   const initDeepLink = app.slice(app.indexOf('function initDeepLink()'), app.indexOf('function getFacilityDeepLinkParts()'));
-  for (const query of ['?workflow=closing', '?checklist=closing', '?tab=report&workflow=closing', '?tab=guide&checklist=closing', '?challenge=field60&challenge_path=closing']) {
+  for (const query of ['?workflow=closing', '?checklist=closing', '?tab=guide&checklist=closing', '?challenge=field60&challenge_path=closing']) {
     const tabs = [];
     const types = [];
     const context = vm.createContext({

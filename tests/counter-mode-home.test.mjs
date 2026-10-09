@@ -28,10 +28,10 @@ test('Counter home has three full-width field actions and a one-tap nav entry', 
   assert.ok(shell.indexOf('id="nav-counter"') < shell.indexOf('id="nav-errors"'));
   assert.ok(shell.indexOf('id="nav-errors"') < shell.indexOf('id="nav-scan"'));
   assert.ok(shell.indexOf('id="nav-scan"') < shell.indexOf('id="nav-dosing"'));
-  assert.match(shell, /field tools"\] \{ overflow-x:auto; overflow-y:hidden;/);
-  assert.match(shell, /\.nav-btn \{ flex:0 0 66px; min-width:66px; \}/);
-  assert.match(shell, /\.nav-btn span \{ font-size:10px; white-space:nowrap; \}/);
-  assert.match(shell, /#nav-counter \{ position:sticky; left:0;/);
+  assert.match(shell, /field tools"\] \{ overflow:hidden; \}/);
+  assert.match(shell, /\.nav-btn \{ flex:1 1 0; min-width:0; \}/);
+  assert.match(shell, /\.nav-btn span \{ font-size:9px; white-space:nowrap; \}/);
+  assert.match(shell, /#nav-counter \{ position:static; flex-basis:0;/);
   for (const button of ['code', 'part', 'chem']) {
     assert.match(shell, new RegExp(`onclick="openCounterTool\\('${button}'\\)"`));
   }
