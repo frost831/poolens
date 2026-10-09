@@ -1,3 +1,5 @@
+import { CLOSING_PASS_LABEL } from '../_shared/closing-pass.mjs';
+
 const TOKEN_PREFIX = 'sl_scan_v1';
 const ACCOUNT_TOKEN_PREFIX = 'sl_account_v1';
 const ACCOUNT_TOKEN_MAX_AGE_SECONDS = 24 * 60 * 60;
@@ -124,10 +126,14 @@ async function storedEntitlement(email, env) {
        FROM commercial_entitlements
        WHERE lower(email) = lower(?) AND status IN ('active','trialing')
          AND lane = 'pro' AND source IN ('stripe_webhook','stripe_checkout_success')
+         AND (plan <> ? OR (current_period_end IS NOT NULL AND datetime(current_period_end) > datetime('now')))
        ORDER BY updated_at DESC
        LIMIT 1`,
-    ).bind(email).first();
+    ).bind(email, CLOSING_PASS_LABEL).first();
     if (row && row.email) {
+      if (row.plan === CLOSING_PASS_LABEL
+        && (!/^cs_(test|live)_[A-Za-z0-9]+$/.test(String(row.stripeSessionId || ''))
+          || !(Date.parse(row.expiresAt || '') > Date.now()))) return null;
       return {
         subject: email,
         plan: row.plan || 'Splash Lens Pro Unlimited',
@@ -148,8 +154,10 @@ async function storedEntitlement(email, env) {
       try {
         const parsed = JSON.parse(value);
         if (parsed && typeof parsed === 'object'
-          && ['stripe_webhook', 'stripe_checkout'].includes(String(parsed.source || ''))
-          && Date.parse(parsed.expiresAt || '') > Date.now()) return parsed;
+          && ['stripe_webhook', 'stripe_checkout', 'stripe_checkout_success'].includes(String(parsed.source || ''))
+          && Date.parse(parsed.expiresAt || '') > Date.now()
+          && (parsed.plan !== CLOSING_PASS_LABEL
+            || /^cs_(test|live)_[A-Za-z0-9]+$/.test(String(parsed.stripeSessionId || '')))) return parsed;
       } catch {}
     }
   }
@@ -160,13 +168,19 @@ async function createTokenFromRecord(email, record, env) {
   const secret = tokenSecret(env);
   if (!secret) return null;
   const now = Math.floor(Date.now() / 1000);
+  const closingPass = record.plan === CLOSING_PASS_LABEL;
+  const expiresAt = closingPass ? Date.parse(record.expiresAt || '') : (now + 365 * 24 * 60 * 60) * 1000;
+  const expiry = Math.floor(expiresAt / 1000);
+  if (closingPass && (!Number.isFinite(expiry) || expiry <= now
+    || !/^cs_(test|live)_[A-Za-z0-9]+$/.test(String(record.stripeSessionId || '')))) return null;
   const token = await signToken(secret, {
     sub: email,
     plan: String(record.plan || 'Splash Lens Pro Unlimited').slice(0, 100),
     scopes: Array.isArray(record.scopes) && record.scopes.length ? record.scopes : ['scan'],
     source: 'restore_entitlement',
+    ...(closingPass ? { stripeSessionId: record.stripeSessionId, stripeCustomerId: record.stripeCustomerId || '' } : {}),
     iat: now,
-    exp: now + 365 * 24 * 60 * 60,
+    exp: expiry,
   });
   if (env.SCAN_USAGE_KV && typeof env.SCAN_USAGE_KV.put === 'function') {
     await env.SCAN_USAGE_KV.put(`entitlement:${email}`, JSON.stringify({
@@ -177,8 +191,8 @@ async function createTokenFromRecord(email, record, env) {
       stripeSessionId: record.stripeSessionId || '',
       stripeCustomerId: record.stripeCustomerId || '',
       issuedAt: new Date(now * 1000).toISOString(),
-      expiresAt: new Date((now + 365 * 24 * 60 * 60) * 1000).toISOString(),
-    }), { expirationTtl: 365 * 24 * 60 * 60 });
+      expiresAt: new Date(expiresAt).toISOString(),
+    }), { expirationTtl: expiry - now });
     await env.SCAN_USAGE_KV.delete(`entitlement_revoked:${email}`);
   }
   return token;

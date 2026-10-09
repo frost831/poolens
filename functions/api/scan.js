@@ -6,6 +6,7 @@
 // Production scanner traffic must have SCAN_USAGE_KV so free and entitled monthly limits are server-enforced.
 
 import { attachPartSnapCorpusCandidates } from '../lib/partsnap-corpus.mjs';
+import { CLOSING_PASS_LABEL } from '../_shared/closing-pass.mjs';
 
 const CLAUDE_API = 'https://api.anthropic.com/v1/messages';
 const DEFAULT_ORIGIN = 'https://app.splashlens.com';
@@ -264,21 +265,47 @@ async function verifyEntitlementToken(request, env, body) {
     }
   }
   if (/^stripe_|^restore_entitlement$/.test(String(payload.source || ''))) {
+    const closingPass = payload.plan === CLOSING_PASS_LABEL;
+    const passSessionId = String(payload.stripeSessionId || '').trim();
+    if (closingPass && !/^cs_(test|live)_[A-Za-z0-9]+$/.test(passSessionId)) {
+      return { present: true, ok: false, status: 403, error: 'Paid scanner access could not be confirmed. Restore the subscription before continuing.' };
+    }
+    if (closingPass && env.SCAN_USAGE_KV && typeof env.SCAN_USAGE_KV.get === 'function'
+      && await env.SCAN_USAGE_KV.get(`closing_pass_revoked:${passSessionId}`)) {
+      return { present: true, ok: false, status: 403, error: 'Closing Pro access is no longer active.' };
+    }
     if (env.SUBSCRIBERS_DB && typeof env.SUBSCRIBERS_DB.prepare === 'function') {
       const customerId = String(payload.stripeCustomerId || '').trim();
-      const row = customerId
-        ? await env.SUBSCRIBERS_DB.prepare(
+      let row;
+      if (closingPass) {
+        row = await env.SUBSCRIBERS_DB.prepare(
+          `SELECT email, plan, status, current_period_end AS expiresAt FROM commercial_entitlements
+           WHERE id = ? AND stripe_session_id = ? AND lower(email) = lower(?)
+             AND lane = 'pro' AND source IN ('stripe_webhook','stripe_checkout_success')
+           LIMIT 1`,
+        ).bind(`stripe:${passSessionId}`, passSessionId, subject).first();
+      } else if (customerId) {
+        row = await env.SUBSCRIBERS_DB.prepare(
           `SELECT status FROM commercial_entitlements
            WHERE (stripe_customer_id = ? OR lower(email) = lower(?))
              AND lane = 'pro' AND source IN ('stripe_webhook','stripe_checkout_success')
+             AND plan <> ?
            ORDER BY updated_at DESC LIMIT 1`,
-        ).bind(customerId, subject).first()
-        : await env.SUBSCRIBERS_DB.prepare(
+        ).bind(customerId, subject, CLOSING_PASS_LABEL).first();
+      } else {
+        row = await env.SUBSCRIBERS_DB.prepare(
           `SELECT status FROM commercial_entitlements
            WHERE lower(email) = lower(?)
              AND lane = 'pro' AND source IN ('stripe_webhook','stripe_checkout_success')
+             AND plan <> ?
            ORDER BY updated_at DESC LIMIT 1`,
-        ).bind(subject).first();
+        ).bind(subject, CLOSING_PASS_LABEL).first();
+      }
+      const passExpiry = Date.parse(row?.expiresAt || '');
+      if (closingPass && (row?.plan !== CLOSING_PASS_LABEL || row?.status !== 'active'
+        || !(passExpiry > Date.now()) || payload.exp > Math.floor(passExpiry / 1000))) {
+        return { present: true, ok: false, status: 403, error: 'Paid scanner access could not be confirmed. Restore the subscription before continuing.' };
+      }
       if (!row || !['active', 'trialing', 'pilot'].includes(String(row.status || '').toLowerCase())) {
         return { present: true, ok: false, status: 403, error: 'Paid scanner access could not be confirmed. Restore the subscription before continuing.' };
       }
@@ -287,9 +314,14 @@ async function verifyEntitlementToken(request, env, body) {
       if (env.SCAN_USAGE_KV && typeof env.SCAN_USAGE_KV.get === 'function') {
         try { record = JSON.parse(await env.SCAN_USAGE_KV.get(`entitlement:${subject}`)); } catch {}
       }
-      if (!record || !['stripe_webhook', 'stripe_checkout'].includes(String(record.source || ''))
-        || !(Date.parse(record.expiresAt || '') > Date.now())
-        || String(record.subject || '').trim().toLowerCase() !== subject) {
+      const recordExpiry = Date.parse(record?.expiresAt || '');
+      if (!record || !['stripe_webhook', 'stripe_checkout', 'stripe_checkout_success'].includes(String(record.source || ''))
+        || !(recordExpiry > Date.now())
+        || String(record.subject || '').trim().toLowerCase() !== subject
+        || (!closingPass && record.plan === CLOSING_PASS_LABEL)
+        || (closingPass && (record.plan !== CLOSING_PASS_LABEL
+          || record.stripeSessionId !== passSessionId
+          || payload.exp > Math.floor(recordExpiry / 1000)))) {
         return { present: true, ok: false, status: 403, error: 'Paid scanner access could not be confirmed. Restore the subscription before continuing.' };
       }
     }

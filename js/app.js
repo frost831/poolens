@@ -847,8 +847,8 @@ function startFieldChallenge(path = 'partsnap') {
   trackFirstActionStarted(getSplashLensRole() || 'tech', `field60_${normalized}`);
 
   if (normalized === 'closing') {
-    enterSplashLensApp('report');
-    setTimeout(() => startServiceProofWorkflow('closing'), 120);
+    enterSplashLensApp('guide');
+    setTimeout(() => switchClType('closing'), 120);
     return;
   }
 
@@ -914,20 +914,17 @@ function initDeepLink() {
   if (mode === 'tech') {
     setSplashLensRole('tech', { persist: false, forced: true });
   }
-  if (tab && allowed.has(tab)) {
+  if (challenge === 'field60' && challengePath === 'closing') {
+    setTimeout(() => startFieldChallenge('closing'), 120);
+  } else if (workflow === 'closing' || checklist === 'closing') {
+    showTab('guide');
+    setTimeout(() => switchClType('closing'), 120);
+  } else if (tab && allowed.has(tab)) {
     showTab(tab);
     if (tab === 'scan' && mode) setTimeout(() => setScanMode(mode), 120);
     if (tab === 'errors' && params.has('search')) {
       setTimeout(() => focusErrorSearch(params.get('search') || ''), 120);
     }
-    if (tab === 'report' && workflow === 'closing') {
-      setTimeout(() => startServiceProofWorkflow('closing'), 120);
-    }
-    if (tab === 'guide' && checklist === 'closing') {
-      setTimeout(() => switchClType('closing'), 120);
-    }
-  } else if (challenge === 'field60' && challengePath === 'closing') {
-    setTimeout(() => startFieldChallenge('closing'), 120);
   }
 }
 
@@ -4689,7 +4686,109 @@ function initGuide() {
   renderChecklist();
 }
 
+const CLOSING_PHOTO_PROOFS = [
+  { key: 'cover', label: 'Cover installed' },
+  { key: 'plugs', label: 'Winter and drain plugs' },
+  { key: 'equipment', label: 'Equipment drained' },
+  { key: 'chemistry', label: 'Closing chemistry record' },
+];
+let closingChecklistStarted = false;
+let closingPassOfferShown = false;
+let closingOfferRequest = 0;
+
+function closingChecklistStatus() {
+  const cl = S.checklists.closing || {};
+  const phases = CL_MAP.closing.data();
+  const steps = phases.reduce((count, phase) => count + phase.steps.length, 0);
+  const checked = phases.reduce((count, phase, pi) => count + phase.steps.filter((_, si) => !!cl[`${pi}-${si}`]).length, 0);
+  const photos = CLOSING_PHOTO_PROOFS.filter(({ key }) => String(cl._photos?.[key] || '').trim()).length;
+  return { steps, checked, photos, complete: checked === steps && photos === CLOSING_PHOTO_PROOFS.length };
+}
+
+function trackClosingChecklistStart() {
+  if (closingChecklistStarted) return;
+  closingChecklistStarted = true;
+  const { checked, photos } = closingChecklistStatus();
+  trackSplashLensEvent('closing_checklist_started', { steps: checked, photos });
+}
+
+function closingChecklistChanged(wasComplete) {
+  renderClosingProof();
+  const status = closingChecklistStatus();
+  if (!wasComplete && status.complete) {
+    trackSplashLensEvent('closing_checklist_completed', { steps: status.checked, photos: status.photos });
+  }
+}
+
+function setClosingPhotoReference(key, value) {
+  if (!CLOSING_PHOTO_PROOFS.some(item => item.key === key)) return;
+  const wasComplete = closingChecklistStatus().complete;
+  trackClosingChecklistStart();
+  const cl = S.checklists.closing;
+  cl._photos = cl._photos || {};
+  cl._photos[key] = String(value || '').trim().slice(0, 120);
+  localStorage.setItem(CL_MAP.closing.key, JSON.stringify(cl));
+  closingChecklistChanged(wasComplete);
+}
+
+function renderClosingProof() {
+  const el = document.getElementById('closing-proof-content');
+  if (!el) return;
+  el.hidden = S.clType !== 'closing';
+  if (el.hidden) { closingOfferRequest++; return; }
+  const cl = S.checklists.closing || {};
+  const status = closingChecklistStatus();
+  el.innerHTML = `<section style="border-top:1px solid #cbd5e1;padding-top:14px;margin-top:4px;">
+    <h3 style="font-size:14px;color:#0f172a;margin:0 0 5px;">Closing photo references</h3>
+    <p style="font-size:12px;color:#475569;margin:0 0 12px;">Record where each photo is saved. References are local to this device; images are not attached to the text packet.</p>
+    ${CLOSING_PHOTO_PROOFS.map(({ key, label }) => `<label style="display:block;font-size:12px;font-weight:700;color:#334155;margin:0 0 10px;">${label}
+      <input type="text" maxlength="120" value="${escAttr(cl._photos?.[key] || '')}" placeholder="Photo filename or job record reference" onchange="setClosingPhotoReference('${key}',this.value)" style="display:block;width:100%;box-sizing:border-box;padding:10px;margin-top:4px;border:1px solid #cbd5e1;border-radius:6px;font:inherit;">
+    </label>`).join('')}
+    <p style="font-size:12px;color:#475569;margin:0 0 10px;">${status.photos} / ${CLOSING_PHOTO_PROOFS.length} photo references</p>
+    ${status.complete ? '<button type="button" class="brain-action green" onclick="textClosingProofPacket()">Text closing proof packet</button><div id="closing-pass-offer"></div>' : '<p style="font-size:12px;color:#475569;margin:0;">Complete every step and photo reference to text the closing packet.</p>'}
+  </section>`;
+  if (status.complete) loadClosingPassOffer();
+  else closingOfferRequest++;
+}
+
+async function textClosingProofPacket() {
+  const status = closingChecklistStatus();
+  if (!status.complete) return;
+  const refs = S.checklists.closing._photos;
+  return shareFieldPacket({
+    surface: 'closing_checklist',
+    summary: `Closing checklist complete: ${status.checked} steps recorded. Verify site conditions and company method.`,
+    evidence: CLOSING_PHOTO_PROOFS.map(({ key, label }) => `${label}: ${refs[key].slice(0, 18)}`).join('; '),
+  });
+}
+
+async function loadClosingPassOffer() {
+  const requestId = ++closingOfferRequest;
+  if (isStoreShellMode()) return;
+  try {
+    const response = await fetch('/api/checkout?catalog=1', { cache: 'no-store' });
+    if (!response.ok) return;
+    const catalog = await response.json();
+    const item = catalog.plans?.find(plan => plan.key === 'closing_pass_60d' || plan.key === 'closing_pro_60_day');
+    const amount = Number(item?.amountCents ?? item?.amount);
+    if (!item?.checkoutConfigured || (item.checkoutPlan && item.checkoutPlan !== 'closing_pass_60d') || !Number.isSafeInteger(amount) || amount <= 0 || !item.priceLabel) return;
+    if (requestId !== closingOfferRequest || S.clType !== 'closing' || !closingChecklistStatus().complete) return;
+    const el = document.getElementById('closing-pass-offer');
+    if (!el) return;
+    el.innerHTML = `<div style="border-top:1px solid #cbd5e1;margin-top:14px;padding-top:12px;">
+      <p style="font-size:13px;font-weight:800;color:#0f172a;margin:0 0 5px;">Closing Pro 60-day pass</p>
+      <p style="font-size:12px;color:#475569;margin:0 0 10px;">${escHtml(item.priceLabel)}</p>
+      <button type="button" class="brain-action green" data-checkout-plan="closing_pass_60d" data-checkout-placement="closing_checklist" onclick="startWebCheckout('closing_pass_60d','closing_checklist')">Review pass checkout</button>
+    </div>`;
+    if (!closingPassOfferShown) {
+      closingPassOfferShown = true;
+      trackSplashLensEvent('closing_pass_offer_shown', { placement: 'closing_checklist', plan: 'closing_pass_60d' });
+    }
+  } catch {}
+}
+
 function switchClType(type) {
+  if (type === 'closing') trackClosingChecklistStart();
   S.clType = type;
   ['opening','closing','weekly','monthly'].forEach(t => {
     const btn = document.getElementById(`cl-btn-${t}`);
@@ -4721,9 +4820,13 @@ function renderChecklist() {
         }).join('')}
       </div>`).join(''));
   updateProgress();
+  renderClosingProof();
 }
 
 function toggleItem(pi, si) {
+  const closing = S.clType === 'closing';
+  const wasComplete = closing && closingChecklistStatus().complete;
+  if (closing) trackClosingChecklistStart();
   const k = `${pi}-${si}`;
   const cl = S.checklists[S.clType];
   cl[k] = !cl[k];
@@ -4733,6 +4836,7 @@ function toggleItem(pi, si) {
   if (row) row.classList.toggle('done', !!cl[k]);
   if (chk) chk.checked = !!cl[k];
   updateProgress();
+  if (closing) closingChecklistChanged(wasComplete);
 }
 
 function updateProgress() {
@@ -10753,8 +10857,8 @@ function getCheckoutAttribution(plan, placement) {
   const safePlacement = String(placement || '').trim().toLowerCase();
   return {
     source: 'app',
-    plan: /year|annual/i.test(String(plan || '')) ? 'yearly' : 'monthly',
-    feature: 'unlimited_partsnap',
+    plan: plan === 'closing_pass_60d' ? 'closing_pass_60d' : /year|annual/i.test(String(plan || '')) ? 'yearly' : 'monthly',
+    feature: plan === 'closing_pass_60d' ? 'closing_pass' : 'unlimited_partsnap',
     placement: /^[a-z0-9_-]{1,80}$/.test(safePlacement) ? safePlacement : 'app_upgrade',
     store: ['ios', 'android'].includes(store) ? store : 'web',
     client_id: clientId,

@@ -1,4 +1,5 @@
 import { recordPaymentEvent, sessionAttribution } from '../_shared/payment-funnel.mjs';
+import { grantClosingPass, isClosingPass, verifiedClosingPassPayment } from '../_shared/closing-pass.mjs';
 
 const TOKEN_PREFIX = 'sl_scan_v1';
 const textEncoder = new TextEncoder();
@@ -267,6 +268,24 @@ export async function onRequestGet({ request, env }) {
   const session = await stripeGet(`checkout/sessions/${encodeURIComponent(sessionId)}`, env);
   if (!session) {
     return html('<h1>SplashLens checkout</h1><p>Checkout lookup is not configured yet. Contact support for activation.</p>', 503);
+  }
+  if (session.id !== sessionId) {
+    return html('<h1>SplashLens checkout</h1><p>Checkout verification failed.</p>', 503);
+  }
+  if (isClosingPass(session)) {
+    const payment = await verifiedClosingPassPayment(session, env);
+    if (!payment) {
+      return html('<h1>SplashLens checkout</h1><p>Closing Pro payment could not be verified yet.</p>', 503);
+    }
+    const activation = await grantClosingPass(session, payment.paidAt, env, 'stripe_checkout_success', payment.chargeId);
+    if (!activation.ok) {
+      return html(`<h1>SplashLens checkout</h1><p>${escapeHtml(activation.error)}</p>`, activation.status);
+    }
+    const proof = { plan: 'closing_pass_60d', path: '/api/checkout-success', props: { ...sessionAttribution(session), payment_status: session.payment_status } };
+    await recordPaymentEvent(env, 'checkout_completed', session.id, proof);
+    await recordPaymentEvent(env, 'entitlement_granted', session.id, proof);
+    const activateUrl = `https://app.splashlens.com/?tab=scan&scan_token=${encodeURIComponent(activation.token)}`;
+    return html(`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Closing Pro activated</title></head><body><main><h1>Closing Pro activated.</h1><p>Pro access for ${escapeHtml(activation.subject)} is active until ${escapeHtml(activation.expiresAt)}.</p><a href="${escapeHtml(activateUrl)}">Open SplashLens scanner</a></main></body></html>`);
   }
   if (!isSplashLensCheckoutSession(session, env)) {
     return html('<h1>SplashLens checkout</h1><p>This checkout session is not a Splash Lens Pro Unlimited purchase. Contact support if this looks wrong.</p>', 403);
