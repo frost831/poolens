@@ -1,4 +1,4 @@
-const CACHE = 'splashlens-v36-pc20';
+const CACHE = 'splashlens-v37-pc20';
 const ASSETS = [
   '/',
   '/js/errors.js?v=20261002-trust-fixes-3',

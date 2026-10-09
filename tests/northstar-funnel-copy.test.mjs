@@ -90,10 +90,16 @@ test('service worker cache version ships the newest account bundle', () => {
   assert.match(app, /import\('\.\/packet-share\.js\?v=20261009-restart-a4'\)/);
   assert.match(sw, /\/js\/packet-share\.js\?v=20261009-restart-a4/);
   assert.match(shell, /errors\.js\?v=20261002-trust-fixes-3/);
-  assert.match(sw, /const CACHE = 'splashlens-v36-pc20'/);
+  assert.match(sw, /const CACHE = 'splashlens-v37-pc20'/);
   assert.match(sw, /\/js\/crm-proof-export\.js\?v=20261009-pc20/);
   assert.match(sw, /errors\.js\?v=20261002-trust-fixes-3/);
   assert.match(sw, /keys\.filter\(k => k !== CACHE\)/);
+});
+
+test('store-visible free-tools copy contains no promotional dollar amount', () => {
+  assert.match(shell, /<strong>Free<\/strong><span>No card<\/span>/);
+  assert.doesNotMatch(shell, /<strong>\$0<\/strong><span>No card<\/span>/);
+  assert.match(shell, /id="rpt-cost-total"[^>]*>\$0\.00<\/span>/);
 });
 
 test('checkout exposes a JSON catalog and Splash Lens Pro Unlimited metadata', () => {
