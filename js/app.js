@@ -4941,18 +4941,26 @@ function getReportChemRows() {
     const name = _rptVal(`cr-name-${rid}`);
     const amt = _rptVal(`cr-amt-${rid}`);
     const costRaw = _rptVal(`cr-cost-${rid}`);
-    const cost = parseFloat(costRaw);
+    const cost = costRaw !== '' && Number.isFinite(Number(costRaw)) && Number(costRaw) >= 0 ? Number(costRaw) : null;
     const stock = _rptVal(`cr-stock-${rid}`) || 'Truck';
-    if (name || amt || costRaw) chems.push({ name, amt, cost: isNaN(cost) ? 0 : cost, stock });
+    if (name || amt || costRaw) chems.push({ name, amt, cost, stock });
   });
   return chems;
 }
 
+function reportChemicalCost(chems) {
+  return chems.length && chems.every(c => Number.isFinite(c.cost) && c.cost >= 0)
+    ? chems.reduce((sum, c) => sum + c.cost, 0)
+    : null;
+}
+
 function updateReportCostSummary() {
   const chems = getReportChemRows();
-  const total = chems.reduce((sum, c) => sum + (c.cost || 0), 0);
+  const total = reportChemicalCost(chems);
+  const anyCost = chems.some(c => c.cost !== null);
   const totalEl = document.getElementById('rpt-cost-total');
-  if (totalEl) totalEl.textContent = `$${total.toFixed(2)}`;
+  if (totalEl) totalEl.textContent = total === null
+    ? a3Text(anyCost ? 'packet.costIncomplete' : 'packet.costNotEntered') : `$${total.toFixed(2)}`;
   const byStock = chems.reduce((acc, c) => {
     const key = c.stock || 'Truck';
     acc[key] = (acc[key] || 0) + 1;
@@ -4961,7 +4969,7 @@ function updateReportCostSummary() {
   const summary = Object.keys(byStock).length
     ? Object.entries(byStock).map(([k, v]) => `${v} from ${k.toLowerCase()}`).join(', ')
     : 'Add chemical costs and stock source to estimate stop cost.';
-  setEl('rpt-inventory-summary', `${summary}${total ? ` - estimated chemical cost for this stop: $${total.toFixed(2)}.` : ''}`);
+  setEl('rpt-inventory-summary', `${summary}${total === null ? (chems.length ? ' - Enter every chemical cost before estimating this stop.' : '') : ` - estimated chemical cost for this stop: $${total.toFixed(2)}.`}`);
 }
 
 function hasAnyReportReading() {
@@ -5156,7 +5164,7 @@ function serviceProofSharePayload() {
     chemicals: (passport.chemicals || []).slice(0, 12).map((item) => ({
       name: item.name || '',
       amount: item.amount || item.amt || '',
-      cost: item.cost || 0,
+      cost: Number.isFinite(item.cost) ? item.cost : null,
     })),
     doseBasis: passport.doseBasis || '',
     workPerformed: passport.workPerformed || '',
@@ -5532,7 +5540,7 @@ function buildReportText() {
   ].filter(([,v]) => v).map(([l,v]) => `${l}: ${v}`).join('  |  ');
 
   const chemRows = getReportChemRows();
-  const totalCost = chemRows.reduce((sum, c) => sum + (c.cost || 0), 0);
+  const totalCost = reportChemicalCost(chemRows);
   const chems = [];
   document.querySelectorAll('[id^="chem-row-"]').forEach(row => {
     const rid  = row.id.replace('chem-row-', '');
@@ -5561,7 +5569,7 @@ function buildReportText() {
     ...(customerSummary ? [`${a3Text('packet.customer')}: ${customerSummary}`] : []),
     '',
     ...(chems.length ? [`${a3Text('packet.chemicals')}:`, ...chems, ''] : []),
-    ...(chemRows.length ? [`${a3Text('packet.chemicalCost')}: $${totalCost.toFixed(2)}`, ''] : []),
+    ...(chemRows.length ? [`${a3Text('packet.chemicalCost')}: ${totalCost === null ? a3Text(chemRows.some(c => c.cost !== null) ? 'packet.costIncomplete' : 'packet.costNotEntered') : `$${totalCost.toFixed(2)}`}`, ''] : []),
     ...(doseBasis ? [`${a3Text('packet.doseBasis')}: ${doseBasis}`, ''] : []),
     ...(work  ? [`${a3Text('packet.work')}:`, work, '']  : []),
     ...(equip ? [`${a3Text('packet.equipmentNotes')}:`, equip, ''] : []),
@@ -5577,7 +5585,7 @@ function buildServicePassport() {
   const rawDate = _rptVal('rpt-date');
   const proof = validateReportProof({ quiet: true });
   const chemRows = getReportChemRows();
-  const totalCost = chemRows.reduce((sum, c) => sum + (c.cost || 0), 0);
+  const totalCost = reportChemicalCost(chemRows);
   const passport = {
     id: `svc-${Date.now()}`,
     type: 'service_passport',
@@ -5608,6 +5616,7 @@ function buildServicePassport() {
     },
     chemicals: chemRows,
     totalChemicalCost: totalCost,
+    chemicalCostComplete: totalCost !== null,
     doseBasis: _rptVal('rpt-dose-basis'),
     workPerformed: _rptVal('rpt-work'),
     equipmentNotes: _rptVal('rpt-equip'),
@@ -5713,7 +5722,7 @@ function resumeReportDraft() {
     const id = _chemRowId;
     setReportDraftValue(`cr-name-${id}`, chemical.name);
     setReportDraftValue(`cr-amt-${id}`, chemical.amt);
-    setReportDraftValue(`cr-cost-${id}`, chemical.cost || '');
+    setReportDraftValue(`cr-cost-${id}`, chemical.cost ?? '');
     setReportDraftValue(`cr-stock-${id}`, chemical.stock || 'Truck');
   });
   updateReportCostSummary();
@@ -7060,7 +7069,8 @@ function servicePassportDetail(r) {
   if (r.equipmentNotes) blocks.push(['Equipment', r.equipmentNotes]);
   if (r.recommendations) blocks.push(['Recommendations', r.recommendations]);
   if (r.nextVisit) blocks.push(['Next Visit', r.nextVisit]);
-  if (r.totalChemicalCost) blocks.push(['Chemical Cost', `$${Number(r.totalChemicalCost).toFixed(2)}`]);
+  if (r.chemicals?.length) blocks.push(['Chemical Cost', r.chemicalCostComplete === true && Number.isFinite(r.totalChemicalCost)
+    ? `$${r.totalChemicalCost.toFixed(2)}` : 'Not verified']);
   return `
     ${poolReadingDetailGrid({
       fc: r.readings?.fc,
