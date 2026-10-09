@@ -46,6 +46,7 @@ function harness(names, overrides = {}) {
 const checkoutFunctions = [
   'getScanClientId', 'getAnalyticsSessionId', 'getCheckoutAttribution',
   'createCheckoutUUID', 'getCheckoutUrl', 'trackCheckoutIntent', 'trackPostValueUpgrade',
+  'claimPostValueOffer',
 ];
 const valueFunctions = ['trackFirstActionStarted', 'trackFirstUsefulResult'];
 const names = events => events.map(event => event.name);
@@ -137,15 +138,169 @@ test('zero-result lookup generates neither an offer nor an impression', () => {
 });
 
 test('all rendered web upgrade links replace their href with the attributed intent URL', () => {
-  const { context } = harness([...checkoutFunctions,
-    'renderPostValueUpgradeOffer', 'renderPartSnapResultUpgradeOffer', 'renderManualLookupUpgradeOffer'], { isPartSnapPro: () => false });
-  for (const html of [context.renderPostValueUpgradeOffer(), context.renderPartSnapResultUpgradeOffer(), context.renderManualLookupUpgradeOffer(1, 'E05')]) {
+  for (const [renderer, args] of [
+    ['renderPostValueUpgradeOffer', []],
+    ['renderPartSnapResultUpgradeOffer', []],
+    ['renderManualLookupUpgradeOffer', [1, 'E05']],
+  ]) {
+    const { context } = harness([...checkoutFunctions, renderer], { isPartSnapPro: () => false });
+    const html = context[renderer](...args);
     assert.equal((html.match(/data-checkout-plan=/g) || []).length, 2);
     assert.equal((html.match(/this.href=trackPostValueUpgrade/g) || []).length, 2);
     assert.doesNotMatch(html, /sl_checkout_/);
   }
   assert.match(functionSource('showScanLimitModal'), /this.href=trackCheckoutIntent/);
   assert.match(source, /this.href=trackCheckoutIntent\('monthly','account_dashboard'\)/);
+});
+
+test('web post-value surfaces share one offer per session', () => {
+  const sharedSession = storage();
+  const functions = [...checkoutFunctions, 'renderPostValueUpgradeOffer',
+    'renderPartSnapResultUpgradeOffer', 'renderManualLookupUpgradeOffer'];
+  const first = harness(functions, { isPartSnapPro: () => false, sessionStorage: sharedSession });
+  assert.match(first.context.renderManualLookupUpgradeOffer(1, 'E05'), /data-checkout-placement="scan_lookup_search"/);
+  assert.equal(first.context.renderPartSnapResultUpgradeOffer(), '');
+  assert.equal(first.context.renderPostValueUpgradeOffer(), '');
+  assert.deepEqual(names(first.events), ['post_value_upgrade_shown']);
+  const reloaded = harness(functions, { isPartSnapPro: () => false, sessionStorage: sharedSession });
+  assert.equal(reloaded.context.renderPartSnapResultUpgradeOffer(), '');
+  assert.equal(reloaded.events.length, 0);
+});
+
+test('third free scan gate follows result, can be dismissed, and uses A1 placement', () => {
+  let html = '<div>Complete scan result</div>';
+  let removed = false;
+  const gate = { remove: () => { removed = true; } };
+  const result = { insertAdjacentHTML: (_position, markup) => { html += markup; } };
+  const { context, events } = harness([...checkoutFunctions, 'showThirdScanSoftGate', 'dismissThirdScanSoftGate'], {
+    isPartSnapPro: () => false, SCAN_LIMIT_FREE: 3,
+    document: { getElementById: id => id === 'third-scan-soft-gate' ? gate : null },
+  });
+  context.showThirdScanSoftGate(result, 'parts_snap');
+  assert.ok(html.indexOf('Complete scan result') < html.indexOf('third-scan-soft-gate'));
+  assert.match(html, /data-checkout-placement="soft_gate_scan3"/);
+  assert.match(html, /trackPostValueUpgrade\('monthly','soft_gate_scan3'\)/);
+  assert.match(html, /upgrade.softGateManual/);
+  assert.equal(events[0].name, 'soft_gate_shown');
+  assert.equal(events[0].props.remaining_scans, 0);
+  assert.equal(events[0].props.mode, 'parts_snap');
+  const checkoutUrl = new URL(context.trackPostValueUpgrade('monthly', 'soft_gate_scan3'), 'https://app.test');
+  assert.equal(checkoutUrl.searchParams.get('placement'), 'soft_gate_scan3');
+  assert.equal(events.find(event => event.name === 'checkout_click').props.placement, 'soft_gate_scan3');
+  assert.equal(context.showThirdScanSoftGate(result, 'parts_snap'), undefined);
+  assert.equal(events.filter(event => event.name === 'soft_gate_shown').length, 1);
+  context.dismissThirdScanSoftGate();
+  assert.equal(removed, true);
+  assert.equal(events.at(-1).name, 'soft_gate_dismissed');
+  assert.equal(events.at(-1).props.placement, 'soft_gate_scan3');
+});
+
+test('store shell cannot show a third-scan card or claim the session offer', () => {
+  const result = { insertAdjacentHTML: () => { throw Error('store offer rendered'); } };
+  const { context, events } = harness([...checkoutFunctions, 'showThirdScanSoftGate'], {
+    SCAN_LIMIT_FREE: 3, isPartSnapPro: () => false, isStoreShellMode: () => true,
+  });
+  context.showThirdScanSoftGate(result, 'test_strip');
+  assert.equal(events.length, 0);
+});
+
+test('a prior post-value offer does not suppress the third-scan gate', () => {
+  let html = '';
+  const result = { insertAdjacentHTML: (_position, markup) => { html += markup; } };
+  const { context, events } = harness([...checkoutFunctions, 'showThirdScanSoftGate'], {
+    SCAN_LIMIT_FREE: 3, isPartSnapPro: () => false,
+    sessionStorage: storage({ 'splashlens-post-value-offer-session-v1': '1' }),
+  });
+  context.showThirdScanSoftGate(result, 'parts_snap');
+  assert.match(html, /soft_gate_scan3/);
+  assert.equal(events.filter(event => event.name === 'soft_gate_shown').length, 1);
+});
+
+test('a failed third scan does not show an upgrade card', async () => {
+  let count = 2;
+  let html = '';
+  const result = {
+    get innerHTML() { return html; },
+    set innerHTML(value) { html = value; },
+    insertAdjacentHTML: (_position, markup) => { html += markup; },
+  };
+  const { context, events } = harness([...checkoutFunctions, 'callAIScan', 'showThirdScanSoftGate'], {
+    SCAN_LIMIT_FREE: 3, isPartSnapPro: () => false,
+    getScanUsage: () => ({ count }), recordAIScan: (_mode, usage) => { count = usage.count; },
+    renderPartsSnapResult: (_ai, element) => { element.innerHTML = '<div>More evidence needed</div>'; return false; },
+    getLanguageHeaders: () => ({}), getScanEntitlementToken: () => '',
+    getPartSnapRecoveryContext: () => null, getSplashLensIdentityProfile: () => ({}),
+    getFieldSaveAccount: () => ({}), getPartSnapEvidenceSummary: () => ({}),
+    getScanClientId: () => uuid, withLanguageMetadata: value => value,
+    FREE_PROFILE_TOKEN_KEY: 'profile', ACCOUNT_TOKEN_KEY: 'account',
+    fetch: async () => ({ ok: true, json: async () => ({ result: {}, usage: { source: 'free_metered', count: 3 } }) }),
+  });
+  await context.callAIScan({ toDataURL: () => 'data:image/jpeg;base64,AA==' }, 'parts_snap', result, {});
+  assert.match(html, /More evidence needed/);
+  assert.doesNotMatch(html, /soft_gate_scan3/);
+  assert.equal(events.some(event => event.name === 'soft_gate_shown'), false);
+});
+
+test('successful free scans show the soft gate only after the third complete result', async () => {
+  let count = 0;
+  let html = '';
+  const result = {
+    get innerHTML() { return html; },
+    set innerHTML(value) { html = value; },
+    insertAdjacentHTML: (_position, markup) => { html += markup; },
+  };
+  const { context, events } = harness([...checkoutFunctions, 'callAIScan', 'showThirdScanSoftGate'], {
+    SCAN_LIMIT_FREE: 3, isPartSnapPro: () => false,
+    getScanUsage: () => ({ count }),
+    recordAIScan: (_mode, usage) => { count = usage.count; },
+    renderPartsSnapResult: (_ai, element) => { element.innerHTML = '<div>Full PartSnap result and actions</div>'; return true; },
+    getLanguageHeaders: () => ({}), getScanEntitlementToken: () => '',
+    getPartSnapRecoveryContext: () => null, getSplashLensIdentityProfile: () => ({}),
+    getFieldSaveAccount: () => ({}), getPartSnapEvidenceSummary: () => ({ complete: true }),
+    getScanClientId: () => uuid, withLanguageMetadata: value => value,
+    FREE_PROFILE_TOKEN_KEY: 'profile', ACCOUNT_TOKEN_KEY: 'account',
+    fetch: async () => ({ ok: true, json: async () => ({ result: { component: 'Pump lid' }, usage: { source: 'free_metered', count: count + 1 } }) }),
+  });
+  const canvas = { toDataURL: () => 'data:image/jpeg;base64,AA==' };
+  for (let scan = 1; scan <= 3; scan++) {
+    await context.callAIScan(canvas, 'parts_snap', result, {});
+    assert.match(html, /Full PartSnap result and actions/);
+    assert.equal(html.includes('third-scan-soft-gate'), scan === 3);
+  }
+  assert.ok(html.indexOf('Full PartSnap result and actions') < html.indexOf('third-scan-soft-gate'));
+  assert.equal(events.filter(event => event.name === 'soft_gate_shown').length, 1);
+  assert.equal(events.some(event => event.name === 'ai_scan_failed'), false);
+});
+
+test('Strip Scan offers Pro only after a useful reading and once per session', async () => {
+  let count = 0;
+  let html = '';
+  const result = {
+    isConnected: true,
+    get innerHTML() { return html; },
+    set innerHTML(value) { html = value; },
+    getClientRects: () => [{}],
+    insertAdjacentHTML: (_position, markup) => { html += markup; },
+  };
+  const { context, events } = harness([...checkoutFunctions, 'callAIScan', 'trackFirstUsefulResult',
+    'renderPartSnapResultUpgradeOffer'], {
+    SCAN_LIMIT_FREE: 3, isPartSnapPro: () => false,
+    getScanUsage: () => ({ count }), recordAIScan: (_mode, usage) => { count = usage.count; },
+    renderStripResult: (_ai, element) => { element.innerHTML = '<div>Complete strip readings</div>'; },
+    getLanguageHeaders: () => ({}), getScanEntitlementToken: () => '',
+    getPartSnapRecoveryContext: () => null, getSplashLensIdentityProfile: () => ({}),
+    getFieldSaveAccount: () => ({}), getPartSnapEvidenceSummary: () => ({}),
+    getScanClientId: () => uuid, withLanguageMetadata: value => value,
+    FREE_PROFILE_TOKEN_KEY: 'profile', ACCOUNT_TOKEN_KEY: 'account',
+    fetch: async () => ({ ok: true, json: async () => ({ result: { fc: 2 }, usage: { source: 'free_metered', count: count + 1 } }) }),
+  });
+  const canvas = { toDataURL: () => 'data:image/jpeg;base64,AA==' };
+  await context.callAIScan(canvas, 'test_strip', result, {});
+  assert.ok(html.indexOf('Complete strip readings') < html.indexOf('data-checkout-placement="test_strip_result"'));
+  assert.ok(names(events).indexOf('first_value_completed') < names(events).indexOf('post_value_upgrade_shown'));
+  await context.callAIScan(canvas, 'test_strip', result, {});
+  assert.doesNotMatch(html, /data-checkout-placement=/);
+  assert.equal(events.filter(event => event.name === 'post_value_upgrade_shown').length, 1);
 });
 
 test('paid lane checks configuration and posts the same click identity before navigation', async () => {
@@ -367,13 +522,15 @@ function resultHarness(guidedRetry = false) {
     getPartSnapRecoveryContext: () => null,
     savePartSnapRecoveryContext: () => ({ attempts: 1 }),
     compactPartSnapList: value => value.join('|'),
+    getScanUsage: () => ({ count: 1 }),
+    SCAN_LIMIT_FREE: 3,
     _lastPartSnapResult: {},
   });
 }
 
 test('useful PartSnap success retains legacy result and counts value after rendering', () => {
   const { context, events } = resultHarness();
-  const result = { isConnected: true, innerHTML: '', getClientRects: () => [{}] };
+  const result = { isConnected: true, innerHTML: '', getClientRects: () => [{}], insertAdjacentHTML: () => {} };
   context.renderPartsSnapResult({ component: 'Pump lid', confidence: 'medium' }, result, {});
   assert.match(result.innerHTML, /Pump lid/);
   assert.equal(events.find(event => event.name === 'partsnap_result').props.useful_result, true);

@@ -80,17 +80,17 @@ test('saving job history requires a free save profile signal', () => {
 test('service worker cache version ships the newest account bundle', () => {
   const shellAppUrl = shell.match(/<script src="(\/js\/app\.js\?v=[^"]+)"/ )?.[1];
   const precacheAppUrl = sw.match(/'(\/js\/app\.js\?v=[^']+)'/)?.[1];
-  assert.equal(shellAppUrl, '/js/app.js?v=20261009-restart-a6');
+  assert.equal(shellAppUrl, '/js/app.js?v=20261009-restart-a7');
   assert.equal(precacheAppUrl, shellAppUrl);
-  assert.match(shell, /\/js\/i18n\.js\?v=20261009-restart-a5/);
-  assert.match(sw, /\/js\/i18n\.js\?v=20261009-restart-a5/);
+  assert.match(shell, /\/js\/i18n\.js\?v=20261009-restart-a7/);
+  assert.match(sw, /\/js\/i18n\.js\?v=20261009-restart-a7/);
   assert.match(app, /import\('\.\/truck-qr\.js\?v=20261009-restart-a5'\)/);
   assert.match(sw, /\/js\/truck-qr\.js\?v=20261009-restart-a5/);
   assert.match(sw, /\/js\/vendor\/qrcode-generator\.mjs\?v=20261009-restart-a5/);
   assert.match(app, /import\('\.\/packet-share\.js\?v=20261009-restart-a4'\)/);
   assert.match(sw, /\/js\/packet-share\.js\?v=20261009-restart-a4/);
   assert.match(shell, /errors\.js\?v=20261002-trust-fixes-3/);
-  assert.match(sw, /const CACHE = 'splashlens-v33-restart-a6'/);
+  assert.match(sw, /const CACHE = 'splashlens-v34-restart-a7'/);
   assert.match(sw, /errors\.js\?v=20261002-trust-fixes-3/);
   assert.match(sw, /keys\.filter\(k => k !== CACHE\)/);
 });
