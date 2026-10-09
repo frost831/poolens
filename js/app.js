@@ -3555,7 +3555,7 @@ function codeCard(code, uid, brandColor) {
   const causes = (code.causes || []).slice(0, 5);
   const fixes = (code.fix || []).slice(0, 6);
   return `
-    <div class="error-card" data-code="${escAttr(code.code)}" data-answer-name="${escAttr(code.name)}" style="border-left:3px solid ${brandColor};">
+    <div class="error-card" data-code="${escAttr(code.code)}" data-answer-name="${escAttr(code.name)}" data-answer-proof="${escAttr([causes[0], fixes[0]].filter(Boolean).join(' / '))}" style="border-left:3px solid ${brandColor};">
       <button class="error-toggle" onclick="toggleCode('${uid}')">
         <div style="flex:1;">
           <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:5px;align-items:center;">
@@ -3578,9 +3578,19 @@ function codeCard(code, uid, brandColor) {
             ${fixes.map((f, i) => `<div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:9px;padding:9px;min-height:62px;"><span style="display:inline-grid;place-items:center;width:22px;height:22px;border-radius:999px;background:#0284c7;color:#fff;font-size:11px;font-weight:950;margin-bottom:5px;">${i+1}</span><p class="code-data" style="font-size:12px;line-height:1.28;color:#1e3a8a;font-weight:800;">${f}</p></div>`).join('')}
           </div>
           ${code.callpro ? `<div class="badge-pro" style="margin-top:10px;padding:8px 10px;border-radius:8px;font-size:12px;font-weight:600;text-transform:none;letter-spacing:0;">⚠ ${a3Text('code.callProWarning')}</div>` : ''}
+          <button type="button" class="brain-action secondary" style="margin-top:10px;" onclick="textCodeAnswer(this)">Text it</button>
         </div>
       </div>
     </div>`;
+}
+
+function textCodeAnswer(button) {
+  const card = button.closest('.error-card');
+  if (!card) return;
+  return shareFieldPacket({
+    surface: 'code_answer', kind: 'code', code: card.dataset.code,
+    summary: card.dataset.answerName, evidence: card.dataset.answerProof,
+  });
 }
 
 function toggleCode(uid) {
@@ -4853,6 +4863,8 @@ function validateReportProof(opts = {}) {
     pill.style.background = complete ? '#dcfce7' : '#fee2e2';
     pill.style.color = complete ? '#166534' : '#991b1b';
   }
+  const textButton = document.getElementById('rpt-text-proof-btn');
+  if (textButton) textButton.hidden = !complete;
   setEl('rpt-proof-missing', complete ? '' : `Missing: ${missing.join(', ')}`);
   if (!complete && !opts.quiet) alert(`Stop proof is incomplete: ${missing.join(', ')}`);
   return { complete, missing, source };
@@ -5034,6 +5046,51 @@ function serviceProofSharePayload() {
 
 let _lastSecureProofPacket = null;
 
+function proofPacketSignature(payload) {
+  const { date, visitType, readings, proof, workPerformed, equipmentNotes, recommendations, nextVisit } = payload;
+  return JSON.stringify({ date, visitType, readings, proof, workPerformed, equipmentNotes, recommendations, nextVisit });
+}
+
+function currentProofPassportUrl() {
+  const saved = _lastSecureProofPacket;
+  if (!saved?.shareUrl || (saved.expiresAt && !(Date.parse(saved.expiresAt) > Date.now()))) return '';
+  return saved.signature === proofPacketSignature(serviceProofSharePayload()) ? saved.shareUrl : '';
+}
+
+async function shareFieldPacket({ surface, kind = 'proof', code = '', summary = '', evidence = '', passportUrl = '' }) {
+  try {
+    const { composeProofPacket, shareProofPacket } = await import('./packet-share.js');
+    const packet = composeProofPacket({ language: getLanguageProfile().preferredLanguage, kind, code, summary, evidence, passportUrl });
+    const result = await shareProofPacket({ packet, surface, navigator, document, onEvent: trackSplashLensEvent });
+    if (!result.channel && !result.canceled) showSplashLensNotice('Text sharing is unavailable on this device.');
+    return result;
+  } catch {
+    showSplashLensNotice('Text sharing is unavailable on this device.');
+    return { channel: null };
+  }
+}
+
+function textCurrentProofStop() {
+  if (!validateReportProof({ quiet: true }).complete) return;
+  const passport = buildServicePassport();
+  return shareFieldPacket({
+    surface: 'proof_stop', summary: passport.proof.customerSummary || passport.workPerformed || passport.visitType,
+    evidence: passport.proof.photoProof || passport.proof.issueNote || reportReadingSummary(),
+    passportUrl: currentProofPassportUrl(),
+  });
+}
+
+function textSavedProofStop(button) {
+  const pool = findPoolById(button.dataset.poolId);
+  const passport = pool?.servicePassports?.[Number(button.dataset.passportIndex)];
+  if (!passport?.proof?.complete) return;
+  return shareFieldPacket({
+    surface: 'proof_stop', summary: passport.proof.customerSummary || passport.workPerformed || passport.visitType,
+    evidence: passport.proof.photoProof || passport.proof.issueNote || '',
+    passportUrl: passport.passportExpiresAt && !(Date.parse(passport.passportExpiresAt) > Date.now()) ? '' : passport.passportUrl || '',
+  });
+}
+
 async function submitProofPacketForTeamReview(proofPacketId, payload) {
   const teamId = localStorage.getItem(SPLASHLENS_LAST_TEAM_KEY) || '';
   if (!teamId) throw new Error('Create or join a team workspace before sending proof for review.');
@@ -5098,7 +5155,10 @@ async function createServiceProofShareLink() {
     return;
   }
   const url = stored.shareUrl;
-  _lastSecureProofPacket = { proofPacketId: stored.proofPacketId, payload };
+  _lastSecureProofPacket = {
+    proofPacketId: stored.proofPacketId, payload, shareUrl: url, expiresAt: stored.expiresAt,
+    signature: proofPacketSignature(payload),
+  };
   const message = `SplashLens ${a3Text('packet.title')}\n${url}\n\n${a3Text('packet.shareCaution')}`;
   if (output) {
     output.innerHTML = `
@@ -5553,6 +5613,11 @@ function saveReportToPoolHistory() {
 
   const passport = buildServicePassport();
   passport.poolId = pool.id;
+  const passportUrl = currentProofPassportUrl();
+  if (passportUrl) {
+    passport.passportUrl = passportUrl;
+    passport.passportExpiresAt = _lastSecureProofPacket.expiresAt;
+  }
   const target = pools.find(p => p.id === pool.id);
   if (!target) return;
   if (!target.servicePassports) target.servicePassports = [];
@@ -6686,6 +6751,7 @@ function renderServicePassportHistory(pool) {
         </div>
         <div id="${uid}" class="pool-reading-detail">
           ${servicePassportDetail(r)}
+          ${r.proof?.complete ? `<button type="button" class="brain-action secondary" data-pool-id="${escAttr(pool.id)}" data-passport-index="${passports.length - 1 - i}" onclick="event.stopPropagation();textSavedProofStop(this)">Text it</button>` : ''}
         </div>
       </div>`;
   }).join('');

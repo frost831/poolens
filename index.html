@@ -193,6 +193,7 @@
     /* Buttons */
     .btn-calc { background: linear-gradient(135deg, var(--field-blue-bright) 0%, var(--field-blue) 100%); color: white; border: none; border-radius: var(--field-radius); padding: 14px; font-weight: 800; font-size: 15px; width: 100%; cursor: pointer; letter-spacing: 0.03em; transition: all 0.15s; -webkit-tap-highlight-color: transparent; }
     .btn-calc:active { transform: scale(0.98); opacity: 0.88; }
+    #rpt-text-proof-btn[hidden] { display:none; }
 
     /* Field rescue home */
     .rescue-hero { background: linear-gradient(145deg, #082f49 0%, #0f172a 58%, #134e4a 100%); border: 1px solid rgba(125,211,252,.24); border-radius: 12px; padding: 16px; margin-bottom: 12px; box-shadow: var(--field-shadow); }
@@ -1522,6 +1523,9 @@
       </div>
       <button type="button" class="btn-calc" onclick="createServiceProofShareLink()" style="width:100%;margin-top:10px;background:linear-gradient(135deg,#0f172a,#075985);">
         Create Proof Packet Link
+      </button>
+      <button type="button" id="rpt-text-proof-btn" class="btn-calc" onclick="textCurrentProofStop()" hidden style="width:100%;margin-top:10px;background:#0f766e;">
+        Text it
       </button>
       <button type="button" class="btn-calc" onclick="saveReportToPoolHistory()" style="width:100%;margin-top:10px;background:linear-gradient(135deg,#0f766e,#0d9488);">
         Save to Pool History
