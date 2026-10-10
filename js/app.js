@@ -3566,7 +3566,7 @@ function codeCard(code, uid, brandColor) {
   const causes = (code.causes || []).slice(0, 5);
   const fixes = (code.fix || []).slice(0, 6);
   return `
-    <div class="error-card" data-code="${escAttr(code.code)}" data-answer-name="${escAttr(code.name)}" data-answer-proof="${escAttr([causes[0], fixes[0]].filter(Boolean).join(' / '))}" style="border-left:3px solid ${brandColor};">
+    <div class="error-card" data-code="${escAttr(code.code)}" data-answer-name="${escAttr(code.name)}" data-answer-proof="${escAttr([causes[0], fixes[0]].filter(Boolean).join(' / '))}" data-unverified="${code.unverified === true}" style="border-left:3px solid ${brandColor};">
       <button class="error-toggle" onclick="toggleCode('${uid}')">
         <div style="flex:1;">
           <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:5px;align-items:center;">
@@ -3621,14 +3621,16 @@ function toggleCode(uid) {
     });
     const attachedPoolId = document.getElementById('code-pool-select')?.value;
     if (attachedPoolId) saveLastPoolPointer(attachedPoolId, 'code_lookup');
-    trackFirstUsefulResult('manual_code_answer', det, {
-      role: getSplashLensRole(),
-      code,
-      result_count: 1,
-      time_back_message: 'A code answer was opened without leaving the stop.',
-    });
-    const offer = renderManualCodeAnswerUpgradeOffer();
-    if (offer) det.insertAdjacentHTML('beforeend', offer);
+    if (card?.dataset.unverified !== 'true') {
+      trackFirstUsefulResult('manual_code_answer', det, {
+        role: getSplashLensRole(),
+        code,
+        result_count: 1,
+        time_back_message: 'A code answer was opened without leaving the stop.',
+      });
+      const offer = renderManualCodeAnswerUpgradeOffer();
+      if (offer) det.insertAdjacentHTML('beforeend', offer);
+    }
     window.SplashLensFieldSignals?.onCodeOpened({
       description: card?.textContent || '',
     });
@@ -10390,11 +10392,12 @@ async function callAIScan(canvas, mode, result, status) {
         ${renderScanHits(hits, codes[0], true)}
         ${!hits.length ? `<div style="text-align:center;padding:16px 0;"><button onclick="showCaptureWithManualEntry(document.getElementById('scan-canvas'),'${codes[0]}',document.getElementById('scan-result'),document.getElementById('scan-camera-status'))" style="background:#334155;color:#94a3b8;border:none;border-radius:8px;padding:10px 20px;font-size:13px;cursor:pointer;">Edit Code Manually</button></div>` : ''}
       `;
-      if (hits.length) trackFirstUsefulResult('scan_detected_code_answer', result, {
-        result_count: hits.length, role: getSplashLensRole(),
+      const verifiedCount = countVerifiedCodeHits(hits);
+      if (verifiedCount) trackFirstUsefulResult('scan_detected_code_answer', result, {
+        result_count: verifiedCount, role: getSplashLensRole(),
       });
-      if (thirdFreeScan && hits.length) showThirdScanSoftGate(result, mode);
-      else if (result && hits.length) {
+      if (thirdFreeScan && verifiedCount) showThirdScanSoftGate(result, mode);
+      else if (result && verifiedCount) {
         result.insertAdjacentHTML('beforeend', renderPartSnapResultUpgradeOffer('scan_code_result'));
       }
     } else {
@@ -11996,9 +11999,10 @@ function scanManualSearch(val) {
   const hits = searchErrorDB(val.trim());
   el.innerHTML = renderScanHits(hits, val.trim(), true);
   trackFirstActionStarted(getSplashLensRole(), 'manual_code_lookup');
-  if (hits.length) {
-    trackFirstUsefulResult('scan_manual_code_answer', el, { result_count: hits.length, role: getSplashLensRole() });
-    el.insertAdjacentHTML('beforeend', renderManualLookupUpgradeOffer(hits.length, val.trim()));
+  const verifiedCount = countVerifiedCodeHits(hits);
+  if (verifiedCount) {
+    trackFirstUsefulResult('scan_manual_code_answer', el, { result_count: verifiedCount, role: getSplashLensRole() });
+    el.insertAdjacentHTML('beforeend', renderManualLookupUpgradeOffer(verifiedCount, val.trim()));
   }
 }
 
@@ -12013,10 +12017,11 @@ function runCodeSearch(code, result, status, suppressOffer = false) {
       </div>
       ${renderScanHits(hits, code, true)}
     `;
-    if (hits.length) {
-      trackFirstUsefulResult('scan_detected_code_answer', result, { result_count: hits.length, role: getSplashLensRole() });
+    const verifiedCount = countVerifiedCodeHits(hits);
+    if (verifiedCount) {
+      trackFirstUsefulResult('scan_detected_code_answer', result, { result_count: verifiedCount, role: getSplashLensRole() });
       if (suppressOffer) showThirdScanSoftGate(result, 'error_code');
-      else result.insertAdjacentHTML('beforeend', renderManualLookupUpgradeOffer(hits.length, code));
+      else result.insertAdjacentHTML('beforeend', renderManualLookupUpgradeOffer(verifiedCount, code));
     }
   }
 }
@@ -12055,6 +12060,7 @@ function scanCodeSearch(val) {
   }
   const safeQuery = query.replace(/[^a-zA-Z0-9 ._-]/g, '').slice(0, 40);
   const hits = searchErrorDB(query, _scanBrand);
+  const verifiedCount = countVerifiedCodeHits(hits);
   trackFirstActionStarted(getSplashLensRole(), 'manual_code_lookup');
   el.innerHTML = renderScanHits(hits, query, true);
   if (!hits.length && _scanBrand && searchErrorDB(query).length) {
@@ -12075,18 +12081,18 @@ function scanCodeSearch(val) {
       brand: _scanBrand || 'all',
       result_count: hits.length,
     });
-    if (hits.length > 0) {
+    if (verifiedCount > 0) {
       trackSplashLensEvent('scan_code_answer_opened', {
         code: hits[0]?.code || safeQuery,
-        result_count: hits.length,
+        result_count: verifiedCount,
         workflow: 'scan_lookup_search',
       });
       trackFirstUsefulResult('scan_lookup_search', el, {
         role: getSplashLensRole(),
-        result_count: hits.length,
+        result_count: verifiedCount,
         time_back_message: 'Lookup answer found inside scanner mode.',
       });
-    } else {
+    } else if (!hits.length) {
       trackSplashLensEvent('lookup_zero_result', {
         role: getSplashLensRole(),
         workflow: 'scan_lookup_search',
@@ -12095,7 +12101,11 @@ function scanCodeSearch(val) {
       });
     }
   }
-  if (hits.length) el.insertAdjacentHTML('beforeend', renderManualLookupUpgradeOffer(hits.length, query));
+  if (verifiedCount) el.insertAdjacentHTML('beforeend', renderManualLookupUpgradeOffer(verifiedCount, query));
+}
+
+function countVerifiedCodeHits(hits) {
+  return hits.filter(hit => hit.unverified !== true).length;
 }
 
 function searchErrorDB(query, brandFilter) {
@@ -12171,7 +12181,7 @@ function renderScanHits(hits, query, suppressOffer = false) {
       ${h.callpro ? `<p style="color:#fbbf24;font-size:12px;font-weight:700;margin-top:10px;">⚠ ${a3Text('code.callPro')}</p>` : ''}
       <p style="color:#64748b;font-size:10px;line-height:1.45;margin-top:10px;">${a3Text('code.referenceOnly')}</p>
     </div>
-  `).join('') + (suppressOffer ? '' : renderManualLookupUpgradeOffer(hits.length, query));
+  `).join('') + (suppressOffer ? '' : renderManualLookupUpgradeOffer(countVerifiedCodeHits(hits), query));
 }
 
 function renderManualLookupUpgradeOffer(resultCount, query) {

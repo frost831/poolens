@@ -61,6 +61,34 @@ test('retired code families remain searchable without restoring guessed meanings
   }
 });
 
+test('Hayward H-Series unsupported meanings fail closed and keep the search route', () => {
+  const family = errorContext.window.ERROR_DB.hayward.categories['H-Series Gas Heater'];
+  assert.equal(family.verificationStatus, 'unverified');
+  assert.equal(family.codes.length, 1);
+  assert.equal(family.codes[0].unverified, true);
+  assert.ok(family.codes[0].searchAliases.includes('E05'));
+  assert.match(family.note, /LO.*E05/);
+  assert.doesNotMatch(JSON.stringify(family), /jumper pressure switch|replace pressure switch if flow/i);
+  const start = appSource.indexOf('function searchErrorDB');
+  const end = appSource.indexOf('function renderScanHits', start);
+  const searchContext = { window: { ERROR_DB: errorContext.window.ERROR_DB } };
+  vm.createContext(searchContext);
+  vm.runInContext(`${appSource.slice(start, end)}; this.searchErrorDB = searchErrorDB;`, searchContext);
+  const haywardHit = searchContext.searchErrorDB('Hayward E05').find(hit => hit.brandKey === 'hayward' && hit.category === 'H-Series Gas Heater');
+  assert.equal(haywardHit?.code, 'UNVERIFIED');
+  assert.equal(haywardHit?.unverified, true);
+  const heatPro = errorContext.window.ERROR_DB.hayward.categories['HeatPro Heat Pump'];
+  assert.doesNotMatch(JSON.stringify(heatPro), /bypass flow switch|20 GPM typically/i);
+});
+
+test('updated code data and app logic refresh the installed offline cache', () => {
+  assert.match(serviceWorker, /splashlens-v42-code-proof/);
+  for (const asset of ['errors.js?v=20261010-hayward-safety', 'app.js?v=20261010-code-value']) {
+    assert.ok(shell.includes(`/js/${asset}`));
+    assert.ok(serviceWorker.includes(`/js/${asset}`));
+  }
+});
+
 test('first value requires an opened answer or completed calculation and first-session prompts wait', () => {
   assert.match(appSource, /trackSplashLensEvent\('code_answer_opened'/);
   assert.match(appSource, /trackSplashLensEvent\('calculation_completed'/);

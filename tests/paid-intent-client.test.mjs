@@ -417,6 +417,28 @@ test('manual answers count first action and first value when opened, not when cl
   assert.ok(names(events).indexOf('first_value_completed') < names(events).indexOf('post_value_upgrade_shown'));
 });
 
+test('unverified code answers never count as first value or show checkout', () => {
+  const offers = [];
+  const detail = { isConnected: true, innerHTML: '<p>Check the model manual</p>', getClientRects: () => [{}],
+    classList: { toggle: () => true },
+    closest: () => ({ dataset: { code: 'UNVERIFIED', answerName: 'Meaning withheld', unverified: 'true' } }),
+    insertAdjacentHTML: (_position, html) => offers.push(html) };
+  const { context, events } = harness([...valueFunctions, 'toggleCode', 'claimPostValueOffer', 'renderManualCodeAnswerUpgradeOffer'], {
+    document: { getElementById: id => id.startsWith('det-') ? detail : { style: {} } },
+    isPartSnapPro: () => false,
+    getCheckoutUrl: () => '/api/checkout?plan=monthly',
+  });
+  context.toggleCode('hayward-e05');
+  assert.deepEqual(names(events), ['first_action_started', 'code_answer_opened']);
+  assert.equal(offers.length, 0);
+});
+
+test('only verified code matches qualify for lookup value and offers', () => {
+  const { context } = harness(['countVerifiedCodeHits']);
+  assert.equal(context.countVerifiedCodeHits([{ unverified: true }]), 0);
+  assert.equal(context.countVerifiedCodeHits([{ unverified: true }, { code: 'LO' }]), 1);
+});
+
 test('invalid PartSnap entry does not claim first action, but accepted evidence does', () => {
   const { context, events } = harness(valueFunctions);
   context.trackFirstActionStarted('tech', 'Use real PartSnap');
