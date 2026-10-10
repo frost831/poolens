@@ -70,7 +70,7 @@ test('both code-search surfaces debounce and dedupe a settled zero-hit equipment
     clearTimeout: () => {}, setTimeout: callback => { callback(); return 1; },
   });
   vm.runInContext('let _scanBrand = null;', h.context);
-  vm.runInContext([fn('onErrorSearch'), fn('scanCodeSearch')].join('\n'), h.context);
+  vm.runInContext([fn('onErrorSearch'), fn('scanCodeSearch'), fn('countVerifiedCodeHits')].join('\n'), h.context);
   h.context.onErrorSearch('E999');
   h.context.scanCodeSearch('E999');
   assert.equal(h.posted.length, 1);
