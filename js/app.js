@@ -3627,6 +3627,8 @@ function toggleCode(uid) {
       result_count: 1,
       time_back_message: 'A code answer was opened without leaving the stop.',
     });
+    const offer = renderManualCodeAnswerUpgradeOffer();
+    if (offer) det.insertAdjacentHTML('beforeend', offer);
     window.SplashLensFieldSignals?.onCodeOpened({
       description: card?.textContent || '',
     });
@@ -12190,6 +12192,17 @@ function renderManualLookupUpgradeOffer(resultCount, query) {
         <a data-checkout-plan="monthly" data-checkout-placement="scan_lookup_search" href="${getCheckoutUrl('monthly', 'scan_lookup_search')}" target="_blank" rel="noopener" onclick="this.href=trackPostValueUpgrade('monthly','scan_lookup_search')" style="background:#0ea5e9;color:#082f49;text-decoration:none;text-align:center;border-radius:8px;padding:10px 7px;font-size:11px;font-weight:950;">${a3Text('upgrade.goProPrice')}</a>
         <a data-checkout-plan="yearly" data-checkout-placement="scan_lookup_search" href="${getCheckoutUrl('yearly', 'scan_lookup_search')}" target="_blank" rel="noopener" onclick="this.href=trackPostValueUpgrade('yearly','scan_lookup_search')" style="background:#22c55e;color:#052e16;text-decoration:none;text-align:center;border-radius:8px;padding:10px 7px;font-size:11px;font-weight:950;">${a3Text('upgrade.saveYearly')}</a>
       </div>
+    </div>`;
+}
+
+function renderManualCodeAnswerUpgradeOffer() {
+  if (isPartSnapPro() || isStoreShellMode() || !claimPostValueOffer()) return '';
+  const placement = 'manual_code_answer';
+  trackSplashLensEvent('post_value_upgrade_shown', { feature: 'job_memory', placement });
+  return `
+    <div class="manual-code-pro-offer" style="background:#082f49;border:1px solid #0ea5e9;border-radius:8px;padding:12px;margin-top:12px;">
+      <p style="color:#f8fafc;font-size:13px;font-weight:800;line-height:1.4;margin-bottom:10px;">${a3Text('upgrade.saveJob')}</p>
+      <a data-checkout-plan="monthly" data-checkout-placement="${placement}" href="${getCheckoutUrl('monthly', placement)}" target="_blank" rel="noopener" onclick="this.href=trackCheckoutIntent('monthly','manual_code_answer')" style="display:inline-flex;align-items:center;justify-content:center;min-height:44px;background:#0ea5e9;color:#082f49;text-decoration:none;border-radius:8px;padding:10px 14px;font-size:13px;font-weight:900;">${a3Text('upgrade.goProPrice')}</a>
     </div>`;
 }
 

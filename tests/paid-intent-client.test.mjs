@@ -119,7 +119,7 @@ test('post-value checkout preserves the legacy click and upgrade events', () => 
 test('native shells cannot render or initiate web upgrade paths', () => {
   for (const store of ['ios', 'android', 'native']) {
     const { context, events } = harness([...checkoutFunctions,
-      'renderPostValueUpgradeOffer', 'renderPartSnapResultUpgradeOffer', 'renderManualLookupUpgradeOffer'], {
+      'renderPostValueUpgradeOffer', 'renderPartSnapResultUpgradeOffer', 'renderManualLookupUpgradeOffer', 'renderManualCodeAnswerUpgradeOffer'], {
       getStoreShellMode: () => store, isStoreShellMode: () => true, isPartSnapPro: () => false,
     });
     assert.equal(context.getCheckoutUrl('monthly', 'account_dashboard'), '');
@@ -128,6 +128,7 @@ test('native shells cannot render or initiate web upgrade paths', () => {
     assert.equal(context.renderPostValueUpgradeOffer(), '');
     assert.equal(context.renderPartSnapResultUpgradeOffer(), '');
     assert.equal(context.renderManualLookupUpgradeOffer(1, 'E05'), '');
+    assert.equal(context.renderManualCodeAnswerUpgradeOffer(), '');
     assert.equal(events.length, 0);
   }
 });
@@ -139,15 +140,16 @@ test('zero-result lookup generates neither an offer nor an impression', () => {
 });
 
 test('all rendered web upgrade links replace their href with the attributed intent URL', () => {
-  for (const [renderer, args] of [
-    ['renderPostValueUpgradeOffer', []],
-    ['renderPartSnapResultUpgradeOffer', []],
-    ['renderManualLookupUpgradeOffer', [1, 'E05']],
+  for (const [renderer, args, linkCount, clickHandler] of [
+    ['renderPostValueUpgradeOffer', [], 2, 'trackPostValueUpgrade'],
+    ['renderPartSnapResultUpgradeOffer', [], 2, 'trackPostValueUpgrade'],
+    ['renderManualLookupUpgradeOffer', [1, 'E05'], 2, 'trackPostValueUpgrade'],
+    ['renderManualCodeAnswerUpgradeOffer', [], 1, 'trackCheckoutIntent'],
   ]) {
     const { context } = harness([...checkoutFunctions, renderer], { isPartSnapPro: () => false });
     const html = context[renderer](...args);
-    assert.equal((html.match(/data-checkout-plan=/g) || []).length, 2);
-    assert.equal((html.match(/this.href=trackPostValueUpgrade/g) || []).length, 2);
+    assert.equal((html.match(/data-checkout-plan=/g) || []).length, linkCount, renderer);
+    assert.equal((html.match(new RegExp(`this.href=${clickHandler}`, 'g')) || []).length, linkCount, renderer);
     assert.doesNotMatch(html, /sl_checkout_/);
   }
   assert.match(functionSource('showScanLimitModal'), /this.href=trackCheckoutIntent/);
@@ -393,10 +395,14 @@ test('rendered checkout links use the central POST helper before navigation', ()
 
 test('manual answers count first action and first value when opened, not when closed', () => {
   let open = false;
+  const offers = [];
   const detail = { isConnected: true, innerHTML: '<p>Check the filter</p>', getClientRects: () => [{}],
-    classList: { toggle: () => (open = !open) }, closest: () => ({ dataset: { code: 'E05', answerName: 'Pump fault' } }) };
-  const { context, events } = harness([...valueFunctions, 'toggleCode'], {
+    classList: { toggle: () => (open = !open) }, closest: () => ({ dataset: { code: 'E05', answerName: 'Pump fault' } }),
+    insertAdjacentHTML: (_position, html) => offers.push(html) };
+  const { context, events } = harness([...valueFunctions, 'toggleCode', 'claimPostValueOffer', 'renderManualCodeAnswerUpgradeOffer'], {
     document: { getElementById: id => id.startsWith('det-') ? detail : { style: {} } },
+    isPartSnapPro: () => false,
+    getCheckoutUrl: () => '/api/checkout?plan=monthly',
   });
   context.toggleCode('pump-e05');
   context.toggleCode('pump-e05');
@@ -404,6 +410,11 @@ test('manual answers count first action and first value when opened, not when cl
   assert.equal(events.filter(event => event.name === 'first_action_started').length, 1);
   assert.equal(events.filter(event => event.name === 'first_value_completed').length, 1);
   assert.equal(events.filter(event => event.name === 'code_answer_opened').length, 2);
+  assert.equal(events.filter(event => event.name === 'post_value_upgrade_shown').length, 1);
+  assert.equal(offers.length, 1);
+  assert.match(offers[0], /data-checkout-placement="manual_code_answer"/);
+  assert.equal((offers[0].match(/data-checkout-plan=/g) || []).length, 1);
+  assert.ok(names(events).indexOf('first_value_completed') < names(events).indexOf('post_value_upgrade_shown'));
 });
 
 test('invalid PartSnap entry does not claim first action, but accepted evidence does', () => {
