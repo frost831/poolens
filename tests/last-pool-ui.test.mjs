@@ -78,6 +78,7 @@ test('code answer updates Last pool only when a saved pool is attached', () => {
     trackFirstActionStarted() {},
     getSplashLensRole: () => 'tech',
     trackFirstUsefulResult() {},
+    renderManualCodeAnswerUpgradeOffer: () => '',
     window: { SplashLensFieldSignals: { onCodeOpened() {} } },
   });
   vm.runInNewContext(section('function toggleCode(uid)', 'function onErrorSearch(q)'), h.context);
