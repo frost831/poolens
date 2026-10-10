@@ -9092,6 +9092,7 @@ async function captureAndAnalyze() {
   const status = document.getElementById('scan-camera-status');
   const result = document.getElementById('scan-result');
   if (!video || !canvas) return;
+  const usingUploadedPhoto = _scanUploadedFrameReady;
 
   if (_scanMode === 'parts' && getPartSnapEvidenceSummary().complete) {
     _scanUploadedFrameReady = false;
@@ -9117,12 +9118,13 @@ async function captureAndAnalyze() {
     if (!evidenceBeforeCapture.complete) {
       const preflight = inspectPartSnapImage(canvas);
       if (preflight.block) {
-        showPartSnapImagePreflight(preflight, result, status);
+        showPartSnapImagePreflight(preflight, result, status, usingUploadedPhoto);
         return;
       }
       if (preflight.warnings.length) {
         trackSplashLensEvent('partsnap_image_preflight_warning', {
-          warnings: preflight.warnings,
+          primary_warning: preflight.warnings[0],
+          warning_count: preflight.warnings.length,
           brightness: preflight.brightness,
           contrast: preflight.contrast,
           edge_score: preflight.edgeScore,
@@ -9259,14 +9261,17 @@ function partSnapPreflightCopy(code) {
   return copy[code] || ['Retake photo', 'Capture a clearer part close-up and the equipment model plate.'];
 }
 
-function showPartSnapImagePreflight(preflight, result, status) {
-  trackPartSnapResultFailure('photo_quality');
+function showPartSnapImagePreflight(preflight, result, status, usingUploadedPhoto = false) {
   if (status) status.textContent = 'PHOTO NEEDS PROOF BEFORE AI SCAN';
   const primary = preflight.blockers[0] || preflight.warnings[0] || 'retake';
+  const captureSource = usingUploadedPhoto ? 'gallery' : 'camera';
+  trackPartSnapResultFailure('photo_quality', { blocker: primary, capture_source: captureSource });
   const [title, body] = partSnapPreflightCopy(primary);
   trackSplashLensEvent('partsnap_image_preflight_blocked', {
-    blockers: preflight.blockers,
-    warnings: preflight.warnings,
+    primary_blocker: primary,
+    blocker_count: preflight.blockers.length,
+    warning_count: preflight.warnings.length,
+    capture_source: captureSource,
     brightness: preflight.brightness,
     contrast: preflight.contrast,
     edge_score: preflight.edgeScore,
@@ -9295,7 +9300,7 @@ function showPartSnapImagePreflight(preflight, result, status) {
         </div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-        <button type="button" onclick="captureAndAnalyze()" style="background:#ea580c;color:#fff;border:0;border-radius:9px;padding:12px 9px;font-size:12px;font-weight:950;cursor:pointer;">Retake now</button>
+        <button type="button" onclick="${usingUploadedPhoto ? 'requestGalleryPhotoFallback()' : 'captureAndAnalyze()'}" style="background:#ea580c;color:#fff;border:0;border-radius:9px;padding:12px 9px;font-size:12px;font-weight:950;cursor:pointer;">${usingUploadedPhoto ? 'Choose another photo' : 'Retake now'}</button>
         <button type="button" onclick="openPartSnapPreflightManualFallback()" style="background:#0f172a;color:#fed7aa;border:1px solid #92400e;border-radius:9px;padding:12px 9px;font-size:12px;font-weight:950;cursor:pointer;">Document manually</button>
       </div>
     </div>`;
