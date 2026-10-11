@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import { DatabaseSync } from 'node:sqlite';
 import { test } from 'node:test';
 
 import {
@@ -42,6 +43,26 @@ test('field intelligence runner is non-interactive and safe for heartbeat use', 
   assert.match(numbersPullSource, /\[switch\]\$PromptForSecret/);
   assert.match(numbersPullSource, /\$PromptForSecret/);
   assert.match(numbersPullSource, /run-field-intelligence-loop\.mjs/);
+});
+
+test('owner and intelligence funnels exclude QA and bot events even when source is app', () => {
+  const db = new DatabaseSync(':memory:');
+  try {
+    db.exec('CREATE TABLE events (event TEXT, source TEXT, path TEXT, user_agent TEXT, props TEXT)');
+    const insert = db.prepare('INSERT INTO events VALUES (?, ?, ?, ?, ?)');
+    for (const trafficClass of ['real', 'qa', 'bot', null]) {
+      insert.run('checkout_cta_shown', 'app', '/', 'Mobile Safari', trafficClass ? JSON.stringify({ traffic_class: trafficClass }) : null);
+    }
+    for (const [source, name] of [[toolSource, 'REPORTING_EVENT_FILTER'], [statsSource, 'EXTERNAL_EVENT_FILTER']]) {
+      const filter = source.split('const ' + name + ' = `')[1]?.split('`;')[0];
+      assert.ok(filter, name);
+      const rows = db.prepare(`SELECT COUNT(*) AS count FROM events WHERE event = 'checkout_cta_shown' ${filter}`).get();
+      assert.equal(rows.count, 2, name);
+    }
+    assert.match(toolSource, /WHERE \(event LIKE '%store%'[^]*\$\{REPORTING_EVENT_FILTER\}/);
+  } finally {
+    db.close();
+  }
 });
 
 test('Windows Wrangler fallback preserves SQL as an argv value', () => {
