@@ -14,6 +14,7 @@ const STALE_ROTATION_PATH = '/api/stripe-webhook?rotation=flagship-audit-3dc2b80
 const REPORTING_EVENT_FILTER = `
  AND COALESCE(event, '') NOT IN ('session_heartbeat', 'amplitude_readiness_smoke', 'growth_plan_smoke', 'audit_handoff_probe', 'codex_deploy_smoke', 'codex_launch_probe', 'codex_post_push_probe', 'command_center_probe', 'release_gate_live_custom_domain', 'release_gate_live_preview')
  AND COALESCE(source, '') NOT IN ('qa', 'codex', 'codex_smoke', 'launch-gate-test')
+ AND CASE WHEN json_valid(props) THEN COALESCE(json_extract(props, '$.traffic_class'), 'real') ELSE 'real' END = 'real'
  AND lower(COALESCE(source, '')) NOT LIKE 'codex%'
  AND lower(COALESCE(source, '')) NOT IN ('release_gate', 'release-gate')
  AND lower(COALESCE(user_agent, '')) NOT LIKE '%headless%'
@@ -358,7 +359,8 @@ function remoteD1Snapshot(database) {
   const storeSignals = d1Rows(database, `
     SELECT event, COUNT(*) AS count, MIN(created_at) AS firstSeen, MAX(created_at) AS lastSeen
     FROM events
-    WHERE event LIKE '%store%' OR event LIKE '%play%' OR event LIKE '%native%' OR event LIKE '%install%'
+    WHERE (event LIKE '%store%' OR event LIKE '%play%' OR event LIKE '%native%' OR event LIKE '%install%')
+      ${REPORTING_EVENT_FILTER}
     GROUP BY event
     ORDER BY count DESC
   `);
