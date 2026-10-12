@@ -51,11 +51,13 @@ Launch verdict: Play metadata and a signed AAB have been submitted to production
 
 ## October 12, 2026 Update
 
-The May launch status above is historical. Production currently serves 1.0.8 (versionCode 9). Version 1.0.9 (versionCode 10, min SDK 24, target SDK 36) is available to the existing two-account internal tester list, not production. The signed bundle was validated by bundletool and Play with upload certificate SHA-256 `9F:B4:69:CF:41:91:74:BF:76:21:32:34:AF:7A:53:0D:75:02:58:0A:33:77:C9:D8:91:71:E4:E9:4B:17:2E:96`. Installed-device acceptance is still required before promoting it.
+The May launch status above is historical. Production still serves 1.0.8 (versionCode 9) while Google's review is pending. Version 1.0.9 (versionCode 10, min SDK 24, target SDK 36) is available to the existing two-account internal tester list. The user reported its installed-device checks passed on October 12; the device model and Android version were not recorded.
+
+The production submission is now 1.0.10 (versionCode 11), a follow-up to the tested code 10 bundle that explicitly marks camera autofocus optional and changes only Android manifest/version metadata. GitHub Android bundle run `38282490063` and CI run `38282489297` passed. Bundletool validated the signed bundle, and its upload certificate SHA-256 matches Play: `9F:B4:69:CF:41:91:74:BF:76:21:32:34:AF:7A:53:0D:75:02:58:0A:33:77:C9:D8:91:71:E4:E9:4B:17:2E:96`. Play accepted code 11 for a 100% production rollout, retaining code 9 for Android API 23 devices; the preview showed zero devices removed. Publishing overview shows the change in review, not live. Code 11 has not been separately installed on a physical device.
 
 The corrected en-US short and full descriptions below were submitted for Google review separately. They are not confirmed live until Play finishes review. Do not reuse the older FreeCore/PartSnap-only wording.
 
-Internal tester opt-in: `https://play.google.com/apps/internaltest/4701158832234876933`. On a physical Android device signed into one of the two existing internal-tester accounts, install 1.0.9 and check first open, PartSnap/Error Scan camera grant and denial recovery, photo-library fallback, manual lookup, cached offline reference, saved packet, and absence of native checkout. Record device/Android version and pass/fail before production promotion.
+Internal tester opt-in: `https://play.google.com/apps/internaltest/4701158832234876933`. The code 10 acceptance list was first open, PartSnap/Error Scan camera grant and denial recovery, photo-library fallback, manual lookup, cached offline reference, saved packet, and absence of native checkout. Record the device/Android version and pass/fail for any further installed-build check.
 
 ## Play Store Metadata
 
