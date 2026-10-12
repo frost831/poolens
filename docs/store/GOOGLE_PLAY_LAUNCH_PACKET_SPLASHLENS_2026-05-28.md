@@ -59,6 +59,8 @@ The corrected en-US short and full descriptions below were submitted for Google 
 
 The Play App Signing certificate SHA-256 is `F9:A4:78:9A:32:C8:10:D6:C1:FC:8E:6A:39:26:79:25:61:C3:E9:E9:A1:5F:D0:9D:6C:5D:4C:36:CE:1A:2B:F7`. Commit `e880a1e` added it alongside the upload certificate in `com.splashlens.fieldtools` Digital Asset Links. Cloudflare Pages deployment `a3e7a7f0` serves the update; both its deployment URL and `https://app.splashlens.com/.well-known/assetlinks.json` returned HTTP 200 with the Play signing certificate and both package entries on October 12. This closes the asset-links handoff, but Google approval and a code 11 installed-device check remain unverified.
 
+Play's automated quick-check indicator completed and Publishing overview changed to "Your changes are now in review" on October 12. Release 1.0.10 still showed "In review" while 1.0.8 remained "Available on Google Play". Managed publishing was off; do not report code 11 as live until the production track confirms it.
+
 Internal tester opt-in: `https://play.google.com/apps/internaltest/4701158832234876933`. The code 10 acceptance list was first open, PartSnap/Error Scan camera grant and denial recovery, photo-library fallback, manual lookup, cached offline reference, saved packet, and absence of native checkout. Record the device/Android version and pass/fail for any further installed-build check.
 
 ## Play Store Metadata
