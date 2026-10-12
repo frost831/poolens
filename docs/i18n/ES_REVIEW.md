@@ -22,6 +22,8 @@ Review against a pool-service technician's usage, including US Spanish and regio
 | Text closing proof packet | Enviar paquete de cierre por mensaje | Check whether this suggests a server send; the tech opens their SMS composer. |
 | 3 of 3 free AI scans | Usaste las 3 de 3 lecturas de IA gratis | Confirm readable short copy and that an unsuccessful scan never triggers this offer. |
 
+Free-identification soft-gate strings (`softgate.*`) are machine-drafted. "{count}" is the number of successful free part identifications saved on this device. The offer does not say a scan will expire or that a price changed. "Cerrar oferta Pro" only hides the card.
+
 Camera fallback strings (`camera.*`) are machine-drafted. "Subir foto" opens a photo already on the device. "Buscar manualmente" opens Code Lookup. Neither path claims the camera will start working.
 
 Seasonal checklist strings (`seasonal.*`) are machine-drafted. "Las notificaciones siguen apagadas" means the app does not request notification permission. "Sun Belt" is left in English as the region name. "Ocultar" only hides this year's in-app card.

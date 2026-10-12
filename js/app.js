@@ -10831,6 +10831,7 @@ function renderPartsSnapResult(ai, result, status) {
       time_back_message: 'Part path, missing proof, and packet actions are visible.',
     });
     window.SplashLensStopFlow?.onPartIdentified?.(_lastPartSnapResult);
+    window.SplashLensSoftGate?.noteSuccessfulFreeId?.(_lastPartSnapResult, result);
     if (getScanUsage().count < SCAN_LIMIT_FREE) {
       result.insertAdjacentHTML('beforeend', renderPartSnapResultUpgradeOffer('partsnap_result'));
     }

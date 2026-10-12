@@ -264,6 +264,10 @@ export const I18N = Object.freeze({
     'camera.recoveryBody': 'Upload an existing photo or use free manual Code Lookup. Camera is not required for either path.',
     'camera.uploadPhoto': 'Upload photo',
     'camera.searchManually': 'Search manually',
+    'softgate.kicker': 'Pro',
+    'softgate.title': 'This identification stays on screen.',
+    'softgate.body': 'Successful free part identifications on this device: {count}. Pro is available when you want more AI scans. Manual lookup stays free.',
+    'softgate.dismiss': 'Dismiss Pro offer',
   }),
   // needs_native_review: every Spanish string below is a machine-drafted UI asset.
   es: Object.freeze({
@@ -536,6 +540,11 @@ export const I18N = Object.freeze({
     'camera.recoveryBody': 'Sube una foto existente o usa la búsqueda manual de Code Lookup. La cámara no hace falta para ninguno de los dos caminos.',
     'camera.uploadPhoto': 'Subir foto',
     'camera.searchManually': 'Buscar manualmente',
+    // needs_native_review: machine-drafted free-identification soft gate.
+    'softgate.kicker': 'Pro',
+    'softgate.title': 'Esta identificación sigue en pantalla.',
+    'softgate.body': 'Identificaciones de piezas gratis correctas en este dispositivo: {count}. Pro está disponible si quieres más lecturas de IA. La búsqueda manual sigue gratis.',
+    'softgate.dismiss': 'Cerrar oferta Pro',
   }),
 });
 
