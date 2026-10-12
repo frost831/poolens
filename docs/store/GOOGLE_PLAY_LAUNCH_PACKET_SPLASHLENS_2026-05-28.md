@@ -10,7 +10,7 @@ Scope: Google Play launch packet for the current SplashLens pool-service field a
 - Marketing URL: `https://splashlens.com`
 - Privacy URL: `https://app.splashlens.com/privacy`
 - Support URL: `https://app.splashlens.com`
-- Current product promise: FreeCore field reference app for pool service technicians. Search equipment codes, calculate chemical doses, create service notes, use filter/checklist references, and use 3 included PartSnap app scans a month for optional scanner workflows.
+- Current product promise: free manual field reference for pool technicians, with an email-verified profile unlocking three AI scans per month across scanner tools.
 - Important legacy warning: `github-projects/splashlens` contains an older Unity AR pool-visualizer/dealer-sales concept. Do not use that AR/dealer copy, screenshots, or build lane for the current pool-tech PWA/scanner Play launch.
 
 ## Play Console Execution Update - 2026-05-28
@@ -49,6 +49,14 @@ Artifact verification:
 
 Launch verdict: Play metadata and a signed AAB have been submitted to production review on the correct ThrottleShare developer account. Google Play approval and the final app-signing asset-links update remain external follow-ups.
 
+## October 12, 2026 Update
+
+The May launch status above is historical. Production currently serves 1.0.8 (versionCode 9). Version 1.0.9 (versionCode 10, min SDK 24, target SDK 36) is available to the existing two-account internal tester list, not production. The signed bundle was validated by bundletool and Play with upload certificate SHA-256 `9F:B4:69:CF:41:91:74:BF:76:21:32:34:AF:7A:53:0D:75:02:58:0A:33:77:C9:D8:91:71:E4:E9:4B:17:2E:96`. Installed-device acceptance is still required before promoting it.
+
+The corrected en-US short and full descriptions below were submitted for Google review separately. They are not confirmed live until Play finishes review. Do not reuse the older FreeCore/PartSnap-only wording.
+
+Internal tester opt-in: `https://play.google.com/apps/internaltest/4701158832234876933`. On a physical Android device signed into one of the two existing internal-tester accounts, install 1.0.9 and check first open, PartSnap/Error Scan camera grant and denial recovery, photo-library fallback, manual lookup, cached offline reference, saved packet, and absence of native checkout. Record device/Android version and pass/fail before production promotion.
+
 ## Play Store Metadata
 
 Title, 30-character limit:
@@ -57,36 +65,26 @@ SplashLens Field Tools
 
 Short description, 80-character limit:
 
-FreeCore pool tech app: codes, dosing, notes, 3 PartSnap scans/month.
+Pool tech code lookup, dosing estimates, closing checks and optional AI scans.
 
 Full description:
 
-SplashLens is a FreeCore field reference app for pool service technicians who need fast answers at the equipment pad.
+SplashLens is a field reference for pool and spa technicians. At the equipment pad, look up an equipment code, estimate a chemical dose from readings you enter, or draft a service summary.
 
-Use SplashLens to search pool equipment codes, estimate chemical doses from values you enter, draft service notes, review filter and maintenance checklists, and use 3 included PartSnap app scans a month for optional online scanner workflows.
+Free manual tools include code lookup, pool-volume and dosing calculators, service notes, filter references, and closing checklists. Manual reference tools can work offline after first load when the needed data is cached. No account is required for manual lookup or calculators.
 
-FreeCore tools do not require an account. Manual lookup, calculators, notes, filters, checklists, Facility Assist, and 3 PartSnap app scans a month are designed for field use. Manual tools can work from the app shell after first load. Online scanner features require internet access and are user-initiated. Splash Lens Pro Unlimited is the paid scanner-capacity and saved-job-memory lane where paid access is available.
+Optional AI scanner assistance includes PartSnap, Error Scan, and Strip Scan. AI scans require internet access and a free email-verified field profile. The free allowance is three AI scans total per month across the scanner tools. Camera access is optional: choose an existing photo or use manual lookup if the camera is unavailable.
 
-What SplashLens helps with:
-
-- Equipment error-code lookup and field reference
-- Chemical dosing calculators based on user-entered readings
-- Service notes and visit-report drafting
-- Filter guides, maintenance checklists, and poolside references
-- 3 included PartSnap app scans a month for optional scanner assistance
-
-Important field-use note:
-
-SplashLens provides reference assistance only. AI scanner output must be verified against equipment manuals, calibrated testing, label directions, SDS information where applicable, and professional field judgment. SplashLens does not guarantee diagnosis, repair, chemical safety, manufacturer support, or training certification.
+SplashLens provides reference assistance, not a diagnosis, parts-fitment guarantee, chemical safety certification, or manufacturer endorsement. Confirm the model, code, procedure, dose, and part against current manufacturer manuals, product labels, SDS information where applicable, calibrated readings, and professional judgment before acting.
 
 ## Policy-Safe Claims
 
 Allowed claims for this Play launch:
 
 - FreeCore pool-service field reference app.
-- 3 included PartSnap app scans a month.
+- Three AI scans per month across scanner tools after free email verification.
 - Splash Lens Pro Unlimited as a paid scanner-capacity and saved-job-memory lane where paid access is available.
-- No account required for core use.
+- No account required for manual lookup or calculators; AI scans require an email-verified profile.
 - Manual tools can work offline after first load.
 - Error-code lookup and reference workflows.
 - Chemical dosing calculators based on user-entered data.
