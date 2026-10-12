@@ -1894,12 +1894,15 @@ function storeReviewLinks() {
   ];
 }
 
-function showStoreReviewPrompt(trigger = 'success') {
+function showStoreReviewPrompt(trigger = 'success', options = {}) {
   const state = readStoreReviewState();
-  if (!shouldShowStoreReviewPrompt(state)) return;
+  const overlayOpen = document.getElementById('field-feedback-overlay') || document.getElementById('store-review-overlay');
+  if (options.force) {
+    if (overlayOpen) return false;
+  } else if (!shouldShowStoreReviewPrompt(state)) return false;
   state.promptShown = Date.now();
   writeStoreReviewState(state);
-  trackSplashLensEvent('store_review_prompt_shown', { trigger, wins: state.wins, store: getStoreShellMode() || 'web' });
+  if (!options.silent) trackSplashLensEvent('store_review_prompt_shown', { trigger, wins: state.wins, store: getStoreShellMode() || 'web' });
 
   const links = storeReviewLinks();
   const overlay = document.createElement('div');
@@ -1921,6 +1924,7 @@ function showStoreReviewPrompt(trigger = 'success') {
       </div>
     </div>`;
   document.body.appendChild(overlay);
+  return true;
 }
 
 function closeStoreReviewPrompt() {
@@ -10832,6 +10836,7 @@ function renderPartsSnapResult(ai, result, status) {
     });
     window.SplashLensStopFlow?.onPartIdentified?.(_lastPartSnapResult);
     window.SplashLensSoftGate?.noteSuccessfulFreeId?.(_lastPartSnapResult, result);
+    window.SplashLensReview?.afterSuccessfulId?.();
     if (getScanUsage().count < SCAN_LIMIT_FREE) {
       result.insertAdjacentHTML('beforeend', renderPartSnapResultUpgradeOffer('partsnap_result'));
     }
