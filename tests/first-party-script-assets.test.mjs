@@ -13,6 +13,8 @@ const llms = readFileSync(join(root, 'llms.txt'), 'utf8');
 const appSource = readFileSync(join(root, 'js', 'app.js'), 'utf8');
 const serviceWorker = readFileSync(join(root, 'sw.js'), 'utf8');
 const deployScript = readFileSync(join(root, 'tools', 'deploy-poolens-web.ps1'), 'utf8');
+const dataDeletionRoute = readFileSync(join(root, 'functions', 'data-deletion.html.js'), 'utf8');
+const cleanDataDeletionRoute = readFileSync(join(root, 'functions', 'data-deletion.js'), 'utf8');
 
 test('all first-party scripts referenced by index.html exist as JavaScript files', () => {
   const scripts = [...html.matchAll(/<script[^>]+src="([^"]+)"/g)]
@@ -80,6 +82,11 @@ test('deploy package includes public disclosure and AI crawler files', () => {
   assert.match(deployScript, /llms\.txt/);
   assert.match(deployScript, /robots\.txt/);
   assert.match(deployScript, /_headers/);
+});
+
+test('data deletion routes serve the standalone policy page', () => {
+  assert.match(dataDeletionRoute, /assetUrl\.pathname = '\/data-deletion\.html'/);
+  assert.match(cleanDataDeletionRoute, /export \{ onRequest \} from '.\/data-deletion\.html\.js'/);
 });
 
 test('internal development tooling is blocked from public Pages routes', () => {

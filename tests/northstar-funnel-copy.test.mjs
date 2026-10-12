@@ -97,6 +97,8 @@ test('account dashboard shows commercial lanes without pretending every lane is 
   assert.match(app, /requestSplashLensPartnerCard/);
   assert.match(app, /Free lookup first\. Pay when proof, teams, or partner workflows matter/);
   assert.match(app, /Get Pro/);
+  assert.match(app, /Request Pro/);
+  assert.match(app, /const proAction = storeMode/);
   assert.match(app, /Request team/);
   assert.match(app, /Submit manufacturer \/ training card/);
   assert.match(app, /saveSplashLensCommercialProof/);
@@ -105,4 +107,10 @@ test('account dashboard shows commercial lanes without pretending every lane is 
   assert.match(checkout, /requestAccessConfigured/);
   assert.match(commercial, /pilot_request/);
   assert.match(commercial, /partner_pilot/);
+});
+
+test('native store shells suppress direct checkout offers', () => {
+  assert.match(app, /if \(isPartSnapPro\(\) \|\| isStoreShellMode\(\)\) return '';/);
+  assert.match(app, /requestSplashLensCommercialAccess\('pro'\)/);
+  assert.doesNotMatch(app, /Team Proof OS/);
 });

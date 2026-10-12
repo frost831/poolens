@@ -13,6 +13,7 @@ const teamEndpoint = readFileSync(new URL('../functions/api/team.js', import.met
 const commercialEndpoint = readFileSync(new URL('../functions/api/commercial.js', import.meta.url), 'utf8');
 const stripeWebhookEndpoint = readFileSync(new URL('../functions/api/stripe-webhook.js', import.meta.url), 'utf8');
 const storeMetricsEndpoint = readFileSync(new URL('../functions/api/store-metrics.js', import.meta.url), 'utf8');
+const app = readFileSync(new URL('../js/app.js', import.meta.url), 'utf8');
 const wrangler = readFileSync(new URL('../wrangler.toml', import.meta.url), 'utf8');
 
 test('events endpoint accepts app analytics payload shapes', () => {
@@ -20,6 +21,9 @@ test('events endpoint accepts app analytics payload shapes', () => {
   assert.match(eventsEndpoint, /plainObject\(body\.props\)/);
   assert.match(eventsEndpoint, /plainObject\(body\.properties\)/);
   assert.match(eventsEndpoint, /Event name required/);
+  assert.match(app, /trackSplashLensEvent\('app_open'/);
+  assert.match(app, /trackSplashLensEvent\('screen_view'/);
+  assert.match(app, /screen_class: 'SplashLensWebApp'/);
 });
 
 test('events endpoint stores to D1 when the binding exists', () => {

@@ -1,0 +1,30 @@
+{
+  "capturedAt": "2026-09-10T21:44:55.756Z",
+  "request": {
+    "method": "GET",
+    "urlPath": "/v1/appStoreVersionLocalizations/1e2c22eb-23a2-4938-a3a7-97eb9d7e2bd3/appScreenshotSets?fields[appScreenshotSets]=screenshotDisplayType&limit=50"
+  },
+  "response": {
+    "data": [
+      {
+        "type": "appScreenshotSets",
+        "id": "36c67d6b-4921-4e66-b397-902d575aaa12",
+        "attributes": {
+          "screenshotDisplayType": "APP_IPHONE_67"
+        },
+        "links": {
+          "self": "https://api.appstoreconnect.apple.com/v1/appScreenshotSets/36c67d6b-4921-4e66-b397-902d575aaa12"
+        }
+      }
+    ],
+    "links": {
+      "self": "https://api.appstoreconnect.apple.com/v1/appStoreVersionLocalizations/1e2c22eb-23a2-4938-a3a7-97eb9d7e2bd3/appScreenshotSets?fields%5BappScreenshotSets%5D=screenshotDisplayType&limit=50"
+    },
+    "meta": {
+      "paging": {
+        "total": 1,
+        "limit": 50
+      }
+    }
+  }
+}

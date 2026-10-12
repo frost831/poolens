@@ -1,0 +1,46 @@
+{
+  "capturedAt": "2026-09-10T21:45:02.411Z",
+  "request": {
+    "method": "POST",
+    "urlPath": "/v1/appScreenshots"
+  },
+  "response": {
+    "data": {
+      "type": "appScreenshots",
+      "id": "afb18fbf-0d8b-4d40-a25d-3cbe9b42e614",
+      "attributes": {
+        "fileSize": 317110,
+        "fileName": "04-dosing.png",
+        "sourceFileChecksum": null,
+        "imageAsset": null,
+        "assetToken": "PurpleSource211/v4/d0/5a/a2/d05aa290-06dc-8524-b0c8-7e377e9f2dcf/04-dosing.png",
+        "assetType": "SCREENSHOT",
+        "uploadOperations": [
+          {
+            "method": "PUT",
+            "url": "https://northamerica-1.object-storage.apple.com/itms-assets-prod-200001/PurpleSource211/v4/d0/5a/a2/d05aa290-06dc-8524-b0c8-7e377e9f2dcf/TVVCrq1MBEbkuaWlUx0bFn_qr77RzXpIfeBb2NeJFq4_U003d-1789076702140?partNumber=1&uploadId=e0943130-ad60-11f1-a110-70b2b906abb9&apple-asset-repo-correlation-key=IZHSLZSZGL23DCTRKCD575TON4&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Date=20260910T214502Z&X-Amz-SignedHeaders=host&X-Amz-Credential=PKIAI0ZGNAD8WKMSOOX0%2F20260910%2Fnorthamerica-1%2Fs3%2Faws4_request&X-Amz-Expires=604800&X-Amz-Signature=f5351834cce23d4be1a29c200797f1433d7deda010c447d553a1d981da34060c",
+            "length": 317110,
+            "offset": 0,
+            "requestHeaders": [
+              {
+                "name": "Content-Type",
+                "value": "image/png"
+              }
+            ]
+          }
+        ],
+        "assetDeliveryState": {
+          "errors": [],
+          "warnings": null,
+          "state": "AWAITING_UPLOAD"
+        }
+      },
+      "links": {
+        "self": "https://api.appstoreconnect.apple.com/v1/appScreenshots/afb18fbf-0d8b-4d40-a25d-3cbe9b42e614"
+      }
+    },
+    "links": {
+      "self": "https://api.appstoreconnect.apple.com/v1/appScreenshots"
+    }
+  }
+}

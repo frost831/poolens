@@ -1,0 +1,33 @@
+{
+  "capturedAt": "2026-09-10T21:44:54.926Z",
+  "request": {
+    "method": "GET",
+    "urlPath": "/v1/appStoreVersions/1b349f20-6ea5-4fee-9368-ba73e775db7e/appStoreVersionLocalizations?fields[appStoreVersionLocalizations]=locale,whatsNew,promotionalText,description&limit=50"
+  },
+  "response": {
+    "data": [
+      {
+        "type": "appStoreVersionLocalizations",
+        "id": "1e2c22eb-23a2-4938-a3a7-97eb9d7e2bd3",
+        "attributes": {
+          "description": "SplashLens helps pool and spa techs get off the pad faster.\n\nUse SplashLens to:\n\n- Identify the part with PartSnap and clear photo prompts\n- Check equipment codes and symptom references\n- Prove the visit with saved job history, notes, readings, and customer-safe summaries\n- Use PartSnap Pro and Saved Job Pro when more field capacity is needed\n- Give teams a shared Team Field View for cleaner handoffs\n- Use Facility Assist for daily checks, contamination events, and escalation packets\n- Watch repeat issues before leaving the stop\n- Calculate common chemical dosing adjustments\n- Keep manual lookup, calculators, notes, filters, and checklists available from the app shell after first load\n\nThe core app is free. Optional paid add-ons are available on the web, while native store mode keeps direct web checkout calls to action hidden.\n\nOnline AI scan features require internet access and are assistance only. Always verify scan output, part fit, code lookup, dosing math, and job notes against equipment manuals, model numbers, calibrated tests, label directions, and qualified field judgment.\n\nSplashLens does not guarantee diagnosis, repair, chemical safety, manufacturer support, part fit, or training certification.",
+          "locale": "en-US",
+          "promotionalText": null,
+          "whatsNew": null
+        },
+        "links": {
+          "self": "https://api.appstoreconnect.apple.com/v1/appStoreVersionLocalizations/1e2c22eb-23a2-4938-a3a7-97eb9d7e2bd3"
+        }
+      }
+    ],
+    "links": {
+      "self": "https://api.appstoreconnect.apple.com/v1/appStoreVersions/1b349f20-6ea5-4fee-9368-ba73e775db7e/appStoreVersionLocalizations?fields%5BappStoreVersionLocalizations%5D=whatsNew%2Cdescription%2Clocale%2CpromotionalText&limit=50"
+    },
+    "meta": {
+      "paging": {
+        "total": 1,
+        "limit": 50
+      }
+    }
+  }
+}

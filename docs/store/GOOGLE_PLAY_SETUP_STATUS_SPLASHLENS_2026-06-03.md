@@ -3,7 +3,7 @@
 ## App
 
 - Play app: SplashLens Field Tools
-- Package: com.splashlens.app
+- Package: com.splashlens.fieldtools
 - Signed bundle: `C:\Users\sales\Dropbox\Projects\poolens\play-store-artifacts\SplashLens-Field-Tools-1.0.0-v1-signed.aab`
 - Bundle SHA-256: `7602A83C9A5AD97D66C4C46AE7EB38EC8F9B573995AD0FFF3960794243D97230`
 - Privacy policy: `https://splashlens.com/privacy.html`
@@ -18,9 +18,9 @@
 - Content rating saved as All Other App Types with online content disclosed for generated AI content; rating preview showed ESRB Everyone / PEGI 3 / IARC 3+ style ratings.
 - Target audience saved as 18 and over.
 - Data safety saved:
-  - No data shared with third parties.
-  - Data collected: name, email address, photos, crash logs, diagnostics, other app performance data, app interactions, other user-generated content, other actions.
-  - Data deletion request URL: `https://splashlens.com/privacy.html`
+  - Third-party advertising tracking: no.
+  - Data collected: contact/account identifiers when users create or verify a server-backed profile/account/team/entitlement/support workflow; user-selected photos/text when scanner/support workflows are used; product interaction analytics and diagnostics for app functionality, analytics, reliability, abuse prevention, and security.
+  - Data deletion request URL: `https://app.splashlens.com/data-deletion.html` or the clean route `https://app.splashlens.com/data-deletion` after the current route fix is deployed.
   - Encrypted in transit.
 - Advertising ID declaration saved as no.
 - Government app declaration saved as no.

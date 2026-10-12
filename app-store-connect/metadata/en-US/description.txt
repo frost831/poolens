@@ -14,4 +14,4 @@ FreeCore access keeps manual lookup, calculators, notes, filters, checklists, Fa
 
 Online scan features require internet access and are assistance only. Always verify scan output, part fit, code lookup, dosing math, and job notes against equipment manuals, model numbers, calibrated tests, label directions, and qualified field judgment.
 
-SplashLens does not guarantee diagnosis, repair, chemical safety, manufacturer support, part fit, or training certification.
+SplashLens does not promise diagnosis, repair, chemical safety, manufacturer support, part fit, or training certification.

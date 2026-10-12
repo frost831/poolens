@@ -1,0 +1,1 @@
+PartSnap is now the first field workflow, with clearer proof-before-ordering guidance, updated saved job context, and refined store-mode analytics disclosure.
