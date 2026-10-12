@@ -772,6 +772,7 @@ function refreshFieldSurfaces(tab) {
   window.SplashLensStopFlow?.mount?.(tab);
   window.SplashLensDayRecap?.mount?.(tab);
   window.SplashLensMorningRoute?.mount?.(tab);
+  window.SplashLensSeasonalChecklist?.mount?.(tab);
 }
 
 function initMarketingGate() {

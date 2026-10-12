@@ -131,6 +131,7 @@
     .morning-list { list-style:none; margin:0 0 10px; padding:0; display:grid; gap:8px; }
     .morning-list li { display:flex; justify-content:space-between; gap:8px; align-items:center; font-size:15px; font-weight:700; }
     .morning-list button { width:auto; min-height:44px; margin:0; padding:8px 12px; }
+    #seasonal-region { width:100%; min-height:44px; margin:0 0 10px; font:600 16px/1.2 system-ui,sans-serif; }
 
     /* Bottom nav */
     nav[aria-label="SplashLens field tools"] { overflow:hidden; }
@@ -958,6 +959,7 @@
         <div id="stop-flow-mount"></div>
         <div id="morning-route-mount"></div>
         <div id="day-recap-mount"></div>
+        <div id="seasonal-counter-mount"></div>
         <div class="counter-actions">
           <button type="button" class="counter-action code" onclick="openCounterTool('code')">Code<span>Look up an equipment code offline</span></button>
           <button type="button" class="counter-action" onclick="openCounterTool('part')">Part<span>Open PartSnap</span></button>
@@ -1602,6 +1604,7 @@
 
     <!-- GUIDE (all checklists) -->
     <div id="tab-guide" class="tab-panel" style="padding:14px;">
+      <div id="seasonal-guide-mount"></div>
       <div style="display:flex;gap:6px;margin-bottom:14px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:2px;">
         <button id="cl-btn-opening" class="cat-pill active" onclick="switchClType('opening')">Opening</button>
         <button id="cl-btn-closing" class="cat-pill" onclick="switchClType('closing')">Closing</button>
@@ -1799,11 +1802,12 @@
 
   <script src="/js/errors.js?v=20261010-hayward-safety"></script>
   <script src="/js/data.js?v=20261002-trust-fixes-2"></script>
-  <script type="module" src="/js/i18n.js?v=20261012-morning-route"></script>
-  <script src="/js/app.js?v=20261012-morning-route"></script>
+  <script type="module" src="/js/i18n.js?v=20261012-seasonal"></script>
+  <script src="/js/app.js?v=20261012-seasonal"></script>
   <script type="module" src="/js/stop-flow.js?v=20261012-stop-flow"></script>
   <script type="module" src="/js/day-recap.js?v=20261012-day-recap"></script>
   <script type="module" src="/js/morning-route.js?v=20261012-morning-route"></script>
+  <script type="module" src="/js/seasonal-checklist.js?v=20261012-seasonal"></script>
   <script type="module" src="/js/partsnap-boss-packet.js?v=20261005-boss-draft"></script>
   <script type="module" src="/js/field-signals.js?v=20260728-field-signals"></script>
   <script src="/js/analytics.js"></script>
