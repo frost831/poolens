@@ -1,11 +1,12 @@
-const CACHE = 'splashlens-v43-stop-flow';
+const CACHE = 'splashlens-v44-day-recap';
 const ASSETS = [
   '/',
   '/js/errors.js?v=20261010-hayward-safety',
   '/js/data.js?v=20261002-trust-fixes-2',
-  '/js/i18n.js?v=20261012-stop-flow',
-  '/js/app.js?v=20261012-stop-flow',
+  '/js/i18n.js?v=20261012-day-recap',
+  '/js/app.js?v=20261012-day-recap',
   '/js/stop-flow.js?v=20261012-stop-flow',
+  '/js/day-recap.js?v=20261012-day-recap',
   '/js/crm-proof-export.js?v=20261009-pc20',
   '/js/packet-share.js?v=20261009-restart-a4',
   '/js/truck-qr.js?v=20261009-restart-a5',

@@ -770,6 +770,7 @@ function showTab(name) {
 
 function refreshFieldSurfaces(tab) {
   window.SplashLensStopFlow?.mount?.(tab);
+  window.SplashLensDayRecap?.mount?.(tab);
 }
 
 function initMarketingGate() {

@@ -228,6 +228,13 @@ export const I18N = Object.freeze({
     'stop.openedShare': 'The share sheet opened with the summary.',
     'stop.copiedSummary': 'Summary copied. Paste it into the message you choose.',
     'stop.shareUnavailable': 'The summary could not be opened from this browser.',
+    'recap.kicker': 'End of day',
+    'recap.title': 'Day recap',
+    'recap.empty': 'No stops saved on this device today.',
+    'recap.source': 'These counts are only the stops you saved with New stop on this device today.',
+    'recap.stops': 'Stops logged',
+    'recap.parts': 'Parts identified',
+    'recap.packets': 'Packets sent',
   }),
   // needs_native_review: every Spanish string below is a machine-drafted UI asset.
   es: Object.freeze({
@@ -460,6 +467,14 @@ export const I18N = Object.freeze({
     'stop.openedShare': 'Se abrió la hoja para compartir con el resumen.',
     'stop.copiedSummary': 'Resumen copiado. Pégalo en el mensaje que elijas.',
     'stop.shareUnavailable': 'Este navegador no pudo abrir el resumen.',
+    // needs_native_review: machine-drafted day-recap labels.
+    'recap.kicker': 'Fin del día',
+    'recap.title': 'Resumen del día',
+    'recap.empty': 'Hoy no hay visitas guardadas en este dispositivo.',
+    'recap.source': 'Estos números son solo las visitas que guardaste con Nueva visita en este dispositivo hoy.',
+    'recap.stops': 'Visitas registradas',
+    'recap.parts': 'Piezas identificadas',
+    'recap.packets': 'Paquetes enviados',
   }),
 });
 
