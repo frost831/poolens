@@ -55,7 +55,7 @@ android {
     namespace "com.splashlens.fieldtools"
     defaultConfig {
         applicationId "com.splashlens.fieldtools"
-        minSdkVersion 21
+        minSdkVersion 24
         targetSdkVersion 36
         versionCode 10
         versionName "1.0.9"
