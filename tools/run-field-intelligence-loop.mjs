@@ -502,7 +502,8 @@ function buildRecommendations({ probes, env, stats, admin }) {
     const firstActions = Number(stats.metrics?.firstActions30d ?? signals.first_action ?? 0);
     const firstValues = Number(stats.metrics?.firstValues30d ?? signals.first_value ?? 0);
     const checkoutClicks = Number(stats.metrics?.checkoutClicks30d ?? signals.checkout_intent ?? 0);
-    const checkoutStarts = Number(stats.metrics?.checkoutStarts30d ?? checkoutClicks);
+    const checkoutStartsKnown = Boolean(stats.metrics) && Object.prototype.hasOwnProperty.call(stats.metrics, 'checkoutStarts30d');
+    const checkoutStarts = checkoutStartsKnown ? Number(stats.metrics.checkoutStarts30d) || 0 : null;
     if (firstActions >= 5 && firstValues / firstActions < 0.5) {
       const signalRatio = Math.round((firstValues / firstActions) * 1000) / 10;
       recommendations.push({
@@ -536,11 +537,12 @@ function buildRecommendations({ probes, env, stats, admin }) {
         fix: 'Inspect the matching Stripe session status and source before classifying this as a real prospect or payment failure.',
       });
     }
-    if (checkoutStarts > 0 && checkoutClicks > 0 && Number(stats.metrics?.splashlensPaidCompletions30d ?? stats.metrics?.splashlensPaidCompletions ?? 0) === 0) {
+    if (checkoutClicks > 0 && Number(stats.metrics?.splashlensPaidCompletions30d ?? stats.metrics?.splashlensPaidCompletions ?? 0) === 0) {
+      const startsText = checkoutStartsKnown ? `${checkoutStarts} legacy checkout starts` : 'legacy checkout starts not reported';
       recommendations.push({
         severity: 'high',
         issue: 'Checkout intent exists with no paid completion proof',
-        evidence: `${checkoutStarts} checkout starts, ${checkoutClicks} tracked clicks, and 0 new SplashLens paid completions.`,
+        evidence: `${startsText}, ${checkoutClicks} tracked checkout clicks, and 0 new SplashLens paid completions.`,
         fix: 'Check Stripe dashboard sessions, webhook delivery, and entitlement fulfillment immediately.',
       });
     }

@@ -98,6 +98,7 @@ Write-TableRows -Headers @("Metric", "Value") -Rows @(
   [pscustomobject]@{ Metric = "Useful results, 30 days"; Value = $metrics.firstValues30d },
   [pscustomobject]@{ Metric = "Feedback, 30 days"; Value = $metrics.feedback30d },
   [pscustomobject]@{ Metric = "Checkout clicks, 30 days"; Value = $metrics.checkoutClicks30d },
+  [pscustomobject]@{ Metric = "Legacy checkout starts, 30 days"; Value = $metrics.checkoutStarts30d },
   [pscustomobject]@{ Metric = "Subscribers total"; Value = $metrics.subscribersTotal },
   [pscustomobject]@{ Metric = "Partner leads total"; Value = $metrics.partnerLeadsTotal },
   [pscustomobject]@{ Metric = "SplashLens paid completions"; Value = $metrics.splashlensPaidCompletions },

@@ -36,6 +36,9 @@ test('field intelligence runner is non-interactive and safe for heartbeat use', 
   assert.match(toolSource, /qualifiedFirstValueSessions30d/);
   assert.match(toolSource, /checkoutStarts30d/);
   assert.match(toolSource, /checkoutStarts30d: countEvents\(database, 30, \['checkout_started'\]\)/);
+  assert.doesNotMatch(toolSource, /checkoutStarts30d \?\? checkoutClicks/);
+  assert.match(numbersPullSource, /Checkout clicks, 30 days/);
+  assert.match(numbersPullSource, /Legacy checkout starts, 30 days/);
   assert.match(toolSource, /ce\.source IN \('stripe_webhook', 'stripe_checkout_success'\)/);
   assert.match(toolSource, /splashlensPaidCompletions30d/);
   assert.match(packageJson.scripts['intelligence:check'], /run-field-intelligence-loop\.mjs/);
@@ -181,7 +184,11 @@ test('field intelligence runner flags value-without-feedback and checkout-withou
   });
 
   assert.ok(recommendations.some((item) => /getting value but not leaving feedback/.test(item.issue)));
-  assert.ok(recommendations.some((item) => /Checkout intent exists/.test(item.issue)));
+  const intent = recommendations.find((item) => /Checkout intent exists/.test(item.issue));
+  assert.ok(intent);
+  assert.match(intent.evidence, /legacy checkout starts not reported/);
+  assert.match(intent.evidence, /3 tracked checkout clicks/);
+  assert.doesNotMatch(intent.evidence, /3 legacy checkout starts/);
 });
 
 test('a server checkout start without an app click is not called customer intent', () => {
@@ -206,6 +213,31 @@ test('a server checkout start without an app click is not called customer intent
   assert.ok(recommendations.some((item) => /without a tracked app click/.test(item.issue)));
   assert.ok(recommendations.some((item) => /not producing paid-lane intent/.test(item.issue)));
   assert.ok(!recommendations.some((item) => /Checkout intent exists/.test(item.issue)));
+});
+
+test('checkout clicks and legacy checkout starts stay distinct when both are present', () => {
+  const recommendations = buildRecommendations({
+    env: { statsSecret: true, amplitudeApiKey: false, stripeSecretKey: false },
+    probes: [
+      { label: 'app', ok: true, status: 200 },
+      { label: 'site', ok: true, status: 200 },
+      { label: 'checkoutCatalog', ok: true, status: 200, body: '{"product":"splashlens","plans":[{"key":"partsnap_pro_monthly","checkoutConfigured":true},{"key":"partsnap_pro_yearly","checkoutConfigured":true}]}' },
+      { label: 'amplitudeConfig', ok: true, status: 200, body: '{"ok":true,"enabled":true,"status":"ready"}' },
+      { label: 'statsNoSecret', ok: false, status: 401 },
+    ],
+    stats: {
+      ok: true,
+      metrics: { firstValues30d: 4, feedback30d: 1, checkoutClicks30d: 2, checkoutStarts30d: 5, splashlensPaidCompletions30d: 0 },
+      activitySignals30d: [],
+    },
+    admin: null,
+  });
+
+  const intent = recommendations.find((item) => /Checkout intent exists/.test(item.issue));
+  assert.ok(intent);
+  assert.match(intent.evidence, /5 legacy checkout starts/);
+  assert.match(intent.evidence, /2 tracked checkout clicks/);
+  assert.ok(!recommendations.some((item) => /without a tracked app click/.test(item.issue)));
 });
 
 test('field intelligence arguments default to production SplashLens URLs', () => {

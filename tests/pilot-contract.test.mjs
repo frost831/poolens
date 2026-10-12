@@ -25,8 +25,11 @@ test('pilot workflow measures completion, time, feedback, return, PartSnap, and 
   assert.match(app, /field-feedback-time-saved/);
   assert.match(app, /field-feedback-upgrade-intent/);
   assert.match(app, /challengeCompleted && challenge\.pilot_id/);
-  for (const signal of ['field_challenge_completed', 'time_saved', 'upgrade_intent', 'return_events', 'partsnap_results', 'checkout_starts']) {
+  for (const signal of ['field_challenge_completed', 'time_saved', 'upgrade_intent', 'return_events', 'partsnap_results', 'checkout_clicks', 'checkout_starts']) {
     assert.match(report, new RegExp(signal));
   }
+  assert.match(report, /event = 'checkout_click' THEN 1 ELSE 0 END\) AS checkout_clicks/);
+  assert.match(report, /event = 'checkout_started' THEN 1 ELSE 0 END\) AS checkout_starts/);
+  assert.doesNotMatch(report, /event = 'checkout_click' THEN 1 ELSE 0 END\) AS checkout_starts/);
   assert.match(packageJson.scripts['pilot:report'], /report-closing-pilot\.mjs/);
 });

@@ -6,4 +6,6 @@ Create and apply the saved segment **Real users** with `traffic_class = real` to
 
 `traffic_class` and `is_internal` are assigned at ingestion in `/api/events` and in server payment events, then forwarded to Amplitude. `checkout_click` is client intent; `checkout_click_server` is a deduplicated POST backstop; `checkout_session_created` means Stripe returned a session. None proves payment. Only verified completion and entitlement events count as paid proof.
 
+Owner counts stay separate. `checkoutClicks30d` counts `checkout_click` and `native_purchase_click`. `checkoutStarts30d` counts only the legacy `checkout_started` event. A missing start count is not copied from clicks. Amplitude event names stay `checkout_click` and `checkout_started`; they are not aliases of each other.
+
 The saved segment must be created in the Amplitude UI by an account with project access. This repository does not contain an Amplitude management credential, so the segment is a documented operating rule, not a claim that the remote segment already exists.

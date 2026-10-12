@@ -29,7 +29,8 @@ function query(database) {
       MAX(CASE WHEN event = 'field_feedback_submitted' THEN json_extract(props, '$.upgrade_intent') END) AS upgrade_intent,
       SUM(CASE WHEN event IN ('session_started','return_task_continued','partsnap_field_stop_reopened') THEN 1 ELSE 0 END) AS return_events,
       SUM(CASE WHEN event = 'partsnap_result' THEN 1 ELSE 0 END) AS partsnap_results,
-      SUM(CASE WHEN event = 'checkout_click' THEN 1 ELSE 0 END) AS checkout_starts,
+      SUM(CASE WHEN event = 'checkout_click' THEN 1 ELSE 0 END) AS checkout_clicks,
+      SUM(CASE WHEN event = 'checkout_started' THEN 1 ELSE 0 END) AS checkout_starts,
       MAX(created_at) AS last_seen
     FROM events
     WHERE json_extract(props, '$.pilot_id') = '${PILOT_ID}'
@@ -77,20 +78,21 @@ const rows = PARTICIPANTS.map((participant_id) => ({
   upgrade_intent: '',
   return_events: 0,
   partsnap_results: 0,
+  checkout_clicks: 0,
   checkout_starts: 0,
   last_seen: '',
   ...(byParticipant.get(participant_id) || {}),
 }));
 const totals = rows.reduce((acc, row) => {
-  for (const key of ['starts', 'completions', 'feedback', 'return_events', 'partsnap_results', 'checkout_starts']) acc[key] += Number(row[key] || 0);
+  for (const key of ['starts', 'completions', 'feedback', 'return_events', 'partsnap_results', 'checkout_clicks', 'checkout_starts']) acc[key] += Number(row[key] || 0);
   return acc;
-}, { starts: 0, completions: 0, feedback: 0, return_events: 0, partsnap_results: 0, checkout_starts: 0 });
-const report = { ok: true, pilot_id: PILOT_ID, generated_at: new Date().toISOString(), totals, targets: { partsnap_results: 10, feedback: 5, checkout_starts: 3, verified_new_paid_conversions: 1 }, participants: rows };
+}, { starts: 0, completions: 0, feedback: 0, return_events: 0, partsnap_results: 0, checkout_clicks: 0, checkout_starts: 0 });
+const report = { ok: true, pilot_id: PILOT_ID, generated_at: new Date().toISOString(), totals, targets: { partsnap_results: 10, feedback: 5, checkout_clicks: 3, verified_new_paid_conversions: 1 }, participants: rows };
 
 if (jsonMode) console.log(JSON.stringify(report, null, 2));
 else {
   console.log(`# SplashLens Closing Pilot\n\nGenerated: ${report.generated_at}\n`);
-  console.log(`Starts ${totals.starts} | Completions ${totals.completions} | PartSnap ${totals.partsnap_results}/10 | Feedback ${totals.feedback}/5 | Checkout starts ${totals.checkout_starts}/3`);
+  console.log(`Starts ${totals.starts} | Completions ${totals.completions} | PartSnap ${totals.partsnap_results}/10 | Feedback ${totals.feedback}/5 | Checkout clicks ${totals.checkout_clicks}/3 | Legacy checkout starts ${totals.checkout_starts}`);
   console.table(rows);
   console.log('\nPaid conversion is intentionally excluded from participant attribution until a signed Stripe completion can be joined to a verified account email.');
 }
