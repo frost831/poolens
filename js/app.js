@@ -8815,6 +8815,12 @@ async function deletePartSnapFieldStop(id) {
 
 // ── Camera ──────────────────────────────────
 
+function cameraFallbackCopy(key, fallback) {
+  if (typeof a3Text !== 'function') return fallback;
+  const value = a3Text(key);
+  return value && value !== key ? value : fallback;
+}
+
 function revealNoCameraFallback(noCam, vWrap, reason = 'camera_unavailable') {
   if (vWrap) vWrap.style.display = 'none';
   const controls = document.getElementById('scan-camera-controls');
@@ -8825,13 +8831,56 @@ function revealNoCameraFallback(noCam, vWrap, reason = 'camera_unavailable') {
   // A library upload must not reopen the denied camera via the capture hint.
   document.getElementById('scan-photo-upload')?.removeAttribute('capture');
   const messages = noCam.querySelectorAll('p');
-  if (messages[0]) messages[0].textContent = reason === 'permission_denied' ? 'Camera permission was denied.' : 'Camera is not available.';
-  if (messages[1]) messages[1].textContent = 'Allow Camera in device or browser settings, then tap Retry Camera. You can also upload an existing photo or use free manual Code Lookup without camera access.';
+  const denied = reason === 'permission_denied';
+  const skipped = reason === 'camera_skipped';
+  if (messages[0]) {
+    messages[0].textContent = denied
+      ? cameraFallbackCopy('camera.deniedTitle', 'Camera permission was denied.')
+      : skipped
+        ? cameraFallbackCopy('camera.skippedTitle', 'Camera was not opened.')
+        : cameraFallbackCopy('camera.unavailableTitle', 'Camera is not available.');
+  }
+  if (messages[1]) {
+    messages[1].textContent = denied
+      ? cameraFallbackCopy('camera.deniedBody', 'SplashLens cannot open the camera until permission is allowed. Upload an existing photo or use free manual Code Lookup. You can also allow Camera in settings, then tap Retry Camera.')
+      : cameraFallbackCopy('camera.recoveryBody', 'Upload an existing photo or use free manual Code Lookup. Camera is not required for either path.');
+  }
+  const upload = document.getElementById('scan-upload-photo');
+  if (upload) upload.textContent = cameraFallbackCopy('camera.uploadPhoto', 'Upload photo');
+  const search = document.getElementById('scan-manual-search');
+  if (search) search.textContent = cameraFallbackCopy('camera.searchManually', 'Search manually');
   const status = document.getElementById('scan-camera-status');
   if (status) status.textContent = 'CAMERA UNAVAILABLE - RETRY OR UPLOAD A PHOTO';
   noCam.style.scrollMarginBottom = 'calc(184px + env(safe-area-inset-bottom))';
   noCam.style.scrollMarginTop = '100px';
   requestAnimationFrame(() => noCam.scrollIntoView({ block: 'start', inline: 'nearest', behavior: 'auto' }));
+  if (_scanMode === 'parts') {
+    trackSplashLensEvent('partsnap_camera_fallback_shown', {
+      reason,
+      mode: _scanMode,
+      store: (typeof getStoreShellMode === 'function' ? getStoreShellMode() : '') || 'web',
+      paths: 'upload_photo,manual_search',
+    });
+  }
+}
+
+function uploadPartSnapPhoto() {
+  trackSplashLensEvent('partsnap_upload_photo_clicked', {
+    mode: _scanMode,
+    store: (typeof getStoreShellMode === 'function' ? getStoreShellMode() : '') || 'web',
+  });
+  const input = document.getElementById('scan-photo-upload');
+  input?.removeAttribute('capture');
+  input?.click();
+}
+
+function openPartSnapManualSearch() {
+  trackSplashLensEvent('partsnap_manual_search_opened', {
+    mode: _scanMode,
+    store: (typeof getStoreShellMode === 'function' ? getStoreShellMode() : '') || 'web',
+  });
+  setScanMode('lookup');
+  document.getElementById('scan-code-input')?.focus();
 }
 
 function retryCameraAccess() {

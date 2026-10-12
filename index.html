@@ -1698,6 +1698,8 @@
               <button type="button" onclick="requestGalleryPhotoFallback()" style="background:#0f766e;color:#fff;border:none;padding:12px 10px;border-radius:8px;font-weight:800;cursor:pointer;">Pick Gallery</button>
               <button type="button" onclick="showSplashLensCameraSettingsHelp()" style="background:#fff;color:#334155;border:1px solid #cbd5e1;padding:12px 10px;border-radius:8px;font-weight:800;cursor:pointer;">Camera Settings</button>
               <button type="button" onclick="setScanMode('lookup')" style="background:#fff;color:#0369a1;border:1px solid #7dd3fc;padding:12px 10px;border-radius:8px;font-weight:800;cursor:pointer;">Code Lookup</button>
+              <button type="button" id="scan-upload-photo" onclick="uploadPartSnapPhoto()" style="background:#0f766e;color:#fff;border:none;padding:12px 10px;border-radius:8px;font-weight:800;cursor:pointer;">Upload photo</button>
+              <button type="button" id="scan-manual-search" onclick="openPartSnapManualSearch()" style="background:#fff;color:#0369a1;border:1px solid #7dd3fc;padding:12px 10px;border-radius:8px;font-weight:800;cursor:pointer;">Search manually</button>
             </div>
           </div>
         </div>
@@ -1802,8 +1804,8 @@
 
   <script src="/js/errors.js?v=20261010-hayward-safety"></script>
   <script src="/js/data.js?v=20261002-trust-fixes-2"></script>
-  <script type="module" src="/js/i18n.js?v=20261012-seasonal"></script>
-  <script src="/js/app.js?v=20261012-seasonal"></script>
+  <script type="module" src="/js/i18n.js?v=20261012-camera-fallback"></script>
+  <script src="/js/app.js?v=20261012-camera-fallback"></script>
   <script type="module" src="/js/stop-flow.js?v=20261012-stop-flow"></script>
   <script type="module" src="/js/day-recap.js?v=20261012-day-recap"></script>
   <script type="module" src="/js/morning-route.js?v=20261012-morning-route"></script>

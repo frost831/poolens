@@ -1,10 +1,10 @@
-const CACHE = 'splashlens-v46-seasonal';
+const CACHE = 'splashlens-v47-camera-fallback';
 const ASSETS = [
   '/',
   '/js/errors.js?v=20261010-hayward-safety',
   '/js/data.js?v=20261002-trust-fixes-2',
-  '/js/i18n.js?v=20261012-seasonal',
-  '/js/app.js?v=20261012-seasonal',
+  '/js/i18n.js?v=20261012-camera-fallback',
+  '/js/app.js?v=20261012-camera-fallback',
   '/js/stop-flow.js?v=20261012-stop-flow',
   '/js/day-recap.js?v=20261012-day-recap',
   '/js/morning-route.js?v=20261012-morning-route',

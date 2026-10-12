@@ -459,7 +459,7 @@ function cameraHarness(overrides = {}) {
     parentElement: { prepend(element) { element.movedToTop = true; } },
     removeAttribute(name) { this.removed = name; },
   }]));
-  const { context, events } = harness(['startCamera', 'revealNoCameraFallback', 'retryCameraAccess', 'trackPartSnapResultFailure'], {
+  const { context, events } = harness(['cameraFallbackCopy', 'startCamera', 'revealNoCameraFallback', 'retryCameraAccess', 'trackPartSnapResultFailure'], {
     _scanMode: 'parts', _scanStream: null, _flashTrack: null, S: { tab: 'scan' },
     document: { getElementById: id => elements[id] },
     setTimeout: callback => callback(),
@@ -495,7 +495,8 @@ test('PartSnap requests permission only after explanation consent', async () => 
 test('denial provides photo/manual recovery, records failure, and never records value or first action', async () => {
   const { context, events, elements, paragraphs } = cameraHarness();
   await context.startCamera();
-  assert.deepEqual(names(events), ['partsnap_camera_explanation_shown', 'partsnap_camera_requested', 'scanner_camera_denied', 'partsnap_result_fail', 'partsnap_camera_denied']);
+  assert.deepEqual(names(events), ['partsnap_camera_explanation_shown', 'partsnap_camera_requested', 'scanner_camera_denied', 'partsnap_result_fail', 'partsnap_camera_denied', 'partsnap_camera_fallback_shown']);
+  assert.deepEqual(events.at(-1).props, { reason: 'permission_denied', mode: 'parts', store: 'web', paths: 'upload_photo,manual_search' });
   assert.equal(events.find(event => event.name === 'partsnap_result_fail').props.reason, 'camera_denied');
   assert.match(paragraphs[0].textContent, /denied/);
   assert.match(paragraphs[1].textContent, /existing photo/);
@@ -517,14 +518,44 @@ test('skipping camera does not invoke permission or claim activation', async () 
   await context.startCamera();
   assert.equal(requests, 0);
   assert.equal(elements['scan-no-camera'].style.display, 'block');
-  assert.deepEqual(names(events), ['partsnap_camera_explanation_shown', 'partsnap_camera_explanation_dismissed']);
+  assert.deepEqual(names(events), ['partsnap_camera_explanation_shown', 'partsnap_camera_explanation_dismissed', 'partsnap_camera_fallback_shown']);
+  assert.equal(events.at(-1).props.reason, 'camera_skipped');
 });
 
 test('unsupported camera still exposes existing upload/manual fallback', async () => {
   const { context, events, elements } = cameraHarness({ navigator: {} });
   await context.startCamera();
-  assert.deepEqual(names(events), ['scanner_camera_unavailable', 'partsnap_result_fail', 'partsnap_camera_denied']);
+  assert.deepEqual(names(events), ['scanner_camera_unavailable', 'partsnap_result_fail', 'partsnap_camera_denied', 'partsnap_camera_fallback_shown']);
+  assert.equal(events.at(-1).props.reason, 'camera_unavailable');
   assert.equal(elements['scan-no-camera'].style.display, 'block');
+});
+
+test('upload photo and manual search stay available after a camera denial', () => {
+  const clicked = [];
+  const focused = [];
+  const modes = [];
+  const { context, events } = harness(['uploadPartSnapPhoto', 'openPartSnapManualSearch'], {
+    _scanMode: 'parts',
+    document: {
+      getElementById(id) {
+        if (id === 'scan-photo-upload') return { removeAttribute() {}, click() { clicked.push(id); } };
+        if (id === 'scan-code-input') return { focus() { focused.push(id); } };
+        return null;
+      },
+    },
+    setScanMode: mode => modes.push(mode),
+  });
+  context.uploadPartSnapPhoto();
+  context.openPartSnapManualSearch();
+  assert.deepEqual(clicked, ['scan-photo-upload']);
+  assert.deepEqual(modes, ['lookup']);
+  assert.deepEqual(focused, ['scan-code-input']);
+  assert.deepEqual(names(events), ['partsnap_upload_photo_clicked', 'partsnap_manual_search_opened']);
+  const eventsEndpoint = readFileSync(new URL('../functions/api/events.js', import.meta.url), 'utf8');
+  const lowSignal = eventsEndpoint.match(/LOW_SIGNAL_EVENTS = new Set\(\[([^\]]*)\]/)[1];
+  for (const name of ['partsnap_camera_fallback_shown', 'partsnap_upload_photo_clicked', 'partsnap_manual_search_opened']) {
+    assert.equal(lowSignal.includes(`'${name}'`), false, name);
+  }
 });
 
 test('late permission result stops its stream after leaving the camera workflow', async () => {

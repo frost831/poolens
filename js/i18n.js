@@ -257,6 +257,13 @@ export const I18N = Object.freeze({
     'seasonal.openClosing': 'Open closing checklist',
     'seasonal.openOpening': 'Open opening checklist',
     'seasonal.dismiss': 'Dismiss',
+    'camera.deniedTitle': 'Camera permission was denied.',
+    'camera.unavailableTitle': 'Camera is not available.',
+    'camera.skippedTitle': 'Camera was not opened.',
+    'camera.deniedBody': 'SplashLens cannot open the camera until permission is allowed. Upload an existing photo or use free manual Code Lookup. You can also allow Camera in settings, then tap Retry Camera.',
+    'camera.recoveryBody': 'Upload an existing photo or use free manual Code Lookup. Camera is not required for either path.',
+    'camera.uploadPhoto': 'Upload photo',
+    'camera.searchManually': 'Search manually',
   }),
   // needs_native_review: every Spanish string below is a machine-drafted UI asset.
   es: Object.freeze({
@@ -521,6 +528,14 @@ export const I18N = Object.freeze({
     'seasonal.openClosing': 'Abrir lista de cierre',
     'seasonal.openOpening': 'Abrir lista de apertura',
     'seasonal.dismiss': 'Ocultar',
+    // needs_native_review: machine-drafted camera fallback labels.
+    'camera.deniedTitle': 'Se denegó el permiso de la cámara.',
+    'camera.unavailableTitle': 'La cámara no está disponible.',
+    'camera.skippedTitle': 'No se abrió la cámara.',
+    'camera.deniedBody': 'SplashLens no puede abrir la cámara hasta que se permita el acceso. Sube una foto existente o usa la búsqueda manual de Code Lookup. También puedes permitir la cámara en ajustes y tocar Reintentar cámara.',
+    'camera.recoveryBody': 'Sube una foto existente o usa la búsqueda manual de Code Lookup. La cámara no hace falta para ninguno de los dos caminos.',
+    'camera.uploadPhoto': 'Subir foto',
+    'camera.searchManually': 'Buscar manualmente',
   }),
 });
 
