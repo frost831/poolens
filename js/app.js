@@ -771,6 +771,7 @@ function showTab(name) {
 function refreshFieldSurfaces(tab) {
   window.SplashLensStopFlow?.mount?.(tab);
   window.SplashLensDayRecap?.mount?.(tab);
+  window.SplashLensMorningRoute?.mount?.(tab);
 }
 
 function initMarketingGate() {

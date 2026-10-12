@@ -235,6 +235,15 @@ export const I18N = Object.freeze({
     'recap.stops': 'Stops logged',
     'recap.parts': 'Parts identified',
     'recap.packets': 'Packets sent',
+    'morning.kicker': 'This morning',
+    'morning.title': "Today's route",
+    'morning.today': 'Saved stops',
+    'morning.routeList': 'Route list',
+    'morning.followUps': 'Open follow-ups',
+    'morning.noneInSection': 'None saved',
+    'morning.empty': 'No stops or follow-ups saved for today.',
+    'morning.done': 'Mark done',
+    'morning.source': 'Only stops, route names, and follow-ups you entered on this device.',
   }),
   // needs_native_review: every Spanish string below is a machine-drafted UI asset.
   es: Object.freeze({
@@ -475,6 +484,16 @@ export const I18N = Object.freeze({
     'recap.stops': 'Visitas registradas',
     'recap.parts': 'Piezas identificadas',
     'recap.packets': 'Paquetes enviados',
+    // needs_native_review: machine-drafted morning-route labels.
+    'morning.kicker': 'Esta mañana',
+    'morning.title': 'Ruta de hoy',
+    'morning.today': 'Visitas guardadas',
+    'morning.routeList': 'Lista de ruta',
+    'morning.followUps': 'Seguimientos abiertos',
+    'morning.noneInSection': 'Ninguno guardado',
+    'morning.empty': 'Hoy no hay visitas ni seguimientos guardados.',
+    'morning.done': 'Marcar listo',
+    'morning.source': 'Solo las visitas, nombres de ruta y seguimientos que anotaste en este dispositivo.',
   }),
 });
 

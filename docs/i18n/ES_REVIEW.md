@@ -22,6 +22,8 @@ Review against a pool-service technician's usage, including US Spanish and regio
 | Text closing proof packet | Enviar paquete de cierre por mensaje | Check whether this suggests a server send; the tech opens their SMS composer. |
 | 3 of 3 free AI scans | Usaste las 3 de 3 lecturas de IA gratis | Confirm readable short copy and that an unsuccessful scan never triggers this offer. |
 
+Morning-route strings (`morning.*`) are machine-drafted. "Marcar listo" only closes a follow-up the tech typed.
+
 Day-recap strings (`recap.*`) are machine-drafted. "Paquetes enviados" means the tech opened a text or share handoff, not that SplashLens delivered a message.
 
 Stop-flow strings (`stop.*`) are machine-drafted. Review "Nueva visita", "Enviar resumen al cliente", and the line that says the text app opened but the tech still sends the message.

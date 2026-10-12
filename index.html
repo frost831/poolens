@@ -128,6 +128,9 @@
     .day-recap-counts { display:grid; gap:6px; margin:0 0 8px; }
     .day-recap-row { display:flex; justify-content:space-between; gap:12px; font-size:16px; font-weight:700; }
     .day-recap-row dd { margin:0; color:#0369a1; }
+    .morning-list { list-style:none; margin:0 0 10px; padding:0; display:grid; gap:8px; }
+    .morning-list li { display:flex; justify-content:space-between; gap:8px; align-items:center; font-size:15px; font-weight:700; }
+    .morning-list button { width:auto; min-height:44px; margin:0; padding:8px 12px; }
 
     /* Bottom nav */
     nav[aria-label="SplashLens field tools"] { overflow:hidden; }
@@ -953,6 +956,7 @@
         <div class="counter-heading"><h1>Counter</h1><button type="button" id="counter-language-toggle" class="counter-language-toggle" aria-label="Change language" title="Change language" onclick="openLanguageSheet('header')">EN</button></div>
         <p>Pick what is in front of you.</p>
         <div id="stop-flow-mount"></div>
+        <div id="morning-route-mount"></div>
         <div id="day-recap-mount"></div>
         <div class="counter-actions">
           <button type="button" class="counter-action code" onclick="openCounterTool('code')">Code<span>Look up an equipment code offline</span></button>
@@ -1310,6 +1314,7 @@
     <!-- ROUTE -->
     <div id="tab-route" class="tab-panel" style="padding:14px;">
       <div id="route-stop-mount"></div>
+      <div id="route-morning-mount"></div>
       <div id="route-recap-mount"></div>
       <div id="route-content"></div>
     </div>
@@ -1794,10 +1799,11 @@
 
   <script src="/js/errors.js?v=20261010-hayward-safety"></script>
   <script src="/js/data.js?v=20261002-trust-fixes-2"></script>
-  <script type="module" src="/js/i18n.js?v=20261012-day-recap"></script>
-  <script src="/js/app.js?v=20261012-day-recap"></script>
+  <script type="module" src="/js/i18n.js?v=20261012-morning-route"></script>
+  <script src="/js/app.js?v=20261012-morning-route"></script>
   <script type="module" src="/js/stop-flow.js?v=20261012-stop-flow"></script>
   <script type="module" src="/js/day-recap.js?v=20261012-day-recap"></script>
+  <script type="module" src="/js/morning-route.js?v=20261012-morning-route"></script>
   <script type="module" src="/js/partsnap-boss-packet.js?v=20261005-boss-draft"></script>
   <script type="module" src="/js/field-signals.js?v=20260728-field-signals"></script>
   <script src="/js/analytics.js"></script>
