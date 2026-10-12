@@ -24,7 +24,7 @@ jobs:
       - name: Upload unsigned bundle
         uses: actions/upload-artifact@v4
         with:
-          name: splashlens-android-unsigned-v10
+          name: splashlens-android-unsigned-v11
           path: android-twa/app/build/outputs/bundle/release/app-release.aab
           if-no-files-found: error
           retention-days: 7
