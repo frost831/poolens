@@ -22,4 +22,6 @@ Review against a pool-service technician's usage, including US Spanish and regio
 | Text closing proof packet | Enviar paquete de cierre por mensaje | Check whether this suggests a server send; the tech opens their SMS composer. |
 | 3 of 3 free AI scans | Usaste las 3 de 3 lecturas de IA gratis | Confirm readable short copy and that an unsuccessful scan never triggers this offer. |
 
+Stop-flow strings (`stop.*`) are machine-drafted. Review "Nueva visita", "Enviar resumen al cliente", and the line that says the text app opened but the tech still sends the message.
+
 The code-answer causes, fixes, and manufacturer data can remain English under A3. A reviewer should also inspect mixed-language packets containing that data. Upgrade strings deliberately omit prices; the integrated UI must obtain current prices from server configuration and suppress offers in store shells.

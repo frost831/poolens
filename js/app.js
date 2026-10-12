@@ -402,6 +402,7 @@ function selectAppLanguage(language) {
   applySplashLensLocalization();
   renderCodePoolSelector();
   renderLastPoolCounterCard();
+  if (typeof refreshFieldSurfaces === 'function') refreshFieldSurfaces(S.tab);
   if (S.clType) switchClType(S.clType);
   trackSplashLensEvent('language_selected', { language: profile.preferredLanguage, surface });
   trackSplashLensEvent('language_preference_set', { preferred_language: profile.preferredLanguage, locale: profile.locale, source: surface });
@@ -685,6 +686,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initCheckoutClientTracking();
   initUpgradeHandoff();
   initFreezeAlerts();
+  refreshFieldSurfaces(S.tab);
 });
 
 // ═══════════════════════════════════════════
@@ -762,7 +764,12 @@ function showTab(name) {
   if (name === 'errors') renderCodePoolSelector();
   if (name === 'scan')   initScanTab();
   if (name === 'dosing') renderSlamBanner();
+  refreshFieldSurfaces(name);
   window.SplashLensFieldSignals?.onTabShown(name);
+}
+
+function refreshFieldSurfaces(tab) {
+  window.SplashLensStopFlow?.mount?.(tab);
 }
 
 function initMarketingGate() {
@@ -10771,6 +10778,7 @@ function renderPartsSnapResult(ai, result, status) {
       proof_missing_count: missingProof.length || (ladder.missing || []).length,
       time_back_message: 'Part path, missing proof, and packet actions are visible.',
     });
+    window.SplashLensStopFlow?.onPartIdentified?.(_lastPartSnapResult);
     if (getScanUsage().count < SCAN_LIMIT_FREE) {
       result.insertAdjacentHTML('beforeend', renderPartSnapResultUpgradeOffer('partsnap_result'));
     }
