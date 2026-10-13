@@ -223,6 +223,15 @@ window.SPLASHLENS_MONETIZATION_LANES = {
       guardrail: "Search links are for price checking; verify model, dimensions, and current parts diagram before ordering."
     },
     {
+      name: "Closing Pro",
+      planKey: "closing_pass_60d",
+      availability: "self_serve",
+      price: "$29 one time / 60 days",
+      buyer: "Techs who want Pro scanner access through a closing window",
+      includes: ["Pro scanner access for 60 days", "One-time payment", "Access ends when the 60 days end", "Does not renew"],
+      guardrail: "Reference aid only. This pass does not guarantee winterization, coverage, diagnosis, or part fit."
+    },
+    {
       name: "Teams",
       planKey: "team_proof_os_monthly",
       availability: "pilot",

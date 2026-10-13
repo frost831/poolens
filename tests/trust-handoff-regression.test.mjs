@@ -82,8 +82,8 @@ test('Hayward H-Series unsupported meanings fail closed and keep the search rout
 });
 
 test('updated code data and app logic refresh the installed offline cache', () => {
-  assert.match(serviceWorker, /splashlens-v49-review-prompt/);
-  for (const asset of ['errors.js?v=20261010-hayward-safety', 'app.js?v=20261012-review-prompt']) {
+  assert.match(serviceWorker, /splashlens-v50-closing-pro/);
+  for (const asset of ['errors.js?v=20261010-hayward-safety', 'app.js?v=20261013-closing-pro']) {
     assert.ok(shell.includes(`/js/${asset}`));
     assert.ok(serviceWorker.includes(`/js/${asset}`));
   }

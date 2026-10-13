@@ -51,10 +51,18 @@ Recommended first pass:
 
 If `STRIPE_SECRET_KEY` is missing, `/api/checkout` falls back to the existing Stripe Payment Links so the public CTA does not break, but the customer activation path remains manual and revenue launch is not clean.
 
-Current Stripe catalog IDs:
+Current Stripe catalog IDs for the existing Pro plans:
 
-- Monthly Splash Lens Pro Unlimited: `price_1TbAp725fqLun6cVz5lhOiiS`
-- Annual Splash Lens Pro Unlimited: `price_1TbAp825fqLun6cVoVG0wqQl`
+- Monthly Splash Lens Pro Unlimited ($19/month): `price_1TbAp725fqLun6cVz5lhOiiS`
+- Annual Splash Lens Pro Unlimited ($149/year): `price_1TbAp825fqLun6cVoVG0wqQl`
+
+Closing Pro is a separate one-time Price. The app reads `SPLASHLENS_STRIPE_PRICE_CLOSING_PRO_60D` and refuses checkout until that Price is active, USD, `unit_amount` 2900, and not recurring. Do not create the Price from application code. In Stripe live mode, create:
+
+- Product name: SplashLens Closing Pro 60-Day Pass
+- Price: $29.00 USD, one time
+- Description: 60 days of SplashLens Pro scanner access. One-time payment. Access ends after 60 days and does not renew.
+
+Then set the new Price ID in the Pages environment. The app grants Pro scanner access for 60 days from the charge time and does not start a subscription.
 
 Admin issuance shape:
 

@@ -1,14 +1,14 @@
-const CACHE = 'splashlens-v49-review-prompt';
+const CACHE = 'splashlens-v50-closing-pro';
 const ASSETS = [
   '/',
   '/js/errors.js?v=20261010-hayward-safety',
-  '/js/data.js?v=20261002-trust-fixes-2',
-  '/js/i18n.js?v=20261012-soft-gate',
-  '/js/app.js?v=20261012-review-prompt',
+  '/js/data.js?v=20261013-closing-pro',
+  '/js/i18n.js?v=20261013-closing-pro',
+  '/js/app.js?v=20261013-closing-pro',
   '/js/stop-flow.js?v=20261012-stop-flow',
   '/js/day-recap.js?v=20261012-day-recap',
   '/js/morning-route.js?v=20261012-morning-route',
-  '/js/seasonal-checklist.js?v=20261012-seasonal',
+  '/js/seasonal-checklist.js?v=20261013-closing-pro',
   '/js/field-config.js?v=20261012-soft-gate',
   '/js/soft-gate.js?v=20261012-soft-gate',
   '/js/review-prompt.js?v=20261012-review-prompt',

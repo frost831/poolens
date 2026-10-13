@@ -1,6 +1,6 @@
 import { checkoutAttribution, recordPaymentEvent } from '../_shared/payment-funnel.mjs';
 import { classifyTraffic } from '../_shared/traffic-class.mjs';
-import { closingPassAmount, recordClosingPassCheckout } from '../_shared/closing-pass.mjs';
+import { CLOSING_PASS_AMOUNT_CENTS, CLOSING_PASS_LABEL, closingPassAmount, recordClosingPassCheckout } from '../_shared/closing-pass.mjs';
 
 const PLAN_CONFIG = {
   monthly: {
@@ -14,7 +14,8 @@ const PLAN_CONFIG = {
     label: 'Splash Lens Pro Unlimited Annual',
   },
   closing_pass_60d: {
-    label: 'SplashLens Closing Pro 60-Day Pass',
+    amount: CLOSING_PASS_AMOUNT_CENTS,
+    label: CLOSING_PASS_LABEL,
   },
 };
 
@@ -32,6 +33,9 @@ function paymentLinkForPlan(env, plan) {
 }
 
 function priceForPlan(env, plan) {
+  if (plan === 'closing_pass_60d') {
+    return String(env.SPLASHLENS_STRIPE_PRICE_CLOSING_PRO_60D || '').trim();
+  }
   const key = normalizedPlan(plan) === 'yearly' ? 'YEARLY' : 'MONTHLY';
   return String(
     env[`SPLASHLENS_STRIPE_PRICE_${key}_PRO`]
@@ -63,11 +67,14 @@ async function configuredPriceMatchesPlan(env, priceId, planConfig) {
     });
     if (!response.ok) return false;
     const price = await response.json();
+    const oneTime = !planConfig.interval;
+    const recurringOk = oneTime
+      ? price.type !== 'recurring' && !price.recurring
+      : price.recurring?.interval === planConfig.interval && Number(price.recurring?.interval_count || 1) === 1;
     return price.active === true
       && price.currency === 'usd'
       && price.unit_amount === planConfig.amount
-      && price.recurring?.interval === planConfig.interval
-      && price.recurring?.interval_count === 1;
+      && recurringOk;
   } catch {
     return false;
   }
@@ -80,9 +87,10 @@ async function createCheckoutSession(request, env, plan, attributionInput) {
   const pass = plan === 'closing_pass_60d';
   const planKey = pass ? plan : normalizedPlan(plan);
   const planConfig = PLAN_CONFIG[planKey];
-  const passAmount = pass ? closingPassAmount(env) : null;
+  const passAmount = pass ? closingPassAmount() : null;
   if (pass && !passAmount) return { configurationError: true };
-  const configuredPrice = pass ? '' : priceForPlan(env, planKey);
+  const configuredPrice = priceForPlan(env, planKey);
+  if (pass && !/^price_[A-Za-z0-9]+$/.test(configuredPrice)) return { configurationError: true };
   if (configuredPrice && !(await configuredPriceMatchesPlan(env, configuredPrice, planConfig))) {
     console.error('SplashLens checkout Price ID does not match the published plan');
     return { configurationError: true };
@@ -97,9 +105,7 @@ async function createCheckoutSession(request, env, plan, attributionInput) {
     params.set('line_items[0][price_data][unit_amount]', String(pass ? passAmount : planConfig.amount));
     if (!pass) params.set('line_items[0][price_data][recurring][interval]', planConfig.interval);
     params.set('line_items[0][price_data][product_data][name]', pass ? planConfig.label : 'Splash Lens Pro Unlimited');
-    params.set('line_items[0][price_data][product_data][description]', pass
-      ? '60 days of SplashLens Pro access for closing season.'
-      : 'Unlimited PartSnap scans, saved jobs, customer summaries, and equipment history.');
+    params.set('line_items[0][price_data][product_data][description]', 'Unlimited PartSnap scans, saved jobs, customer summaries, and equipment history.');
   }
   params.set('line_items[0][quantity]', '1');
   params.set('success_url', `${origin}/api/checkout-success?session_id={CHECKOUT_SESSION_ID}`);
@@ -206,13 +212,15 @@ export async function onRequestGet({ request, env }) {
           priceLabel: '$149/year',
           checkoutConfigured: checkoutEnabled && (stripeReady || (Boolean(paymentLinkForPlan(env, 'yearly')) && env.SPLASHLENS_PAYMENT_LINK_PRICING_VERSION === '2026-10-growth')),
         },
-        ...(closingPassAmount(env) ? [{
+        {
           key: 'closing_pass_60d',
           label: PLAN_CONFIG.closing_pass_60d.label,
-          priceLabel: `$${(closingPassAmount(env) / 100).toFixed(2)} one time / 60 days`,
-          amountCents: closingPassAmount(env),
-          checkoutConfigured: checkoutEnabled && stripeReady,
-        }] : []),
+          priceLabel: '$29 one time / 60 days',
+          amountCents: CLOSING_PASS_AMOUNT_CENTS,
+          accessDays: 60,
+          renews: false,
+          checkoutConfigured: checkoutEnabled && stripeReady && /^price_[A-Za-z0-9]+$/.test(priceForPlan(env, 'closing_pass_60d')),
+        },
         {
           key: 'team_proof_os_monthly',
           label: 'SplashLens Teams',
@@ -288,7 +296,8 @@ export async function onRequestPost({ request, env }) {
     });
   }
 
-  if (body.plan === 'closing_pass_60d' && (!closingPassAmount(env) || !env.STRIPE_SECRET_KEY
+  if (body.plan === 'closing_pass_60d' && (!closingPassAmount() || !env.STRIPE_SECRET_KEY
+    || !/^price_[A-Za-z0-9]+$/.test(priceForPlan(env, 'closing_pass_60d'))
     || !env.SUBSCRIBERS_DB || typeof env.SUBSCRIBERS_DB.prepare !== 'function')) {
     return Response.json({ ok: false, error: 'Closing Pro pass is unavailable.' }, {
       status: 503, headers: { 'Cache-Control': 'no-store' },

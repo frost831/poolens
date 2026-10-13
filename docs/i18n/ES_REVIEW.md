@@ -17,7 +17,7 @@ Review against a pool-service technician's usage, including US Spanish and regio
 | Equipment drained | Equipo drenado | Confirm this does not imply a safety or completion guarantee. |
 | Possible match / fit | Posible coincidencia / compatibilidad | Preserve uncertainty before parts ordering. |
 | Qualified technician | Técnico calificado | Check appropriate trade/safety meaning. |
-| Closing Pro pass | Pase Closing Pro | Confirm offer name only after the offer exists and is approved. |
+| Closing Pro pass | Pase Closing Pro | Approved offer name. Review the no-renew sentence: access lasts 60 days and then ends. |
 | Closing photo references | Referencias de fotos del cierre | Explain clearly that only a local filename/reference is saved, not the image. |
 | Text closing proof packet | Enviar paquete de cierre por mensaje | Check whether this suggests a server send; the tech opens their SMS composer. |
 | 3 of 3 free AI scans | Usaste las 3 de 3 lecturas de IA gratis | Confirm readable short copy and that an unsuccessful scan never triggers this offer. |

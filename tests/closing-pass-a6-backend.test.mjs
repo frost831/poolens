@@ -135,19 +135,31 @@ function signedWebhook(session, type = 'checkout.session.completed', id = 'evt_a
   });
 }
 
-test('unset or invalid pass amount hides catalog and blocks checkout', async () => {
-  for (const amount of [undefined, '0', '99', '14901', '49.00', 'not-a-price']) {
+test('missing or invalid Closing Pro price ID keeps checkout off without creating a Stripe session', async (t) => {
+  const calls = [];
+  t.mock.method(globalThis, 'fetch', async (url) => {
+    calls.push(String(url));
+    return Response.json({});
+  });
+  for (const priceId of [undefined, '', 'prod_live_123', 'price_']) {
     const configuration = env();
-    configuration.SPLASHLENS_CLOSING_PASS_60D_AMOUNT_CENTS = amount;
+    if (priceId === undefined) delete configuration.SPLASHLENS_STRIPE_PRICE_CLOSING_PRO_60D;
+    else configuration.SPLASHLENS_STRIPE_PRICE_CLOSING_PRO_60D = priceId;
     const response = await catalog({ request: new Request('https://app.splashlens.com/api/checkout?catalog=1'), env: configuration });
     const plans = (await response.json()).plans;
-    assert.equal(plans.some(plan => plan.key === 'closing_pass_60d'), false);
+    const pass = plans.find(plan => plan.key === 'closing_pass_60d');
+    assert.equal(pass.priceLabel, '$29 one time / 60 days');
+    assert.equal(pass.amountCents, 2900);
+    assert.equal(pass.accessDays, 60);
+    assert.equal(pass.renews, false);
+    assert.equal(pass.checkoutConfigured, false);
     assert.equal(plans.find(plan => plan.key === 'partsnap_pro_monthly').priceLabel, '$19/month');
     assert.equal(plans.find(plan => plan.key === 'partsnap_pro_yearly').priceLabel, '$149/year');
     const blocked = await checkout({ request: passCheckoutRequest(), env: configuration });
     assert.equal(blocked.status, 503);
     configuration.SUBSCRIBERS_DB.sqlite.close();
   }
+  assert.equal(calls.length, 0);
 });
 
 function passCheckoutRequest(overrides = {}) {
@@ -159,32 +171,38 @@ function passCheckoutRequest(overrides = {}) {
 }
 
 test('configured pass appears in catalog and creates only a one-time web Stripe session', async (t) => {
+  const priceId = 'price_testClosingPro60d';
   const configuration = env();
+  configuration.SPLASHLENS_STRIPE_PRICE_CLOSING_PRO_60D = priceId;
   configuration.SUBSCRIBERS_DB.sqlite.prepare('DELETE FROM closing_pass_checkouts').run();
   const plans = (await (await catalog({ request: new Request('https://app.splashlens.com/api/checkout?catalog=1'), env: configuration })).json()).plans;
   assert.deepEqual(plans.find(plan => plan.key === 'closing_pass_60d'), {
     key: 'closing_pass_60d', label: 'SplashLens Closing Pro 60-Day Pass',
-    priceLabel: '$49.00 one time / 60 days', amountCents: 4900, checkoutConfigured: true,
+    priceLabel: '$29 one time / 60 days', amountCents: 2900, accessDays: 60, renews: false, checkoutConfigured: true,
   });
   let params;
   t.mock.method(globalThis, 'fetch', async (url, options) => {
+    if (String(url).endsWith(`/prices/${priceId}`)) {
+      return Response.json({ id: priceId, active: true, currency: 'usd', unit_amount: 2900, type: 'one_time', recurring: null });
+    }
     assert.equal(url, 'https://api.stripe.com/v1/checkout/sessions');
+    assert.equal(options.method, 'POST');
     params = new URLSearchParams(options.body);
     return Response.json({ id: sessionId, url: `https://checkout.stripe.com/c/pay/${sessionId}` });
   });
   const result = await checkout({ request: passCheckoutRequest(), env: configuration });
   assert.equal(result.status, 200);
   assert.equal(params.get('mode'), 'payment');
-  assert.equal(params.get('line_items[0][price_data][unit_amount]'), '4900');
-  assert.equal(params.get('line_items[0][price_data][currency]'), 'usd');
+  assert.equal(params.get('line_items[0][price]'), priceId);
+  assert.equal(params.get('line_items[0][price_data][unit_amount]'), null);
   assert.equal(params.get('metadata[plan_key]'), 'closing_pass_60d');
-  assert.equal(params.get('metadata[pass_amount_cents]'), '4900');
+  assert.equal(params.get('metadata[pass_amount_cents]'), '2900');
   assert.equal(params.get('client_reference_id'), reference);
-  assert.equal([...params.keys()].some(key => key.startsWith('subscription_data') || key.includes('[recurring]')), false);
+  assert.equal([...params.keys()].some(key => key.startsWith('subscription_data') || key.includes('[recurring]') || key.startsWith('line_items[0][price_data]')), false);
   assert.equal(params.has('customer_creation'), false);
-  assert.equal(configuration.SUBSCRIBERS_DB.sqlite.prepare('SELECT amount_cents FROM closing_pass_checkouts WHERE session_id = ?').get(sessionId).amount_cents, 4900);
+  assert.equal(configuration.SUBSCRIBERS_DB.sqlite.prepare('SELECT amount_cents FROM closing_pass_checkouts WHERE session_id = ?').get(sessionId).amount_cents, 2900);
   const noDb = await checkout({ request: passCheckoutRequest(), env: {
-    STRIPE_SECRET_KEY: 'sk_test_a6', SPLASHLENS_CLOSING_PASS_60D_AMOUNT_CENTS: '4900',
+    STRIPE_SECRET_KEY: 'sk_test_a6', SPLASHLENS_STRIPE_PRICE_CLOSING_PRO_60D: priceId,
   } });
   assert.equal(noDb.status, 503);
   for (const bad of [{ client_reference_id: '' }, { placement: '' }, { store: 'ios' }, { source: 'server' }]) {
@@ -193,10 +211,29 @@ test('configured pass appears in catalog and creates only a one-time web Stripe 
   configuration.SUBSCRIBERS_DB.sqlite.close();
 });
 
+test('a recurring Closing Pro price cannot open a checkout session', async (t) => {
+  const priceId = 'price_testRecurringClosing';
+  const configuration = env();
+  configuration.SPLASHLENS_STRIPE_PRICE_CLOSING_PRO_60D = priceId;
+  configuration.SUBSCRIBERS_DB.sqlite.prepare('DELETE FROM closing_pass_checkouts').run();
+  let sessions = 0;
+  t.mock.method(globalThis, 'fetch', async (url) => {
+    if (String(url).includes('/checkout/sessions')) {
+      sessions += 1;
+      return Response.json({ id: sessionId, url: `https://checkout.stripe.com/c/pay/${sessionId}` });
+    }
+    return Response.json({ id: priceId, active: true, currency: 'usd', unit_amount: 2900, type: 'recurring', recurring: { interval: 'month', interval_count: 1 } });
+  });
+  const result = await checkout({ request: passCheckoutRequest(), env: configuration });
+  assert.equal(result.status, 503);
+  assert.equal(sessions, 0);
+  assert.equal(configuration.SUBSCRIBERS_DB.sqlite.prepare('SELECT COUNT(*) AS n FROM closing_pass_checkouts').get().n, 0);
+  configuration.SUBSCRIBERS_DB.sqlite.close();
+});
+
 test('paid original checkout price survives config change, but missing or mismatched receipt fails closed', async (t) => {
   stripeFetch(t);
   const configuration = env();
-  configuration.SPLASHLENS_CLOSING_PASS_60D_AMOUNT_CENTS = '5900';
   const request = () => new Request(`https://app.splashlens.com/api/checkout-success?session_id=${sessionId}`);
   assert.equal((await checkoutSuccess({ request: request(), env: configuration })).status, 200);
   configuration.SUBSCRIBERS_DB.sqlite.prepare('DELETE FROM commercial_entitlements').run();
