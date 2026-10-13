@@ -1,4 +1,4 @@
-# SplashLens Android SL-5 Build Report - 2026-10-12
+# SplashLens Android SL-5 Build Report - 2026-10-13
 
 ## Version
 
@@ -11,14 +11,16 @@ Repo evidence in `docs/store/GOOGLE_PLAY_LAUNCH_PACKET_SPLASHLENS_2026-05-28.md`
 
 ## Tests
 
-- `ANDROID_HOME=/Users/macbookpro/Library/Android/sdk ./gradlew test` - PASS
+- `GRADLE_USER_HOME=/private/tmp/poolens-gradle-home ANDROID_HOME=/Users/macbookpro/Library/Android/sdk ./gradlew test` - PASS on 2026-10-13
 - Result detail: `testDebugUnitTest` and `testReleaseUnitTest` were `NO-SOURCE`; Gradle build completed successfully.
+- `node tools/aso-length-check.mjs` - PASS on 2026-10-13
+- `node --test tests/android-release-association.test.mjs tests/aso-length-check.test.mjs` - PASS on 2026-10-13; 6 tests passed.
 
 ## Bundle Build
 
-- `ANDROID_HOME=/Users/macbookpro/Library/Android/sdk ./gradlew bundleRelease` - PASS
+- `GRADLE_USER_HOME=/private/tmp/poolens-gradle-home ANDROID_HOME=/Users/macbookpro/Library/Android/sdk ./gradlew bundleRelease` - PASS on 2026-10-13
 - Generated bundle: `android-twa/app/build/outputs/bundle/release/app-release.aab`
-- SHA-256: `654b5d7edf89dd1d286751e2699793b0811624467f7246678183054fa695d42f`
+- SHA-256: `ef6c5b30ffb978fb3142841d74e418b5988a3aae546eaffc164931528b868f05`
 
 ## Signing Gate
 
@@ -28,7 +30,7 @@ Repo evidence in `docs/store/GOOGLE_PLAY_LAUNCH_PACKET_SPLASHLENS_2026-05-28.md`
 jar is unsigned.
 ```
 
-No `android-twa/key.properties`, `.keystore`, `.jks`, `.p12`, or `.p8` file is present in this isolated worktree. The Gradle file now supports ignored local upload-key signing through `android-twa/key.properties`, but this run did not have the upload key material available here. Do not upload this generated AAB to Play.
+No `android-twa/key.properties`, `.keystore`, `.jks`, `.p12`, or `.p8` file is present in this isolated worktree. The Gradle file supports ignored local upload-key signing through `android-twa/key.properties`, but this run did not have the upload key material available here and the bridge instruction says not to sign Android independently. Do not upload this generated AAB to Play.
 
 ## Screenshots
 
