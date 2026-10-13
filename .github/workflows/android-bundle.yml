@@ -8,7 +8,7 @@ permissions:
 
 jobs:
   bundle:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, mac, codex]
     timeout-minutes: 20
     steps:
       - name: Check out repository
