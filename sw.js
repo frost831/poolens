@@ -1,10 +1,10 @@
-const CACHE = 'splashlens-v50-closing-pro';
+const CACHE = 'splashlens-v51-crew';
 const ASSETS = [
   '/',
   '/js/errors.js?v=20261010-hayward-safety',
-  '/js/data.js?v=20261013-closing-pro',
-  '/js/i18n.js?v=20261013-closing-pro',
-  '/js/app.js?v=20261013-closing-pro',
+  '/js/data.js?v=20261013-crew',
+  '/js/i18n.js?v=20261013-crew',
+  '/js/app.js?v=20261013-crew',
   '/js/stop-flow.js?v=20261012-stop-flow',
   '/js/day-recap.js?v=20261012-day-recap',
   '/js/morning-route.js?v=20261012-morning-route',

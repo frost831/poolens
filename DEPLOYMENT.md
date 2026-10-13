@@ -64,6 +64,14 @@ Closing Pro is a separate one-time Price. The app reads `SPLASHLENS_STRIPE_PRICE
 
 Then set the new Price ID in the Pages environment. The app grants Pro scanner access for 60 days from the charge time and does not start a subscription.
 
+Crew is a separate monthly Price. The app reads `SPLASHLENS_STRIPE_PRICE_CREW_MONTHLY` and refuses checkout until that Price is active, USD, `unit_amount` 3900, and recurring every 1 month. Do not create the Price from application code. In Stripe live mode, create:
+
+- Product name: SplashLens Crew
+- Price: $39.00 USD every month
+- Description: Monthly workspace for one lead and up to 3 techs. Renews each month until canceled. Does not include Teams owner reporting.
+
+Then set that Price ID as `SPLASHLENS_STRIPE_PRICE_CREW_MONTHLY`. A paid Crew checkout gives the lead Pro scanner access while the subscription is active and caps the workspace at 4 people. Teams stays request-only at $49-79.
+
 Admin issuance shape:
 
 ```powershell

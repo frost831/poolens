@@ -232,6 +232,15 @@ window.SPLASHLENS_MONETIZATION_LANES = {
       guardrail: "Reference aid only. This pass does not guarantee winterization, coverage, diagnosis, or part fit."
     },
     {
+      name: "Crew",
+      planKey: "crew_monthly",
+      availability: "self_serve",
+      price: "$39/mo",
+      buyer: "A lead who works with up to 3 techs",
+      includes: ["One lead and up to 3 techs", "Shared crew workspace while the monthly subscription is active", "Lead keeps Pro scanner access while Crew is active", "New tech invites pause if the subscription is not active"],
+      guardrail: "Does not include Teams owner reports. Does not replace route, billing, or payroll software."
+    },
+    {
       name: "Teams",
       planKey: "team_proof_os_monthly",
       availability: "pilot",

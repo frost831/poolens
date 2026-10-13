@@ -1,3 +1,5 @@
+import { CREW_SEAT_LIMIT } from '../_shared/crew-plan.mjs';
+
 // /api/team - protected passwordless team workspace API for SplashLens.
 // Env: SUBSCRIBERS_DB, SPLASHLENS_PROFILE_SECRET or SPLASHLENS_ENTITLEMENT_SECRET, optional SENDGRID_API_KEY/SENDGRID_FROM.
 
@@ -349,8 +351,20 @@ async function inviteMember(request, env, db, auth, body, headers) {
   if (!team.id) return json({ ok: false, error: 'Team not found.' }, 404, headers);
   const existingMember = await first(db, 'SELECT status FROM team_members WHERE team_id = ? AND email = ?', teamId, email);
   if (existingMember.status === 'active') return json({ ok: false, error: 'That email is already an active team member.' }, 409, headers);
-  const billing = await first(db, 'SELECT seat_limit AS seatLimit, status FROM team_billing WHERE team_id = ?', teamId);
-  const seatLimit = Number(billing.seatLimit || 3);
+  const billing = await first(db, 'SELECT seat_limit AS seatLimit, status, plan FROM team_billing WHERE team_id = ?', teamId);
+  const billingPlan = String(billing.plan || '');
+  const billingStatus = String(billing.status || '').toLowerCase();
+  if (billingPlan === 'crew' && !['active', 'trialing'].includes(billingStatus)) {
+    await logEvent(db, request, 'team_member_invite_blocked_seat_limit', auth.email, {
+      action: 'invite_member',
+      team_id: teamId,
+      invited_email: email,
+      seat_limit: CREW_SEAT_LIMIT,
+      billing_status: billingStatus,
+    });
+    return json({ ok: false, error: 'Crew subscription is not active, so new tech invites are paused.' }, 402, headers);
+  }
+  const seatLimit = billingPlan === 'crew' ? CREW_SEAT_LIMIT : Number(billing.seatLimit || 3);
   const occupiedSeats = await first(db, `SELECT COUNT(*) AS value FROM team_members WHERE team_id = ? AND status IN ('active', 'pending')`, teamId);
   if (seatLimit > 0 && Number(occupiedSeats.value || 0) >= seatLimit) {
     await logEvent(db, request, 'team_member_invite_blocked_seat_limit', auth.email, {
@@ -360,7 +374,10 @@ async function inviteMember(request, env, db, auth, body, headers) {
       seat_limit: seatLimit,
       occupied_seats: Number(occupiedSeats.value || 0),
     });
-    return json({ ok: false, error: `Team seat limit reached (${seatLimit}). Request a larger team plan before inviting more techs.` }, 402, headers);
+    const limitMessage = billingPlan === 'crew'
+      ? `Crew includes one lead and up to 3 techs (${seatLimit} people). This workspace is full.`
+      : `Team seat limit reached (${seatLimit}). Request a larger team plan before inviting more techs.`;
+    return json({ ok: false, error: limitMessage }, 402, headers);
   }
   const inviteId = `invite_${crypto.randomUUID()}`;
   const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();

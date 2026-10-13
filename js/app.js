@@ -2259,7 +2259,7 @@ function renderVerifiedProofNetwork() {
         ${plan.planKey === 'free_save_profile'
           ? `<button type="button" class="brain-action green" style="width:100%;margin-top:8px;" onclick="ensureFieldSaveAccount('pricing_catalog')">Create free save profile</button>`
           : plan.planKey && plan.planKey !== 'free_core'
-            ? `<button type="button" ${plan.availability === 'self_serve' && !isStoreShellMode() ? `data-checkout-plan="${escAttr(plan.planKey)}" data-checkout-placement="paid_lane"` : ''} class="brain-action green" style="width:100%;margin-top:8px;" onclick="openSplashLensPaidLane('${escHtml(plan.planKey)}','${escHtml(plan.name)}')">${plan.availability === 'self_serve' ? 'Start paid plan' : 'Request Teams access'}</button>`
+            ? `<button type="button" ${plan.availability === 'self_serve' && !isStoreShellMode() ? `data-checkout-plan="${escAttr(plan.planKey)}" data-checkout-placement="paid_lane"` : ''} class="brain-action green" style="width:100%;margin-top:8px;" onclick="openSplashLensPaidLane('${escHtml(plan.planKey)}','${escHtml(plan.name)}')">${plan.availability === 'self_serve' ? (plan.planKey === 'crew_monthly' ? a3Text('upgrade.crew') : plan.planKey === 'closing_pass_60d' ? a3Text('upgrade.closingPass') : 'Start paid plan') : 'Request Teams access'}</button>${plan.planKey === 'crew_monthly' ? `<p style="color:#475569;font-size:11px;line-height:1.45;margin-top:8px;">${a3Text('upgrade.crewBody')}</p>` : ''}`
             : ''}
       </div>
     </details>
@@ -5642,7 +5642,7 @@ const SERVICE_PROOF_FAQ = [
   },
   {
     keys: ['price', 'paid', 'subscription'],
-    answer: 'The FreeCore app stays useful: manual lookup, calculators, checklists, and Facility Assist stay open. A free field profile unlocks 3 monthly AI scans and lets a tech start saving job context on this device. Splash Lens Pro Unlimited stays $19/month or $149/year for unlimited scanner use and saved job memory where paid access is available. Closing Pro is a $29 one-time pass with Pro scanner access for 60 days; it ends after 60 days and does not renew. Teams is for owners who want crew visibility and company reporting. Partner/manufacturer/training ideas are handled through direct discussion, not self-serve checkout.'
+    answer: 'The FreeCore app stays useful: manual lookup, calculators, checklists, and Facility Assist stay open. A free field profile unlocks 3 monthly AI scans and lets a tech start saving job context on this device. Splash Lens Pro Unlimited stays $19/month or $149/year for unlimited scanner use and saved job memory where paid access is available. Closing Pro is a $29 one-time pass with Pro scanner access for 60 days; it ends after 60 days and does not renew. Crew is $39/month for one lead and up to 3 techs, below Teams. Teams stays the owner-paid $49-79 lane for company reporting. Partner/manufacturer/training ideas are handled through direct discussion, not self-serve checkout.'
   },
   {
     keys: ['trend', 'callback', 'risk', 'repeat'],
@@ -11220,11 +11220,15 @@ async function initUpgradeHandoff() {
   const params = new URLSearchParams(window.location.search);
   if (!params.has('upgrade') || isStoreShellMode()) return;
   const requested = params.get('upgrade') || '';
-  const plan = requested === 'closing_pass_60d' ? 'closing_pass_60d' : /year|annual/i.test(requested) ? 'yearly' : 'monthly';
+  const plan = requested === 'closing_pass_60d' || requested === 'crew_monthly'
+    ? requested
+    : /year|annual/i.test(requested) ? 'yearly' : 'monthly';
   const placement = /^[a-z0-9_-]{1,80}$/.test(params.get('placement') || '') ? params.get('placement') : 'site_upgrade';
   let label = plan === 'closing_pass_60d'
     ? 'SplashLens Closing Pro 60-Day Pass'
-    : plan === 'yearly' ? 'Splash Lens Pro Unlimited Annual' : 'Splash Lens Pro Unlimited Monthly';
+    : plan === 'crew_monthly'
+      ? 'SplashLens Crew'
+      : plan === 'yearly' ? 'Splash Lens Pro Unlimited Annual' : 'Splash Lens Pro Unlimited Monthly';
   try {
     const response = await fetch('/api/checkout?catalog=1', { cache: 'no-store' });
     const catalog = await response.json();
@@ -11255,8 +11259,8 @@ function getCheckoutAttribution(plan, placement) {
   const safePlacement = String(placement || '').trim().toLowerCase();
   return {
     source: 'app',
-    plan: plan === 'closing_pass_60d' ? 'closing_pass_60d' : /year|annual/i.test(String(plan || '')) ? 'yearly' : 'monthly',
-    feature: plan === 'closing_pass_60d' ? 'closing_pass' : 'unlimited_partsnap',
+    plan: plan === 'closing_pass_60d' ? 'closing_pass_60d' : plan === 'crew_monthly' ? 'crew_monthly' : /year|annual/i.test(String(plan || '')) ? 'yearly' : 'monthly',
+    feature: plan === 'closing_pass_60d' ? 'closing_pass' : plan === 'crew_monthly' ? 'crew' : 'unlimited_partsnap',
     placement: /^[a-z0-9_-]{1,80}$/.test(safePlacement) ? safePlacement : 'app_upgrade',
     store: ['ios', 'android'].includes(store) ? store : 'web',
     client_id: clientId,
