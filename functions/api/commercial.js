@@ -22,6 +22,7 @@ const ALLOWED_ORIGINS = new Set([
 
 const COMMERCIAL_LANES = new Set([
   'pro',
+  'crew',
   'teams',
   'facility',
   'manufacturer',
@@ -43,6 +44,13 @@ const PLAN_CATALOG = [
     price: '$19/mo or $149/yr',
     status: 'live_checkout',
     included: ['more PartSnap/AI scanning', 'saved job proof', 'customer-ready notes', 'supplier handoff text'],
+  },
+  {
+    lane: 'crew',
+    label: 'SplashLens Crew',
+    price: '$39/month',
+    status: 'live_checkout',
+    included: ['one lead', 'up to 3 techs', 'shared crew workspace', 'lead Pro scanner access while subscribed'],
   },
   {
     lane: 'teams',

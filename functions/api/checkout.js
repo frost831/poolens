@@ -1,6 +1,7 @@
 import { checkoutAttribution, recordPaymentEvent } from '../_shared/payment-funnel.mjs';
 import { classifyTraffic } from '../_shared/traffic-class.mjs';
 import { CLOSING_PASS_AMOUNT_CENTS, CLOSING_PASS_LABEL, closingPassAmount, recordClosingPassCheckout } from '../_shared/closing-pass.mjs';
+import { CREW_AMOUNT_CENTS, CREW_LABEL, CREW_SEAT_LIMIT, crewPriceId } from '../_shared/crew-plan.mjs';
 
 const PLAN_CONFIG = {
   monthly: {
@@ -16,6 +17,11 @@ const PLAN_CONFIG = {
   closing_pass_60d: {
     amount: CLOSING_PASS_AMOUNT_CENTS,
     label: CLOSING_PASS_LABEL,
+  },
+  crew_monthly: {
+    amount: CREW_AMOUNT_CENTS,
+    interval: 'month',
+    label: CREW_LABEL,
   },
 };
 
@@ -36,6 +42,7 @@ function priceForPlan(env, plan) {
   if (plan === 'closing_pass_60d') {
     return String(env.SPLASHLENS_STRIPE_PRICE_CLOSING_PRO_60D || '').trim();
   }
+  if (plan === 'crew_monthly') return crewPriceId(env);
   const key = normalizedPlan(plan) === 'yearly' ? 'YEARLY' : 'MONTHLY';
   return String(
     env[`SPLASHLENS_STRIPE_PRICE_${key}_PRO`]
@@ -85,12 +92,13 @@ async function createCheckoutSession(request, env, plan, attributionInput) {
 
   const origin = appOrigin(request, env);
   const pass = plan === 'closing_pass_60d';
-  const planKey = pass ? plan : normalizedPlan(plan);
+  const crew = plan === 'crew_monthly';
+  const planKey = pass || crew ? plan : normalizedPlan(plan);
   const planConfig = PLAN_CONFIG[planKey];
   const passAmount = pass ? closingPassAmount() : null;
   if (pass && !passAmount) return { configurationError: true };
   const configuredPrice = priceForPlan(env, planKey);
-  if (pass && !/^price_[A-Za-z0-9]+$/.test(configuredPrice)) return { configurationError: true };
+  if ((pass || crew) && !/^price_[A-Za-z0-9]+$/.test(configuredPrice)) return { configurationError: true };
   if (configuredPrice && !(await configuredPriceMatchesPlan(env, configuredPrice, planConfig))) {
     console.error('SplashLens checkout Price ID does not match the published plan');
     return { configurationError: true };
@@ -98,6 +106,7 @@ async function createCheckoutSession(request, env, plan, attributionInput) {
   const params = new URLSearchParams();
   if (pass) params.set('mode', 'payment');
   else params.set('mode', 'subscription');
+  if (crew) params.set('metadata[seat_limit]', String(CREW_SEAT_LIMIT));
   if (configuredPrice) {
     params.set('line_items[0][price]', configuredPrice);
   } else {
@@ -118,6 +127,13 @@ async function createCheckoutSession(request, env, plan, attributionInput) {
     params.set('metadata[pass_amount_cents]', String(passAmount));
     params.set('payment_intent_data[metadata][product]', 'splashlens');
     params.set('payment_intent_data[metadata][plan_key]', planKey);
+  } else if (crew) {
+    params.set('metadata[plan_key]', planKey);
+    params.set('subscription_data[metadata][product]', 'splashlens');
+    params.set('subscription_data[metadata][feature]', 'scanner');
+    params.set('subscription_data[metadata][plan]', params.get('metadata[plan]'));
+    params.set('subscription_data[metadata][plan_key]', planKey);
+    params.set('subscription_data[metadata][seat_limit]', String(CREW_SEAT_LIMIT));
   } else {
     params.set('subscription_data[metadata][product]', 'splashlens');
     params.set('subscription_data[metadata][feature]', 'scanner');
@@ -132,7 +148,7 @@ async function createCheckoutSession(request, env, plan, attributionInput) {
     params.set(`metadata[${key}]`, value);
     if (!pass) params.set(`subscription_data[metadata][${key}]`, value);
   }
-  if (!pass) params.set('allow_promotion_codes', 'true');
+  if (!pass && !crew) params.set('allow_promotion_codes', 'true');
 
   const response = await fetch('https://api.stripe.com/v1/checkout/sessions', {
     method: 'POST',
@@ -186,7 +202,7 @@ async function recordCheckoutStarted(request, env, plan, mode, attribution) {
     await db.prepare(
       `INSERT INTO events (event, source, path, plan, mode, props, user_agent)
        VALUES ('checkout_started', ?, '/api/checkout', ?, ?, ?, ?)`,
-    ).bind(attribution.source, plan === 'closing_pass_60d' ? plan : normalizedPlan(plan), mode, JSON.stringify({ ...attribution, traffic_class: trafficClass, is_internal: trafficClass !== 'real' }), userAgent).run();
+    ).bind(attribution.source, plan === 'closing_pass_60d' || plan === 'crew_monthly' ? plan : normalizedPlan(plan), mode, JSON.stringify({ ...attribution, traffic_class: trafficClass, is_internal: trafficClass !== 'real' }), userAgent).run();
   } catch (error) {
     console.error('SplashLens checkout start tracking failed', error);
   }
@@ -220,6 +236,15 @@ export async function onRequestGet({ request, env }) {
           accessDays: 60,
           renews: false,
           checkoutConfigured: checkoutEnabled && stripeReady && /^price_[A-Za-z0-9]+$/.test(priceForPlan(env, 'closing_pass_60d')),
+        },
+        {
+          key: 'crew_monthly',
+          label: CREW_LABEL,
+          priceLabel: '$39/month',
+          amountCents: CREW_AMOUNT_CENTS,
+          seatLimit: CREW_SEAT_LIMIT,
+          seatSummary: '1 lead + up to 3 techs',
+          checkoutConfigured: checkoutEnabled && stripeReady && /^price_[A-Za-z0-9]+$/.test(priceForPlan(env, 'crew_monthly')),
         },
         {
           key: 'team_proof_os_monthly',
@@ -260,7 +285,8 @@ export async function onRequestGet({ request, env }) {
     }, { headers: { 'Cache-Control': 'no-store' } });
   }
 
-  const plan = normalizedPlan(url.searchParams.get('plan'));
+  const requestedPlan = url.searchParams.get('plan') || '';
+  const plan = ['closing_pass_60d', 'crew_monthly'].includes(requestedPlan) ? requestedPlan : normalizedPlan(requestedPlan);
   const placement = /^[a-z0-9_-]{1,80}$/i.test(url.searchParams.get('placement') || '')
     ? url.searchParams.get('placement') : 'direct_checkout';
   const upgradeUrl = `/?upgrade=${plan}&placement=${encodeURIComponent(placement)}`;
@@ -281,7 +307,7 @@ export async function onRequestPost({ request, env }) {
   } catch {
     return Response.json({ ok: false, error: 'Invalid checkout request.' }, { status: 400 });
   }
-  if (!['monthly', 'yearly', 'closing_pass_60d'].includes(body?.plan) || body?.store !== 'web') {
+  if (!['monthly', 'yearly', 'closing_pass_60d', 'crew_monthly'].includes(body?.plan) || body?.store !== 'web') {
     return Response.json({ ok: false, error: 'Web plan required.' }, { status: 400 });
   }
   const attribution = checkoutAttribution(body);
@@ -300,6 +326,14 @@ export async function onRequestPost({ request, env }) {
     || !/^price_[A-Za-z0-9]+$/.test(priceForPlan(env, 'closing_pass_60d'))
     || !env.SUBSCRIBERS_DB || typeof env.SUBSCRIBERS_DB.prepare !== 'function')) {
     return Response.json({ ok: false, error: 'Closing Pro pass is unavailable.' }, {
+      status: 503, headers: { 'Cache-Control': 'no-store' },
+    });
+  }
+
+  if (body.plan === 'crew_monthly' && (!env.STRIPE_SECRET_KEY
+    || !/^price_[A-Za-z0-9]+$/.test(priceForPlan(env, 'crew_monthly'))
+    || !env.SUBSCRIBERS_DB || typeof env.SUBSCRIBERS_DB.prepare !== 'function')) {
+    return Response.json({ ok: false, error: 'Crew checkout is unavailable.' }, {
       status: 503, headers: { 'Cache-Control': 'no-store' },
     });
   }
@@ -330,7 +364,7 @@ export async function onRequestPost({ request, env }) {
     return checkoutResponse(session.url, 'stripe_checkout_session');
   }
 
-  const target = body.plan === 'closing_pass_60d' ? '' : paymentLinkForPlan(env, body.plan);
+  const target = body.plan === 'closing_pass_60d' || body.plan === 'crew_monthly' ? '' : paymentLinkForPlan(env, body.plan);
   if (target && env.SPLASHLENS_PAYMENT_LINK_PRICING_VERSION === '2026-10-growth') {
     await recordCheckoutStarted(request, env, body.plan, 'payment_link_direct', attribution);
     const paymentUrl = new URL(target);

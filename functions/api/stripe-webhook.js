@@ -1,5 +1,6 @@
 import { recordPaymentEvent, sessionAttribution } from '../_shared/payment-funnel.mjs';
 import { closingPassRevocationStatus, grantClosingPass, isClosingPass, revokeClosingPassPayment, verifiedClosingPassPayment } from '../_shared/closing-pass.mjs';
+import { CREW_AMOUNT_CENTS, crewSubscriptionMatches, ensureCrewBilling, isCrewCheckout, syncCrewBillingStatus } from '../_shared/crew-plan.mjs';
 
 const TOKEN_PREFIX = 'sl_scan_v1';
 const ACCEPTED_EVENTS = new Set([
@@ -429,6 +430,7 @@ async function storeLifecycleEvent(object, eventType, env) {
        SET status = ?, current_period_end = COALESCE(?, current_period_end), updated_at = CURRENT_TIMESTAMP
        WHERE stripe_customer_id = ? AND plan <> 'SplashLens Closing Pro 60-Day Pass'`,
     ).bind(subscriptionStatus(object, eventType), periodEnd(object), customer).run();
+    await syncCrewBillingStatus(db, customer, subscriptionStatus(object, eventType), periodEnd(object));
   }
   const status = subscriptionStatus(object, eventType);
   if (subject && env.SCAN_USAGE_KV && typeof env.SCAN_USAGE_KV.put === 'function') {
@@ -518,6 +520,48 @@ export async function onRequestPost({ request, env }) {
   }
 
   const session = event?.data?.object;
+  if (isCrewCheckout(session)) {
+    if (!isPaidSession(session, event.type)) {
+      return json({ ok: true, ignored: true, event: event.type, reason: 'checkout_not_paid' });
+    }
+    const leadEmail = String(session?.customer_details?.email || session?.customer_email || '').trim().toLowerCase();
+    if (session?.mode !== 'subscription' || Number(session?.amount_total) !== CREW_AMOUNT_CENTS
+      || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(leadEmail)) {
+      return json({ ok: false, error: 'Crew checkout did not match the published monthly price.' }, 503);
+    }
+    const subscriptionId = String(session.subscription || '').trim();
+    if (!env.STRIPE_SECRET_KEY || !/^sub_[A-Za-z0-9]+$/.test(subscriptionId)) {
+      return json({ ok: false, error: 'Crew subscription could not be verified.' }, 503);
+    }
+    let subscription = null;
+    try {
+      const response = await fetch(`https://api.stripe.com/v1/subscriptions/${encodeURIComponent(subscriptionId)}`, {
+        headers: { Authorization: `Bearer ${env.STRIPE_SECRET_KEY}` },
+      });
+      subscription = response.ok ? await response.json() : null;
+    } catch {
+      subscription = null;
+    }
+    if (!crewSubscriptionMatches(subscription, env)) {
+      return json({ ok: false, error: 'Crew subscription could not be verified.' }, 503);
+    }
+    const periodEnd = Number(subscription.current_period_end || 0);
+    const stored = await storeEntitlement(session, event.type, env);
+    if (!stored.ok) return json({ ok: false, error: stored.error }, 422);
+    const seats = await ensureCrewBilling(env.SUBSCRIBERS_DB, {
+      email: leadEmail,
+      customerId: String(session.customer || ''),
+      periodEnd: periodEnd > 0 ? new Date(periodEnd * 1000).toISOString() : null,
+      status: 'active',
+    });
+    if (!seats.ok) return json({ ok: false, error: 'Crew seat limit could not be saved.' }, 503);
+    const proof = { plan: 'crew_monthly', path: '/api/stripe-webhook', props: { ...sessionAttribution(session), payment_status: session.payment_status } };
+    await recordPaymentEvent(env, 'checkout_completed', session.id, proof);
+    await recordPaymentEvent(env, 'subscription_created', subscriptionId, proof);
+    await recordPaymentEvent(env, 'entitlement_granted', session.id, proof);
+    if (webhookDb) await markWebhookProcessed(webhookDb, receipt.eventId);
+    return json({ ok: true, event: event.type, subject: stored.subject, entitlementStored: true, seatLimit: seats.seatLimit });
+  }
   if (isClosingPass(session)) {
     if (session?.payment_status !== 'paid') {
       return json({ ok: true, ignored: true, event: event.type, reason: 'checkout_not_paid' });

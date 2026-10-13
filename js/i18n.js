@@ -84,6 +84,8 @@ export const I18N = Object.freeze({
     'upgrade.yearly': 'Yearly',
     'upgrade.closingPass': 'Closing Pro pass',
     'upgrade.closingPassBody': 'One-time payment. Pro scanner access lasts 60 days, then ends. It does not renew. Manual lookup stays free.',
+    'upgrade.crew': 'Start Crew',
+    'upgrade.crewBody': 'One lead and up to 3 techs. Monthly subscription. New tech invites pause if it is not active. Manual lookup stays free.',
     'upgrade.dismiss': 'Not now',
     'upgrade.freeLookup': 'Manual code lookup stays free.',
     'counter.prompt': 'Pick what is in front of you.',
@@ -356,6 +358,9 @@ export const I18N = Object.freeze({
     // needs_native_review: machine-drafted Closing Pro expiry copy.
     'upgrade.closingPass': 'Pase Closing Pro',
     'upgrade.closingPassBody': 'Pago único. El acceso Pro al escáner dura 60 días y después termina. No se renueva. La búsqueda manual sigue gratis.',
+    // needs_native_review: machine-drafted Crew seat copy.
+    'upgrade.crew': 'Empezar Crew',
+    'upgrade.crewBody': 'Un líder y hasta 3 técnicos. Suscripción mensual. Las invitaciones nuevas se pausan si no está activa. La búsqueda manual sigue gratis.',
     'upgrade.dismiss': 'Ahora no',
     'upgrade.freeLookup': 'La búsqueda manual de códigos sigue siendo gratuita.',
     'counter.prompt': 'Elige lo que tienes enfrente.',

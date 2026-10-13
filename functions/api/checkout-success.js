@@ -1,5 +1,6 @@
 import { recordPaymentEvent, sessionAttribution } from '../_shared/payment-funnel.mjs';
 import { grantClosingPass, isClosingPass, verifiedClosingPassPayment } from '../_shared/closing-pass.mjs';
+import { crewSubscriptionMatches, ensureCrewBilling, isCrewCheckout } from '../_shared/crew-plan.mjs';
 
 const TOKEN_PREFIX = 'sl_scan_v1';
 const textEncoder = new TextEncoder();
@@ -286,6 +287,37 @@ export async function onRequestGet({ request, env }) {
     await recordPaymentEvent(env, 'entitlement_granted', session.id, proof);
     const activateUrl = `https://app.splashlens.com/?tab=scan&scan_token=${encodeURIComponent(activation.token)}`;
     return html(`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Closing Pro activated</title></head><body><main><h1>Closing Pro activated.</h1><p>Pro access for ${escapeHtml(activation.subject)} is active until ${escapeHtml(activation.expiresAt)}.</p><a href="${escapeHtml(activateUrl)}">Open SplashLens scanner</a></main></body></html>`);
+  }
+  if (isCrewCheckout(session)) {
+    if (session.mode !== 'subscription') {
+      return html('<h1>SplashLens checkout</h1><p>Crew checkout must be a monthly subscription.</p>', 403);
+    }
+    if (!isPaid(session)) {
+      return html('<h1>SplashLens checkout</h1><p>Payment is not complete yet. Refresh after Stripe finishes processing.</p>', 402);
+    }
+    const subscriptionState = await activeSubscription(session, env);
+    if (subscriptionState.unavailable) {
+      return html('<h1>SplashLens checkout</h1><p>Subscription verification is temporarily unavailable. Refresh in a moment or contact support.</p>', 503);
+    }
+    if (!crewSubscriptionMatches(subscriptionState.subscription, env)) {
+      return html('<h1>SplashLens checkout</h1><p>Crew payment could not be verified.</p>', 503);
+    }
+    const lead = String(session.customer_details?.email || session.customer_email || '').trim().toLowerCase();
+    const periodEnd = Number(subscriptionState.subscription.current_period_end || 0);
+    const seats = await ensureCrewBilling(env.SUBSCRIBERS_DB, {
+      email: lead,
+      customerId: String(session.customer || ''),
+      periodEnd: periodEnd > 0 ? new Date(periodEnd * 1000).toISOString() : null,
+      status: 'active',
+    });
+    if (!seats.ok) {
+      return html('<h1>SplashLens checkout</h1><p>Crew workspace could not be saved yet.</p>', 503);
+    }
+    const activation = await issueActivation(session, env, subscriptionState.subscription);
+    if (activation.error) {
+      return html(`<h1>SplashLens checkout complete</h1><p>${escapeHtml(activation.error)} Contact support for activation.</p>`, 503);
+    }
+    return html(`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Crew activated</title></head><body><main><h1>Crew is active.</h1><p>The workspace for ${escapeHtml(activation.subject)} includes one lead and up to 3 techs while the $39 monthly subscription stays active. It does not renew a Closing Pro pass and it does not replace route or billing software.</p><a href="${escapeHtml(activation.activateUrl)}">Open SplashLens</a></main></body></html>`);
   }
   if (!isSplashLensCheckoutSession(session, env)) {
     return html('<h1>SplashLens checkout</h1><p>This checkout session is not a Splash Lens Pro Unlimited purchase. Contact support if this looks wrong.</p>', 403);
