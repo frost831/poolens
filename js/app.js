@@ -2105,9 +2105,11 @@ function startServiceProofWorkflow(kind = 'visit') {
         <button type="button" class="brain-action secondary" onclick="createServiceProofShareLink()">${a3Text('closing.buildPacket')}</button>
         <button type="button" class="brain-action secondary" onclick="saveReportDraft()">${a3Text('closing.saveDraft')}</button>
       </div>
-      <p style="color:#64748b;font-size:11px;line-height:1.45;margin-top:10px;">${escHtml(a3ClosingText(proof.trustBoundary || 'Verify exact model manuals, product labels, company policy, local code, and qualified technician judgment before acting.'))}</p>`
+      <p style="color:#64748b;font-size:11px;line-height:1.45;margin-top:10px;">${escHtml(a3ClosingText(proof.trustBoundary || 'Verify exact model manuals, product labels, company policy, local code, and qualified technician judgment before acting.'))}</p>
+      <div data-closing-pass-mount data-closing-pass-placement="closing_workflow"></div>`
     );
     focusReportField('rpt-photo-proof');
+    mountClosingPassOffers();
   } else {
     setReportValueAndNotify('rpt-type', 'Regular Service', { force: false });
     setReportValueAndNotify('rpt-priority', 'today', { force: false });
@@ -4801,13 +4803,14 @@ async function loadClosingPassOffer() {
     const catalog = await response.json();
     const item = catalog.plans?.find(plan => plan.key === 'closing_pass_60d' || plan.key === 'closing_pro_60_day');
     const amount = Number(item?.amountCents ?? item?.amount);
-    if (!item?.checkoutConfigured || (item.checkoutPlan && item.checkoutPlan !== 'closing_pass_60d') || !Number.isSafeInteger(amount) || amount <= 0 || !item.priceLabel) return;
+    if (!item?.checkoutConfigured || item.renews === true || (item.checkoutPlan && item.checkoutPlan !== 'closing_pass_60d') || !Number.isSafeInteger(amount) || amount <= 0 || !item.priceLabel) return;
     if (requestId !== closingOfferRequest || S.clType !== 'closing' || !closingChecklistStatus().complete) return;
     const el = document.getElementById('closing-pass-offer');
     if (!el) return;
     el.innerHTML = `<div style="border-top:1px solid #cbd5e1;margin-top:14px;padding-top:12px;">
       <p style="font-size:13px;font-weight:800;color:#0f172a;margin:0 0 5px;">${a3Text('upgrade.closingPass')}</p>
-      <p style="font-size:12px;color:#475569;margin:0 0 10px;">${escHtml(item.priceLabel)}</p>
+      <p style="font-size:12px;color:#475569;margin:0 0 6px;">${escHtml(item.priceLabel)}</p>
+      <p style="font-size:12px;color:#475569;margin:0 0 10px;">${a3Text('upgrade.closingPassBody')}</p>
       <button type="button" class="brain-action green" data-checkout-plan="closing_pass_60d" data-checkout-placement="closing_checklist" onclick="startWebCheckout('closing_pass_60d','closing_checklist')">${a3Text('closing.reviewPassCheckout')}</button>
     </div>`;
     if (!closingPassOfferShown) {
@@ -4816,6 +4819,33 @@ async function loadClosingPassOffer() {
     }
   } catch {}
 }
+
+async function mountClosingPassOffers() {
+  if (isStoreShellMode() || typeof document.querySelectorAll !== 'function') return;
+  const mounts = [...document.querySelectorAll('[data-closing-pass-mount]')];
+  if (!mounts.length) return;
+  try {
+    const response = await fetch('/api/checkout?catalog=1', { cache: 'no-store' });
+    if (!response.ok) return;
+    const catalog = await response.json();
+    const item = catalog.plans?.find(plan => plan.key === 'closing_pass_60d');
+    const amount = Number(item?.amountCents ?? item?.amount);
+    if (!item?.checkoutConfigured || item.renews === true || !Number.isSafeInteger(amount) || amount <= 0 || !item.priceLabel) return;
+    for (const el of mounts) {
+      const placement = el.getAttribute('data-closing-pass-placement') === 'seasonal_closing' ? 'seasonal_closing' : 'closing_workflow';
+      if (el.dataset?.closingPassFilled === placement) continue;
+      if (el.dataset) el.dataset.closingPassFilled = placement;
+      el.innerHTML = `<div style="border-top:1px solid #cbd5e1;margin-top:14px;padding-top:12px;">
+        <p style="font-size:13px;font-weight:800;color:#0f172a;margin:0 0 5px;">${a3Text('upgrade.closingPass')}</p>
+        <p style="font-size:12px;color:#475569;margin:0 0 6px;">${escHtml(item.priceLabel)}</p>
+        <p style="font-size:12px;color:#475569;margin:0 0 10px;">${a3Text('upgrade.closingPassBody')}</p>
+        <button type="button" class="brain-action green" data-checkout-plan="closing_pass_60d" data-checkout-placement="${placement}" onclick="startWebCheckout('closing_pass_60d','${placement}')">${a3Text('closing.reviewPassCheckout')}</button>
+      </div>`;
+      trackSplashLensEvent('closing_pass_offer_shown', { placement, plan: 'closing_pass_60d' });
+    }
+  } catch {}
+}
+globalThis.mountClosingPassOffers = mountClosingPassOffers;
 
 function switchClType(type) {
   if (type === 'closing') trackClosingChecklistStart();
@@ -5612,7 +5642,7 @@ const SERVICE_PROOF_FAQ = [
   },
   {
     keys: ['price', 'paid', 'subscription'],
-    answer: 'The FreeCore app stays useful: manual lookup, calculators, checklists, and Facility Assist stay open. A free field profile unlocks 3 monthly AI scans and lets a tech start saving job context on this device. Splash Lens Pro Unlimited is the paid lane for unlimited scanner use and saved job memory where paid access is available. Teams is for owners who want crew visibility and company reporting. Partner/manufacturer/training ideas are handled through direct discussion, not self-serve checkout.'
+    answer: 'The FreeCore app stays useful: manual lookup, calculators, checklists, and Facility Assist stay open. A free field profile unlocks 3 monthly AI scans and lets a tech start saving job context on this device. Splash Lens Pro Unlimited stays $19/month or $149/year for unlimited scanner use and saved job memory where paid access is available. Closing Pro is a $29 one-time pass with Pro scanner access for 60 days; it ends after 60 days and does not renew. Teams is for owners who want crew visibility and company reporting. Partner/manufacturer/training ideas are handled through direct discussion, not self-serve checkout.'
   },
   {
     keys: ['trend', 'callback', 'risk', 'repeat'],
@@ -11189,9 +11219,12 @@ async function startWebCheckout(plan, placement) {
 async function initUpgradeHandoff() {
   const params = new URLSearchParams(window.location.search);
   if (!params.has('upgrade') || isStoreShellMode()) return;
-  const plan = /year|annual/i.test(params.get('upgrade') || '') ? 'yearly' : 'monthly';
+  const requested = params.get('upgrade') || '';
+  const plan = requested === 'closing_pass_60d' ? 'closing_pass_60d' : /year|annual/i.test(requested) ? 'yearly' : 'monthly';
   const placement = /^[a-z0-9_-]{1,80}$/.test(params.get('placement') || '') ? params.get('placement') : 'site_upgrade';
-  let label = plan === 'yearly' ? 'Splash Lens Pro Unlimited Annual' : 'Splash Lens Pro Unlimited Monthly';
+  let label = plan === 'closing_pass_60d'
+    ? 'SplashLens Closing Pro 60-Day Pass'
+    : plan === 'yearly' ? 'Splash Lens Pro Unlimited Annual' : 'Splash Lens Pro Unlimited Monthly';
   try {
     const response = await fetch('/api/checkout?catalog=1', { cache: 'no-store' });
     const catalog = await response.json();

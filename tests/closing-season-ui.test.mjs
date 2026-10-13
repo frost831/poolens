@@ -149,6 +149,9 @@ test('pass price and checkout appear only for configured catalog on web after co
     assert.equal(offer.includes('startWebCheckout'), shown);
     assert.equal(h.events.filter(event => event.name === 'closing_pass_offer_shown').length, Number(shown));
   }
+  assert.match(app, /upgrade\.closingPassBody/);
+  assert.match(app, /item\.renews === true/);
+  assert.match(app, /data-closing-pass-placement="closing_workflow"/);
   assert.match(app, /data-checkout-plan="closing_pass_60d" data-checkout-placement="closing_checklist"/);
   assert.match(app, /startWebCheckout\('closing_pass_60d','closing_checklist'\)/);
   assert.match(app, /plan: plan === 'closing_pass_60d' \? 'closing_pass_60d'/);

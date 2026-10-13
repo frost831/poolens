@@ -28,6 +28,9 @@ test('season follows the saved region and local date', () => {
 test('seasonal module does not request notifications', () => {
   const source = readFileSync(new URL('../js/seasonal-checklist.js', import.meta.url), 'utf8');
   assert.doesNotMatch(source, /Notification|requestPermission|showNotification|pushManager/);
+  assert.match(source, /season === 'closing'/);
+  assert.match(source, /data-closing-pass-placement', 'seasonal_closing'/);
+  assert.doesNotMatch(source, /stripe|checkout\.stripe|\$29/i);
 });
 
 function memory(initial = {}) {

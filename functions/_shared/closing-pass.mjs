@@ -1,13 +1,14 @@
 const PASS_KEY = 'closing_pass_60d';
 export const CLOSING_PASS_LABEL = 'SplashLens Closing Pro 60-Day Pass';
+export const CLOSING_PASS_AMOUNT_CENTS = 2900;
 const PASS_SECONDS = 60 * 24 * 60 * 60;
 const encoder = new TextEncoder();
 
-export function closingPassAmount(env) {
-  const raw = String(env.SPLASHLENS_CLOSING_PASS_60D_AMOUNT_CENTS || '').trim();
-  if (!/^[1-9]\d*$/.test(raw)) return null;
-  const amount = Number(raw);
-  return Number.isSafeInteger(amount) && amount >= 100 && amount <= 14900 ? amount : null;
+// Published price is the approved $29 one-time pass. Checkout reads the Stripe
+// Price ID from env and must match this amount. Older paid receipts can still
+// grant access at the amount recorded when that session was created.
+export function closingPassAmount() {
+  return CLOSING_PASS_AMOUNT_CENTS;
 }
 
 async function ensureCheckoutTable(db) {

@@ -126,6 +126,13 @@ export function createSeasonalChecklist({
         mount(surface);
       });
       card.append(open, dismiss);
+      if (season === 'closing') {
+        const passMount = element(doc, 'div');
+        passMount.setAttribute('data-closing-pass-mount', 'seasonal_closing');
+        passMount.setAttribute('data-closing-pass-placement', 'seasonal_closing');
+        card.append(passMount);
+        globalThis.mountClosingPassOffers?.();
+      }
       const shown = `${key}:${surface}`;
       if (!seen.has(shown)) {
         seen.add(shown);
