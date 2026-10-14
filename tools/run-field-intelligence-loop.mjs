@@ -15,6 +15,7 @@ const REPORTING_EVENT_FILTER = `
  AND COALESCE(event, '') NOT IN ('session_heartbeat', 'amplitude_readiness_smoke', 'growth_plan_smoke', 'audit_handoff_probe', 'codex_deploy_smoke', 'codex_launch_probe', 'codex_post_push_probe', 'command_center_probe', 'release_gate_live_custom_domain', 'release_gate_live_preview')
  AND COALESCE(source, '') NOT IN ('qa', 'codex', 'codex_smoke', 'launch-gate-test')
  AND CASE WHEN json_valid(props) THEN COALESCE(json_extract(props, '$.traffic_class'), 'real') ELSE 'real' END = 'real'
+ AND lower(CASE WHEN json_valid(props) THEN COALESCE(json_extract(props, '$.attribution_referrer_host'), '') ELSE '' END) NOT LIKE '%.poolens.pages.dev'
  AND lower(COALESCE(source, '')) NOT LIKE 'codex%'
  AND lower(COALESCE(source, '')) NOT IN ('release_gate', 'release-gate')
  AND lower(COALESCE(user_agent, '')) NOT LIKE '%headless%'
@@ -72,7 +73,7 @@ const FUNNEL_STAGES = [
   {
     key: 'paid_or_restored',
     label: 'Paid / entitlement proof',
-    events: ['entitlement_granted', 'paid_entitlement_activated', 'checkout_success', 'stripe_checkout_completed', 'restore_entitlement_success'],
+    events: ['entitlement_granted'],
   },
 ];
 

@@ -56,6 +56,7 @@ test('owner and intelligence funnels exclude QA and bot events even when source 
     for (const trafficClass of ['real', 'qa', 'bot', null]) {
       insert.run('checkout_cta_shown', 'app', '/', 'Mobile Safari', trafficClass ? JSON.stringify({ traffic_class: trafficClass }) : null);
     }
+    insert.run('checkout_cta_shown', 'app', '/', 'Mobile Safari', JSON.stringify({ traffic_class: 'real', attribution_referrer_host: 'stripe-test-55.poolens.pages.dev' }));
     for (const [source, name] of [[toolSource, 'REPORTING_EVENT_FILTER'], [statsSource, 'EXTERNAL_EVENT_FILTER']]) {
       const filter = source.split('const ' + name + ' = `')[1]?.split('`;')[0];
       assert.ok(filter, name);
@@ -63,6 +64,8 @@ test('owner and intelligence funnels exclude QA and bot events even when source 
       assert.equal(rows.count, 2, name);
     }
     assert.match(toolSource, /WHERE \(event LIKE '%store%'[^]*\$\{REPORTING_EVENT_FILTER\}/);
+    assert.match(toolSource, /events: \['entitlement_granted'\]/);
+    assert.match(statsSource, /events: \['entitlement_granted'\]/);
   } finally {
     db.close();
   }
