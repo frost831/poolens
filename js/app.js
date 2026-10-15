@@ -11125,14 +11125,17 @@ function renderPartSnapResultUpgradeOffer(placement = 'partsnap_result') {
     </div>`;
 }
 
-function claimPostValueOffer() {
-  if (isStoreShellMode() || claimPostValueOffer.claimed) return false;
+function claimPostValueOffer(placement = '') {
+  if (isStoreShellMode()) return false;
+  if (claimPostValueOffer.claimed) return Boolean(placement && claimPostValueOffer.placement === placement);
   const key = 'splashlens-post-value-offer-session-v1';
   try {
-    if (sessionStorage.getItem(key)) return false;
-    sessionStorage.setItem(key, '1');
+    const existing = sessionStorage.getItem(key);
+    if (existing && existing !== placement) return false;
+    if (!existing) sessionStorage.setItem(key, placement || '1');
   } catch {}
   claimPostValueOffer.claimed = true;
+  claimPostValueOffer.placement = placement;
   return true;
 }
 
@@ -12290,12 +12293,14 @@ function renderScanHits(hits, query, suppressOffer = false) {
 function renderManualLookupUpgradeOffer(resultCount, query) {
   if (resultCount <= 0 || isPartSnapPro() || isStoreShellMode()) return '';
   const safeQuery = String(query || '').replace(/[^a-zA-Z0-9 ._-]/g, '').slice(0, 40);
-  if (!claimPostValueOffer()) return '';
-  trackSplashLensEvent('post_value_upgrade_shown', {
-    feature: 'unlimited_partsnap',
-    placement: 'scan_lookup_search',
-    result_count: resultCount,
-    query: safeQuery,
+  const placement = 'scan_lookup_search';
+  const alreadyOwned = claimPostValueOffer.placement === placement || (() => {
+    try { return sessionStorage.getItem('splashlens-post-value-offer-session-v1') === placement; }
+    catch { return false; }
+  })();
+  if (!claimPostValueOffer(placement)) return '';
+  if (!alreadyOwned) trackSplashLensEvent('post_value_upgrade_shown', {
+    feature: 'unlimited_partsnap', placement, result_count: resultCount, query: safeQuery,
   });
   return `
     <div style="background:#082f49;border:1px solid #0ea5e9;border-radius:10px;padding:12px;margin:12px 0 6px;">

@@ -170,6 +170,22 @@ test('web post-value surfaces share one offer per session', () => {
   assert.equal(reloaded.events.length, 0);
 });
 
+test('scanner lookup keeps its offer through result redraws without claiming another offer', () => {
+  const sharedSession = storage();
+  const functions = [...checkoutFunctions, 'renderManualLookupUpgradeOffer',
+    'renderManualCodeAnswerUpgradeOffer', 'renderPartSnapResultUpgradeOffer'];
+  const first = harness(functions, { isPartSnapPro: () => false, sessionStorage: sharedSession });
+  assert.match(first.context.renderManualLookupUpgradeOffer(1, 'E0'), /data-checkout-placement="scan_lookup_search"/);
+  assert.match(first.context.renderManualLookupUpgradeOffer(2, 'E05'), /data-checkout-placement="scan_lookup_search"/);
+  assert.equal(first.context.renderManualCodeAnswerUpgradeOffer(), '');
+  assert.equal(first.events.filter(event => event.name === 'post_value_upgrade_shown').length, 1);
+
+  const reloaded = harness(functions, { isPartSnapPro: () => false, sessionStorage: sharedSession });
+  assert.match(reloaded.context.renderManualLookupUpgradeOffer(2, 'E05'), /data-checkout-placement="scan_lookup_search"/);
+  assert.equal(reloaded.context.renderPartSnapResultUpgradeOffer(), '');
+  assert.equal(reloaded.events.length, 0);
+});
+
 test('third free scan gate follows result, can be dismissed, and uses A1 placement', () => {
   let html = '<div>Complete scan result</div>';
   let removed = false;
