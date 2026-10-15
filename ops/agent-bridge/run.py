@@ -82,7 +82,7 @@ def authorized_event(event, event_name, machine, issue):
                  event.get('action') == 'labeled' and event.get('label', {}).get('name') == f'agent:{machine}'))
 
 
-REQUIRED_CHECKS = {'frost831/throttleshare': ['verify'], 'frost831/hyperpulse': ['committed-secrets'], 'frost831/grainbrief': ['test-and-scan', 'mobile-security'], 'frost831/bay2course-data-passport': ['verify'], 'frost831/poolens': ['test'], 'frost831/poolens-site': ['test'], 'frost831/ruckmode': ['validate']}
+REQUIRED_CHECKS = {'frost831/throttleshare': ['verify'], 'frost831/hyperpulse': ['committed-secrets', 'content', 'page-shell'], 'frost831/grainbrief': ['test-and-scan', 'mobile-security'], 'frost831/bay2course-data-passport': ['verify'], 'frost831/poolens': ['test'], 'frost831/poolens-site': ['test'], 'frost831/ruckmode': ['validate']}
 
 
 def latest_checks(checks):
