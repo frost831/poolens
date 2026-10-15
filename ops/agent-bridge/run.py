@@ -85,8 +85,25 @@ def authorized_event(event, event_name, machine, issue):
 REQUIRED_CHECKS = {'frost831/throttleshare': ['verify'], 'frost831/hyperpulse': ['committed-secrets'], 'frost831/grainbrief': ['test-and-scan', 'mobile-security'], 'frost831/bay2course-data-passport': ['verify'], 'frost831/poolens': ['test'], 'frost831/poolens-site': ['test'], 'frost831/ruckmode': ['validate']}
 
 
+def latest_checks(checks):
+    """Ignore superseded Actions attempts while preserving every external check."""
+    latest = {}
+    external = []
+    for check in checks:
+        match = re.search(r'/actions/runs/(\d+)', check.get('link', ''))
+        if not match:
+            external.append(check)
+            continue
+        key = (check.get('workflow', ''), check.get('name'))
+        run_id = int(match.group(1))
+        if key not in latest or run_id > latest[key][0]:
+            latest[key] = (run_id, check)
+    return external + [item[1] for item in latest.values()]
+
+
 def checks_passed(checks):
     # Required suites must actually pass; additional pending or failed checks block merging.
+    checks = latest_checks(checks)
     required = set(REQUIRED_CHECKS.get(REPO, ()))
     passed = {c.get('name') for c in checks if c.get('bucket') == 'pass'}
     return bool(required) and required.issubset(passed) and all(
@@ -139,8 +156,8 @@ def finish_pr(pr_url, result, previous, worktree, env):
     sha = execute(['git', 'rev-parse', 'HEAD'], cwd=worktree, env=env).stdout.strip()
     deadline = time.monotonic() + 1800
     while time.monotonic() < deadline:
-        check = execute(['gh', 'pr', 'checks', pr_url, '--json', 'name,bucket'], env=env, check=False)
-        checks = json.loads(check.stdout or '[]')
+        check = execute(['gh', 'pr', 'checks', pr_url, '--json', 'name,bucket,workflow,link'], env=env, check=False)
+        checks = latest_checks(json.loads(check.stdout or '[]'))
         if any(c.get('bucket') in ('fail', 'cancel') for c in checks):
             raise RuntimeError(f'PR checks failed; review {pr_url}')
         if checks_passed(checks):

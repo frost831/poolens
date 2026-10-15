@@ -76,4 +76,13 @@ class Reliability(unittest.TestCase):
             bridge.finish_pr('pr-url',{'complete':True,'allow_merge':False},None,Path('.'),{})
             remote.assert_not_called();command.assert_not_called()
 
+    def test_superseded_cancelled_run_does_not_hide_current_result(self):
+        def check(run, bucket):
+            return {'name': 'verify', 'workflow': 'Web CI', 'bucket': bucket, 'link': f'https://github.com/a/b/actions/runs/{run}/job/1'}
+        with patch.object(bridge, 'REPO', 'frost831/throttleshare'):
+            self.assertTrue(bridge.checks_passed([check(10, 'cancel'), check(11, 'pass')]))
+            self.assertFalse(bridge.checks_passed([check(10, 'pass'), check(11, 'pending')]))
+            self.assertFalse(bridge.checks_passed([check(10, 'pass'), check(11, 'fail')]))
+            self.assertFalse(bridge.checks_passed([check(10, 'pass'), check(11, 'cancel')]))
+
 if __name__=='__main__':unittest.main()
