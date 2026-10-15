@@ -9300,9 +9300,14 @@ function inspectPartSnapImage(canvas) {
   sample.width = sampleSize;
   sample.height = sampleSize;
   const ctx = sample.getContext('2d', { willReadFrequently: true });
-  if (!ctx) return { block: false, warnings, blockers, width, height, brightness: 0, contrast: 0, edgeScore: 0 };
-  ctx.drawImage(canvas, 0, 0, sampleSize, sampleSize);
-  const pixels = ctx.getImageData(0, 0, sampleSize, sampleSize).data;
+  if (!ctx) return { block: true, warnings, blockers: [...blockers, 'inspection_unavailable'], width, height, brightness: 0, contrast: 0, edgeScore: 0 };
+  let pixels;
+  try {
+    ctx.drawImage(canvas, 0, 0, sampleSize, sampleSize);
+    pixels = ctx.getImageData(0, 0, sampleSize, sampleSize).data;
+  } catch {
+    return { block: true, warnings, blockers: [...blockers, 'inspection_unavailable'], width, height, brightness: 0, contrast: 0, edgeScore: 0 };
+  }
   const luminance = [];
   let total = 0;
   for (let i = 0; i < pixels.length; i += 4) {
@@ -9583,7 +9588,9 @@ function attributionFromCurrentPage() {
       referrer: cleanAttributionValue(document.referrer ? new URL(document.referrer).origin : '', 300),
       referrer_host: cleanAttributionValue(referrerHost, 120),
       landing_path: cleanAttributionValue(window.location.pathname, 300),
-      article: source === 'poolpro' ? 'poolpro_splashlens_launches_free_field_reference_app' : '',
+      article: /^[a-z0-9-]{1,64}$/.test(params.get('article') || '')
+        ? params.get('article')
+        : source === 'poolpro' ? 'poolpro_splashlens_launches_free_field_reference_app' : '',
       first_seen: now,
       last_seen: now,
     };

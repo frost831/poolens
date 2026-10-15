@@ -15,6 +15,30 @@ const preflight = {
   contrast: 11, edgeScore: 1, width: 720, height: 1280,
 };
 
+test('image preflight blocks when pixels cannot be inspected', () => {
+  const context = vm.createContext({
+    document: { createElement: () => ({ getContext: () => null }) },
+  });
+  vm.runInContext(functionSource('inspectPartSnapImage'), context);
+  const result = context.inspectPartSnapImage({ width: 1, height: 1 });
+  assert.equal(result.block, true);
+  assert.ok(result.blockers.includes('low_resolution'));
+  assert.ok(result.blockers.includes('inspection_unavailable'));
+});
+
+test('image preflight recovers from a pixel-read failure', () => {
+  const context = vm.createContext({
+    document: { createElement: () => ({ getContext: () => ({
+      drawImage() {},
+      getImageData() { throw new Error('pixel access denied'); },
+    }) }) },
+  });
+  vm.runInContext(functionSource('inspectPartSnapImage'), context);
+  const result = context.inspectPartSnapImage({ width: 720, height: 1280 });
+  assert.equal(result.block, true);
+  assert.deepEqual(Array.from(result.blockers), ['inspection_unavailable']);
+});
+
 test('a blocked gallery photo offers another gallery pick and records a scalar blocker', () => {
   const events = [];
   const result = { innerHTML: '' };
