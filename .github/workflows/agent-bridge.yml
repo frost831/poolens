@@ -41,7 +41,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
-          ref: master
+          ref: ${{ github.sha }}
           fetch-depth: 0
           persist-credentials: false
       - name: Run authorized Mac task
@@ -61,7 +61,7 @@ jobs:
        !contains(github.event.issue.labels.*.name, 'agent:running') &&
        (github.event_name == 'issues' && (github.event.action == 'opened' || github.event.label.name == 'agent:pc') ||
         github.event_name == 'issue_comment' && startsWith(github.event.comment.body, '/codex')))
-    runs-on: [self-hosted, pc, codex]
+    runs-on: [self-hosted, pc, codex, agent]
     timeout-minutes: 180
     concurrency:
       group: ${{ github.repository }}-agent-pc
@@ -70,7 +70,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
-          ref: master
+          ref: ${{ github.sha }}
           fetch-depth: 0
           persist-credentials: false
       - name: Run authorized PC task

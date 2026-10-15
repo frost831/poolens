@@ -149,10 +149,13 @@ def test_followup_preserves_one_owned_task_pr():
             bridge.continuation_pr([{**pr, **change}], '42')
 
 
-def test_authentication_precedes_private_fetch():
-    source = (ROOT / 'ops/agent-bridge/run.py').read_text()
-    assert source.index('configure_git_auth(root, env)', source.index('def main')) < source.index("['git', 'fetch'")
-    assert "f'HEAD:refs/heads/{remote_branch}'" in source
+def test_authentication_precedes_private_fetch(monkeypatch):
+    calls = []
+    monkeypatch.setattr(bridge, 'execute', lambda args, **kwargs: (calls.append(args) or SimpleNamespace(stdout='sha')))
+    bridge.create_isolated_checkout(ROOT, ROOT / 'unused-test-path', 'master', 'test-branch', {})
+    auth = next(i for i, args in enumerate(calls) if 'credential.helper' in args)
+    fetch = next(i for i, args in enumerate(calls) if args[:2] == ['git', 'fetch'])
+    assert auth < fetch
 
 
 def test_no_change_continuation_can_finish_existing_pr(monkeypatch):
