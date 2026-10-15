@@ -1,0 +1,89 @@
+name: Mac runner storage diagnosis
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: owner-mac-storage-diagnosis
+  cancel-in-progress: false
+jobs:
+  inspect:
+    if: github.repository == 'frost831/poolens' && github.actor == 'frost831'
+    runs-on: [self-hosted, macOS, mac, codex]
+    timeout-minutes: 5
+    steps:
+      - name: Read storage metadata and active work without changing the checkout
+        shell: bash
+        run: |
+          set +x
+          set -euo pipefail
+          if [[ -x /opt/homebrew/bin/python3.12 ]]; then
+            probe_python=/opt/homebrew/bin/python3.12
+          else
+            probe_python=$(command -v python3)
+          fi
+          "$probe_python" - <<'PY'
+          """Read-only storage/process facts for the signed-in Mac runner user."""
+          import json
+          import os
+          from pathlib import Path
+          import plistlib
+          import stat
+          import subprocess
+          import sys
+          
+          def plist(args):
+              try:
+                  result = subprocess.run(args, capture_output=True, timeout=30)
+                  return plistlib.loads(result.stdout) if not result.returncode else {'probe_error': 'command failed'}
+              except (OSError, ValueError, subprocess.SubprocessError):
+                  return {'probe_error': 'metadata unavailable'}
+          
+          if sys.platform != 'darwin' or os.getuid() == 0:
+              raise SystemExit('This read-only probe requires the signed-in non-root Mac user')
+          if Path('/dev/console').stat().st_uid != os.getuid():
+              raise SystemExit('Runner user does not match the signed-in Mac user; no changes made')
+          
+          result = {'operation': 'read_only_storage_probe', 'changes_made': 0, 'volumes': []}
+          for name in ('MACSSD', 'MacBuildAPFS', 'CodexBuildAPFS'):
+              path = Path('/Volumes') / name
+              row = {'path': str(path), 'exists': path.exists(), 'is_mount': os.path.ismount(path),
+                     'writable_by_runner': os.access(path, os.W_OK), 'is_symlink': path.is_symlink()}
+              if path.exists():
+                  metadata = path.stat()
+                  row.update(owner_is_runner=metadata.st_uid == os.getuid(), mode=oct(stat.S_IMODE(metadata.st_mode)))
+              if row['is_mount']:
+                  info = plist(['/usr/sbin/diskutil', 'info', '-plist', str(path)])
+                  row['disk'] = {key: info[key] for key in ('DeviceIdentifier', 'ParentWholeDisk', 'Internal', 'Mounted', 'Writable', 'FilesystemType', 'VolumeName') if key in info}
+              result['volumes'].append(row)
+          
+          image = Path('/Volumes/MACSSD/MacBuild/MacBuildAPFS.sparsebundle')
+          result['expected_image_exists'] = image.exists()
+          result['expected_image_is_symlink'] = image.is_symlink()
+          result['expected_image_owned_by_runner'] = image.exists() and image.stat().st_uid == os.getuid()
+          images = plist(['/usr/bin/hdiutil', 'info', '-plist']).get('images', [])
+          result['build_images'] = [{'image_path': item.get('image-path'),
+                                     'mounts': [{'device': entry.get('dev-entry'), 'mount': entry.get('mount-point')}
+                                                for entry in item.get('system-entities', [])]}
+                                    for item in images if str(item.get('image-path', '')).startswith('/Volumes/MACSSD/MacBuild/')]
+          
+          processes = subprocess.run(['/bin/ps', '-axo', 'pid=,ppid=,comm='], capture_output=True, text=True, timeout=30)
+          if processes.returncode:
+              raise SystemExit('Process inventory unavailable; no changes made')
+          rows = {}
+          for line in processes.stdout.splitlines():
+              fields = line.strip().split(None, 2)
+              if len(fields) == 3 and fields[0].isdigit() and fields[1].isdigit():
+                  rows[int(fields[0])] = (int(fields[1]), Path(fields[2]).name)
+          ancestors = set()
+          pid = os.getpid()
+          while pid in rows and pid not in ancestors:
+              ancestors.add(pid)
+              pid = rows[pid][0]
+          work = {'Runner.Worker', 'xcodebuild', 'swift-frontend', 'clang', 'gradle', 'rsync', 'restic', 'borg'}
+          result['independent_active_work'] = [{'pid': pid, 'program': name} for pid, (_, name) in rows.items()
+                                               if pid not in ancestors and name in work]
+          result['runner_workspace'] = os.environ.get('GITHUB_WORKSPACE', '').replace(str(Path.home()), '~')
+          print(json.dumps(result), flush=True)
+          
+          PY
