@@ -30,6 +30,11 @@ function tokenSecret(env) {
   return secret.length >= 32 ? secret : '';
 }
 
+function scannerActivationUrl(env, token) {
+  const origin = String(env.SPLASHLENS_APP_ORIGIN || 'https://app.splashlens.com').replace(/\/+$/, '');
+  return `${origin}/?tab=scan&scan_token=${encodeURIComponent(token)}`;
+}
+
 async function stripeGet(path, env) {
   if (!env.STRIPE_SECRET_KEY) return null;
   const response = await fetch(`https://api.stripe.com/v1/${path}`, {
@@ -228,7 +233,7 @@ async function issueActivation(session, env, subscription) {
     exp: now + 365 * 24 * 60 * 60,
   };
   const token = await signToken(secret, payload);
-  const activateUrl = `https://app.splashlens.com/?tab=scan&scan_token=${encodeURIComponent(token)}`;
+  const activateUrl = scannerActivationUrl(env, token);
 
   await persistActivation(session, subject, payload.plan, env, subscription);
 
@@ -285,7 +290,7 @@ export async function onRequestGet({ request, env }) {
     const proof = { plan: 'closing_pass_60d', path: '/api/checkout-success', props: { ...sessionAttribution(session), payment_status: session.payment_status } };
     await recordPaymentEvent(env, 'checkout_completed', session.id, proof);
     await recordPaymentEvent(env, 'entitlement_granted', session.id, proof);
-    const activateUrl = `https://app.splashlens.com/?tab=scan&scan_token=${encodeURIComponent(activation.token)}`;
+    const activateUrl = scannerActivationUrl(env, activation.token);
     return html(`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Closing Pro activated</title></head><body><main><h1>Closing Pro activated.</h1><p>Pro access for ${escapeHtml(activation.subject)} is active until ${escapeHtml(activation.expiresAt)}.</p><a href="${escapeHtml(activateUrl)}">Open SplashLens scanner</a></main></body></html>`);
   }
   if (isCrewCheckout(session)) {
