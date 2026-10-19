@@ -249,3 +249,29 @@ test('scan API enriches the Anthropic result and records non-sensitive stage tel
     console.info = originalInfo;
   }
 });
+
+for (const stopReason of ['max_tokens', 'model_context_window_exceeded']) {
+test(`truncated model output (${stopReason}) cannot become a PartSnap result and refunds its quota`, async (t) => {
+  const secret='truncated-output-test-secret-is-long-enough';
+  const token=await signedEntitlement(secret);
+  const store=new Map();
+  const stages=[];
+  let requested;
+  t.mock.method(console,'info',()=>{});
+  t.mock.method(globalThis,'fetch',async (_url,options) => {
+    requested=JSON.parse(options.body);
+    return Response.json({stop_reason:stopReason,content:[{type:'text',text:JSON.stringify({manufacturer:'Hayward',component:'pump lid',confidence:'medium'})}]});
+  });
+  const response=await onRequestPost({
+    request:new Request('http://localhost:8788/api/scan',{method:'POST',headers:{'Content-Type':'application/json','X-SplashLens-Entitlement-Token':token},body:JSON.stringify({mode:'parts_snap',image:'data:image/jpeg;base64,AAAA'})}),
+    env:{ANTHROPIC_API_KEY:'fixture',SPLASHLENS_ENTITLEMENT_SECRET:secret,SUBSCRIBERS_DB:fakeDatabase(stages),SCAN_USAGE_KV:{async get(key){return store.get(key)||null;},async put(key,value){store.set(key,value);}}},
+  });
+  assert.equal(response.status,502);
+  assert.equal((await response.json()).errorCode,'ai_response_truncated');
+  assert.ok(requested.max_tokens>=1536,'PartSnap needs space for evidence and missing-proof JSON');
+  assert.ok(stages.some(row=>row.error_code==='ai_response_truncated' || row.errorCode==='ai_response_truncated'));
+  assert.ok(!stages.some(row=>row.stage==='completed'));
+  assert.ok(store.size>0);
+  for(const value of store.values()) assert.equal(Number(value),0,'failed output does not consume a scan');
+});
+}

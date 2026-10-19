@@ -3644,7 +3644,7 @@ function toggleCode(uid) {
         result_count: 1,
         time_back_message: 'A code answer was opened without leaving the stop.',
       });
-      const offer = renderManualCodeAnswerUpgradeOffer();
+      const offer = det.querySelector?.('.manual-code-pro-offer') ? '' : renderManualCodeAnswerUpgradeOffer();
       if (offer) det.insertAdjacentHTML('beforeend', offer);
     }
     window.SplashLensFieldSignals?.onCodeOpened({
@@ -8542,7 +8542,8 @@ async function composePartSnapEvidenceSheet(targetCanvas) {
     const x = (index % 2) * cellWidth;
     const y = Math.floor(index / 2) * cellHeight;
     const areaHeight = cellHeight - headerHeight;
-    const scale = Math.max(cellWidth / image.width, areaHeight / image.height);
+    // Keep edge markings and model plates in frame, including portrait gallery photos.
+    const scale = Math.min(cellWidth / image.width, areaHeight / image.height);
     const drawWidth = image.width * scale;
     const drawHeight = image.height * scale;
     ctx.save();
@@ -10356,6 +10357,7 @@ function trackStoreShellOpen() {
 
 async function callAIScan(canvas, mode, result, status) {
   trackSplashLensEvent('ai_scan_attempted', { mode });
+  let requestFailure = {};
   try {
     const base64 = canvas.toDataURL('image/jpeg', 0.85).replace(/^data:image\/jpeg;base64,/, '');
     const headers = { 'Content-Type': 'application/json', ...getLanguageHeaders() };
@@ -10399,6 +10401,9 @@ async function callAIScan(canvas, mode, result, status) {
     });
     const payload = await res.json().catch(() => ({}));
     if (!res.ok) {
+      requestFailure = { http_status: res.status };
+      if (/^(ai_response_truncated|invalid_model_json|anthropic_http_[1-5][0-9]{2})$/.test(payload.errorCode || '')) requestFailure.error_code = payload.errorCode;
+      if (/^[a-z0-9_-]{8,80}$/i.test(payload.scanId || '')) requestFailure.scan_id = payload.scanId;
       if (payload.profileRequired) {
         if (mode === 'parts_snap') trackPartSnapResultFailure('profile_required');
         trackSplashLensEvent('ai_scan_blocked', { mode, reason: 'profile_required', status: res.status });
@@ -10520,13 +10525,15 @@ async function callAIScan(canvas, mode, result, status) {
       }
     }
   } catch (err) {
+    const failureReason = requestFailure.error_code || (err?.name === 'TypeError' ? 'network_or_worker_unavailable' : 'scan_request_failed');
     trackSplashLensEvent('ai_scan_failed', {
       mode,
-      reason: err && err.name === 'TypeError' ? 'network_or_worker_unavailable' : 'scan_request_failed',
+      reason: failureReason,
+      ...requestFailure,
     });
     // Network error or worker unavailable — fall back to offline path
     if (mode === 'parts_snap') {
-      trackPartSnapResultFailure(err?.name === 'TypeError' ? 'network_or_worker_unavailable' : 'scan_request_failed');
+      trackPartSnapResultFailure(failureReason, requestFailure);
       if (status) status.textContent = 'PARTSNAP UNAVAILABLE - RETRY OR USE CODE LOOKUP';
       if (result) result.innerHTML = `<div style="background:#1e293b;border:1px solid #334155;border-radius:8px;padding:16px;color:#e2e8f0;">
         <p style="font-size:14px;font-weight:800;margin-bottom:8px;">PartSnap could not analyze these photos.</p>
@@ -11103,8 +11110,8 @@ function savePartSnapFieldStop() {
 
 function renderPostValueUpgradeOffer() {
   if (isPartSnapPro() || isStoreShellMode()) return '';
-  if (!claimPostValueOffer()) return '';
-  trackSplashLensEvent('post_value_upgrade_shown', { feature: 'unlimited_partsnap', placement: 'field_stop_saved' });
+  if (!claimPostValueOffer('field_stop_saved')) return '';
+  if (claimPostValueOffer.isNew) trackSplashLensEvent('post_value_upgrade_shown', { feature: 'unlimited_partsnap', placement: 'field_stop_saved' });
   return `
     <div style="background:#0f172a;border:1px solid #334155;border-radius:10px;padding:12px;margin:0 0 16px;">
       <p style="color:#7dd3fc;font-size:10px;font-weight:950;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;">Splash Lens Pro Unlimited</p>
@@ -11119,8 +11126,8 @@ function renderPostValueUpgradeOffer() {
 
 function renderPartSnapResultUpgradeOffer(placement = 'partsnap_result') {
   if (isPartSnapPro() || isStoreShellMode()) return '';
-  if (!claimPostValueOffer()) return '';
-  trackSplashLensEvent('post_value_upgrade_shown', { feature: 'unlimited_partsnap', placement });
+  if (!claimPostValueOffer(placement)) return '';
+  if (claimPostValueOffer.isNew) trackSplashLensEvent('post_value_upgrade_shown', { feature: 'unlimited_partsnap', placement });
   return `
     <div style="background:#082f49;border:1px solid #0ea5e9;border-radius:10px;padding:12px;margin:10px 0;">
       <p style="color:#7dd3fc;font-size:10px;font-weight:950;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;">${a3Text('upgrade.keepResult')}</p>
@@ -11133,16 +11140,19 @@ function renderPartSnapResultUpgradeOffer(placement = 'partsnap_result') {
 }
 
 function claimPostValueOffer(placement = '') {
+  claimPostValueOffer.isNew = false;
   if (isStoreShellMode()) return false;
   if (claimPostValueOffer.claimed) return Boolean(placement && claimPostValueOffer.placement === placement);
   const key = 'splashlens-post-value-offer-session-v1';
+  let existing = '';
   try {
-    const existing = sessionStorage.getItem(key);
+    existing = sessionStorage.getItem(key);
     if (existing && existing !== placement) return false;
     if (!existing) sessionStorage.setItem(key, placement || '1');
   } catch {}
   claimPostValueOffer.claimed = true;
   claimPostValueOffer.placement = placement;
+  claimPostValueOffer.isNew = !existing;
   return true;
 }
 
@@ -11210,6 +11220,7 @@ async function startWebCheckout(plan, placement) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
       credentials: 'same-origin',
+      signal: typeof AbortSignal !== 'undefined' && typeof AbortSignal.timeout === 'function' ? AbortSignal.timeout(35000) : undefined,
     });
     const result = await response.json();
     const target = new URL(result.url || '', window.location.origin);
@@ -11219,7 +11230,9 @@ async function startWebCheckout(plan, placement) {
     window.location.assign(target.href);
     return true;
   } catch (error) {
-    showSplashLensNotice(error.message || 'Secure checkout is unavailable. Please try again.');
+    showSplashLensNotice(['TimeoutError', 'AbortError'].includes(error.name)
+      ? 'Secure checkout took too long. Please try again.'
+      : error.message || 'Secure checkout is unavailable. Please try again.');
     return false;
   } finally {
     checkoutPending = false;
@@ -11239,18 +11252,38 @@ async function initUpgradeHandoff() {
     : plan === 'crew_monthly'
       ? 'SplashLens Crew'
       : plan === 'yearly' ? 'Splash Lens Pro Unlimited Annual' : 'Splash Lens Pro Unlimited Monthly';
+  let catalogItem;
+  const catalogKey = ['closing_pass_60d', 'crew_monthly'].includes(plan) ? plan : `partsnap_pro_${plan}`;
   try {
     const response = await fetch('/api/checkout?catalog=1', { cache: 'no-store' });
+    if (!response.ok) throw new Error('catalog_unavailable');
     const catalog = await response.json();
-    const item = catalog.plans?.find(candidate => candidate.key === `partsnap_pro_${plan}`);
-    if (item) label = `${item.label} - ${item.priceLabel}`;
-  } catch {}
+    catalogItem = catalog.plans?.find(candidate => candidate.key === catalogKey);
+    if (!catalogItem) throw new Error('plan_unavailable');
+    label = `${catalogItem.label} - ${catalogItem.priceLabel}`;
+  } catch {
+    revealSplashLensApp();
+    showSplashLensNotice('Plan availability could not be checked. Please try again in a moment.');
+    return;
+  }
   revealSplashLensApp();
+  if (!catalogItem.checkoutConfigured) {
+    const requested = await openSplashLensSheet({
+      eyebrow: 'Paid access', title: label,
+      body: 'Checkout for this plan is not available yet. Request access for an update. Manual lookup stays free.',
+      primaryLabel: 'Request access', secondaryLabel: 'Not now',
+    });
+    if (requested) await openSplashLensPaidLane(catalogKey, catalogItem.label);
+    return;
+  }
   await openSplashLensSheet({
     eyebrow: 'Secure web checkout', title: label,
     body: 'Continue to Stripe to review the plan and payment details. Manual lookup stays free.',
     primaryLabel: 'Continue to Stripe', secondaryLabel: 'Not now',
-    submit: () => startWebCheckout(plan, placement),
+    submit: async () => {
+      if (!(await startWebCheckout(plan, placement))) throw new Error('Secure checkout did not open. Please try again.');
+      return true;
+    },
   });
 }
 
@@ -12321,9 +12354,9 @@ function renderManualLookupUpgradeOffer(resultCount, query) {
 }
 
 function renderManualCodeAnswerUpgradeOffer() {
-  if (isPartSnapPro() || isStoreShellMode() || !claimPostValueOffer()) return '';
   const placement = 'manual_code_answer';
-  trackSplashLensEvent('post_value_upgrade_shown', { feature: 'job_memory', placement });
+  if (isPartSnapPro() || isStoreShellMode() || !claimPostValueOffer(placement)) return '';
+  if (claimPostValueOffer.isNew) trackSplashLensEvent('post_value_upgrade_shown', { feature: 'job_memory', placement });
   return `
     <div class="manual-code-pro-offer" style="background:#082f49;border:1px solid #0ea5e9;border-radius:8px;padding:12px;margin-top:12px;">
       <p style="color:#f8fafc;font-size:13px;font-weight:800;line-height:1.4;margin-bottom:10px;">${a3Text('upgrade.saveJob')}</p>
