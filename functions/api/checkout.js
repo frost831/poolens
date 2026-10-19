@@ -67,10 +67,11 @@ function isAutomatedPreview(request) {
     || (request.headers.has('Sec-Fetch-Mode') && !['navigate', 'cors'].includes(request.headers.get('Sec-Fetch-Mode')));
 }
 
-async function configuredPriceMatchesPlan(env, priceId, planConfig) {
+async function configuredPriceMatchesPlan(env, priceId, planConfig, signal) {
   try {
     const response = await fetch(`https://api.stripe.com/v1/prices/${encodeURIComponent(priceId)}`, {
       headers: { Authorization: `Bearer ${env.STRIPE_SECRET_KEY}` },
+      signal,
     });
     if (!response.ok) return false;
     const price = await response.json();
@@ -98,8 +99,9 @@ async function createCheckoutSession(request, env, plan, attributionInput) {
   const passAmount = pass ? closingPassAmount() : null;
   if (pass && !passAmount) return { configurationError: true };
   const configuredPrice = priceForPlan(env, planKey);
+  const signal = AbortSignal.timeout(15000);
   if ((pass || crew) && !/^price_[A-Za-z0-9]+$/.test(configuredPrice)) return { configurationError: true };
-  if (configuredPrice && !(await configuredPriceMatchesPlan(env, configuredPrice, planConfig))) {
+  if (configuredPrice && !(await configuredPriceMatchesPlan(env, configuredPrice, planConfig, signal))) {
     console.error('SplashLens checkout Price ID does not match the published plan');
     return { configurationError: true };
   }
@@ -150,15 +152,22 @@ async function createCheckoutSession(request, env, plan, attributionInput) {
   }
   if (!pass && !crew) params.set('allow_promotion_codes', 'true');
 
-  const response = await fetch('https://api.stripe.com/v1/checkout/sessions', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${env.STRIPE_SECRET_KEY}`,
-      'Content-Type': 'application/x-www-form-urlencoded',
-      'Idempotency-Key': `splashlens-${attribution.client_reference_id}`,
-    },
-    body: params,
-  });
+  let response;
+  try {
+    response = await fetch('https://api.stripe.com/v1/checkout/sessions', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${env.STRIPE_SECRET_KEY}`,
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Idempotency-Key': `splashlens-${attribution.client_reference_id}`,
+      },
+      body: params,
+      signal,
+    });
+  } catch {
+    console.error('SplashLens checkout session transport failed');
+    return null;
+  }
 
   if (!response.ok) {
     console.error('SplashLens checkout session creation failed', response.status, await response.text());
