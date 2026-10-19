@@ -38,6 +38,14 @@ function stripeSession() {
   };
 }
 
+test('Stripe transport failure produces a retryable checkout response', async (t) => {
+  t.mock.method(console,'error',()=>{});
+  t.mock.method(globalThis,'fetch',async()=>{throw new TypeError('provider unreachable');});
+  const response=await checkout({request:checkoutRequest(),env:{STRIPE_SECRET_KEY:'fixture'}});
+  assert.equal(response.status,503);
+  assert.equal((await response.json()).ok,false);
+});
+
 test('Pro checkout creates a live subscription route with product metadata and a success handoff', async (t) => {
   let params;
   const recorded = [];

@@ -170,6 +170,98 @@ test('web post-value surfaces share one offer per session', () => {
   assert.equal(reloaded.events.length, 0);
 });
 
+test('a PartSnap result redraw retains its checkout offer without another offer event', () => {
+  const functions=[...checkoutFunctions,'renderPartSnapResultUpgradeOffer'];
+  const sharedSession=storage();
+  const first=harness(functions,{isPartSnapPro:()=>false,sessionStorage:sharedSession});
+  assert.match(first.context.renderPartSnapResultUpgradeOffer(),/data-checkout-plan="monthly"/);
+  assert.match(first.context.renderPartSnapResultUpgradeOffer(),/data-checkout-plan="monthly"/);
+  assert.equal(first.events.filter(event=>event.name==='post_value_upgrade_shown').length,1);
+  const reloaded=harness(functions,{isPartSnapPro:()=>false,sessionStorage:sharedSession});
+  assert.match(reloaded.context.renderPartSnapResultUpgradeOffer(),/data-checkout-plan="monthly"/);
+  assert.equal(reloaded.events.length,0);
+});
+
+test('upgrade handoff identifies Closing Pro by its catalog key and offers access while checkout is off', async () => {
+  let sheet;
+  const requested=[];
+  const {context}=harness(['initUpgradeHandoff'],{
+    window:{location:{search:'?upgrade=closing_pass_60d&placement=site_closing'}},
+    fetch:async()=>({ok:true,json:async()=>({plans:[{key:'closing_pass_60d',label:'Closing Pro',priceLabel:'$29 one time / 60 days',checkoutConfigured:false}]})}),
+    revealSplashLensApp:()=>{},openSplashLensSheet:async config=>{sheet=config;return {};},
+    openSplashLensPaidLane:(...args)=>requested.push(args),startWebCheckout:()=>{throw Error('unconfigured checkout');},
+  });
+  await context.initUpgradeHandoff();
+  assert.match(sheet.title,/\$29/);
+  assert.equal(sheet.primaryLabel,'Request access');
+  assert.deepEqual(requested,[['closing_pass_60d','Closing Pro']]);
+});
+
+test('a failed upgrade handoff stays open for a deliberate checkout retry', async () => {
+  let sheet;
+  let attempt=0;
+  const {context}=harness(['initUpgradeHandoff'],{
+    window:{location:{search:'?upgrade=monthly&placement=site_pricing'}},
+    fetch:async()=>({ok:true,json:async()=>({plans:[{key:'partsnap_pro_monthly',label:'Pro',priceLabel:'$19/month',checkoutConfigured:true}]})}),
+    revealSplashLensApp:()=>{},openSplashLensSheet:async config=>{sheet=config;},
+    startWebCheckout:async()=>++attempt>1,
+  });
+  await context.initUpgradeHandoff();
+  await assert.rejects(sheet.submit(),/try again/i);
+  assert.equal(await sheet.submit(),true);
+});
+
+test('checkout timeout releases its lock so the next deliberate click can retry', async () => {
+  const notices=[];
+  const signal={};
+  let attempt=0;
+  const {context}=harness([...checkoutFunctions,'startWebCheckout'],{
+    window:{location:{origin:'https://app.test',assign:()=>{}}},
+    AbortSignal:{timeout:ms=>{assert.ok(ms>0 && ms<=45000);return signal;}},
+    showSplashLensNotice:message=>notices.push(message),
+    fetch:async (_url,options)=>{
+      assert.equal(options.signal,signal);
+      if(++attempt===1) throw Object.assign(Error('expired'),{name:'TimeoutError'});
+      return {ok:true,json:async()=>({url:'https://checkout.stripe.com/c/pay/fixture'})};
+    },
+  });
+  assert.equal(await context.startWebCheckout('monthly','partsnap_result'),false);
+  assert.match(notices[0],/try again/i);
+  assert.equal(await context.startWebCheckout('monthly','partsnap_result'),true);
+  assert.equal(attempt,2);
+});
+
+test('PartSnap failure diagnostics retain only the structured server code and scan reference', async () => {
+  const {context,events}=harness(['callAIScan','trackPartSnapResultFailure'],{
+    getLanguageHeaders:()=>({}),getScanEntitlementToken:()=>'',getPartSnapRecoveryContext:()=>null,
+    getSplashLensIdentityProfile:()=>({}),getFieldSaveAccount:()=>({}),getPartSnapEvidenceSummary:()=>({complete:true}),
+    getScanClientId:()=>uuid,withLanguageMetadata:value=>value,FREE_PROFILE_TOKEN_KEY:'profile',ACCOUNT_TOKEN_KEY:'account',
+    fetch:async()=>({ok:false,status:502,json:async()=>({error:'private@example.com',errorCode:'ai_response_truncated',scanId:'scan_fixture123'})}),
+  });
+  await context.callAIScan({toDataURL:()=> 'data:image/jpeg;base64,AA=='},'parts_snap',{innerHTML:''},{});
+  const failure=events.find(event=>event.name==='partsnap_result_fail');
+  assert.equal(failure.props.reason,'ai_response_truncated');
+  assert.equal(failure.props.http_status,502);
+  assert.equal(failure.props.scan_id,'scan_fixture123');
+  assert.doesNotMatch(JSON.stringify(events),/private@example/);
+});
+
+test('scanner lookup keeps its offer through result redraws without claiming another offer', () => {
+  const sharedSession = storage();
+  const functions = [...checkoutFunctions, 'renderManualLookupUpgradeOffer',
+    'renderManualCodeAnswerUpgradeOffer', 'renderPartSnapResultUpgradeOffer'];
+  const first = harness(functions, { isPartSnapPro: () => false, sessionStorage: sharedSession });
+  assert.match(first.context.renderManualLookupUpgradeOffer(1, 'E0'), /data-checkout-placement="scan_lookup_search"/);
+  assert.match(first.context.renderManualLookupUpgradeOffer(2, 'E05'), /data-checkout-placement="scan_lookup_search"/);
+  assert.equal(first.context.renderManualCodeAnswerUpgradeOffer(), '');
+  assert.equal(first.events.filter(event => event.name === 'post_value_upgrade_shown').length, 1);
+
+  const reloaded = harness(functions, { isPartSnapPro: () => false, sessionStorage: sharedSession });
+  assert.match(reloaded.context.renderManualLookupUpgradeOffer(2, 'E05'), /data-checkout-placement="scan_lookup_search"/);
+  assert.equal(reloaded.context.renderPartSnapResultUpgradeOffer(), '');
+  assert.equal(reloaded.events.length, 0);
+});
+
 test('third free scan gate follows result, can be dismissed, and uses A1 placement', () => {
   let html = '<div>Complete scan result</div>';
   let removed = false;
@@ -275,7 +367,7 @@ test('successful free scans show the soft gate only after the third complete res
   assert.equal(events.some(event => event.name === 'ai_scan_failed'), false);
 });
 
-test('Strip Scan offers Pro only after a useful reading and once per session', async () => {
+test('Strip Scan retains its post-result offer through redraws and records it once per session', async () => {
   let count = 0;
   let html = '';
   const result = {
@@ -302,7 +394,7 @@ test('Strip Scan offers Pro only after a useful reading and once per session', a
   assert.ok(html.indexOf('Complete strip readings') < html.indexOf('data-checkout-placement="test_strip_result"'));
   assert.ok(names(events).indexOf('first_value_completed') < names(events).indexOf('post_value_upgrade_shown'));
   await context.callAIScan(canvas, 'test_strip', result, {});
-  assert.doesNotMatch(html, /data-checkout-placement=/);
+  assert.match(html, /data-checkout-placement="test_strip_result"/);
   assert.equal(events.filter(event => event.name === 'post_value_upgrade_shown').length, 1);
 });
 
@@ -398,6 +490,7 @@ test('manual answers count first action and first value when opened, not when cl
   const offers = [];
   const detail = { isConnected: true, innerHTML: '<p>Check the filter</p>', getClientRects: () => [{}],
     classList: { toggle: () => (open = !open) }, closest: () => ({ dataset: { code: 'E05', answerName: 'Pump fault' } }),
+    querySelector: () => offers.length ? {} : null,
     insertAdjacentHTML: (_position, html) => offers.push(html) };
   const { context, events } = harness([...valueFunctions, 'toggleCode', 'claimPostValueOffer', 'renderManualCodeAnswerUpgradeOffer'], {
     document: { getElementById: id => id.startsWith('det-') ? detail : { style: {} } },

@@ -15,6 +15,49 @@ const preflight = {
   contrast: 11, edgeScore: 1, width: 720, height: 1280,
 };
 
+test('evidence composition retains the whole portrait and landscape photo inside each cell', async () => {
+  const draws = [];
+  const sizes = [{width:400,height:1200},{width:1600,height:400},{width:800,height:800},{width:600,height:1200}];
+  const context = vm.createContext({
+    PARTSNAP_EVIDENCE_STEPS: sizes.map((_,i) => ({key:String(i),label:'Proof'})),
+    _partSnapEvidenceSession: {captures:{0:0,1:1,2:2,3:3},dimensions:''},
+    loadPartSnapEvidenceImage: async key => sizes[key],
+  });
+  const ctx = new Proxy({}, {get(_target,key) { return key === 'drawImage' ? (...args) => draws.push(args) : () => {}; }});
+  vm.runInContext(functionSource('composePartSnapEvidenceSheet'),context);
+  await context.composePartSnapEvidenceSheet({getContext:() => ctx});
+  for (const [i,[_image,x,y,width,height]] of draws.entries()) {
+    const cellX=(i%2)*600, cellY=Math.floor(i/2)*450;
+    assert.ok(x>=cellX && y>=cellY+54, `photo ${i} starts inside its proof cell`);
+    assert.ok(x+width<=cellX+600+0.001 && y+height<=cellY+450+0.001, `photo ${i} is not cropped`);
+    assert.ok(Math.abs(width/height-sizes[i].width/sizes[i].height)<0.001,'aspect ratio preserved');
+  }
+});
+
+test('image preflight blocks when pixels cannot be inspected', () => {
+  const context = vm.createContext({
+    document: { createElement: () => ({ getContext: () => null }) },
+  });
+  vm.runInContext(functionSource('inspectPartSnapImage'), context);
+  const result = context.inspectPartSnapImage({ width: 1, height: 1 });
+  assert.equal(result.block, true);
+  assert.ok(result.blockers.includes('low_resolution'));
+  assert.ok(result.blockers.includes('inspection_unavailable'));
+});
+
+test('image preflight recovers from a pixel-read failure', () => {
+  const context = vm.createContext({
+    document: { createElement: () => ({ getContext: () => ({
+      drawImage() {},
+      getImageData() { throw new Error('pixel access denied'); },
+    }) }) },
+  });
+  vm.runInContext(functionSource('inspectPartSnapImage'), context);
+  const result = context.inspectPartSnapImage({ width: 720, height: 1280 });
+  assert.equal(result.block, true);
+  assert.deepEqual(Array.from(result.blockers), ['inspection_unavailable']);
+});
+
 test('a blocked gallery photo offers another gallery pick and records a scalar blocker', () => {
   const events = [];
   const result = { innerHTML: '' };

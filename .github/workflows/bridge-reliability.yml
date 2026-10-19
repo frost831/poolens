@@ -1,0 +1,23 @@
+name: Bridge reliability
+on:
+  pull_request:
+    paths: ['ops/agent-bridge/**', '.github/workflows/**', 'tests/test_agent_bridge.py']
+  push:
+    branches: ['master']
+    paths: ['ops/agent-bridge/**', '.github/workflows/**', 'tests/test_agent_bridge.py']
+permissions:
+  contents: read
+concurrency:
+  group: bridge-reliability-${{ github.head_ref || github.ref_name }}
+  cancel-in-progress: true
+jobs:
+  bridge-reliability:
+    runs-on: [self-hosted, pc, ci]
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Verify checkout isolation, gates, and task authorization
+        run: python -m unittest discover -s ops/agent-bridge -p test_reliability.py -v

@@ -842,7 +842,7 @@ export async function onRequestPost({ request, env }) {
       },
       body: JSON.stringify({
         model: 'claude-haiku-4-5-20251001',
-        max_tokens: 512,
+        max_tokens: mode === 'parts_snap' ? 1536 : 512,
         messages: [{
           role: 'user',
           content: [
@@ -866,10 +866,18 @@ export async function onRequestPost({ request, env }) {
         usageSource: meter.usage?.source,
       });
       await refundUsageQuota(env, meter.usage);
-      return json({ error: 'AI service error', status: apiRes.status, scanId }, 502, headers);
+      return json({ error: 'AI service error', errorCode: `anthropic_http_${apiRes.status}`, status: apiRes.status, scanId }, 502, headers);
     }
 
     const data = await apiRes.json();
+    if (['max_tokens', 'model_context_window_exceeded'].includes(data.stop_reason)) {
+      await recordScanStage(request, env, body, {
+        scanId, stage: 'ai_failed', status: 'error', errorCode: 'ai_response_truncated',
+        durationMs: Date.now() - startedAt, mode, usageSource: meter.usage?.source,
+      });
+      await refundUsageQuota(env, meter.usage);
+      return json({ error: 'AI analysis was incomplete. Your scan was not used. Please retry.', errorCode: 'ai_response_truncated', scanId }, 502, headers);
+    }
     const text = data.content?.[0]?.text || '';
 
     let parsed;
@@ -887,7 +895,7 @@ export async function onRequestPost({ request, env }) {
         usageSource: meter.usage?.source,
       });
       await refundUsageQuota(env, meter.usage);
-      return json({ error: 'AI response parse failed', scanId }, 502, headers);
+      return json({ error: 'AI response parse failed', errorCode: 'invalid_model_json', scanId }, 502, headers);
     }
 
     await recordScanStage(request, env, body, {
