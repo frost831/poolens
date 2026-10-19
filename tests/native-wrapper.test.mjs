@@ -15,13 +15,29 @@ function galleryContext(pickGalleryPhoto) {
     getStoreShellMode: () => 'ios',
     trackSplashLensEvent: (...args) => events.push(args),
     window: { SplashLensNative: { pickGalleryPhoto } },
-    document: { getElementById: () => ({ click: () => browserPicks++ }) },
+    document: { getElementById: () => ({ removeAttribute() {}, click: () => browserPicks++ }) },
     analyzeNativeGalleryPhoto: async photo => { analyzed = photo; },
   });
   vm.runInContext(app.slice(app.indexOf('async function requestGalleryPhotoFallback'),
     app.indexOf('async function analyzeNativeGalleryPhoto')), context);
+  vm.runInContext(app.slice(app.indexOf('function uploadPartSnapPhoto('), app.indexOf('function openPartSnapManualSearch(')), context);
   return { context, events, browserPicks: () => browserPicks, analyzed: () => analyzed };
 }
+
+test('the camera-denied Upload photo action uses the native gallery bridge', async () => {
+  const image = { dataUrl: 'data:image/jpeg;base64,dGVzdA==' };
+  const state = galleryContext(async () => image);
+  await state.context.uploadPartSnapPhoto();
+  assert.equal(state.analyzed(), image);
+  assert.equal(state.browserPicks(), 0);
+});
+
+test('canceling native Upload photo does not unexpectedly open a second picker', async () => {
+  const state = galleryContext(async () => { throw new Error('gallery_cancelled'); });
+  await state.context.uploadPartSnapPhoto();
+  assert.equal(state.browserPicks(), 0);
+  assert.equal(state.analyzed(), undefined);
+});
 
 test('a selected native gallery image reaches the existing analysis path once', async () => {
   const image = { dataUrl: 'data:image/jpeg;base64,dGVzdA==' };
