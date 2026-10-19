@@ -1,4 +1,5 @@
 import { recordPaymentEvent, sessionAttribution } from '../_shared/payment-funnel.mjs';
+import { stripePeriodEnd } from '../_shared/stripe-billing.mjs';
 import { grantClosingPass, isClosingPass, verifiedClosingPassPayment } from '../_shared/closing-pass.mjs';
 import { crewSubscriptionMatches, ensureCrewBilling, isCrewCheckout } from '../_shared/crew-plan.mjs';
 
@@ -147,7 +148,7 @@ async function persistActivation(session, subject, plan, env, subscription) {
   const sessionId = String(session.id || '');
   const customerId = String(session.customer || '');
   const fallbackDays = /year|annual/i.test(plan) ? 370 : 35;
-  const periodEnd = Number(subscription.current_period_end || subscription.items?.data?.[0]?.current_period_end || 0);
+  const periodEnd = stripePeriodEnd(subscription);
   const expiresAt = periodEnd > 0
     ? new Date(periodEnd * 1000).toISOString()
     : new Date(Date.now() + fallbackDays * 24 * 60 * 60 * 1000).toISOString();
@@ -167,7 +168,7 @@ async function persistActivation(session, subject, plan, env, subscription) {
        status = 'active',
        source = CASE WHEN commercial_entitlements.source = 'stripe_webhook' THEN commercial_entitlements.source ELSE excluded.source END,
        stripe_customer_id = excluded.stripe_customer_id,
-       current_period_end = COALESCE(commercial_entitlements.current_period_end, excluded.current_period_end),
+       current_period_end = COALESCE(excluded.current_period_end, commercial_entitlements.current_period_end),
        updated_at = CURRENT_TIMESTAMP`,
   ).bind(
     `stripe:${sessionId || subject}`,
@@ -308,7 +309,7 @@ export async function onRequestGet({ request, env }) {
       return html('<h1>SplashLens checkout</h1><p>Crew payment could not be verified.</p>', 503);
     }
     const lead = String(session.customer_details?.email || session.customer_email || '').trim().toLowerCase();
-    const periodEnd = Number(subscriptionState.subscription.current_period_end || 0);
+    const periodEnd = stripePeriodEnd(subscriptionState.subscription);
     const seats = await ensureCrewBilling(env.SUBSCRIBERS_DB, {
       email: lead,
       customerId: String(session.customer || ''),
