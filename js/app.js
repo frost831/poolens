@@ -8904,9 +8904,7 @@ function uploadPartSnapPhoto() {
     mode: _scanMode,
     store: (typeof getStoreShellMode === 'function' ? getStoreShellMode() : '') || 'web',
   });
-  const input = document.getElementById('scan-photo-upload');
-  input?.removeAttribute('capture');
-  input?.click();
+  return requestGalleryPhotoFallback();
 }
 
 function openPartSnapManualSearch() {
@@ -8962,7 +8960,9 @@ async function requestGalleryPhotoFallback() {
     }
   }
 
-  document.getElementById('scan-photo-upload')?.click();
+  const input = document.getElementById('scan-photo-upload');
+  input?.removeAttribute('capture');
+  input?.click();
 }
 
 async function analyzeNativeGalleryPhoto(picked = {}) {
