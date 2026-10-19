@@ -283,6 +283,32 @@ test('checkout success saves the same four-seat Crew workspace', async (t) => {
   configuration.SUBSCRIBERS_DB.sqlite.close();
 });
 
+test('Crew webhook and checkout recovery use the Stripe item billing period', async (t) => {
+  const configuration = env();
+  t.after(() => configuration.SUBSCRIBERS_DB.sqlite.close());
+  const subscription = crewSubscription();
+  const end = subscription.current_period_end;
+  delete subscription.current_period_end;
+  subscription.items.data[0].current_period_end = end;
+  t.mock.method(globalThis, 'fetch', async (url) => Response.json(
+    String(url).includes('/checkout/sessions/') ? crewSession() : subscription,
+  ));
+  const delivered = await webhook({
+    request: signedWebhook(crewSession(), 'checkout.session.completed', 'evt_crew_item_period'),
+    env: configuration,
+  });
+  assert.equal(delivered.status, 200);
+  const billing = () => configuration.SUBSCRIBERS_DB.sqlite.prepare('SELECT current_period_end FROM team_billing').get().current_period_end;
+  assert.equal(billing(), new Date(end * 1000).toISOString());
+  assert.equal(configuration.SUBSCRIBERS_DB.sqlite.prepare('SELECT current_period_end FROM commercial_entitlements').get().current_period_end, billing());
+  const recovered = await checkoutSuccess({
+    request: new Request(`https://app.splashlens.com/api/checkout-success?session_id=${sessionId}`),
+    env: configuration,
+  });
+  assert.equal(recovered.status, 200);
+  assert.equal(billing(), new Date(end * 1000).toISOString());
+});
+
 test('a pilot workspace keeps its own seat limit', async () => {
   const configuration = env();
   const created = await team({
