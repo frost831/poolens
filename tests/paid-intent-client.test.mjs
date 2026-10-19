@@ -627,7 +627,7 @@ test('upload photo and manual search stay available after a camera denial', () =
   const clicked = [];
   const focused = [];
   const modes = [];
-  const { context, events } = harness(['uploadPartSnapPhoto', 'openPartSnapManualSearch'], {
+  const { context, events } = harness(['uploadPartSnapPhoto', 'requestGalleryPhotoFallback', 'openPartSnapManualSearch'], {
     _scanMode: 'parts',
     document: {
       getElementById(id) {
@@ -643,7 +643,7 @@ test('upload photo and manual search stay available after a camera denial', () =
   assert.deepEqual(clicked, ['scan-photo-upload']);
   assert.deepEqual(modes, ['lookup']);
   assert.deepEqual(focused, ['scan-code-input']);
-  assert.deepEqual(names(events), ['partsnap_upload_photo_clicked', 'partsnap_manual_search_opened']);
+  assert.deepEqual(names(events), ['partsnap_upload_photo_clicked', 'scanner_gallery_fallback_clicked', 'partsnap_gallery_fallback_clicked', 'partsnap_manual_search_opened']);
   const eventsEndpoint = readFileSync(new URL('../functions/api/events.js', import.meta.url), 'utf8');
   const lowSignal = eventsEndpoint.match(/LOW_SIGNAL_EVENTS = new Set\(\[([^\]]*)\]/)[1];
   for (const name of ['partsnap_camera_fallback_shown', 'partsnap_upload_photo_clicked', 'partsnap_manual_search_opened']) {
