@@ -263,6 +263,7 @@ test('paid Crew webhook grants the lead and caps the workspace at one lead plus 
 
 test('checkout success saves the same four-seat Crew workspace', async (t) => {
   const configuration = env();
+  configuration.SPLASHLENS_APP_ORIGIN = 'https://stripe-test-55.poolens.pages.dev';
   t.mock.method(globalThis, 'fetch', async (url) => {
     if (String(url).includes('/checkout/sessions/')) return Response.json(crewSession());
     return Response.json(crewSubscription());
@@ -276,6 +277,8 @@ test('checkout success saves the same four-seat Crew workspace', async (t) => {
   assert.match(html, /one lead and up to 3 techs/);
   assert.match(html, /\$39 monthly/);
   assert.doesNotMatch(html, /guarantee|diagnos/i);
+  const activation = new URL(html.match(/href="([^"]+)"/)[1].replace(/&amp;/g, '&'));
+  assert.equal(activation.origin, configuration.SPLASHLENS_APP_ORIGIN);
   assert.equal(configuration.SUBSCRIBERS_DB.sqlite.prepare('SELECT seat_limit AS seatLimit FROM team_billing').get().seatLimit, 4);
   configuration.SUBSCRIBERS_DB.sqlite.close();
 });
