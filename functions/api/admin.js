@@ -234,6 +234,8 @@ async function dashboardSnapshot(db) {
     teamBilling,
     audit,
     libraryMisses,
+    followupOpen,
+    recentFollowups,
   ] = await Promise.all([
     count(db, `SELECT COUNT(*) AS value FROM commercial_entitlements`),
     count(db, `SELECT COUNT(*) AS value FROM commercial_entitlements WHERE status IN ('active','trialing','pilot') AND COALESCE(source, '') <> 'd1_payment_backfill'`),
@@ -259,6 +261,9 @@ async function dashboardSnapshot(db) {
       FROM library_misses WHERE traffic_class = 'real' AND created_at >= datetime('now', '-7 days')
       GROUP BY "trigger", brand, model, query, status
       ORDER BY count DESC, lastSeen DESC LIMIT 50`),
+    count(db, `SELECT COUNT(*) AS value FROM field_followup_requests WHERE status = 'new'`),
+    safeAll(db, `SELECT id, kind, email, store, brand, model, query, status, created_at AS createdAt
+      FROM field_followup_requests ORDER BY created_at DESC LIMIT 50`),
   ]);
   return {
     totals: {
@@ -270,6 +275,7 @@ async function dashboardSnapshot(db) {
       approvedPartnerCards,
       learningModules,
       teamWorkspaces,
+      followupOpen,
     },
     recentEntitlements,
     recentIntake,
@@ -280,6 +286,7 @@ async function dashboardSnapshot(db) {
     teamBilling,
     audit,
     libraryMisses,
+    recentFollowups,
   };
 }
 

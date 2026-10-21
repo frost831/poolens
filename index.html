@@ -958,6 +958,16 @@
       <section class="counter-home">
         <div class="counter-heading"><h1>Counter</h1><button type="button" id="counter-language-toggle" class="counter-language-toggle" aria-label="Change language" title="Change language" onclick="openLanguageSheet('header')">EN</button></div>
         <p>Pick what is in front of you.</p>
+        <section id="first-open-starts" aria-label="Start a field task" style="display:none;margin:0 0 16px;padding:14px;border:1px solid #bae6fd;border-radius:12px;background:#f0f9ff;">
+          <strong style="display:block;margin-bottom:5px;">Start with one useful result</strong>
+          <p style="margin:0 0 10px;font-size:12px;">Choose the job in front of you. Core tools are free.</p>
+          <div style="display:grid;gap:8px;">
+            <button type="button" class="counter-action" onclick="openFirstStart('closing')">Closing checklist<span>September–November proof steps</span></button>
+            <button type="button" class="counter-action" onclick="openFirstStart('chlorine')">Chlorine calculator<span>Start with free chlorine</span></button>
+            <button type="button" class="counter-action" onclick="openFirstStart('salt')">Salt calculator<span>Check a measured salt adjustment</span></button>
+            <button type="button" class="counter-action" onclick="openFirstStart('partsnap')">PartSnap<span>Photo a part or type a model number</span></button>
+          </div>
+        </section>
         <div id="stop-flow-mount"></div>
         <div id="morning-route-mount"></div>
         <div id="day-recap-mount"></div>
@@ -1701,7 +1711,7 @@
               <button type="button" onclick="showSplashLensCameraSettingsHelp()" style="background:#fff;color:#334155;border:1px solid #cbd5e1;padding:12px 10px;border-radius:8px;font-weight:800;cursor:pointer;">Camera Settings</button>
               <button type="button" onclick="openPartSnapManualSearch()" style="background:#fff;color:#0369a1;border:1px solid #7dd3fc;padding:12px 10px;border-radius:8px;font-weight:800;cursor:pointer;">Code Lookup</button>
               <button type="button" id="scan-upload-photo" onclick="uploadPartSnapPhoto()" style="background:#0f766e;color:#fff;border:none;padding:12px 10px;border-radius:8px;font-weight:800;cursor:pointer;">Upload photo</button>
-              <button type="button" id="scan-manual-search" onclick="openPartSnapManualSearch()" style="background:#fff;color:#0369a1;border:1px solid #7dd3fc;padding:12px 10px;border-radius:8px;font-weight:800;cursor:pointer;">Search manually</button>
+              <button type="button" id="scan-manual-search" onclick="openPartSnapManualSearch()" style="background:#fff;color:#0369a1;border:1px solid #7dd3fc;padding:12px 10px;border-radius:8px;font-weight:800;cursor:pointer;">Type a model number instead</button>
             </div>
           </div>
         </div>
@@ -1807,7 +1817,7 @@
   <script src="/js/errors.js?v=20261010-hayward-safety"></script>
   <script src="/js/data.js?v=20261013-crew"></script>
   <script type="module" src="/js/i18n.js?v=20261021-closing-pro"></script>
-  <script src="/js/app.js?v=20261021-upgrade-offer"></script>
+  <script src="/js/app.js?v=20261021-round2"></script>
   <script type="module" src="/js/stop-flow.js?v=20261012-stop-flow"></script>
   <script type="module" src="/js/day-recap.js?v=20261012-day-recap"></script>
   <script type="module" src="/js/morning-route.js?v=20261012-morning-route"></script>
