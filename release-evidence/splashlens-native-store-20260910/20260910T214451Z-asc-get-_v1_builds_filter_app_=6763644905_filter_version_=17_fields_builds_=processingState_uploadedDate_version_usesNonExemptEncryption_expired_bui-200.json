@@ -1,0 +1,35 @@
+{
+  "capturedAt": "2026-09-10T21:44:51.311Z",
+  "request": {
+    "method": "GET",
+    "urlPath": "/v1/builds?filter[app]=6763644905&filter[version]=17&fields[builds]=processingState,uploadedDate,version,usesNonExemptEncryption,expired,buildAudienceType&limit=20"
+  },
+  "response": {
+    "data": [
+      {
+        "type": "builds",
+        "id": "28958bf8-eb54-4ef4-802e-a71e3671c229",
+        "attributes": {
+          "version": "17",
+          "uploadedDate": "2026-09-10T14:40:45-07:00",
+          "expired": false,
+          "processingState": "VALID",
+          "buildAudienceType": "APP_STORE_ELIGIBLE",
+          "usesNonExemptEncryption": false
+        },
+        "links": {
+          "self": "https://api.appstoreconnect.apple.com/v1/builds/28958bf8-eb54-4ef4-802e-a71e3671c229"
+        }
+      }
+    ],
+    "links": {
+      "self": "https://api.appstoreconnect.apple.com/v1/builds?fields%5Bbuilds%5D=processingState%2CbuildAudienceType%2Cexpired%2CusesNonExemptEncryption%2CuploadedDate%2Cversion&filter%5Bapp%5D=6763644905&filter%5Bversion%5D=17&limit=20"
+    },
+    "meta": {
+      "paging": {
+        "total": 1,
+        "limit": 20
+      }
+    }
+  }
+}

@@ -7,7 +7,7 @@ export async function onRequest({ request, env }) {
   }
 
   const assetUrl = new URL(request.url);
-  assetUrl.pathname = '/data-deletion';
+  assetUrl.pathname = '/data-deletion.html';
   assetUrl.search = '';
 
   const assetResponse = await env.ASSETS.fetch(new Request(assetUrl, request));

@@ -1,0 +1,8 @@
+{
+  "capturedAt": "2026-09-10T21:45:19.576Z",
+  "request": {
+    "method": "PATCH",
+    "urlPath": "/v1/appStoreVersions/1b349f20-6ea5-4fee-9368-ba73e775db7e/relationships/build"
+  },
+  "response": null
+}

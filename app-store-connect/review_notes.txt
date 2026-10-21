@@ -4,4 +4,4 @@ No account is required for core use. Manual lookup, calculators, notes, filters,
 
 Splash Lens Pro Unlimited is the paid scanner-capacity and saved-job-memory lane where paid access is available. Store wrapper mode must not show direct Stripe checkout or web-subscription CTAs. Scan output is assistance only and should be verified against equipment manuals, model numbers, calibrated tests, label directions, and professional field judgment.
 
-This build does not include completed training certificates, manufacturer endorsement, guaranteed diagnosis claims, or unqualified free/native unlimited scanning claims.
+This build does not include completed training certificates, manufacturer endorsement, diagnosis promises, or unqualified free/native unlimited scanning claims.

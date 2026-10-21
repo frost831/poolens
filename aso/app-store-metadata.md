@@ -1,10 +1,10 @@
 # SplashLens App Store Metadata
 
-Generated: 2026-09-02
+Generated: 2026-09-10
 
 App: SplashLens
 Bundle ID: `com.splashlens.app`
-Version/build verified locally: `1.0 (7)`
+Version/build prepared locally: `1.0.10 (17)`
 Category: Utilities
 Pricing posture: FreeCore app with 3 included PartSnap app scans a month. Splash Lens Pro Unlimited is the paid scanner-capacity and saved-job-memory lane where paid access is available.
 
@@ -13,3 +13,6 @@ SplashLens is a FreeCore pool and spa field app for equipment lookup, PartSnap h
 
 Review posture:
 No account is required for core reference use. Store mode hides direct web checkout calls to action. Scanner features are assistance only and require user verification against manuals, model numbers, calibrated tests, labels, and qualified field judgment.
+
+Privacy posture:
+Native store mode collects product interaction analytics and diagnostics for app functionality, product analytics, reliability, abuse prevention, and security. Optional scanner flows may process user-selected photos/text for app functionality. Do not answer App Privacy as "no product interaction analytics."

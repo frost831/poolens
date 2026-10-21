@@ -1,0 +1,48 @@
+{
+  "capturedAt": "2026-09-10T21:44:55.198Z",
+  "request": {
+    "method": "PATCH",
+    "urlPath": "/v1/appStoreVersionLocalizations/1e2c22eb-23a2-4938-a3a7-97eb9d7e2bd3"
+  },
+  "response": {
+    "data": {
+      "type": "appStoreVersionLocalizations",
+      "id": "1e2c22eb-23a2-4938-a3a7-97eb9d7e2bd3",
+      "attributes": {
+        "description": "SplashLens is a FreeCore pool and spa field app for technicians who need quick lookup, PartSnap help, service math, notes, and saved field context.\n\nUse SplashLens to:\n\n- Search pool equipment codes and symptoms\n- Identify parts with PartSnap prompts and verification steps\n- Use 3 included PartSnap app scans each month\n- Calculate common chemical dosing adjustments\n- Build service notes and saved job history\n- Check filter guides, service checklists, and manual reference tools\n- Use optional online scan assistance for equipment displays, pool parts, and test strips\n\nFreeCore access keeps manual lookup, calculators, notes, filters, checklists, Facility Assist, and 3 PartSnap app scans a month available for field use. Splash Lens Pro Unlimited adds unlimited scanner use and saved job memory where paid access is available. Native store mode keeps direct web checkout calls to action hidden.\n\nOnline scan features require internet access and are assistance only. Always verify scan output, part fit, code lookup, dosing math, and job notes against equipment manuals, model numbers, calibrated tests, label directions, and qualified field judgment.\n\nSplashLens does not promise diagnosis, repair, chemical safety, manufacturer support, part fit, or training certification.",
+        "locale": "en-US",
+        "keywords": "pool tech,PartSnap,parts,codes,pump,heater,salt,robot,proof,dosing,CPO,spa",
+        "marketingUrl": "https://splashlens.com",
+        "promotionalText": "FreeCore field app with 3 PartSnap scans a month. Splash Lens Pro Unlimited adds scanner capacity and job memory.",
+        "supportUrl": "https://splashlens.com",
+        "whatsNew": "PartSnap is now the first field workflow, with clearer proof-before-ordering guidance, updated saved job context, and refined store-mode analytics disclosure."
+      },
+      "relationships": {
+        "appScreenshotSets": {
+          "links": {
+            "self": "https://api.appstoreconnect.apple.com/v1/appStoreVersionLocalizations/1e2c22eb-23a2-4938-a3a7-97eb9d7e2bd3/relationships/appScreenshotSets",
+            "related": "https://api.appstoreconnect.apple.com/v1/appStoreVersionLocalizations/1e2c22eb-23a2-4938-a3a7-97eb9d7e2bd3/appScreenshotSets"
+          }
+        },
+        "appPreviewSets": {
+          "links": {
+            "self": "https://api.appstoreconnect.apple.com/v1/appStoreVersionLocalizations/1e2c22eb-23a2-4938-a3a7-97eb9d7e2bd3/relationships/appPreviewSets",
+            "related": "https://api.appstoreconnect.apple.com/v1/appStoreVersionLocalizations/1e2c22eb-23a2-4938-a3a7-97eb9d7e2bd3/appPreviewSets"
+          }
+        },
+        "searchKeywords": {
+          "links": {
+            "self": "https://api.appstoreconnect.apple.com/v1/appStoreVersionLocalizations/1e2c22eb-23a2-4938-a3a7-97eb9d7e2bd3/relationships/searchKeywords",
+            "related": "https://api.appstoreconnect.apple.com/v1/appStoreVersionLocalizations/1e2c22eb-23a2-4938-a3a7-97eb9d7e2bd3/searchKeywords"
+          }
+        }
+      },
+      "links": {
+        "self": "https://api.appstoreconnect.apple.com/v1/appStoreVersionLocalizations/1e2c22eb-23a2-4938-a3a7-97eb9d7e2bd3"
+      }
+    },
+    "links": {
+      "self": "https://api.appstoreconnect.apple.com/v1/appStoreVersionLocalizations/1e2c22eb-23a2-4938-a3a7-97eb9d7e2bd3"
+    }
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "capturedAt": "2026-09-10T21:44:55.602Z",
+  "request": {
+    "method": "PATCH",
+    "urlPath": "/v1/appStoreReviewDetails/8fc60e10-91d7-47f2-8ec3-21da48acfe53"
+  },
+  "response": {
+    "data": {
+      "type": "appStoreReviewDetails",
+      "id": "8fc60e10-91d7-47f2-8ec3-21da48acfe53",
+      "attributes": {
+        "contactFirstName": "Joshua",
+        "contactLastName": "Frost",
+        "contactPhone": "8065550100",
+        "contactEmail": "support@splashlens.com",
+        "demoAccountName": "reviewer@splashlens.com",
+        "demoAccountPassword": "Magic link / Continue AR Demo",
+        "demoAccountRequired": false,
+        "notes": "SplashLens is a FreeCore pool and spa field reference wrapper around the SplashLens PWA at https://app.splashlens.com/?store=ios.\n\nNo account is required for core use. Manual lookup, calculators, notes, filters, checklists, Facility Assist, and 3 PartSnap app scans a month are available from the app shell. Camera/photo access is user-initiated and only used for optional online scanner assistance.\n\nSplash Lens Pro Unlimited is the paid scanner-capacity and saved-job-memory lane where paid access is available. Store wrapper mode must not show direct Stripe checkout or web-subscription CTAs. Scan output is assistance only and should be verified against equipment manuals, model numbers, calibrated tests, label directions, and professional field judgment.\n\nThis build does not include completed training certificates, manufacturer endorsement, diagnosis promises, or unqualified free/native unlimited scanning claims."
+      },
+      "relationships": {
+        "appStoreReviewAttachments": {
+          "links": {
+            "self": "https://api.appstoreconnect.apple.com/v1/appStoreReviewDetails/8fc60e10-91d7-47f2-8ec3-21da48acfe53/relationships/appStoreReviewAttachments",
+            "related": "https://api.appstoreconnect.apple.com/v1/appStoreReviewDetails/8fc60e10-91d7-47f2-8ec3-21da48acfe53/appStoreReviewAttachments"
+          }
+        }
+      },
+      "links": {
+        "self": "https://api.appstoreconnect.apple.com/v1/appStoreReviewDetails/8fc60e10-91d7-47f2-8ec3-21da48acfe53"
+      }
+    },
+    "links": {
+      "self": "https://api.appstoreconnect.apple.com/v1/appStoreReviewDetails/8fc60e10-91d7-47f2-8ec3-21da48acfe53"
+    }
+  }
+}

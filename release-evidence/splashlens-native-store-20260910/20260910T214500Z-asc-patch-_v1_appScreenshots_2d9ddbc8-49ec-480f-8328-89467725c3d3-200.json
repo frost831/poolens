@@ -1,0 +1,46 @@
+{
+  "capturedAt": "2026-09-10T21:45:00.250Z",
+  "request": {
+    "method": "PATCH",
+    "urlPath": "/v1/appScreenshots/2d9ddbc8-49ec-480f-8328-89467725c3d3"
+  },
+  "response": {
+    "data": {
+      "type": "appScreenshots",
+      "id": "2d9ddbc8-49ec-480f-8328-89467725c3d3",
+      "attributes": {
+        "fileSize": 114975,
+        "fileName": "02-partsnap-scanner.png",
+        "sourceFileChecksum": null,
+        "imageAsset": null,
+        "assetToken": "PurpleSource211/v4/78/d4/fe/78d4feb3-c95f-406e-7c80-a0bc43494ab9/02-partsnap-scanner.png",
+        "assetType": "SCREENSHOT",
+        "uploadOperations": [
+          {
+            "method": "PUT",
+            "url": "https://northamerica-1.object-storage.apple.com/itms-assets-prod-200001/PurpleSource211/v4/78/d4/fe/78d4feb3-c95f-406e-7c80-a0bc43494ab9/kUl1X9XiYa0U7DHLDAGox3x9W5-iL60qkQkBKP8ppAo_U003d-1789076698836?partNumber=1&uploadId=de9be3a0-ad60-11f1-9f9d-70b2b9190e19&apple-asset-repo-correlation-key=D3MOLJF3ZUFOX2XOKFBUNQBOXA&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Date=20260910T214459Z&X-Amz-SignedHeaders=host&X-Amz-Credential=PKIAI0ZGNAD8WKMSOOX0%2F20260910%2Fnorthamerica-1%2Fs3%2Faws4_request&X-Amz-Expires=604800&X-Amz-Signature=d73585e513ec7ebe9a2a12017ae7e84d1309423440a9ee622c70f7a0ef7c795c",
+            "length": 114975,
+            "offset": 0,
+            "requestHeaders": [
+              {
+                "name": "Content-Type",
+                "value": "image/png"
+              }
+            ]
+          }
+        ],
+        "assetDeliveryState": {
+          "errors": [],
+          "warnings": null,
+          "state": "UPLOAD_COMPLETE"
+        }
+      },
+      "links": {
+        "self": "https://api.appstoreconnect.apple.com/v1/appScreenshots/2d9ddbc8-49ec-480f-8328-89467725c3d3"
+      }
+    },
+    "links": {
+      "self": "https://api.appstoreconnect.apple.com/v1/appScreenshots/2d9ddbc8-49ec-480f-8328-89467725c3d3"
+    }
+  }
+}

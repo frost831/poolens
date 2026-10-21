@@ -1,0 +1,55 @@
+{
+  "capturedAt": "2026-09-10T21:45:32.500Z",
+  "request": {
+    "method": "GET",
+    "urlPath": "/v1/reviewSubmissions/97cab13f-6421-46a3-9cc1-1459a1afde5b?include=items&fields[reviewSubmissions]=state,submittedDate,items&fields[reviewSubmissionItems]=state,appStoreVersion"
+  },
+  "response": {
+    "data": {
+      "type": "reviewSubmissions",
+      "id": "97cab13f-6421-46a3-9cc1-1459a1afde5b",
+      "attributes": {
+        "submittedDate": "2026-09-10T21:45:30.18Z",
+        "state": "WAITING_FOR_REVIEW"
+      },
+      "relationships": {
+        "items": {
+          "meta": {
+            "paging": {
+              "total": 1,
+              "limit": 10
+            }
+          },
+          "data": [
+            {
+              "type": "reviewSubmissionItems",
+              "id": "OTdjYWIxM2YtNjQyMS00NmEzLTljYzEtMTQ1OWExYWZkZTVifDZ8ODkxMTY5NzU1"
+            }
+          ],
+          "links": {
+            "self": "https://api.appstoreconnect.apple.com/v1/reviewSubmissions/97cab13f-6421-46a3-9cc1-1459a1afde5b/relationships/items",
+            "related": "https://api.appstoreconnect.apple.com/v1/reviewSubmissions/97cab13f-6421-46a3-9cc1-1459a1afde5b/items"
+          }
+        }
+      },
+      "links": {
+        "self": "https://api.appstoreconnect.apple.com/v1/reviewSubmissions/97cab13f-6421-46a3-9cc1-1459a1afde5b"
+      }
+    },
+    "included": [
+      {
+        "type": "reviewSubmissionItems",
+        "id": "OTdjYWIxM2YtNjQyMS00NmEzLTljYzEtMTQ1OWExYWZkZTVifDZ8ODkxMTY5NzU1",
+        "attributes": {
+          "state": "READY_FOR_REVIEW"
+        },
+        "links": {
+          "self": "https://api.appstoreconnect.apple.com/v1/reviewSubmissionItems/OTdjYWIxM2YtNjQyMS00NmEzLTljYzEtMTQ1OWExYWZkZTVifDZ8ODkxMTY5NzU1"
+        }
+      }
+    ],
+    "links": {
+      "self": "https://api.appstoreconnect.apple.com/v1/reviewSubmissions/97cab13f-6421-46a3-9cc1-1459a1afde5b?fields%5BreviewSubmissionItems%5D=appStoreVersion%2Cstate&fields%5BreviewSubmissions%5D=state%2CsubmittedDate%2Citems&include=items"
+    }
+  }
+}

@@ -1,12 +1,13 @@
 # SplashLens Google Play Metadata
 
-Generated: 2026-09-02
+Generated: 2026-09-10
 
 Package: `com.splashlens.fieldtools`
 Start URL: `https://app.splashlens.com/?store=android`
 
 Play posture:
 - Release candidate: confirm latest signed AAB before rollout.
+- Native version prepared locally: `1.0.10` / versionCode `11`; target SDK 36.
 - Confirm asset links include Play app-signing certificate before production rollout.
 - No direct web checkout calls to action in native store mode.
 - FreeCore app includes 3 PartSnap app scans a month.
@@ -20,4 +21,4 @@ Store positioning:
 - Identify the part. Check the code. Prove the visit.
 
 Data safety:
-User-selected photos may be processed for app functionality if scanner is used. No tracking claim unless analytics is later added and disclosed.
+Disclose collection of app interactions/product interaction analytics and diagnostics for app functionality, product analytics, reliability, abuse prevention, and security. User-selected photos/text may be processed for app functionality if scanner is used. Do not claim analytics is hypothetical.

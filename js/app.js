@@ -2295,6 +2295,7 @@ function renderSplashLensCommercialSection(commercialPayload = {}) {
   const intakes = Array.isArray(commercialPayload.intakes) ? commercialPayload.intakes : [];
   const proof = commercialPayload.proof || {};
   const readiness = commercialPayload.readiness || {};
+  const storeMode = getStoreShellMode();
   const activeEntitlement = entitlements.find((entitlement) => String(entitlement.status || '').toLowerCase() === 'active');
   const pilotPlans = plans.filter((plan) => ['teams', 'facility', 'manufacturer', 'distributor', 'training'].includes(plan.lane));
   const readinessChips = [
@@ -2303,6 +2304,9 @@ function renderSplashLensCommercialSection(commercialPayload = {}) {
     ['Stripe hook', readiness.stripeWebhookConfigured],
     ['Audit log', readiness.auditRecords],
   ];
+  const proAction = storeMode
+    ? `<button type="button" onclick="requestSplashLensCommercialAccess('pro')" style="border:0;border-radius:9px;background:#0f766e;color:#fff;font-size:12px;font-weight:950;padding:11px 8px;cursor:pointer;">Request Pro</button>`
+    : `<a href="/api/checkout?plan=monthly" onclick="trackSplashLensEvent('account_pro_checkout_clicked',{plan:'monthly'})" style="display:block;text-align:center;text-decoration:none;border-radius:9px;background:#0f766e;color:#fff;font-size:12px;font-weight:950;padding:11px 8px;">Get Pro</a>`;
   return `
     <div style="background:#ffffff;border:1px solid #dbe8ef;border-radius:12px;padding:13px;margin-bottom:12px;">
       <div style="display:flex;justify-content:space-between;gap:10px;align-items:start;margin-bottom:10px;">
@@ -2325,7 +2329,7 @@ function renderSplashLensCommercialSection(commercialPayload = {}) {
         </div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:10px;">
-        <a href="/api/checkout?plan=monthly" onclick="trackSplashLensEvent('account_pro_checkout_clicked',{plan:'monthly'})" style="display:block;text-align:center;text-decoration:none;border-radius:9px;background:#0f766e;color:#fff;font-size:12px;font-weight:950;padding:11px 8px;">Get Pro</a>
+        ${proAction}
         <button type="button" onclick="requestSplashLensCommercialAccess('teams')" style="border:1px solid #0369a1;border-radius:9px;background:#fff;color:#0369a1;font-size:12px;font-weight:950;padding:11px 8px;cursor:pointer;">Request team</button>
       </div>
       <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin-bottom:10px;">
@@ -2413,7 +2417,7 @@ function renderSplashLensTeamSection(teamPayload = {}) {
           </div>
         </div>`;
     }).join('')}` : `
-    <p style="color:#64748b;font-size:12px;line-height:1.45;margin-bottom:10px;">Create a team workspace when you want techs tied to the same proof and scanner layer. This is the foundation for Team Proof OS.</p>`;
+    <p style="color:#64748b;font-size:12px;line-height:1.45;margin-bottom:10px;">Create a team workspace when you want techs tied to the same proof and scanner layer.</p>`;
 
   return `
     <div style="background:#ecfdf5;border:1px solid #bbf7d0;border-radius:12px;padding:13px;margin-bottom:12px;">
@@ -8431,6 +8435,11 @@ function trackProductTabChange(nextTab) {
     PRODUCT_INTELLIGENCE.currentTab = nextTab;
     PRODUCT_INTELLIGENCE.tabStartedAt = now;
     trackSplashLensEvent('app_tab_view', { tab: nextTab, previous_tab: previousTab });
+    trackSplashLensEvent('screen_view', {
+      screen_name: nextTab,
+      previous_screen: previousTab,
+      screen_class: 'SplashLensWebApp',
+    });
   }
 }
 
@@ -8454,6 +8463,11 @@ function initProductIntelligenceTracking() {
   initReturnFieldTask();
   trackSplashLensEvent('session_started', { entry_tab: PRODUCT_INTELLIGENCE.currentTab });
   trackSplashLensEvent('app_tab_view', { tab: PRODUCT_INTELLIGENCE.currentTab, previous_tab: '' });
+  trackSplashLensEvent('screen_view', {
+    screen_name: PRODUCT_INTELLIGENCE.currentTab,
+    previous_screen: '',
+    screen_class: 'SplashLensWebApp',
+  });
   window.setInterval(() => {
     if (document.visibilityState === 'visible') flushProductEngagement('interval');
   }, SPLASHLENS_HEARTBEAT_INTERVAL_MS);
@@ -9116,7 +9130,7 @@ function savePartSnapFieldStop() {
 }
 
 function renderPostValueUpgradeOffer() {
-  if (isPartSnapPro()) return '';
+  if (isPartSnapPro() || isStoreShellMode()) return '';
   const key = 'splashlens-post-value-upgrade-shown-at';
   const lastShownAt = Date.parse(localStorage.getItem(key) || '');
   if (Number.isFinite(lastShownAt) && Date.now() - lastShownAt < 7 * 86400000) return '';

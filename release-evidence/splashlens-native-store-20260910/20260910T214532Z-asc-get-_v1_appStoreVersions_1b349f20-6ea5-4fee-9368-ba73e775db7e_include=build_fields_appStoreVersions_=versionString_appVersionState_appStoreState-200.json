@@ -1,0 +1,53 @@
+{
+  "capturedAt": "2026-09-10T21:45:32.328Z",
+  "request": {
+    "method": "GET",
+    "urlPath": "/v1/appStoreVersions/1b349f20-6ea5-4fee-9368-ba73e775db7e?include=build&fields[appStoreVersions]=versionString,appVersionState,appStoreState,platform,build&fields[builds]=version,processingState,buildAudienceType,uploadedDate,usesNonExemptEncryption"
+  },
+  "response": {
+    "data": {
+      "type": "appStoreVersions",
+      "id": "1b349f20-6ea5-4fee-9368-ba73e775db7e",
+      "attributes": {
+        "platform": "IOS",
+        "versionString": "1.0.10",
+        "appStoreState": "WAITING_FOR_REVIEW",
+        "appVersionState": "WAITING_FOR_REVIEW"
+      },
+      "relationships": {
+        "build": {
+          "data": {
+            "type": "builds",
+            "id": "28958bf8-eb54-4ef4-802e-a71e3671c229"
+          },
+          "links": {
+            "self": "https://api.appstoreconnect.apple.com/v1/appStoreVersions/1b349f20-6ea5-4fee-9368-ba73e775db7e/relationships/build",
+            "related": "https://api.appstoreconnect.apple.com/v1/appStoreVersions/1b349f20-6ea5-4fee-9368-ba73e775db7e/build"
+          }
+        }
+      },
+      "links": {
+        "self": "https://api.appstoreconnect.apple.com/v1/appStoreVersions/1b349f20-6ea5-4fee-9368-ba73e775db7e"
+      }
+    },
+    "included": [
+      {
+        "type": "builds",
+        "id": "28958bf8-eb54-4ef4-802e-a71e3671c229",
+        "attributes": {
+          "version": "17",
+          "uploadedDate": "2026-09-10T14:40:45-07:00",
+          "processingState": "VALID",
+          "buildAudienceType": "APP_STORE_ELIGIBLE",
+          "usesNonExemptEncryption": false
+        },
+        "links": {
+          "self": "https://api.appstoreconnect.apple.com/v1/builds/28958bf8-eb54-4ef4-802e-a71e3671c229"
+        }
+      }
+    ],
+    "links": {
+      "self": "https://api.appstoreconnect.apple.com/v1/appStoreVersions/1b349f20-6ea5-4fee-9368-ba73e775db7e?fields%5BappStoreVersions%5D=versionString%2Cbuild%2CappStoreState%2CappVersionState%2Cplatform&fields%5Bbuilds%5D=processingState%2CbuildAudienceType%2CusesNonExemptEncryption%2CuploadedDate%2Cversion&include=build"
+    }
+  }
+}

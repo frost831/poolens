@@ -1,0 +1,20 @@
+{
+  "capturedAt": "2026-09-10T21:44:51.452Z",
+  "request": {
+    "method": "GET",
+    "urlPath": "/v1/apps/6763644905/appStoreVersions?filter[platform]=IOS&filter[versionString]=1.0.10&include=build&fields[appStoreVersions]=versionString,appVersionState,platform,appStoreState,build&fields[builds]=version,processingState,buildAudienceType&limit=5"
+  },
+  "response": {
+    "data": [],
+    "included": [],
+    "links": {
+      "self": "https://api.appstoreconnect.apple.com/v1/apps/6763644905/appStoreVersions?fields%5BappStoreVersions%5D=versionString%2Cbuild%2CappStoreState%2CappVersionState%2Cplatform&fields%5Bbuilds%5D=processingState%2CbuildAudienceType%2Cversion&filter%5BversionString%5D=1.0.10&filter%5Bplatform%5D=IOS&include=build&limit=5"
+    },
+    "meta": {
+      "paging": {
+        "total": 0,
+        "limit": 5
+      }
+    }
+  }
+}
