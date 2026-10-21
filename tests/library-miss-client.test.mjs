@@ -53,8 +53,11 @@ test('PartSnap low/no-match and manual fallback call the protected miss path', (
   h.context.trackPartSnapResultFailure('low_confidence');
   h.context.trackPartSnapResultFailure('low_confidence');
   h.context.trackPartSnapResultFailure('no_match');
+  h.context.trackPartSnapResultFailure('library_miss');
   h.context.openPartSnapPreflightManualFallback();
   assert.deepEqual(h.posted.map(row => row.trigger), ['partsnap_low', 'partsnap_no_match', 'manual_fallback']);
+  assert.equal(h.events.filter(event => event.props?.reason === 'library_miss').length, 1);
+  assert.equal(h.events.filter(event => event.props?.reason === 'no_match').length, 1);
   assert.deepEqual(opened, ['part']);
 });
 

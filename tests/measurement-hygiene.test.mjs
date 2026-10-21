@@ -62,6 +62,33 @@ test('checkout_click is stored with real traffic class and forwarded to Amplitud
   assert.equal(sent[0].user_properties.traffic_class, 'real');
 });
 
+test('partsnap evidence session keeps traffic tags when its workflow source is not app', async (t) => {
+  const db = database();
+  t.after(() => db.sql.close());
+  const sent = [];
+  t.mock.method(globalThis, 'fetch', async (_url, options) => {
+    sent.push(JSON.parse(options.body).events[0]);
+    return Response.json({ code: 200 });
+  });
+  const request = new Request('https://app.splashlens.com/api/events', {
+    method: 'POST', headers: { 'Content-Type': 'application/json', 'User-Agent': safari },
+    body: JSON.stringify({
+      event: 'partsnap_evidence_session_started',
+      source: 'partsnap_open',
+      path: '/',
+      props: { source: 'partsnap_open', client_id: '5d46a1e0-a882-4c96-9c93-6558d2e34149' },
+    }),
+  });
+  const response = await ingestEvent({ request, env: { SUBSCRIBERS_DB: db, AMPLITUDE_API_KEY: 'fixture' } });
+  assert.equal(response.status, 200);
+  assert.equal(sent[0].event_type, 'partsnap_evidence_session_started');
+  assert.equal(sent[0].event_properties.source, 'partsnap_open');
+  assert.equal(sent[0].event_properties.traffic_class, 'real');
+  assert.equal(sent[0].event_properties.is_internal, false);
+  assert.equal(sent[0].user_properties.traffic_class, 'real');
+  assert.equal(sent[0].user_properties.is_internal, false);
+});
+
 test('POST checkout rejects missing attribution, bot and prefetch before Stripe', async (t) => {
   const stripeCalls = [];
   t.mock.method(globalThis, 'fetch', async (...args) => { stripeCalls.push(args); throw new Error('Stripe must not run'); });

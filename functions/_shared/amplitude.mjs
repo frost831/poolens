@@ -75,6 +75,8 @@ function identity(record, props) {
 export async function forwardEventToAmplitude(env, record, props = {}) {
   if (!amplitudeEnabled(env)) return { sent: false, skipped: true, reason: 'missing_amplitude_api_key' };
   const safeProps = sanitizeProps(props);
+  const trafficClass = ['real', 'qa', 'bot', 'server'].includes(safeProps.traffic_class) ? safeProps.traffic_class : 'server';
+  const isInternal = trafficClass !== 'real';
   const payload = {
     api_key: amplitudeApiKey(env),
     events: [{
@@ -88,11 +90,13 @@ export async function forwardEventToAmplitude(env, record, props = {}) {
         page_path: clean(record.path || safeProps.path || '', 300),
         plan: clean(record.plan || safeProps.plan || '', 80),
         mode: clean(record.mode || safeProps.mode || '', 80),
+        traffic_class: trafficClass,
+        is_internal: isInternal,
       }),
       user_properties: pruneObject({
         product: 'splashlens',
-        traffic_class: safeProps.traffic_class || 'server',
-        is_internal: safeProps.is_internal !== false,
+        traffic_class: trafficClass,
+        is_internal: isInternal,
         source: clean(record.source || safeProps.source || safeProps.attribution_source || 'app', 80),
         role: clean(safeProps.known_role || safeProps.role || safeProps.audience || safeProps.persona || safeProps.splashlens_role || '', 80),
         identity_source: clean(safeProps.identity_source || safeProps.attribution_source || record.source || 'app', 80),
