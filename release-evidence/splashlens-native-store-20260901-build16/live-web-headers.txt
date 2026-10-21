@@ -1,0 +1,80 @@
+
+URL https://app.splashlens.com/
+HTTP/2 200 
+date: Tue, 01 Sep 2026 15:01:46 GMT
+content-type: text/html; charset=utf-8
+report-to: {"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=J3OTSlkY7HdSsGxdLBvUa17kLbwpWMbg8kCOs8nIX%2F1JzM0dG%2FjGwshMI7rsDTVWTwUuKQeK9Y3wrCLQAmpU%2FGGwMbYr3616FWbGJs%2Bf6lhF1PvnYHlhydRyiimVZsyxoU71FLPpGmNkBzZY1hTSLB0%3D"}]}
+nel: {"report_to":"cf-nel","success_fraction":0.0,"max_age":604800}
+access-control-allow-origin: *
+cache-control: no-cache, must-revalidate
+strict-transport-security: max-age=31536000; includeSubDomains; preload
+content-security-policy: default-src 'self'; base-uri 'self'; frame-ancestors 'none'; object-src 'none'; script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com https://cdn.amplitude.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; media-src 'self' blob:; connect-src 'self' https://api.anthropic.com https://app.splashlens.com https://splashlens.com https://cloudflareinsights.com https://api2.amplitude.com https://*.amplitude.com; worker-src 'self'; manifest-src 'self'; form-action 'self' mailto:
+permissions-policy: camera=(self), microphone=(self), geolocation=()
+referrer-policy: strict-origin-when-cross-origin
+x-content-type-options: nosniff
+x-frame-options: DENY
+server: cloudflare
+cf-cache-status: DYNAMIC
+cf-ray: a34526f248672dab-BOS
+alt-svc: h3=":443"; ma=86400
+
+
+URL https://app.splashlens.com/?store=ios
+HTTP/2 200 
+date: Tue, 01 Sep 2026 15:01:46 GMT
+content-type: text/html; charset=utf-8
+report-to: {"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=zu%2BUJAsPE6jNvg%2FV3QoocEQjj2%2BEkGQ4T%2BEvtv6ZxgosV6Pwe86R9w3nDrzdjTW2FEnSow6GLKMyhezHMHeW2pBJfD2C%2BFqJM8Y7YWTKQRf9P8YASNZSKHa344ESaMzhmEf6y%2B977AFRHt0DIUYmi48%3D"}]}
+nel: {"report_to":"cf-nel","success_fraction":0.0,"max_age":604800}
+access-control-allow-origin: *
+cache-control: no-cache, must-revalidate
+strict-transport-security: max-age=31536000; includeSubDomains; preload
+content-security-policy: default-src 'self'; base-uri 'self'; frame-ancestors 'none'; object-src 'none'; script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com https://cdn.amplitude.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; media-src 'self' blob:; connect-src 'self' https://api.anthropic.com https://app.splashlens.com https://splashlens.com https://cloudflareinsights.com https://api2.amplitude.com https://*.amplitude.com; worker-src 'self'; manifest-src 'self'; form-action 'self' mailto:
+permissions-policy: camera=(self), microphone=(self), geolocation=()
+referrer-policy: strict-origin-when-cross-origin
+x-content-type-options: nosniff
+x-frame-options: DENY
+server: cloudflare
+cf-cache-status: DYNAMIC
+cf-ray: a34526f55c13ab18-YYZ
+alt-svc: h3=":443"; ma=86400
+
+
+URL https://app.splashlens.com/?store=android
+HTTP/2 200 
+date: Tue, 01 Sep 2026 15:01:47 GMT
+content-type: text/html; charset=utf-8
+report-to: {"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=h%2FfPxtn48rx9EccJkThItnqaOWQzvQgOjn5UzZ97dLCMSVKDCXsNacSvdCvqWFRaZ54eRhS%2FY2UciFa0QepgEwrsxWFxZYiwbdfc99OGLP%2Fn9nfajDN9TwJ1%2FdMjRekuQj9HNgErK97V2kA%2Fkb2XpXI%3D"}]}
+nel: {"report_to":"cf-nel","success_fraction":0.0,"max_age":604800}
+access-control-allow-origin: *
+cache-control: no-cache, must-revalidate
+strict-transport-security: max-age=31536000; includeSubDomains; preload
+content-security-policy: default-src 'self'; base-uri 'self'; frame-ancestors 'none'; object-src 'none'; script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com https://cdn.amplitude.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; media-src 'self' blob:; connect-src 'self' https://api.anthropic.com https://app.splashlens.com https://splashlens.com https://cloudflareinsights.com https://api2.amplitude.com https://*.amplitude.com; worker-src 'self'; manifest-src 'self'; form-action 'self' mailto:
+permissions-policy: camera=(self), microphone=(self), geolocation=()
+referrer-policy: strict-origin-when-cross-origin
+x-content-type-options: nosniff
+x-frame-options: DENY
+server: cloudflare
+cf-cache-status: DYNAMIC
+cf-ray: a34526f87c48abe8-YYZ
+alt-svc: h3=":443"; ma=86400
+
+
+URL https://splashlens.com/
+HTTP/2 200 
+date: Tue, 01 Sep 2026 15:01:47 GMT
+content-type: text/html; charset=utf-8
+report-to: {"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=ifIf%2BIxLMgFZy9cd7T6Yvqu0Fd%2BYqGQ9ZNC0PTBX52UGXJlhQs6%2FBuEjklaunG9xvtwCh8zN6bQHPobqT3KFWUg8sid4OUJU6%2Bk%2FMhUdTSeE%2FvOMgk2liFiHV2ndu7dp5KePxyQgtwnQQbV2lw%3D%3D"}]}
+nel: {"report_to":"cf-nel","success_fraction":0.0,"max_age":604800}
+access-control-allow-origin: *
+cache-control: public, max-age=0, must-revalidate
+strict-transport-security: max-age=31536000; includeSubDomains; preload
+content-security-policy: default-src 'self'; base-uri 'self'; frame-ancestors 'none'; object-src 'none'; script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com https://www.googletagmanager.com https://cdn.amplitude.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https://splashlens.com https://app.splashlens.com https://static.cloudflareinsights.com https://www.google-analytics.com https://region1.google-analytics.com https://analytics.google.com https://api2.amplitude.com https://*.amplitude.com; worker-src 'self'; manifest-src 'self'; form-action 'self' mailto:
+permissions-policy: camera=(), microphone=(), geolocation=()
+referrer-policy: strict-origin-when-cross-origin
+x-content-type-options: nosniff
+x-frame-options: DENY
+server: cloudflare
+cf-cache-status: DYNAMIC
+cf-ray: a34526fa4984673a-ATL
+alt-svc: h3=":443"; ma=86400
+

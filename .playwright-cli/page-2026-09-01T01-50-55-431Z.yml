@@ -1,0 +1,58 @@
+- generic [ref=f2e2]:
+  - banner [ref=f2e3]:
+    - generic [ref=f2e4]:
+      - generic [ref=f2e11]: SplashLens
+      - generic [ref=f2e12]: FIELD
+      - generic "Checking offline status..." [ref=f2e13]
+    - button "Open Field Signals" [ref=f2e15] [cursor=pointer]:
+      - generic [ref=f2e269]: "1"
+  - generic [ref=f2e18]:
+    - generic [ref=f2e19]: Preferred language
+    - combobox "Preferred language" [ref=f2e20]:
+      - option "English" [selected]
+      - option "Español"
+  - main [ref=f2e64]:
+    - generic [ref=f2e294]:
+      - generic [ref=f2e295]:
+        - button "ERRORS" [ref=f2e296] [cursor=pointer]
+        - button "PARTSNAP" [ref=f2e297] [cursor=pointer]
+        - button "STRIP" [ref=f2e298] [cursor=pointer]
+        - button "LOOKUP" [ref=f2e299] [cursor=pointer]
+        - button "CHEM" [ref=f2e300] [cursor=pointer]
+      - generic [ref=f2e301]: AI READY - 10 FREE SCANS LEFT
+      - generic [ref=f2e304]:
+        - generic [ref=f2e305]: AIM AT EQUIPMENT PART - TAP IDENTIFY
+        - generic [ref=f2e306]:
+          - button "IDENTIFY PART" [ref=f2e307] [cursor=pointer]
+          - button "LIGHT" [ref=f2e308] [cursor=pointer]
+          - button "STOP" [ref=f2e309] [cursor=pointer]
+        - generic [ref=f2e311]:
+          - paragraph [ref=f2e312]: PartSnap AI Service
+          - paragraph [ref=f2e313]: Shoot the part, then shoot the label.
+          - generic [ref=f2e314]:
+            - generic [ref=f2e315]:
+              - generic [ref=f2e316]: 1. Part
+              - generic [ref=f2e317]: close + lit
+            - generic [ref=f2e318]:
+              - generic [ref=f2e319]: 2. Label
+              - generic [ref=f2e320]: model proof
+            - generic [ref=f2e321]:
+              - generic [ref=f2e322]: 3. Verify
+              - generic [ref=f2e323]: before buy
+            - generic [ref=f2e324]:
+              - generic [ref=f2e325]: 4. Packet
+              - generic [ref=f2e326]: send / save
+        - generic [ref=f2e328]:
+          - generic [ref=f2e329]: CAM
+          - paragraph [ref=f2e330]: Camera access not available or permission denied. Use Code Lookup to search manually.
+          - button "Go to Code Lookup" [ref=f2e331] [cursor=pointer]
+  - navigation "SplashLens field tools" [ref=f2e227]:
+    - button "Errors" [ref=f2e228] [cursor=pointer]
+    - button "Dosing" [ref=f2e233] [cursor=pointer]
+    - button "Volume" [ref=f2e237] [cursor=pointer]
+    - button "Filters" [ref=f2e241] [cursor=pointer]
+    - button "Guide" [ref=f2e245] [cursor=pointer]
+    - button "Report" [ref=f2e250] [cursor=pointer]
+    - button "Pools" [ref=f2e255] [cursor=pointer]
+    - button "Route" [ref=f2e260] [cursor=pointer]
+    - button "Scan" [ref=f2e264] [cursor=pointer]

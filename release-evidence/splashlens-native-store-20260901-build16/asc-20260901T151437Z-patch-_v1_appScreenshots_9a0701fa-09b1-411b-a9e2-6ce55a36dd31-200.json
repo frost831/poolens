@@ -1,0 +1,39 @@
+{
+  "data": {
+    "type": "appScreenshots",
+    "id": "9a0701fa-09b1-411b-a9e2-6ce55a36dd31",
+    "attributes": {
+      "fileSize": 408320,
+      "fileName": "03-saved-job-history.png",
+      "sourceFileChecksum": null,
+      "imageAsset": null,
+      "assetToken": "PurpleSource211/v4/39/74/0e/39740e21-6ff3-c7c7-9803-0fabfd3a56c1/03-saved-job-history.png",
+      "assetType": "SCREENSHOT",
+      "uploadOperations": [
+        {
+          "method": "PUT",
+          "url": "https://northamerica-1.object-storage.apple.com/itms-assets-prod-200001/PurpleSource211/v4/39/74/0e/39740e21-6ff3-c7c7-9803-0fabfd3a56c1/Ig4WEp5t3t9I3vsC4H10-djo--pltx0skDppPxavZJU_U003d-1788275675425?partNumber=1&uploadId=d7739190-a617-11f1-9fbc-70b2b919a381&apple-asset-repo-correlation-key=XB5DAVLKBGDXOKNJAG5O6LTHOM&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Date=20260901T151435Z&X-Amz-SignedHeaders=host&X-Amz-Credential=PKIAI0ZGNAD8WKMSOOX0%2F20260901%2Fnorthamerica-1%2Fs3%2Faws4_request&X-Amz-Expires=604800&X-Amz-Signature=676f6deb86df6bae4339094c8bc1af7ad9ed35e96b7ee9ead955780418a14dce",
+          "length": 408320,
+          "offset": 0,
+          "requestHeaders": [
+            {
+              "name": "Content-Type",
+              "value": "image/png"
+            }
+          ]
+        }
+      ],
+      "assetDeliveryState": {
+        "errors": [],
+        "warnings": null,
+        "state": "UPLOAD_COMPLETE"
+      }
+    },
+    "links": {
+      "self": "https://api.appstoreconnect.apple.com/v1/appScreenshots/9a0701fa-09b1-411b-a9e2-6ce55a36dd31"
+    }
+  },
+  "links": {
+    "self": "https://api.appstoreconnect.apple.com/v1/appScreenshots/9a0701fa-09b1-411b-a9e2-6ce55a36dd31"
+  }
+}

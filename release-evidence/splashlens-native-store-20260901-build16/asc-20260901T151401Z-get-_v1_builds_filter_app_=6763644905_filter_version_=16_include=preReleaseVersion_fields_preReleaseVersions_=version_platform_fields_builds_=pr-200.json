@@ -1,0 +1,41 @@
+{
+  "data": [
+    {
+      "type": "builds",
+      "id": "e49a259f-13c2-44c7-bbff-bbde4fe7569d",
+      "attributes": {
+        "version": "16",
+        "uploadedDate": "2026-09-01T08:12:45-07:00",
+        "expired": false,
+        "processingState": "VALID",
+        "buildAudienceType": "APP_STORE_ELIGIBLE",
+        "usesNonExemptEncryption": false
+      },
+      "links": {
+        "self": "https://api.appstoreconnect.apple.com/v1/builds/e49a259f-13c2-44c7-bbff-bbde4fe7569d"
+      }
+    }
+  ],
+  "included": [
+    {
+      "type": "preReleaseVersions",
+      "id": "1da2cd38-09e6-4779-baf5-ad0bc7db5a82",
+      "attributes": {
+        "version": "1.0.9",
+        "platform": "IOS"
+      },
+      "links": {
+        "self": "https://api.appstoreconnect.apple.com/v1/preReleaseVersions/1da2cd38-09e6-4779-baf5-ad0bc7db5a82"
+      }
+    }
+  ],
+  "links": {
+    "self": "https://api.appstoreconnect.apple.com/v1/builds?fields%5BpreReleaseVersions%5D=version%2Cplatform&fields%5Bbuilds%5D=processingState%2CbuildAudienceType%2Cexpired%2CusesNonExemptEncryption%2CuploadedDate%2Cversion&filter%5Bapp%5D=6763644905&filter%5Bversion%5D=16&include=preReleaseVersion&limit=20"
+  },
+  "meta": {
+    "paging": {
+      "total": 1,
+      "limit": 20
+    }
+  }
+}

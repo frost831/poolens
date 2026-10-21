@@ -1,0 +1,239 @@
+- generic [ref=e2]:
+  - banner [ref=e3]:
+    - generic [ref=e4]:
+      - generic [ref=e11]: SplashLens
+      - generic [ref=e12]: FIELD
+      - generic "Checking offline status..." [ref=e13]
+  - generic [ref=e14]:
+    - generic [ref=e15]: Preferred language
+    - combobox "Preferred language" [ref=e16]:
+      - option "English" [selected]
+      - option "Español"
+  - main [ref=e17]:
+    - generic [ref=e18]:
+      - generic [ref=e19]:
+        - paragraph [ref=e20]: Visit Report
+        - button "Load Pool" [ref=e21] [cursor=pointer]
+      - generic [ref=e22]: "Built for the tech at the stop: fewer taps, faster notes, cleaner proof, and less after-hours paperwork."
+      - region "Service Proof workflow" [ref=e23]:
+        - paragraph [ref=e24]: Service Proof Passport
+        - heading "Capture it once. Finish clean. Hand it off without retyping." [level=2] [ref=e25]
+        - paragraph [ref=e26]: Start with the field situation, then SplashLens preps the right proof checklist, voice-note fields, summary, packet, and save path.
+        - generic [ref=e27]:
+          - button "1 Part or code Photos, labels, issue note, senior/vendor packet." [ref=e28] [cursor=pointer]:
+            - generic [ref=e29]: "1"
+            - strong [ref=e30]: Part or code
+            - generic [ref=e31]: Photos, labels, issue note, senior/vendor packet.
+          - button "2 Facility / CPO Daily check, contamination, dose, or escalation flow." [ref=e32] [cursor=pointer]:
+            - generic [ref=e33]: "2"
+            - strong [ref=e34]: Facility / CPO
+            - generic [ref=e35]: Daily check, contamination, dose, or escalation flow.
+          - button "3 Regular visit Readings, work note, customer-safe summary, passport save." [ref=e36] [cursor=pointer]:
+            - generic [ref=e37]: "3"
+            - strong [ref=e38]: Regular visit
+            - generic [ref=e39]: Readings, work note, customer-safe summary, passport save.
+        - generic [ref=e40]:
+          - generic [ref=e41]: Voice notes ready
+          - generic [ref=e42]: Proof checklist
+          - generic [ref=e43]: Risk flags
+          - generic [ref=e44]: Export / share
+      - region "SplashLens Field Learning OS" [ref=e45]:
+        - paragraph [ref=e46]: Field Learning OS
+        - heading "Turn real stops into five-minute lessons." [level=2] [ref=e47]
+        - paragraph [ref=e48]: Use PartSnap misses, saved proof, facility incidents, and support packets as training material. The app shows student tasks, missing-proof checks, answer keys, and partner-review boundaries.
+        - generic [ref=e49]:
+          - button "PartSnap Lesson" [ref=e50] [cursor=pointer]
+          - button "CPO Scenario" [ref=e51] [cursor=pointer]
+          - button "Proof Review" [ref=e52] [cursor=pointer]
+      - region "SplashLens free-core trust boundary" [ref=e53]:
+        - paragraph [ref=e54]: Free-Core Native Build
+        - heading "Field proof without checkout friction." [level=2] [ref=e55]
+        - paragraph [ref=e56]: Manual lookup, basic PartSnap, calculators, Facility Assist, saved drafts, and customer-safe proof summaries remain free in the native store build. Web subscriptions and team pilots are not offered inside this iOS wrapper.
+        - generic [ref=e57]:
+          - button "Build proof" [ref=e58] [cursor=pointer]
+          - button "Proof Review" [ref=e59] [cursor=pointer]
+          - button "Manual Lookup" [ref=e60] [cursor=pointer]
+      - region "Field Proof Queue" [ref=e61]:
+        - generic [ref=e62]:
+          - generic [ref=e63]:
+            - paragraph [ref=e64]: Field Proof Queue
+            - heading "Pause the stop. Finish it cleanly later." [level=2] [ref=e65]
+          - generic [ref=e66]: No draft
+        - paragraph [ref=e67]: Save an incomplete stop locally before the route pulls you away.
+        - generic [ref=e68]:
+          - button "Save Draft" [ref=e69] [cursor=pointer]
+          - button "Resume Draft" [ref=e70] [cursor=pointer]
+          - button "Senior Tech Packet" [ref=e71] [cursor=pointer]
+          - button "Clear Draft" [ref=e72] [cursor=pointer]
+      - region "Service Proof OS" [ref=e73]:
+        - paragraph [ref=e74]: Service Proof OS
+        - heading "Turn this stop into a Service Proof Passport." [level=2] [ref=e75]
+        - paragraph [ref=e76]: Capture readings, photos, voice notes, parts, approvals, and recommendations. Then generate a homeowner-safe summary and save the visit into the pool's permanent memory.
+        - generic [ref=e77]:
+          - generic [ref=e78]: Proof
+          - generic [ref=e79]: Memory
+          - generic [ref=e80]: Risk flags
+          - generic [ref=e81]: Portal preview
+        - generic [ref=e82]:
+          - button "Generate Summary" [ref=e83] [cursor=pointer]
+          - button "Trust Portal Preview" [ref=e84] [cursor=pointer]
+          - button "Ask Proof Assistant" [ref=e85] [cursor=pointer]
+          - button "Save Passport" [ref=e86] [cursor=pointer]
+      - region "CRM companion exports" [ref=e87]:
+        - paragraph [ref=e88]: CRM companion
+        - heading "Export the proof into whatever system runs the company." [level=2] [ref=e89]
+        - paragraph [ref=e90]: SplashLens does the field proof. Jobber, Skimmer, Pool Brain, Paythepoolman, spreadsheets, or the office can keep the schedule and invoice.
+        - generic [ref=e91]:
+          - button "Copy Customer Summary" [ref=e92] [cursor=pointer]
+          - button "Download Proof JSON" [ref=e93] [cursor=pointer]
+          - button "Add To Route Notes" [ref=e94] [cursor=pointer]
+          - button "Vendor Packet" [ref=e95] [cursor=pointer]
+      - generic [ref=e96]:
+        - generic [ref=e97]: Customer Name
+        - textbox "e.g. Smith Residence" [ref=e98]
+      - generic [ref=e99]:
+        - generic [ref=e100]: Pool Address
+        - textbox "123 Main St, Anytown IL" [ref=e101]
+      - generic [ref=e102]:
+        - generic [ref=e103]:
+          - generic [ref=e104]: Tech Name
+          - textbox "Your name" [ref=e105]
+        - generic [ref=e106]:
+          - generic [ref=e107]: Date
+          - textbox [ref=e108]: 2026-07-27
+      - generic [ref=e109]:
+        - generic [ref=e110]: Visit Type
+        - combobox [ref=e111]:
+          - option "Regular Service" [selected]
+          - option "Opening"
+          - option "Closing"
+          - option "Repair"
+          - option "Chemical Treatment"
+          - option "SLAM / Algae Treatment"
+          - option "Equipment Install"
+          - option "Inspection"
+      - generic [ref=e112]:
+        - generic [ref=e113]:
+          - generic [ref=e114]: Proof Priority
+          - combobox [ref=e115]:
+            - option "Routine" [selected]
+            - option "Finish Today"
+            - option "Callback Risk"
+            - option "Senior Review"
+        - generic [ref=e116]:
+          - generic [ref=e117]: Review / Handoff To
+          - textbox "Senior tech, vendor, office" [ref=e118]
+      - separator [ref=e119]
+      - paragraph [ref=e120]: Water Readings
+      - generic [ref=e121]:
+        - generic [ref=e122]: Reading Source
+        - combobox [ref=e123]:
+          - option "Manual entry" [selected]
+          - option "LaMotte SpinTouch - device reading"
+          - option "LaMotte SpinTouch - edited after import"
+          - option "Office/admin edited"
+      - generic [ref=e124]:
+        - generic [ref=e125]:
+          - generic [ref=e126]: FC (ppm)
+          - spinbutton "-" [ref=e127]
+        - generic [ref=e128]:
+          - generic [ref=e129]: CC (ppm)
+          - spinbutton "-" [ref=e130]
+        - generic [ref=e131]:
+          - generic [ref=e132]: pH
+          - spinbutton "-" [ref=e133]
+        - generic [ref=e134]:
+          - generic [ref=e135]: TA (ppm)
+          - spinbutton "-" [ref=e136]
+        - generic [ref=e137]:
+          - generic [ref=e138]: CH (ppm)
+          - spinbutton "-" [ref=e139]
+        - generic [ref=e140]:
+          - generic [ref=e141]: CYA (ppm)
+          - spinbutton "-" [ref=e142]
+      - generic [ref=e143]:
+        - generic [ref=e144]:
+          - paragraph [ref=e145]: Stop Proof Checklist
+          - generic [ref=e146]: incomplete
+        - generic [ref=e147]:
+          - generic [ref=e148]:
+            - checkbox "Water reading captured" [ref=e149] [cursor=pointer]
+            - text: Water reading captured
+          - generic [ref=e150]:
+            - checkbox "Equipment photo captured" [ref=e151] [cursor=pointer]
+            - text: Equipment photo captured
+          - generic [ref=e152]:
+            - checkbox "Customer-safe summary ready" [ref=e153] [cursor=pointer]
+            - text: Customer-safe summary ready
+        - generic [ref=e154]:
+          - generic [ref=e155]: Attach Photo Names / Proof Notes
+          - textbox "e.g. pad-photo.jpg, spintouch-screen.jpg" [ref=e156]
+        - generic [ref=e157]:
+          - generic [ref=e158]:
+            - generic [ref=e159]: Issue Note for Tech Record
+            - button "Dictate" [ref=e160] [cursor=pointer]
+          - textbox "Heater fault code visible; customer advised..." [ref=e164]
+        - generic [ref=e166]:
+          - generic [ref=e167]:
+            - generic [ref=e168]: Customer-Visible Summary
+            - button "Dictate" [ref=e169] [cursor=pointer]
+          - textbox "Water tested and balanced. Equipment is running normally..." [ref=e173]
+        - generic [ref=e175]: "Missing: water reading, equipment/photo proof, customer summary"
+      - separator [ref=e176]
+      - generic [ref=e177]:
+        - paragraph [ref=e178]: Chemicals Added
+        - button "+ Add" [ref=e179] [cursor=pointer]
+      - generic [ref=e181]:
+        - textbox "Chemical..." [ref=e182]
+        - textbox "Amt" [ref=e183]
+        - spinbutton "$" [ref=e184]
+        - combobox [ref=e185]:
+          - option "Truck" [selected]
+          - option "Restock"
+          - option "Customer"
+        - button "×" [ref=e186] [cursor=pointer]
+      - generic [ref=e187]:
+        - generic [ref=e188]:
+          - paragraph [ref=e189]: Chemical Cost + Truck Inventory
+          - generic [ref=e190]: $0.00
+        - paragraph [ref=e191]: Add chemical costs and stock source to estimate stop cost.
+        - generic [ref=e192]:
+          - generic [ref=e193]: Dose Basis / Calculator Source
+          - textbox "Dose Basis / Calculator Source" [ref=e194]:
+            - /placeholder: e.g. manual test + product label, SplashLens calculator
+          - paragraph [ref=e195]: Record where the recommendation came from. Verify volume, product strength, label directions, and the applied dose before closing the stop.
+      - separator [ref=e196]
+      - generic [ref=e197]:
+        - generic [ref=e198]:
+          - generic [ref=e199]: Work Performed
+          - button "Dictate" [ref=e200] [cursor=pointer]
+        - textbox "Vacuumed, brushed walls, backwashed filter..." [ref=e204]
+      - generic [ref=e206]:
+        - generic [ref=e207]:
+          - generic [ref=e208]: Equipment Notes
+          - button "Dictate" [ref=e209] [cursor=pointer]
+        - 'textbox "Filter PSI: 18. Pump normal. Salt cell clean..." [ref=e213]'
+      - generic [ref=e215]:
+        - generic [ref=e216]:
+          - generic [ref=e217]: Recommendations
+          - button "Dictate" [ref=e218] [cursor=pointer]
+        - textbox "Schedule filter cleaning. Replace pump lid O-ring..." [ref=e222]
+      - generic [ref=e224]:
+        - generic [ref=e225]: Next Visit
+        - textbox [ref=e226]
+      - generic [ref=e227]:
+        - button "Copy Text" [ref=e228] [cursor=pointer]
+        - button "Print / PDF" [ref=e229] [cursor=pointer]
+      - button "Create Proof Packet Link" [ref=e230] [cursor=pointer]
+      - button "Save to Pool History" [ref=e231] [cursor=pointer]
+      - button "Share Report" [ref=e232] [cursor=pointer]
+  - navigation "SplashLens field tools" [ref=e239]:
+    - button "Errors" [ref=e240] [cursor=pointer]
+    - button "Dosing" [ref=e245] [cursor=pointer]
+    - button "Volume" [ref=e249] [cursor=pointer]
+    - button "Filters" [ref=e253] [cursor=pointer]
+    - button "Guide" [ref=e257] [cursor=pointer]
+    - button "Report" [ref=e262] [cursor=pointer]
+    - button "Pools" [ref=e267] [cursor=pointer]
+    - button "Route" [ref=e272] [cursor=pointer]
+    - button "Scan" [ref=e276] [cursor=pointer]

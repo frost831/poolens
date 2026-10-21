@@ -1,0 +1,14 @@
+{
+  "errors": [
+    {
+      "id": "5743ba9f-7cb5-4b6d-a4eb-9adcaddad252",
+      "status": "409",
+      "code": "ENTITY_ERROR.ATTRIBUTE.NOT_ALLOWED",
+      "title": "An attribute in the provided entity is not allowed for this request",
+      "detail": "The attribute 'state' can not be included in a 'UPDATE' operation",
+      "source": {
+        "pointer": "/data/attributes/state"
+      }
+    }
+  ]
+}

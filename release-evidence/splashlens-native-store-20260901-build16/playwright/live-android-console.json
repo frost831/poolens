@@ -1,0 +1,3 @@
+{
+  "result": "Total messages: 1 (Errors: 1, Warnings: 0)\n\n[ERROR] Failed to find a valid digest in the 'integrity' attribute for resource 'https://static.cloudflareinsights.com/beacon.min.js/v3d52b47920f24c319d37e2661827c42b1787588026925' with computed SHA-512 integrity 'Q/Km+vMnipU8mzJKRYgKM1Y44Isigyqjh4ZbjmxL63ZItSrDOsq2diLK6g10D3e6YaXIEoZJFO+vFTSyDB696w=='. The resource has been blocked. @ https://app.splashlens.com/?store=android:0"
+}

@@ -59,7 +59,7 @@ test('first-run marketing screen sells the verified field network in plain field
   assert.match(marketingGate, /Job proof/);
   assert.match(marketingGate, /Training cards/);
   assert.match(marketingGate, /why it might come back/);
-  assert.match(marketingGate, /Saved job trail/);
+  assert.match(marketingGate, /Saved job history/);
   assert.doesNotMatch(marketingGate, /Service Proof OS/);
   assert.doesNotMatch(marketingGate, /Learning OS/);
 });

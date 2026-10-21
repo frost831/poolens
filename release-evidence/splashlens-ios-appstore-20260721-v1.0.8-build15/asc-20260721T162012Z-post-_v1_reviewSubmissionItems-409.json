@@ -1,0 +1,33 @@
+{
+  "errors": [
+    {
+      "id": "c277b333-6566-46ff-8d1f-e99e0ab2acd0",
+      "status": "409",
+      "code": "STATE_ERROR.ENTITY_STATE_INVALID",
+      "title": "appStoreVersions with id '39cd5096-b90b-4526-bb20-961d561b1655' is not in valid state.",
+      "detail": "This resource cannot be reviewed, please check associated errors to see why.",
+      "meta": {
+        "associatedErrors": {
+          "/v1/appScreenshots/9489121f-a205-49fc-a1bc-e18d2b433a15": [
+            {
+              "id": "a226c5dc-9042-4b3b-809b-297486e7d0ac",
+              "status": "409",
+              "code": "STATE_ERROR.SCREENSHOT_UPLOADS_IN_PROGRESS",
+              "title": "Screenshot uploads still in progress.",
+              "detail": "The screenshot 9489121f-a205-49fc-a1bc-e18d2b433a15 is still in progress."
+            }
+          ],
+          "/v1/appScreenshots/4fa585a3-c884-4ee8-a5b0-659e16f41153": [
+            {
+              "id": "5ae01c55-6d45-49d7-9154-7b792b53e345",
+              "status": "409",
+              "code": "STATE_ERROR.SCREENSHOT_UPLOADS_IN_PROGRESS",
+              "title": "Screenshot uploads still in progress.",
+              "detail": "The screenshot 4fa585a3-c884-4ee8-a5b0-659e16f41153 is still in progress."
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

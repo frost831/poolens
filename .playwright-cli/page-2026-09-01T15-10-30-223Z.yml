@@ -1,0 +1,38 @@
+- generic [ref=f1e2]:
+  - banner [ref=f1e3]:
+    - generic [ref=f1e4]:
+      - generic [ref=f1e11]: SplashLens
+      - generic [ref=f1e12]: FIELD
+      - generic "Offline ready - core tools cached" [ref=f1e13]
+    - button "Open Field Signals" [ref=f1e15] [cursor=pointer]:
+      - generic [ref=f1e18]: "1"
+  - generic [ref=f1e19]:
+    - generic [ref=f1e20]: Preferred language
+    - combobox "Preferred language" [ref=f1e21]:
+      - option "English" [selected]
+      - option "Español"
+  - main [ref=f1e22]:
+    - generic [ref=f1e23]:
+      - generic [ref=f1e24]:
+        - button "ERRORS" [ref=f1e25] [cursor=pointer]
+        - button "PARTSNAP" [ref=f1e26] [cursor=pointer]
+        - button "STRIP" [ref=f1e27] [cursor=pointer]
+        - button "LOOKUP" [ref=f1e28] [cursor=pointer]
+        - button "CHEM" [ref=f1e29] [cursor=pointer]
+      - generic [ref=f1e30]: AI READY - 10 FREE SCANS LEFT
+      - generic [ref=f1e33]:
+        - generic [ref=f1e36]: AIM AT ERROR CODE DISPLAY - TAP CAPTURE
+        - generic [ref=f1e37]:
+          - button "CAPTURE" [ref=f1e38] [cursor=pointer]
+          - button "LIGHT" [ref=f1e39] [cursor=pointer]
+          - button "STOP" [ref=f1e40] [cursor=pointer]
+  - navigation "SplashLens field tools" [ref=f1e42]:
+    - button "Errors" [ref=f1e43] [cursor=pointer]
+    - button "Dosing" [ref=f1e48] [cursor=pointer]
+    - button "Volume" [ref=f1e52] [cursor=pointer]
+    - button "Filters" [ref=f1e56] [cursor=pointer]
+    - button "Guide" [ref=f1e60] [cursor=pointer]
+    - button "Report" [ref=f1e65] [cursor=pointer]
+    - button "Pools" [ref=f1e70] [cursor=pointer]
+    - button "Route" [ref=f1e75] [cursor=pointer]
+    - button "Scan" [ref=f1e79] [cursor=pointer]

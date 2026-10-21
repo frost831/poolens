@@ -133,7 +133,7 @@ const LOCALIZED_TEXT = {
     'close + lit': 'cerca + luz',
     'model plate': 'placa modelo',
     'marking / size': 'marca / tamaño',
-    'callback flag': 'riesgo regreso',
+    'repeat issue flag': 'aviso de problema repetido',
     'senior / vendor': 'senior / proveedor',
     'PartSnap + Connected Pool Network': 'PartSnap + Red de piscina conectada',
     'Photo, label, proof checklist, senior/vendor packet.': 'Foto, etiqueta, lista de prueba y paquete para senior/proveedor.',
@@ -1786,7 +1786,7 @@ function renderProofWorkflowOutput(title, body, actions = '') {
   const output = document.getElementById('rpt-proof-os-output');
   if (!output) return;
   output.innerHTML = `
-    <section class="brain-card" aria-label="Service Proof workflow prompt">
+    <section class="brain-card" aria-label="Saved job workflow prompt">
       <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:9px;">
         <div>
           <p style="color:#0f766e;font-size:10px;font-weight:950;letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px;">Proof workflow</p>
@@ -8438,7 +8438,7 @@ function renderPartSnapProofSnapshot(ladder = {}, risk = {}, visibleEvidence = [
       <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:9px;">
         <p style="color:#991b1b;font-size:9px;font-weight:950;text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px;">Risk</p>
         <p style="color:${risk.color || '#d97706'};font-size:15px;font-weight:950;line-height:1;">${escHtml(risk.level || 'hold')}</p>
-        <p style="color:#7f1d1d;font-size:10px;font-weight:800;margin-top:3px;">callback flag</p>
+        <p style="color:#7f1d1d;font-size:10px;font-weight:800;margin-top:3px;">repeat issue flag</p>
       </div>
       <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:9px;">
         <p style="color:#166534;font-size:9px;font-weight:950;text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px;">Packet</p>

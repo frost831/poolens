@@ -1,0 +1,39 @@
+{
+  "data": {
+    "type": "appScreenshots",
+    "id": "3a2e8b20-b0b7-48b0-ba89-91c197027502",
+    "attributes": {
+      "fileSize": 57240,
+      "fileName": "02-partsnap-pro-scan.png",
+      "sourceFileChecksum": null,
+      "imageAsset": null,
+      "assetToken": "PurpleSource221/v4/e6/fb/56/e6fb5667-0380-5ea4-74b0-605f8ad0a877/02-partsnap-pro-scan.png",
+      "assetType": "SCREENSHOT",
+      "uploadOperations": [
+        {
+          "method": "PUT",
+          "url": "https://northamerica-1.object-storage.apple.com/itms-assets-prod-200001/PurpleSource221/v4/e6/fb/56/e6fb5667-0380-5ea4-74b0-605f8ad0a877/q5fpvGuNqZhXCouLDysUoy5YngcoZ6ln-spNIEJT3S0_U003d-1788275673795?partNumber=1&uploadId=d67ab2a0-a617-11f1-a726-4e9e7215e88b&apple-asset-repo-correlation-key=JFYH3FCFWFHCA67K6JE2K4ZQ5M&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Date=20260901T151433Z&X-Amz-SignedHeaders=host&X-Amz-Credential=PKIAI0ZGNAD8WKMSOOX0%2F20260901%2Fnorthamerica-1%2Fs3%2Faws4_request&X-Amz-Expires=604800&X-Amz-Signature=4299768d911ffc5ef4eb742f46f13c7475664b7692f82f7f3ebda980dd4269ed",
+          "length": 57240,
+          "offset": 0,
+          "requestHeaders": [
+            {
+              "name": "Content-Type",
+              "value": "image/png"
+            }
+          ]
+        }
+      ],
+      "assetDeliveryState": {
+        "errors": [],
+        "warnings": null,
+        "state": "AWAITING_UPLOAD"
+      }
+    },
+    "links": {
+      "self": "https://api.appstoreconnect.apple.com/v1/appScreenshots/3a2e8b20-b0b7-48b0-ba89-91c197027502"
+    }
+  },
+  "links": {
+    "self": "https://api.appstoreconnect.apple.com/v1/appScreenshots"
+  }
+}

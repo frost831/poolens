@@ -1,0 +1,55 @@
+{
+  "data": [
+    {
+      "type": "appStoreVersions",
+      "id": "39cd5096-b90b-4526-bb20-961d561b1655",
+      "attributes": {
+        "platform": "IOS",
+        "versionString": "1.0.8",
+        "appStoreState": "REJECTED",
+        "appVersionState": "REJECTED"
+      },
+      "relationships": {
+        "build": {
+          "data": {
+            "type": "builds",
+            "id": "c1e9bd2b-be36-45af-8c03-96e197152967"
+          },
+          "links": {
+            "self": "https://api.appstoreconnect.apple.com/v1/appStoreVersions/39cd5096-b90b-4526-bb20-961d561b1655/relationships/build",
+            "related": "https://api.appstoreconnect.apple.com/v1/appStoreVersions/39cd5096-b90b-4526-bb20-961d561b1655/build"
+          }
+        }
+      },
+      "links": {
+        "self": "https://api.appstoreconnect.apple.com/v1/appStoreVersions/39cd5096-b90b-4526-bb20-961d561b1655"
+      }
+    }
+  ],
+  "included": [
+    {
+      "type": "builds",
+      "id": "c1e9bd2b-be36-45af-8c03-96e197152967",
+      "attributes": {
+        "version": "15",
+        "uploadedDate": "2026-07-21T09:00:35-07:00",
+        "expired": false,
+        "processingState": "VALID",
+        "buildAudienceType": "APP_STORE_ELIGIBLE",
+        "usesNonExemptEncryption": false
+      },
+      "links": {
+        "self": "https://api.appstoreconnect.apple.com/v1/builds/c1e9bd2b-be36-45af-8c03-96e197152967"
+      }
+    }
+  ],
+  "links": {
+    "self": "https://api.appstoreconnect.apple.com/v1/apps/6763644905/appStoreVersions?fields%5BappStoreVersions%5D=versionString%2Cbuild%2CappStoreState%2CappVersionState%2Cplatform&fields%5Bbuilds%5D=processingState%2CbuildAudienceType%2Cexpired%2CusesNonExemptEncryption%2CuploadedDate%2Cversion&filter%5BversionString%5D=1.0.8&filter%5Bplatform%5D=IOS&include=build&limit=5"
+  },
+  "meta": {
+    "paging": {
+      "total": 1,
+      "limit": 5
+    }
+  }
+}

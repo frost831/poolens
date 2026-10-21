@@ -1,0 +1,67 @@
+- generic [ref=e2]:
+  - banner [ref=e3]:
+    - generic [ref=e4]:
+      - generic [ref=e11]: SplashLens
+      - generic [ref=e12]: FIELD
+      - generic "Checking offline status..." [ref=e13]
+    - button "Open Field Signals" [ref=e15] [cursor=pointer]:
+      - generic [ref=e269]: "1"
+  - generic [ref=e18]:
+    - generic [ref=e19]: Preferred language
+    - combobox "Preferred language" [ref=e20]:
+      - option "English" [selected]
+      - option "Español"
+  - main [ref=e64]:
+    - generic [ref=e306]:
+      - generic [ref=e307]:
+        - button "ERRORS" [ref=e308] [cursor=pointer]
+        - button "PARTSNAP" [ref=e309] [cursor=pointer]
+        - button "STRIP" [ref=e310] [cursor=pointer]
+        - button "LOOKUP" [ref=e311] [cursor=pointer]
+        - button "CHEM" [ref=e312] [cursor=pointer]
+      - generic [ref=e313]: AI READY - 10 FREE SCANS LEFT
+      - generic [ref=e316]:
+        - generic [ref=e319]: AIM AT EQUIPMENT PART - TAP IDENTIFY
+        - generic [ref=e320]:
+          - button "IDENTIFY PART" [ref=e321] [cursor=pointer]
+          - button "LIGHT" [ref=e322] [cursor=pointer]
+          - button "STOP" [ref=e323] [cursor=pointer]
+        - generic [ref=e325]:
+          - paragraph [ref=e326]: PartSnap AI Service
+          - paragraph [ref=e327]: Shoot the part, then shoot the label.
+          - generic [ref=e328]:
+            - generic [ref=e329]:
+              - generic [ref=e330]: 1. Part
+              - generic [ref=e331]: close + lit
+            - generic [ref=e332]:
+              - generic [ref=e333]: 2. Label
+              - generic [ref=e334]: model proof
+            - generic [ref=e335]:
+              - generic [ref=e336]: 3. Verify
+              - generic [ref=e337]: before buy
+            - generic [ref=e338]:
+              - generic [ref=e339]: 4. Packet
+              - generic [ref=e340]: send / save
+  - complementary:
+    - region [ref=e294]:
+      - generic [ref=e295]:
+        - generic [ref=e296]:
+          - paragraph [ref=e297]: Quick field check
+          - heading "Did SplashLens help on this stop?" [level=2] [ref=e298]
+        - button "Close feedback" [ref=e299] [cursor=pointer]: x
+      - generic [ref=e300]:
+        - button "Helpful" [ref=e301] [cursor=pointer]
+        - button "Saved time" [ref=e302] [cursor=pointer]
+        - button "Missing info" [ref=e303] [cursor=pointer]
+        - button "Wrong" [ref=e304] [cursor=pointer]
+      - 'textbox "Optional: what should we add or fix?" [ref=e305]'
+  - navigation "SplashLens field tools" [ref=e227]:
+    - button "Errors" [ref=e228] [cursor=pointer]
+    - button "Dosing" [ref=e233] [cursor=pointer]
+    - button "Volume" [ref=e237] [cursor=pointer]
+    - button "Filters" [ref=e241] [cursor=pointer]
+    - button "Guide" [ref=e245] [cursor=pointer]
+    - button "Report" [ref=e250] [cursor=pointer]
+    - button "Pools" [ref=e255] [cursor=pointer]
+    - button "Route" [ref=e260] [cursor=pointer]
+    - button "Scan" [ref=e264] [cursor=pointer]

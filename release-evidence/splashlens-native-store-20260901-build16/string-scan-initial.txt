@@ -1,0 +1,16 @@
+docs/store/MAC_HANDOFF_SPLASHLENS_NORTH_STAR_FIELD_COPY_2026-09-01.md:20:- Uses `Saved job history` instead of `Service Proof Passport`.
+docs/store/MAC_HANDOFF_SPLASHLENS_NORTH_STAR_FIELD_COPY_2026-09-01.md:42:  - `Service Proof Passport`
+docs/store/MAC_HANDOFF_SPLASHLENS_NORTH_STAR_FIELD_COPY_2026-09-01.md:43:  - `Service Proof OS`
+docs/store/MAC_HANDOFF_SPLASHLENS_NORTH_STAR_FIELD_COPY_2026-09-01.md:44:  - `Team Proof OS`
+docs/store/MAC_HANDOFF_SPLASHLENS_NORTH_STAR_FIELD_COPY_2026-09-01.md:45:  - `Callback Risk Score`
+docs/store/MAC_HANDOFF_SPLASHLENS_NORTH_STAR_FIELD_COPY_2026-09-01.md:46:  - `proof layer`
+docs/store/MAC_HANDOFF_SPLASHLENS_NORTH_STAR_FIELD_COPY_2026-09-01.md:74:- No direct Stripe/web checkout CTA appears in iOS store mode.
+docs/store/MAC_HANDOFF_SPLASHLENS_NORTH_STAR_FIELD_COPY_2026-09-01.md:76:- The app does not show `Service Proof Passport` or `Callback Risk Score` in the main user flow.
+docs/store/MAC_HANDOFF_SPLASHLENS_NORTH_STAR_FIELD_COPY_2026-09-01.md:106:- App shell no longer contains `Service Proof Passport`.
+docs/store/MAC_HANDOFF_SPLASHLENS_NORTH_STAR_FIELD_COPY_2026-09-01.md:107:- `https://app.splashlens.com/api/checkout?plan=monthly` returns HTTP 302 to `checkout.stripe.com`, confirming first-party Stripe Checkout Session mode.
+index.html:1157:        <p style="color:#64748b;font-size:12px;line-height:1.45;margin-bottom:10px;">Manual lookup, basic PartSnap, calculators, Facility Assist, saved drafts, and customer-safe proof summaries remain free in the native store build. Web subscriptions and team pilots are not offered inside this iOS wrapper.</p>
+docs/store/GOOGLE_PLAY_LAUNCH_PACKET_SPLASHLENS_2026-05-28.md:172:   - No direct Stripe checkout or web subscription CTA appears in store mode.
+app-store-connect/review_notes.txt:5:Store wrapper mode is intended to stay free-core and must not show direct Stripe checkout or web-subscription CTAs. AI scan output is assistance only and should be verified against equipment manuals, calibrated tests, label directions, and professional field judgment.
+js/app.js:1970:      <p style="color:#64748b;font-size:11px;line-height:1.45;margin-top:10px;">Web subscriptions, checkout links, and paid lead capture are intentionally unavailable in native store shell mode.</p>`
+js/app.js:2010:    window.alert('This native store build is free-core. Web subscriptions and paid pilots are not offered inside the app.');
+app-store-connect/store-wrapper-build-plan.md:10:- Direct Stripe or web upgrade CTAs are hidden in `store=ios` mode.

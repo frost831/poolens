@@ -1,0 +1,39 @@
+{
+  "data": {
+    "type": "appScreenshots",
+    "id": "38cc4f9b-f81a-456a-b43c-8c68cbfbd441",
+    "attributes": {
+      "fileSize": 375634,
+      "fileName": "01-partsnap-field-start.png",
+      "sourceFileChecksum": null,
+      "imageAsset": null,
+      "assetToken": "PurpleSource211/v4/bc/e5/7a/bce57aa5-105e-29c2-594f-53b4823a7556/01-partsnap-field-start.png",
+      "assetType": "SCREENSHOT",
+      "uploadOperations": [
+        {
+          "method": "PUT",
+          "url": "https://northamerica-1.object-storage.apple.com/itms-assets-prod-200001/PurpleSource211/v4/bc/e5/7a/bce57aa5-105e-29c2-594f-53b4823a7556/qK-mJ9K584I9ayZk7d7scRJMOfiORTmTcfL9QTyyvHI_U003d-1788275670132?partNumber=1&uploadId=d44bc4b0-a617-11f1-80d9-70b2b906b3b1&apple-asset-repo-correlation-key=FLFYPCXGPHGYJ3VZVGPPG5LKTI&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Date=20260901T151430Z&X-Amz-SignedHeaders=host&X-Amz-Credential=PKIAI0ZGNAD8WKMSOOX0%2F20260901%2Fnorthamerica-1%2Fs3%2Faws4_request&X-Amz-Expires=604800&X-Amz-Signature=ad4d38ab7de8dc59a2ac110708ef65e42db0be56088a1100a457717270362e91",
+          "length": 375634,
+          "offset": 0,
+          "requestHeaders": [
+            {
+              "name": "Content-Type",
+              "value": "image/png"
+            }
+          ]
+        }
+      ],
+      "assetDeliveryState": {
+        "errors": [],
+        "warnings": null,
+        "state": "UPLOAD_COMPLETE"
+      }
+    },
+    "links": {
+      "self": "https://api.appstoreconnect.apple.com/v1/appScreenshots/38cc4f9b-f81a-456a-b43c-8c68cbfbd441"
+    }
+  },
+  "links": {
+    "self": "https://api.appstoreconnect.apple.com/v1/appScreenshots/38cc4f9b-f81a-456a-b43c-8c68cbfbd441"
+  }
+}

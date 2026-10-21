@@ -1,0 +1,14 @@
+{
+  "status": 409,
+  "body": {
+    "errors": [
+      {
+        "id": "974267bf-697a-43cd-ac3b-9967d361822b",
+        "status": "409",
+        "code": "STATE_ERROR",
+        "title": "The request cannot be fulfilled because of the state of another resource.",
+        "detail": "Attribute 'whatsNew' cannot be edited at this time"
+      }
+    ]
+  }
+}

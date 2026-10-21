@@ -1,0 +1,30 @@
+{
+  "data": {
+    "type": "appStoreReviewDetails",
+    "id": "d6423445-1883-4e85-9a88-48939d8ad8a5",
+    "attributes": {
+      "contactFirstName": "Joshua",
+      "contactLastName": "Frost",
+      "contactPhone": "8065550100",
+      "contactEmail": "support@splashlens.com",
+      "demoAccountName": "reviewer@splashlens.com",
+      "demoAccountPassword": "Magic link / Continue AR Demo",
+      "demoAccountRequired": false,
+      "notes": "SplashLens is a free utility/reference wrapper around the SplashLens PWA at https://app.splashlens.com/?store=ios.\n\nNo account or demo login is required for core use.\n\nJuly 27, 2026 resubmission note: the native store shell has been updated and deployed to production so store=ios runs as a free-core build only. The App Review path now shows no Stripe checkout links, no web-subscription CTAs, no paid-pilot lead capture, and no external purchase/upgrade buttons. Production evidence for the reviewed URL:\n- https://app.splashlens.com/?store=ios&mode=trainer&utm_source=field_learning_os\n- app.js cache marker: 20260727-store-safe-activation-funnel\n- GitHub commit: 52862c97de4ff3bb8f8a221c1c34e621b2c9976f\n- Cloudflare Pages production deployment: https://c1b5e99b.poolens.pages.dev\n\nSuggested review path:\n1. Launch SplashLens.\n2. If the role picker appears, choose Trainer.\n3. Open Report / Service Proof and use the Field Learning OS buttons: PartSnap Lesson, CPO Scenario, and Proof Review.\n4. Open Scan > PartSnap for optional photo/scanner reference assistance.\n5. Open Report / Service Proof to generate a customer-safe service proof/passport summary.\n6. Optional camera, photo, and microphone prompts appear only after the reviewer starts the related scan, selected-photo, or dictated-note flow.\n\nOnline AI scan features require internet access. PartSnap results are possible matches with visible-proof and missing-proof prompts, not confirmed part-fit results.\n\nSplashLens is a field reference, service-proof, and training-aid workflow. It does not replace equipment manuals, product labels, local code, official certification programs, manufacturer guidance, or qualified technician/CPO judgment. This build does not include completed training certificates, official Aquatic Council/CPO alignment, manufacturer endorsement, or guaranteed diagnosis/part-fit claims.\n\nJuly 28, 2026 subscription metadata compliance: The App Description includes the functional standard Apple Terms of Use (EULA) link: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/ . The Privacy Policy is available at https://splashlens.com/privacy and remains configured in App Store Connect. PartSnap Pro monthly and annual are optional subscriptions; SplashLens core reference tools remain free."
+    },
+    "relationships": {
+      "appStoreReviewAttachments": {
+        "links": {
+          "self": "https://api.appstoreconnect.apple.com/v1/appStoreReviewDetails/d6423445-1883-4e85-9a88-48939d8ad8a5/relationships/appStoreReviewAttachments",
+          "related": "https://api.appstoreconnect.apple.com/v1/appStoreReviewDetails/d6423445-1883-4e85-9a88-48939d8ad8a5/appStoreReviewAttachments"
+        }
+      }
+    },
+    "links": {
+      "self": "https://api.appstoreconnect.apple.com/v1/appStoreReviewDetails/d6423445-1883-4e85-9a88-48939d8ad8a5"
+    }
+  },
+  "links": {
+    "self": "https://api.appstoreconnect.apple.com/v1/appStoreVersions/39cd5096-b90b-4526-bb20-961d561b1655/appStoreReviewDetail"
+  }
+}

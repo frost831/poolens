@@ -1,0 +1,63 @@
+{
+  "final": {
+    "appId": "6763644905",
+    "version": "1.0.9",
+    "versionId": "44f0d66b-0643-4459-9454-5246df13ca2a",
+    "buildNumber": "16",
+    "buildId": "e49a259f-13c2-44c7-bbff-bbde4fe7569d",
+    "reviewDetailId": "2ba6ef44-38d0-4bc8-a0ec-b3abb0d92c97",
+    "localizationId": "5ec13c0f-5d6f-4a0c-bf78-19cd89ccd66b",
+    "screenshotSetId": "39d4b411-3fd6-47cb-a0f8-c81795c132f1",
+    "screenshotDeletedCount": 4,
+    "screenshotIds": [
+      "38cc4f9b-f81a-456a-b43c-8c68cbfbd441",
+      "3a2e8b20-b0b7-48b0-ba89-91c197027502",
+      "9a0701fa-09b1-411b-a9e2-6ce55a36dd31",
+      "d050afb9-a598-47a0-b7fa-0d783f08f599"
+    ],
+    "reviewSubmissionId": "0fb1b183-6e15-4bf5-94b0-3471acdad271",
+    "reviewSubmissionItemId": "MGZiMWIxODMtNmUxNS00YmY1LTk0YjAtMzQ3MWFjZGFkMjcxfDZ8ODkwNjUzMjAz",
+    "reviewSubmissionState": "WAITING_FOR_REVIEW",
+    "submittedDate": "2026-09-01T15:15:00.465Z",
+    "submittedAt": "2026-09-01T15:15:02.898Z"
+  },
+  "version": {
+    "platform": "IOS",
+    "versionString": "1.0.9",
+    "appStoreState": "WAITING_FOR_REVIEW",
+    "appVersionState": "WAITING_FOR_REVIEW"
+  },
+  "build": {
+    "version": "16",
+    "uploadedDate": "2026-09-01T08:12:45-07:00",
+    "processingState": "VALID",
+    "buildAudienceType": "APP_STORE_ELIGIBLE",
+    "usesNonExemptEncryption": false
+  },
+  "submission": {
+    "submittedDate": "2026-09-01T15:15:00.465Z",
+    "state": "WAITING_FOR_REVIEW"
+  },
+  "screenshots": [
+    {
+      "id": "38cc4f9b-f81a-456a-b43c-8c68cbfbd441",
+      "fileName": "01-partsnap-field-start.png",
+      "state": "COMPLETE"
+    },
+    {
+      "id": "3a2e8b20-b0b7-48b0-ba89-91c197027502",
+      "fileName": "02-partsnap-pro-scan.png",
+      "state": "COMPLETE"
+    },
+    {
+      "id": "9a0701fa-09b1-411b-a9e2-6ce55a36dd31",
+      "fileName": "03-saved-job-history.png",
+      "state": "COMPLETE"
+    },
+    {
+      "id": "d050afb9-a598-47a0-b7fa-0d783f08f599",
+      "fileName": "04-repeat-issue-watch.png",
+      "state": "COMPLETE"
+    }
+  ]
+}

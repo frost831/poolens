@@ -1,0 +1,58 @@
+- generic [ref=f1e2]:
+  - banner [ref=f1e3]:
+    - generic [ref=f1e4]:
+      - generic [ref=f1e11]: SplashLens
+      - generic [ref=f1e12]: FIELD
+      - generic "Checking offline status..." [ref=f1e13]
+    - button "Open Field Signals" [ref=f1e15] [cursor=pointer]:
+      - generic [ref=f1e18]: "1"
+  - generic [ref=f1e19]:
+    - generic [ref=f1e20]: Preferred language
+    - combobox "Preferred language" [ref=f1e21]:
+      - option "English" [selected]
+      - option "Español"
+  - main [ref=f1e22]:
+    - generic [ref=f1e251]:
+      - generic [ref=f1e252]:
+        - button "ERRORS" [ref=f1e253] [cursor=pointer]
+        - button "PARTSNAP" [ref=f1e254] [cursor=pointer]
+        - button "STRIP" [ref=f1e255] [cursor=pointer]
+        - button "LOOKUP" [ref=f1e256] [cursor=pointer]
+        - button "CHEM" [ref=f1e257] [cursor=pointer]
+      - generic [ref=f1e258]: AI READY - 10 FREE SCANS LEFT
+      - generic [ref=f1e261]:
+        - generic [ref=f1e262]: AIM AT EQUIPMENT PART - TAP IDENTIFY
+        - generic [ref=f1e263]:
+          - button "IDENTIFY PART" [ref=f1e264] [cursor=pointer]
+          - button "LIGHT" [ref=f1e265] [cursor=pointer]
+          - button "STOP" [ref=f1e266] [cursor=pointer]
+        - generic [ref=f1e268]:
+          - paragraph [ref=f1e269]: PartSnap AI Service
+          - paragraph [ref=f1e270]: Shoot the part, then shoot the label.
+          - generic [ref=f1e271]:
+            - generic [ref=f1e272]:
+              - generic [ref=f1e273]: 1. Part
+              - generic [ref=f1e274]: close + lit
+            - generic [ref=f1e275]:
+              - generic [ref=f1e276]: 2. Label
+              - generic [ref=f1e277]: model proof
+            - generic [ref=f1e278]:
+              - generic [ref=f1e279]: 3. Verify
+              - generic [ref=f1e280]: before buy
+            - generic [ref=f1e281]:
+              - generic [ref=f1e282]: 4. Packet
+              - generic [ref=f1e283]: send / save
+        - generic [ref=f1e285]:
+          - generic [ref=f1e286]: CAM
+          - paragraph [ref=f1e287]: Camera access not available or permission denied. Use Code Lookup to search manually.
+          - button "Go to Code Lookup" [ref=f1e288] [cursor=pointer]
+  - navigation "SplashLens field tools" [ref=f1e209]:
+    - button "Errors" [ref=f1e210] [cursor=pointer]
+    - button "Dosing" [ref=f1e215] [cursor=pointer]
+    - button "Volume" [ref=f1e219] [cursor=pointer]
+    - button "Filters" [ref=f1e223] [cursor=pointer]
+    - button "Guide" [ref=f1e227] [cursor=pointer]
+    - button "Report" [ref=f1e232] [cursor=pointer]
+    - button "Pools" [ref=f1e237] [cursor=pointer]
+    - button "Route" [ref=f1e242] [cursor=pointer]
+    - button "Scan" [ref=f1e246] [cursor=pointer]

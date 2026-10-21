@@ -1,0 +1,265 @@
+{
+  "capturedAt": "2026-09-01T14:58:07.825Z",
+  "appId": "6763644905",
+  "versionId": "39cd5096-b90b-4526-bb20-961d561b1655",
+  "files": [
+    {
+      "label": "versions",
+      "statusCode": 200,
+      "file": "/Users/macbookpro/SplashLens-asc-subscription-finish-2026-07-04/release-evidence/splashlens-asc-current-20260728/20260901T145806Z-versions-200-_v1_apps_6763644905_appStoreVersions_filter_platform_=IOS_fields_appStoreVersions_=versionString_appVersionState_appStoreState_platform_limi.json"
+    },
+    {
+      "label": "version-108",
+      "statusCode": 200,
+      "file": "/Users/macbookpro/SplashLens-asc-subscription-finish-2026-07-04/release-evidence/splashlens-asc-current-20260728/20260901T145806Z-version-108-200-_v1_apps_6763644905_appStoreVersions_filter_platform_=IOS_filter_versionString_=1.0.8_include=build_fields_appStoreVersions_=versionString_a.json"
+    },
+    {
+      "label": "review-detail-108",
+      "statusCode": 200,
+      "file": "/Users/macbookpro/SplashLens-asc-subscription-finish-2026-07-04/release-evidence/splashlens-asc-current-20260728/20260901T145806Z-review-detail-108-200-_v1_appStoreVersions_39cd5096-b90b-4526-bb20-961d561b1655_appStoreReviewDetail.json"
+    },
+    {
+      "label": "localizations-108",
+      "statusCode": 200,
+      "file": "/Users/macbookpro/SplashLens-asc-subscription-finish-2026-07-04/release-evidence/splashlens-asc-current-20260728/20260901T145806Z-localizations-108-200-_v1_appStoreVersions_39cd5096-b90b-4526-bb20-961d561b1655_appStoreVersionLocalizations_fields_appStoreVersionLocalizations_=locale_whatsNew_.json"
+    },
+    {
+      "label": "review-submissions",
+      "statusCode": 200,
+      "file": "/Users/macbookpro/SplashLens-asc-subscription-finish-2026-07-04/release-evidence/splashlens-asc-current-20260728/20260901T145807Z-review-submissions-200-_v1_reviewSubmissions_filter_app_=6763644905_include=appStoreVersionForReview_items_fields_reviewSubmissions_=state_submittedDate_platform_i.json"
+    },
+    {
+      "label": "review-submission-detail",
+      "statusCode": 200,
+      "file": "/Users/macbookpro/SplashLens-asc-subscription-finish-2026-07-04/release-evidence/splashlens-asc-current-20260728/20260901T145807Z-review-submission-detail-200-_v1_reviewSubmissions_e36eb61b-762e-4a13-94d1-201c3244b786_include=items_fields_reviewSubmissions_=state_submittedDate_items_fields_reviewSu.json"
+    }
+  ],
+  "versions": [
+    {
+      "id": "39cd5096-b90b-4526-bb20-961d561b1655",
+      "platform": "IOS",
+      "versionString": "1.0.8",
+      "appStoreState": "READY_FOR_SALE",
+      "appVersionState": "READY_FOR_DISTRIBUTION"
+    },
+    {
+      "id": "120f5e85-2a72-4788-858e-ea0f8a898339",
+      "platform": "IOS",
+      "versionString": "1.0.7",
+      "appStoreState": "READY_FOR_SALE",
+      "appVersionState": "READY_FOR_DISTRIBUTION"
+    },
+    {
+      "id": "5ff7d3e5-8264-4e35-bd1f-44f097da15a2",
+      "platform": "IOS",
+      "versionString": "1.0.6",
+      "appStoreState": "READY_FOR_SALE",
+      "appVersionState": "READY_FOR_DISTRIBUTION"
+    },
+    {
+      "id": "3417af1d-f7ea-4a7b-a872-e595d9238040",
+      "platform": "IOS",
+      "versionString": "1.0.4",
+      "appStoreState": "READY_FOR_SALE",
+      "appVersionState": "READY_FOR_DISTRIBUTION"
+    },
+    {
+      "id": "ac084363-e767-4e3b-92c6-ad9768ea0a32",
+      "platform": "IOS",
+      "versionString": "1.0.3",
+      "appStoreState": "READY_FOR_SALE",
+      "appVersionState": "READY_FOR_DISTRIBUTION"
+    },
+    {
+      "id": "6648796d-e31f-4725-944b-d8227ec2774a",
+      "platform": "IOS",
+      "versionString": "1.0.2",
+      "appStoreState": "READY_FOR_SALE",
+      "appVersionState": "READY_FOR_DISTRIBUTION"
+    },
+    {
+      "id": "ec107c1c-1bd0-4131-ab24-38fb0eac5c65",
+      "platform": "IOS",
+      "versionString": "1.0.1",
+      "appStoreState": "READY_FOR_SALE",
+      "appVersionState": "READY_FOR_DISTRIBUTION"
+    },
+    {
+      "id": "68721c64-a109-44c6-97e9-a9463b00949c",
+      "platform": "IOS",
+      "versionString": "1.0",
+      "appStoreState": "READY_FOR_SALE",
+      "appVersionState": "READY_FOR_DISTRIBUTION"
+    }
+  ],
+  "version108": {
+    "id": "39cd5096-b90b-4526-bb20-961d561b1655",
+    "attributes": {
+      "platform": "IOS",
+      "versionString": "1.0.8",
+      "appStoreState": "READY_FOR_SALE",
+      "appVersionState": "READY_FOR_DISTRIBUTION"
+    },
+    "included": [
+      {
+        "type": "builds",
+        "id": "c1e9bd2b-be36-45af-8c03-96e197152967",
+        "version": "15",
+        "uploadedDate": "2026-07-21T09:00:35-07:00",
+        "expired": false,
+        "processingState": "VALID",
+        "buildAudienceType": "APP_STORE_ELIGIBLE",
+        "usesNonExemptEncryption": false
+      }
+    ]
+  },
+  "reviewDetail": {
+    "id": "d6423445-1883-4e85-9a88-48939d8ad8a5",
+    "attributes": {
+      "contactFirstName": "Joshua",
+      "contactLastName": "Frost",
+      "contactPhone": "8065550100",
+      "contactEmail": "support@splashlens.com",
+      "demoAccountName": "reviewer@splashlens.com",
+      "demoAccountPassword": "Magic link / Continue AR Demo",
+      "demoAccountRequired": false,
+      "notes": "SplashLens is a free utility/reference wrapper around the SplashLens PWA at https://app.splashlens.com/?store=ios.\n\nNo account or demo login is required for core use.\n\nJuly 27, 2026 resubmission note: the native store shell has been updated and deployed to production so store=ios runs as a free-core build only. The App Review path now shows no Stripe checkout links, no web-subscription CTAs, no paid-pilot lead capture, and no external purchase/upgrade buttons. Production evidence for the reviewed URL:\n- https://app.splashlens.com/?store=ios&mode=trainer&utm_source=field_learning_os\n- app.js cache marker: 20260727-store-safe-activation-funnel\n- GitHub commit: 52862c97de4ff3bb8f8a221c1c34e621b2c9976f\n- Cloudflare Pages production deployment: https://c1b5e99b.poolens.pages.dev\n\nSuggested review path:\n1. Launch SplashLens.\n2. If the role picker appears, choose Trainer.\n3. Open Report / Service Proof and use the Field Learning OS buttons: PartSnap Lesson, CPO Scenario, and Proof Review.\n4. Open Scan > PartSnap for optional photo/scanner reference assistance.\n5. Open Report / Service Proof to generate a customer-safe service proof/passport summary.\n6. Optional camera, photo, and microphone prompts appear only after the reviewer starts the related scan, selected-photo, or dictated-note flow.\n\nOnline AI scan features require internet access. PartSnap results are possible matches with visible-proof and missing-proof prompts, not confirmed part-fit results.\n\nSplashLens is a field reference, service-proof, and training-aid workflow. It does not replace equipment manuals, product labels, local code, official certification programs, manufacturer guidance, or qualified technician/CPO judgment. This build does not include completed training certificates, official Aquatic Council/CPO alignment, manufacturer endorsement, or guaranteed diagnosis/part-fit claims.\n\nJuly 28, 2026 subscription metadata compliance: The App Description includes the functional standard Apple Terms of Use (EULA) link: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/ . The Privacy Policy is available at https://splashlens.com/privacy and remains configured in App Store Connect. PartSnap Pro monthly and annual are optional subscriptions; SplashLens core reference tools remain free."
+    }
+  },
+  "localizations": [
+    {
+      "id": "a5a8f877-92ee-42e4-b885-ac2627c14033",
+      "description": "SplashLens Field Tools is a proof-first pool and spa service app for technicians, CPOs, and facility operators who need PartSnap pool parts ID, fast equipment troubleshooting lookup, connected-pool field guidance, chemical dosing math, route notes, and Service Proof Passport records.\n\nUse SplashLens to:\n\n- Search 230+ pool equipment, automation, lighting, robot, cover, sanitizer, and controller troubleshooting entries\n- Use PartSnap to photograph unknown pool parts and receive possible manufacturer/model/part-number clues with verification prompts\n- Send quick in-app feedback after PartSnap or scan results so wrong or missing references can be reviewed\n- Review PartSnap Callback Risk Score, missing proof, Service Proof Passport saves, Mystery Part ticket IDs, and Apprentice Mode prompts\n- Build cleaner field packets for senior tech review, vendor support, or CRM notes\n- Capture Service Proof Passport history with readings, photos, voice notes, customer-safe summaries, and next-visit context\n- Use Facility Assist for daily checks, contamination events, basic equipment proof, and escalation packets\n- Calculate common chemical dosing adjustments\n- Build service notes, Route Brain field plans, Field Intelligence profiles, escalation packets, and report-style field records\n- Check filter guides, pump/filter checklists, and manual reference tools\n- Use optional online AI scan assistance for equipment displays, pool parts, and test strips\n\nManual lookup, Route Brain planning, calculators, notes, filters, and checklists are designed for field use and can work from the app shell after first load. Online AI scan features require internet access and are assistance only. Always verify AI scan output and Route Brain guidance against equipment manuals, calibrated tests, label directions, and professional field judgment.\n\nSplashLens is designed to help techs save time and reduce messy follow-up by documenting the stop more clearly. It does not guarantee diagnosis, repair, chemical safety, manufacturer support, part fit, CRM sync, or training certification.\n\nTerms of Use: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/\nPrivacy Policy: https://splashlens.com/privacy",
+      "locale": "en-US",
+      "keywords": "pool tech,PartSnap,parts,codes,pump,heater,salt,robot,proof,dosing,CPO,spa",
+      "marketingUrl": "https://splashlens.com",
+      "promotionalText": "Get off the pad faster, then turn the stop into a five-minute field lesson.",
+      "supportUrl": "https://splashlens.com",
+      "whatsNew": "Adds Field Learning OS workflows that turn real PartSnap misses, facility scenarios, and saved service proof into short field lessons with proof checks and review guidance. SplashLens remains a reference aid and does not replace manuals, codes, certification, or qualified judgment."
+    }
+  ],
+  "reviewSubmissions": [
+    {
+      "id": "e36eb61b-762e-4a13-94d1-201c3244b786",
+      "attributes": {
+        "submittedDate": "2026-07-27T17:42:59.923Z",
+        "platform": "IOS",
+        "state": "COMPLETE"
+      },
+      "appStoreVersionForReview": "39cd5096-b90b-4526-bb20-961d561b1655",
+      "itemIds": [
+        "ZTM2ZWI2MWItNzYyZS00YTEzLTk0ZDEtMjAxYzMyNDRiNzg2fDZ8ODg4NjQwNTY4"
+      ]
+    },
+    {
+      "id": "29d0e41e-452a-4122-99c2-4adc7b0a3df8",
+      "attributes": {
+        "submittedDate": "2026-07-18T18:02:42.896Z",
+        "platform": "IOS",
+        "state": "COMPLETE"
+      },
+      "appStoreVersionForReview": "120f5e85-2a72-4788-858e-ea0f8a898339",
+      "itemIds": [
+        "MjlkMGU0MWUtNDUyYS00MTIyLTk5YzItNGFkYzdiMGEzZGY4fDZ8ODg4NTA2NDk1"
+      ]
+    },
+    {
+      "id": "24bf081b-0a17-4702-93aa-3f5ac497adf1",
+      "attributes": {
+        "submittedDate": "2026-07-15T14:19:55.478Z",
+        "platform": "IOS",
+        "state": "COMPLETE"
+      },
+      "appStoreVersionForReview": "5ff7d3e5-8264-4e35-bd1f-44f097da15a2",
+      "itemIds": [
+        "MjRiZjA4MWItMGExNy00NzAyLTkzYWEtM2Y1YWM0OTdhZGYxfDZ8ODg4MzQ4NTIz"
+      ]
+    },
+    {
+      "id": "c5a411aa-7a98-420e-a9d1-64c8c14fafb4",
+      "attributes": {
+        "submittedDate": "2026-07-10T15:04:20.157Z",
+        "platform": "IOS",
+        "state": "COMPLETE"
+      },
+      "appStoreVersionForReview": "3417af1d-f7ea-4a7b-a872-e595d9238040",
+      "itemIds": [
+        "YzVhNDExYWEtN2E5OC00MjBlLWE5ZDEtNjRjOGMxNGZhZmI0fDZ8ODg4MTIxMzQ4"
+      ]
+    },
+    {
+      "id": "8d365189-046e-408c-941d-dbe3e7413547",
+      "attributes": {
+        "submittedDate": "2026-07-09T17:42:18.575Z",
+        "platform": "IOS",
+        "state": "COMPLETE"
+      },
+      "appStoreVersionForReview": "ac084363-e767-4e3b-92c6-ad9768ea0a32",
+      "itemIds": [
+        "OGQzNjUxODktMDQ2ZS00MDhjLTk0MWQtZGJlM2U3NDEzNTQ3fDZ8ODg4MDcyNTc4"
+      ]
+    },
+    {
+      "id": "00cee234-68ad-4659-bbaa-7d154dd4a915",
+      "attributes": {
+        "submittedDate": "2026-07-07T16:12:58.427Z",
+        "platform": "IOS",
+        "state": "COMPLETE"
+      },
+      "appStoreVersionForReview": "6648796d-e31f-4725-944b-d8227ec2774a",
+      "itemIds": [
+        "MDBjZWUyMzQtNjhhZC00NjU5LWJiYWEtN2QxNTRkZDRhOTE1fDZ8ODg3ODMzMjA5"
+      ]
+    },
+    {
+      "id": "1c334692-0e3c-44bb-ba00-d18d945ed24c",
+      "attributes": {
+        "submittedDate": "2026-07-01T22:50:22.153Z",
+        "platform": "IOS",
+        "state": "COMPLETE"
+      },
+      "appStoreVersionForReview": "ec107c1c-1bd0-4131-ab24-38fb0eac5c65",
+      "itemIds": [
+        "MWMzMzQ2OTItMGUzYy00NGJiLWJhMDAtZDE4ZDk0NWVkMjRjfDZ8ODg3NzExOTU5"
+      ]
+    },
+    {
+      "id": "b7d4743f-6842-41f4-8d95-71b41f95c790",
+      "attributes": {
+        "submittedDate": "2026-05-27T16:48:37.167Z",
+        "platform": "IOS",
+        "state": "COMPLETE"
+      },
+      "appStoreVersionForReview": "68721c64-a109-44c6-97e9-a9463b00949c",
+      "itemIds": [
+        "YjdkNDc0M2YtNjg0Mi00MWY0LThkOTUtNzFiNDFmOTVjNzkwfDZ8ODg0OTExMzc5"
+      ]
+    },
+    {
+      "id": "03e7ecf6-fb67-4c68-8a91-151ededf847b",
+      "attributes": {
+        "submittedDate": "2026-05-18T13:12:20.456Z",
+        "platform": "IOS",
+        "state": "COMPLETE"
+      },
+      "appStoreVersionForReview": "68721c64-a109-44c6-97e9-a9463b00949c",
+      "itemIds": [
+        "MDNlN2VjZjYtZmI2Ny00YzY4LThhOTEtMTUxZWRlZGY4NDdifDZ8ODg0OTExMzc5"
+      ]
+    }
+  ],
+  "activeSubmission": {
+    "id": "e36eb61b-762e-4a13-94d1-201c3244b786",
+    "attributes": {
+      "submittedDate": "2026-07-27T17:42:59.923Z",
+      "platform": "IOS",
+      "state": "COMPLETE"
+    },
+    "items": [
+      {
+        "id": "ZTM2ZWI2MWItNzYyZS00YTEzLTk0ZDEtMjAxYzMyNDRiNzg2fDZ8ODg4NjQwNTY4",
+        "state": "APPROVED"
+      }
+    ]
+  }
+}

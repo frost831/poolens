@@ -1,0 +1,29 @@
+{
+  "status": 200,
+  "body": {
+    "data": [
+      {
+        "type": "appStoreVersionLocalizations",
+        "id": "224ea764-6a20-4325-9b62-23aee254a63b",
+        "attributes": {
+          "locale": "en-US",
+          "promotionalText": null,
+          "supportUrl": "https://splashlens.com",
+          "whatsNew": "Refreshes native store routing and offline-ready cache handling, including safer dashboard/checkout links and updated PartSnap review export behavior for field workflows."
+        },
+        "links": {
+          "self": "https://api.appstoreconnect.apple.com/v1/appStoreVersionLocalizations/224ea764-6a20-4325-9b62-23aee254a63b"
+        }
+      }
+    ],
+    "links": {
+      "self": "https://api.appstoreconnect.apple.com/v1/appStoreVersions/120f5e85-2a72-4788-858e-ea0f8a898339/appStoreVersionLocalizations?fields%5BappStoreVersionLocalizations%5D=whatsNew%2CsupportUrl%2Clocale%2CpromotionalText&limit=20"
+    },
+    "meta": {
+      "paging": {
+        "total": 1,
+        "limit": 20
+      }
+    }
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "errors": [
+    {
+      "id": "3e83919b-f17a-4c3d-a8db-941b071e0745",
+      "status": "400",
+      "code": "PARAMETER_ERROR.INVALID",
+      "title": "A parameter has an invalid value",
+      "detail": "'uploaded' is not a valid field name",
+      "source": {
+        "parameter": "fields[appScreenshots]"
+      }
+    }
+  ]
+}

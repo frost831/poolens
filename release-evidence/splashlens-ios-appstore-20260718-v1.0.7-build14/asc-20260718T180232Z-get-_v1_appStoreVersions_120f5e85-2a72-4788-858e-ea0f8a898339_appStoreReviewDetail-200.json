@@ -1,0 +1,30 @@
+{
+  "data": {
+    "type": "appStoreReviewDetails",
+    "id": "6fdbb502-abf7-4bbd-8adc-0a7dd1825e29",
+    "attributes": {
+      "contactFirstName": "Joshua",
+      "contactLastName": "Frost",
+      "contactPhone": "8065550100",
+      "contactEmail": "support@splashlens.com",
+      "demoAccountName": "reviewer@splashlens.com",
+      "demoAccountPassword": "Magic link / Continue AR Demo",
+      "demoAccountRequired": false,
+      "notes": "SplashLens is a free utility/reference wrapper around the SplashLens PWA at https://app.splashlens.com/?store=ios.\n\nNo account is required for core use. Manual lookup, Route Brain planning, calculators, notes, filters, and checklists work from the app shell after first load. PartSnap is an optional online scanner mode for pool part reference assistance. Camera/photo access is user-initiated and only used for optional AI scanner workflows. Microphone access is user-initiated for dictated service notes where the webview/browser supports speech recognition. Online AI scan features require internet access. PartSnap results are possible matches with missing-proof prompts and verification language, not confirmed part-fit results.\n\nStore wrapper mode is intended to stay free-core and must not show direct Stripe checkout or web-subscription CTAs. AI scan output is assistance only and should be verified against equipment manuals, calibrated tests, label directions, and professional field judgment.\n\nCurrent web release also includes PartSnap Callback Risk Score, Service Proof Passport save flow, Facility Assist/CPO light mode, Mystery Part ticket IDs, local review queue, and Apprentice Mode. These are reference and documentation workflows only. They do not confirm part fit, diagnose equipment, replace official pool/spa standards, or replace manufacturer documentation.\nThe 1.0.6 wrapper loads the same web runtime and includes a quick feedback prompt after PartSnap or scan results. “Yes” dismisses the prompt; “Wrong / missing” opens a short detail form so the field reference can be reviewed. This feedback loop is optional and does not change the verification requirements above.\n\nThis build does not include native paid entitlements, unlimited AI scanning, completed training certificates, manufacturer endorsement, sponsored manufacturer placements, vendor stock/pricing integration, or guaranteed diagnosis/part-fit claims."
+    },
+    "relationships": {
+      "appStoreReviewAttachments": {
+        "links": {
+          "self": "https://api.appstoreconnect.apple.com/v1/appStoreReviewDetails/6fdbb502-abf7-4bbd-8adc-0a7dd1825e29/relationships/appStoreReviewAttachments",
+          "related": "https://api.appstoreconnect.apple.com/v1/appStoreReviewDetails/6fdbb502-abf7-4bbd-8adc-0a7dd1825e29/appStoreReviewAttachments"
+        }
+      }
+    },
+    "links": {
+      "self": "https://api.appstoreconnect.apple.com/v1/appStoreReviewDetails/6fdbb502-abf7-4bbd-8adc-0a7dd1825e29"
+    }
+  },
+  "links": {
+    "self": "https://api.appstoreconnect.apple.com/v1/appStoreVersions/120f5e85-2a72-4788-858e-ea0f8a898339/appStoreReviewDetail"
+  }
+}

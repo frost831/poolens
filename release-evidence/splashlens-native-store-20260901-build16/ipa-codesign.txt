@@ -1,0 +1,10 @@
+Executable=/Users/macbookpro/SplashLens-asc-subscription-finish-2026-07-04/release-evidence/splashlens-native-store-20260901-build16/ipa-expanded-20260901T150620Z/Payload/SplashLens.app/SplashLens
+Identifier=com.splashlens.app
+Format=app bundle with Mach-O thin (arm64)
+CodeDirectory v=20400 size=566 flags=0x0(none) hashes=7+7 location=embedded
+Signature size=4782
+Signed Time=Sep 1, 2026 at 10:05:01 AM
+Info.plist entries=31
+TeamIdentifier=2XSLXV9H74
+Sealed Resources version=2 rules=10 files=3
+Internal requirements count=1 size=184

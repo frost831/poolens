@@ -1,0 +1,39 @@
+{
+  "data": {
+    "type": "appScreenshots",
+    "id": "4fa585a3-c884-4ee8-a5b0-659e16f41153",
+    "attributes": {
+      "fileSize": 280540,
+      "fileName": "03-cpo-scenario-answer-key.png",
+      "sourceFileChecksum": null,
+      "imageAsset": null,
+      "assetToken": "PurpleSource211/v4/2a/da/dc/2adadc66-e174-2e1c-3cad-11c336922a53/03-cpo-scenario-answer-key.png",
+      "assetType": "SCREENSHOT",
+      "uploadOperations": [
+        {
+          "method": "PUT",
+          "url": "https://northamerica-1.object-storage.apple.com/itmspod11-assets-massilia-200001/PurpleSource211/v4/2a/da/dc/2adadc66-e174-2e1c-3cad-11c336922a53/l-vAAUZHukvDbwHCwnvoYad5fWPHoRcTHcc78Nvm17g_U003d-1784650802027?partNumber=1&uploadId=068a9870-8520-11f1-aa52-4e625396d415&apple-asset-repo-correlation-key=W4HK5R6N7BRTOMV2XDTWS7WV54&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Date=20260721T162002Z&X-Amz-SignedHeaders=host&X-Amz-Credential=PKIAI0ZGNAD8WKMSOOX0%2F20260721%2Fnorthamerica-1%2Fs3%2Faws4_request&X-Amz-Expires=604800&X-Amz-Signature=90163860658b78e6ae53d7f3a450fd4dfc5f7e638c92da418d3fa63352fa8810",
+          "length": 280540,
+          "offset": 0,
+          "requestHeaders": [
+            {
+              "name": "Content-Type",
+              "value": "image/png"
+            }
+          ]
+        }
+      ],
+      "assetDeliveryState": {
+        "errors": [],
+        "warnings": null,
+        "state": "AWAITING_UPLOAD"
+      }
+    },
+    "links": {
+      "self": "https://api.appstoreconnect.apple.com/v1/appScreenshots/4fa585a3-c884-4ee8-a5b0-659e16f41153"
+    }
+  },
+  "links": {
+    "self": "https://api.appstoreconnect.apple.com/v1/appScreenshots"
+  }
+}

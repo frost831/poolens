@@ -1,0 +1,39 @@
+{
+  "data": {
+    "type": "appScreenshots",
+    "id": "249e9885-6f26-4b9f-bdc6-7afdac6f8341",
+    "attributes": {
+      "fileSize": 283509,
+      "fileName": "04-service-proof-handoff.png",
+      "sourceFileChecksum": null,
+      "imageAsset": null,
+      "assetToken": "PurpleSource221/v4/7b/d9/d2/7bd9d2e7-4034-e93d-d942-b96612101c6f/04-service-proof-handoff.png",
+      "assetType": "SCREENSHOT",
+      "uploadOperations": [
+        {
+          "method": "PUT",
+          "url": "https://northamerica-1.object-storage.apple.com/itmspod12-assets-massilia-200001/PurpleSource221/v4/7b/d9/d2/7bd9d2e7-4034-e93d-d942-b96612101c6f/eVC9Oi2CtosmJyDZcSxKeGtB9lxEwej6eaJT8ua-2go_U003d-1784650804034?partNumber=1&uploadId=07bbec80-8520-11f1-a1e3-70b2b9104691&apple-asset-repo-correlation-key=XVKAIHSY3PFUH3MHQZLJWA6UYU&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Date=20260721T162004Z&X-Amz-SignedHeaders=host&X-Amz-Credential=PKIAI0ZGNAD8WKMSOOX0%2F20260721%2Fnorthamerica-1%2Fs3%2Faws4_request&X-Amz-Expires=604800&X-Amz-Signature=16df3e4afbad68855f0688a864050d1bda58c7b652499f4ea6c8977caf661178",
+          "length": 283509,
+          "offset": 0,
+          "requestHeaders": [
+            {
+              "name": "Content-Type",
+              "value": "image/png"
+            }
+          ]
+        }
+      ],
+      "assetDeliveryState": {
+        "errors": [],
+        "warnings": null,
+        "state": "AWAITING_UPLOAD"
+      }
+    },
+    "links": {
+      "self": "https://api.appstoreconnect.apple.com/v1/appScreenshots/249e9885-6f26-4b9f-bdc6-7afdac6f8341"
+    }
+  },
+  "links": {
+    "self": "https://api.appstoreconnect.apple.com/v1/appScreenshots"
+  }
+}

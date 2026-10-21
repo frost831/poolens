@@ -1,0 +1,29 @@
+{
+  "data": [
+    {
+      "type": "appStoreVersionLocalizations",
+      "id": "a5a8f877-92ee-42e4-b885-ac2627c14033",
+      "attributes": {
+        "description": "SplashLens Field Tools is a proof-first pool and spa service app for technicians, CPOs, and facility operators who need PartSnap pool parts ID, fast equipment troubleshooting lookup, connected-pool field guidance, chemical dosing math, route notes, and Service Proof Passport records.\n\nUse SplashLens to:\n\n- Search 230+ pool equipment, automation, lighting, robot, cover, sanitizer, and controller troubleshooting entries\n- Use PartSnap to photograph unknown pool parts and receive possible manufacturer/model/part-number clues with verification prompts\n- Send quick in-app feedback after PartSnap or scan results so wrong or missing references can be reviewed\n- Review PartSnap Callback Risk Score, missing proof, Service Proof Passport saves, Mystery Part ticket IDs, and Apprentice Mode prompts\n- Build cleaner field packets for senior tech review, vendor support, or CRM notes\n- Capture Service Proof Passport history with readings, photos, voice notes, customer-safe summaries, and next-visit context\n- Use Facility Assist for daily checks, contamination events, basic equipment proof, and escalation packets\n- Calculate common chemical dosing adjustments\n- Build service notes, Route Brain field plans, Field Intelligence profiles, escalation packets, and report-style field records\n- Check filter guides, pump/filter checklists, and manual reference tools\n- Use optional online AI scan assistance for equipment displays, pool parts, and test strips\n\nManual lookup, Route Brain planning, calculators, notes, filters, and checklists are designed for field use and can work from the app shell after first load. Online AI scan features require internet access and are assistance only. Always verify AI scan output and Route Brain guidance against equipment manuals, calibrated tests, label directions, and professional field judgment.\n\nSplashLens is designed to help techs save time and reduce messy follow-up by documenting the stop more clearly. It does not guarantee diagnosis, repair, chemical safety, manufacturer support, part fit, CRM sync, or training certification.",
+        "locale": "en-US",
+        "keywords": "pool tech,PartSnap,parts,codes,pump,heater,salt,robot,proof,dosing,CPO,spa",
+        "marketingUrl": "https://splashlens.com",
+        "promotionalText": "Get off the pad faster, then turn the stop into a five-minute field lesson.",
+        "supportUrl": "https://splashlens.com",
+        "whatsNew": "Adds Field Learning OS workflows that turn real PartSnap misses, facility scenarios, and saved service proof into short field lessons with proof checks and review guidance. SplashLens remains a reference aid and does not replace manuals, codes, certification, or qualified judgment."
+      },
+      "links": {
+        "self": "https://api.appstoreconnect.apple.com/v1/appStoreVersionLocalizations/a5a8f877-92ee-42e4-b885-ac2627c14033"
+      }
+    }
+  ],
+  "links": {
+    "self": "https://api.appstoreconnect.apple.com/v1/appStoreVersions/39cd5096-b90b-4526-bb20-961d561b1655/appStoreVersionLocalizations?fields%5BappStoreVersionLocalizations%5D=whatsNew%2Ckeywords%2CmarketingUrl%2CsupportUrl%2Cdescription%2Clocale%2CpromotionalText&limit=50"
+  },
+  "meta": {
+    "paging": {
+      "total": 1,
+      "limit": 50
+    }
+  }
+}

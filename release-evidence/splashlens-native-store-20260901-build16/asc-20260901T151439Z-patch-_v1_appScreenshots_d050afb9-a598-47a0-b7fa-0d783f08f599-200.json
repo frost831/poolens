@@ -1,0 +1,39 @@
+{
+  "data": {
+    "type": "appScreenshots",
+    "id": "d050afb9-a598-47a0-b7fa-0d783f08f599",
+    "attributes": {
+      "fileSize": 350345,
+      "fileName": "04-repeat-issue-watch.png",
+      "sourceFileChecksum": null,
+      "imageAsset": null,
+      "assetToken": "PurpleSource221/v4/be/be/90/bebe9084-947d-ca51-5ef7-fc21d1a4513d/04-repeat-issue-watch.png",
+      "assetType": "SCREENSHOT",
+      "uploadOperations": [
+        {
+          "method": "PUT",
+          "url": "https://northamerica-1.object-storage.apple.com/itms-assets-prod-200001/PurpleSource221/v4/be/be/90/bebe9084-947d-ca51-5ef7-fc21d1a4513d/nOrgKR5ph-ZZ8JkWbmGq2SILzLbeAVfpbgspnXrZiec_U003d-1788275677351?partNumber=1&uploadId=d89973f0-a617-11f1-a99f-7e6486f3489d&apple-asset-repo-correlation-key=TXAFAUCK77BVKQJBSBJPEIEGQE&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Date=20260901T151437Z&X-Amz-SignedHeaders=host&X-Amz-Credential=PKIAI0ZGNAD8WKMSOOX0%2F20260901%2Fnorthamerica-1%2Fs3%2Faws4_request&X-Amz-Expires=604800&X-Amz-Signature=02bd39e620ea8b71e25bc5aa276cd1ff50a2b2282566224fd2f7e53361fbaad1",
+          "length": 350345,
+          "offset": 0,
+          "requestHeaders": [
+            {
+              "name": "Content-Type",
+              "value": "image/png"
+            }
+          ]
+        }
+      ],
+      "assetDeliveryState": {
+        "errors": [],
+        "warnings": null,
+        "state": "UPLOAD_COMPLETE"
+      }
+    },
+    "links": {
+      "self": "https://api.appstoreconnect.apple.com/v1/appScreenshots/d050afb9-a598-47a0-b7fa-0d783f08f599"
+    }
+  },
+  "links": {
+    "self": "https://api.appstoreconnect.apple.com/v1/appScreenshots/d050afb9-a598-47a0-b7fa-0d783f08f599"
+  }
+}

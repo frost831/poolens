@@ -1,0 +1,13 @@
+{
+  "checkedAt": "2026-07-21T15:40:34.956Z",
+  "appId": "6763644905",
+  "version": "1.0.7",
+  "versionId": "120f5e85-2a72-4788-858e-ea0f8a898339",
+  "localizationId": "224ea764-6a20-4325-9b62-23aee254a63b",
+  "promotionalText": "Get off the pad faster, then turn the stop into a five-minute field lesson.",
+  "whatsNew": "Refreshes native store routing and offline-ready cache handling, including safer dashboard/checkout links and updated PartSnap review export behavior for field workflows.",
+  "evidence": {
+    "patchFile": "release-evidence/splashlens-asc-field-learning-20260721/20260721T154034Z-patch-promotional-text-200.json",
+    "afterFile": "release-evidence/splashlens-asc-field-learning-20260721/20260721T154034Z-after-promotional-text-200.json"
+  }
+}

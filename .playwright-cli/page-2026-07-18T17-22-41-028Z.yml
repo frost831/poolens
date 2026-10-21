@@ -1,0 +1,107 @@
+- main [ref=f2e2]:
+  - generic [ref=f2e3]:
+    - generic [ref=f2e4]:
+      - heading "SplashLens Dashboard" [level=1] [ref=f2e5]
+      - paragraph [ref=f2e6]: "Owner view for real app usage: opens, installs, scans, searches, PartSnap proof actions, and recent events. This does not track email opens."
+    - generic [ref=f2e7]:
+      - textbox "Stats/admin secret" [ref=f2e8]
+      - combobox "Usage window" [ref=f2e9]:
+        - option "7 days" [selected]
+        - option "Today"
+        - option "3 days"
+        - option "30 days"
+      - button "Load" [ref=f2e10] [cursor=pointer]
+      - button "Forget" [ref=f2e11] [cursor=pointer]
+  - generic [ref=f2e12]: Enter your stats secret to load current usage.
+  - generic [ref=f2e13]:
+    - generic [ref=f2e14]:
+      - heading "Top Events" [level=2] [ref=f2e15]
+      - table
+    - generic [ref=f2e16]:
+      - heading "Top Sources" [level=2] [ref=f2e17]
+      - table
+    - generic [ref=f2e18]:
+      - heading "Top Referrers" [level=2] [ref=f2e19]
+      - table
+    - generic [ref=f2e20]:
+      - heading "Top Campaigns" [level=2] [ref=f2e21]
+      - table
+    - generic [ref=f2e22]:
+      - heading "Activation Types" [level=2] [ref=f2e23]
+      - table
+    - generic [ref=f2e24]:
+      - heading "Activation Sources" [level=2] [ref=f2e25]
+      - table
+    - generic [ref=f2e26]:
+      - heading "Activation Campaigns" [level=2] [ref=f2e27]
+      - table
+    - generic [ref=f2e28]:
+      - heading "User Roles" [level=2] [ref=f2e29]
+      - table
+    - generic [ref=f2e30]:
+      - heading "Languages" [level=2] [ref=f2e31]
+      - table
+    - generic [ref=f2e32]:
+      - heading "Requested Languages" [level=2] [ref=f2e33]
+      - table
+    - generic [ref=f2e34]:
+      - heading "Markets" [level=2] [ref=f2e35]
+      - table
+    - generic [ref=f2e36]:
+      - heading "Payment Plans" [level=2] [ref=f2e37]
+      - table
+    - generic [ref=f2e38]:
+      - heading "Payment Features" [level=2] [ref=f2e39]
+      - table
+    - generic [ref=f2e40]:
+      - heading "Payment Plan Keys" [level=2] [ref=f2e41]
+      - table
+    - generic [ref=f2e42]:
+      - heading "PartSnap Corpus Status" [level=2] [ref=f2e43]
+      - table
+    - generic [ref=f2e44]:
+      - heading "Corpus Source Tiers" [level=2] [ref=f2e45]
+      - table
+    - generic [ref=f2e46]:
+      - heading "Corpus Match Levels" [level=2] [ref=f2e47]
+      - table
+    - generic [ref=f2e48]:
+      - heading "Corpus Health" [level=2] [ref=f2e49]
+      - table
+    - generic [ref=f2e50]:
+      - heading "Recent Payments" [level=2] [ref=f2e51]
+      - table
+    - generic [ref=f2e52]:
+      - heading "Manual Searches" [level=2] [ref=f2e53]
+      - table
+    - generic [ref=f2e54]:
+      - heading "Demand Lanes" [level=2] [ref=f2e55]
+      - table
+    - generic [ref=f2e56]:
+      - heading "PartSnap Categories" [level=2] [ref=f2e57]
+      - table
+    - generic [ref=f2e58]:
+      - heading "Scan Modes" [level=2] [ref=f2e59]
+      - table
+    - generic [ref=f2e60]:
+      - heading "Callback Risk" [level=2] [ref=f2e61]
+      - table
+    - generic [ref=f2e62]:
+      - heading "Recent Sessions" [level=2] [ref=f2e63]
+      - table
+    - generic [ref=f2e64]:
+      - heading "PartSnap Review Status" [level=2] [ref=f2e65]
+      - table
+    - generic [ref=f2e66]:
+      - heading "Top Paths" [level=2] [ref=f2e67]
+      - table
+    - generic [ref=f2e68]:
+      - heading "Senior Tech Review Queue" [level=2] [ref=f2e69]
+      - generic [ref=f2e70]:
+        - button "Download Review JSON" [disabled] [ref=f2e71]
+        - button "Copy Promotion Command" [disabled] [ref=f2e72]
+        - generic [ref=f2e73]: Load the dashboard to export PartSnap review tickets.
+      - table
+    - generic [ref=f2e74]:
+      - heading "Recent Events" [level=2] [ref=f2e75]
+      - table

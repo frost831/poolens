@@ -1,0 +1,25 @@
+{
+  "data": [
+    {
+      "type": "appStoreVersionLocalizations",
+      "id": "a5a8f877-92ee-42e4-b885-ac2627c14033",
+      "attributes": {
+        "locale": "en-US",
+        "promotionalText": null,
+        "whatsNew": null
+      },
+      "links": {
+        "self": "https://api.appstoreconnect.apple.com/v1/appStoreVersionLocalizations/a5a8f877-92ee-42e4-b885-ac2627c14033"
+      }
+    }
+  ],
+  "links": {
+    "self": "https://api.appstoreconnect.apple.com/v1/appStoreVersions/39cd5096-b90b-4526-bb20-961d561b1655/appStoreVersionLocalizations?fields%5BappStoreVersionLocalizations%5D=whatsNew%2Clocale%2CpromotionalText&limit=50"
+  },
+  "meta": {
+    "paging": {
+      "total": 1,
+      "limit": 50
+    }
+  }
+}

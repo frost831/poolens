@@ -1,0 +1,225 @@
+- generic [ref=e2]:
+  - banner [ref=e3]:
+    - generic [ref=e4]:
+      - generic [ref=e11]: SplashLens
+      - generic [ref=e12]: FIELD
+      - generic "Checking offline status..." [ref=e13]
+    - button "Open Field Signals" [ref=e15] [cursor=pointer]
+  - generic [ref=e18]:
+    - generic [ref=e19]: Preferred language
+    - combobox "Preferred language" [ref=e20]:
+      - option "English" [selected]
+      - option "Español"
+  - region "Choose SplashLens mode" [ref=e21]:
+    - generic [ref=e22]:
+      - paragraph [ref=e23]: Pick the stop
+      - heading "What are you trying to finish?" [level=1] [ref=e24]
+      - paragraph [ref=e25]: Choose the closest lane. Every tool stays available.
+      - generic "SplashLens fast workflow" [ref=e26]:
+        - generic [ref=e27]:
+          - strong [ref=e28]: Identify it
+          - generic [ref=e29]: Part, code, spa pack, robot, light, or smart pad.
+        - generic [ref=e30]:
+          - strong [ref=e31]: Prove it
+          - generic [ref=e32]: Photos, readings, labels, and missing checks.
+        - generic [ref=e33]:
+          - strong [ref=e34]: Send it
+          - generic [ref=e35]: Clean note for customer, boss, counter, or trainer.
+      - generic "First-use preferences" [ref=e36]:
+        - generic [ref=e37]:
+          - strong [ref=e38]: Language
+          - generic [ref=e39]:
+            - button "English" [ref=e40] [cursor=pointer]
+            - button "Español" [ref=e41] [cursor=pointer]
+        - generic [ref=e42]:
+          - strong [ref=e43]: First result style
+          - generic [ref=e44]:
+            - button "Numbered steps" [ref=e45] [cursor=pointer]
+            - button "Visual proof" [ref=e46] [cursor=pointer]
+            - button "Compact" [ref=e47] [cursor=pointer]
+      - generic [ref=e48]:
+        - button "Service Tech PartSnap, codes, dosing, route notes, and job proof." [ref=e49] [cursor=pointer]:
+          - strong [ref=e50]: Service Tech
+          - generic [ref=e51]: PartSnap, codes, dosing, route notes, and job proof.
+        - button "Facility / CPO Daily checks, contamination, basic proof, and help packets." [ref=e52] [cursor=pointer]:
+          - strong [ref=e53]: Facility / CPO
+          - generic [ref=e54]: Daily checks, contamination, basic proof, and help packets.
+        - button "Counter Part, model, photo, and proof before ordering." [ref=e55] [cursor=pointer]:
+          - strong [ref=e56]: Counter
+          - generic [ref=e57]: Part, model, photo, and proof before ordering.
+        - button "Trainer Short lessons from real field stops." [ref=e58] [cursor=pointer]:
+          - strong [ref=e59]: Trainer
+          - generic [ref=e60]: Short lessons from real field stops.
+        - button "Homeowner Plain notes, basic math, and when to call a pro." [ref=e61] [cursor=pointer]:
+          - strong [ref=e62]: Homeowner
+          - generic [ref=e63]: Plain notes, basic math, and when to call a pro.
+  - main [ref=e64]:
+    - generic [ref=e65]:
+      - generic [ref=e66]:
+        - paragraph [ref=e67]: PartSnap first - proof before ordering
+        - heading "Find the part. Prove the path." [level=1] [ref=e68]
+        - paragraph [ref=e69]: Photo it, verify it, packet it, then move.
+        - generic "Fast field workflow" [ref=e70]:
+          - button "1 ID Part photo + label" [ref=e71] [cursor=pointer]:
+            - generic [ref=e72]: "1"
+            - strong [ref=e73]: ID Part
+            - generic [ref=e74]: photo + label
+          - button "2 Scan Code display / plate" [ref=e75] [cursor=pointer]:
+            - generic [ref=e76]: "2"
+            - strong [ref=e77]: Scan Code
+            - generic [ref=e78]: display / plate
+          - button "3 Search brand / symptom" [ref=e79] [cursor=pointer]:
+            - generic [ref=e80]: "3"
+            - strong [ref=e81]: Search
+            - generic [ref=e82]: brand / symptom
+          - button "4 Dose pool math" [ref=e83] [cursor=pointer]:
+            - generic [ref=e84]: "4"
+            - strong [ref=e85]: Dose
+            - generic [ref=e86]: pool math
+          - button "5 Note talk + save" [ref=e87] [cursor=pointer]:
+            - generic [ref=e88]: "5"
+            - strong [ref=e89]: Note
+            - generic [ref=e90]: talk + save
+        - paragraph [ref=e91]:
+          - strong [ref=e92]: "Offline:"
+          - text: manual lookup, calculators, guides.
+          - strong [ref=e93]: "Online:"
+          - text: AI scan, PartSnap, voice.
+      - region "CPO and facility manager quick start" [ref=e94]:
+        - heading "CPO / Facility quick start" [level=2] [ref=e95]
+        - paragraph [ref=e96]: For managers who need the first safe step, not a deep repair tree. Pick the situation, document it, then escalate when it is above CPO scope.
+        - generic [ref=e97]:
+          - button "Daily Pool Check readings, clarity, equipment sound" [ref=e98] [cursor=pointer]:
+            - strong [ref=e99]: Daily Pool Check
+            - generic [ref=e100]: readings, clarity, equipment sound
+          - button "Chemical Dose volume, target, product math" [ref=e101] [cursor=pointer]:
+            - strong [ref=e102]: Chemical Dose
+            - generic [ref=e103]: volume, target, product math
+          - button "Contamination Event vomit, fecal, body fluid" [ref=e104] [cursor=pointer]:
+            - strong [ref=e105]: Contamination Event
+            - generic [ref=e106]: vomit, fecal, body fluid
+          - button "Pump / Motor Basic water, baskets, breaker, noise" [ref=e107] [cursor=pointer]:
+            - strong [ref=e108]: Pump / Motor Basic
+            - generic [ref=e109]: water, baskets, breaker, noise
+          - button "Find Manual / Label equipment proof and QR path" [ref=e110] [cursor=pointer]:
+            - strong [ref=e111]: Find Manual / Label
+            - generic [ref=e112]: equipment proof and QR path
+          - button "Call Support packet first, then expert help" [ref=e113] [cursor=pointer]:
+            - strong [ref=e114]: Call Support
+            - generic [ref=e115]: packet first, then expert help
+      - region "PartSnap parts identification" [ref=e116]:
+        - strong [ref=e117]: PartSnap flow
+        - generic [ref=e118]:
+          - generic [ref=e119]:
+            - generic [ref=e120]: 1. Part
+            - generic [ref=e121]: close + lit
+          - generic [ref=e122]:
+            - generic [ref=e123]: 2. Label
+            - generic [ref=e124]: model plate
+          - generic [ref=e125]:
+            - generic [ref=e126]: 3. Proof
+            - generic [ref=e127]: marking / size
+          - generic [ref=e128]:
+            - generic [ref=e129]: 4. Risk
+            - generic [ref=e130]: callback flag
+          - generic [ref=e131]:
+            - generic [ref=e132]: 5. Packet
+            - generic [ref=e133]: senior / vendor
+      - generic "Fast troubleshooting lanes" [ref=e134]:
+        - button "Spa Packs Balboa, Gecko, Waterway, flow proof." [ref=e135] [cursor=pointer]:
+          - strong [ref=e136]: Spa Packs
+          - generic [ref=e137]: Balboa, Gecko, Waterway, flow proof.
+        - button "Robots Dolphin, Aiper, Polaris, Beatbot, WYBOT." [ref=e138] [cursor=pointer]:
+          - strong [ref=e139]: Robots
+          - generic [ref=e140]: Dolphin, Aiper, Polaris, Beatbot, WYBOT.
+        - button "Automation Omni, IntelliCenter, iAquaLink, relays." [ref=e141] [cursor=pointer]:
+          - strong [ref=e142]: Automation
+          - generic [ref=e143]: Omni, IntelliCenter, iAquaLink, relays.
+        - button "Lights ColorLogic, IntelliBrite, GFCI, niches." [ref=e144] [cursor=pointer]:
+          - strong [ref=e145]: Lights
+          - generic [ref=e146]: ColorLogic, IntelliBrite, GFCI, niches.
+        - button "Salt Cells, flow sensors, comms, scaling." [ref=e147] [cursor=pointer]:
+          - strong [ref=e148]: Salt
+          - generic [ref=e149]: Cells, flow sensors, comms, scaling.
+        - button "Chem Feed ORP, pH, AOP, ozone, feeders." [ref=e150] [cursor=pointer]:
+          - strong [ref=e151]: Chem Feed
+          - generic [ref=e152]: ORP, pH, AOP, ozone, feeders.
+      - generic "SplashLens field tools" [ref=e153]:
+        - generic [ref=e154]:
+          - strong [ref=e155]: 260+
+          - generic [ref=e156]: Current entries
+        - generic [ref=e157]:
+          - strong [ref=e158]: $0
+          - generic [ref=e159]: No card
+        - generic [ref=e160]:
+          - strong [ref=e161]: Offline
+          - generic [ref=e162]: Manual tools
+      - generic "Route Ready service authority" [ref=e163]:
+        - strong [ref=e164]: Route Ready service authority
+        - generic [ref=e165]: Use the chips first. Save the longer proof and training notes for review after the stop.
+      - region "New Tech Radar and Connected Pool Network" [ref=e166]:
+        - heading "PartSnap + Connected Pool Network" [level=2] [ref=e167]
+        - paragraph [ref=e168]: Fast lanes for smart gear and weird stops.
+        - generic [ref=e169]:
+          - button "Connected Pool Network Omni, IntelliCenter, iAquaLink, RS-485, relays, actuators, app pairing." [ref=e170]:
+            - strong [ref=e171]: Connected Pool Network
+            - generic [ref=e172]: Omni, IntelliCenter, iAquaLink, RS-485, relays, actuators, app pairing.
+          - button "Robot Field Guide Dolphin, Polaris, Aiper, Beatbot, WYBOT, Ecovacs, iGarden, Betta." [ref=e173]:
+            - strong [ref=e174]: Robot Field Guide
+            - generic [ref=e175]: Dolphin, Polaris, Aiper, Beatbot, WYBOT, Ecovacs, iGarden, Betta.
+          - button "Spa Pack Lane Balboa, Gecko, Waterway, topsides, flow and heater proof." [ref=e176]:
+            - strong [ref=e177]: Spa Pack Lane
+            - generic [ref=e178]: Balboa, Gecko, Waterway, topsides, flow and heater proof.
+          - button "Swim Spa Proof Current pumps, covers, suctions, GFCI timing, and facility handoff." [ref=e179]:
+            - strong [ref=e180]: Swim Spa Proof
+            - generic [ref=e181]: Current pumps, covers, suctions, GFCI timing, and facility handoff.
+          - button "PartSnap Proof Photo, label, proof checklist, senior/vendor packet." [ref=e182]:
+            - strong [ref=e183]: PartSnap Proof
+            - generic [ref=e184]: Photo, label, proof checklist, senior/vendor packet.
+          - button "Risk Flags Flow fault plus dirty filter plus weak proof means higher callback risk." [ref=e185]:
+            - strong [ref=e186]: Risk Flags
+            - generic [ref=e187]: Flow fault plus dirty filter plus weak proof means higher callback risk.
+          - button "Training Mode Turn real field symptoms into 5-minute new-tech lessons and senior-tech packets." [ref=e188]:
+            - strong [ref=e189]: Training Mode
+            - generic [ref=e190]: Turn real field symptoms into 5-minute new-tech lessons and senior-tech packets.
+      - searchbox "Search codes, symptoms, brands..." [ref=e192]
+      - generic [ref=e193]:
+        - button "Hayward" [ref=e194] [cursor=pointer]
+        - button "Pentair" [ref=e195] [cursor=pointer]
+        - button "Jandy / Zodiac" [ref=e196] [cursor=pointer]
+        - button "Maytronics (Dolphin)" [ref=e197] [cursor=pointer]
+        - button "Aiper" [ref=e198] [cursor=pointer]
+        - button "Raypak" [ref=e199] [cursor=pointer]
+        - button "Beatbot" [ref=e200] [cursor=pointer]
+        - button "Betta (BWT)" [ref=e201] [cursor=pointer]
+        - button "Polaris (Zodiac)" [ref=e202] [cursor=pointer]
+        - button "IntelliFlo (Pentair)" [ref=e203] [cursor=pointer]
+        - button "Hayward Salt (TurboCell / AquaRite)" [ref=e204] [cursor=pointer]
+        - button "Pentair Automation (IntelliTouch / EasyTouch)" [ref=e205] [cursor=pointer]
+        - button "AquaCal" [ref=e206] [cursor=pointer]
+        - button "Sta-Rite" [ref=e207] [cursor=pointer]
+        - button "Waterway" [ref=e208] [cursor=pointer]
+        - button "CMP / PAL / S.R. Smith Lighting" [ref=e209] [cursor=pointer]
+        - button "Robot Cleaners / Smart Robots" [ref=e210] [cursor=pointer]
+        - button "Connected Pool Network" [ref=e211] [cursor=pointer]
+        - button "Smart Chemical Dispensers" [ref=e212] [cursor=pointer]
+        - button "Handheld Vacuums / Leaf Vacs" [ref=e213] [cursor=pointer]
+        - button "Hot Tubs / Spas" [ref=e214] [cursor=pointer]
+        - button "Water Features / Valves / Actuators" [ref=e215] [cursor=pointer]
+        - button "UV / Ozone / AOP / Feeders" [ref=e216] [cursor=pointer]
+        - button "Commercial Chem Controllers" [ref=e217] [cursor=pointer]
+        - button "Automatic Covers" [ref=e218] [cursor=pointer]
+        - button "Pool Safety Monitoring" [ref=e219] [cursor=pointer]
+      - generic [ref=e221]:
+        - paragraph [ref=e225]: Pick a brand or search
+        - paragraph [ref=e226]: Hayward / Pentair / Jandy / Maytronics / Aiper / Raypak
+  - navigation "SplashLens field tools" [ref=e227]:
+    - button "Errors" [ref=e228] [cursor=pointer]
+    - button "Dosing" [ref=e233] [cursor=pointer]
+    - button "Volume" [ref=e237] [cursor=pointer]
+    - button "Filters" [ref=e241] [cursor=pointer]
+    - button "Guide" [ref=e245] [cursor=pointer]
+    - button "Report" [ref=e250] [cursor=pointer]
+    - button "Pools" [ref=e255] [cursor=pointer]
+    - button "Route" [ref=e260] [cursor=pointer]
+    - button "Scan" [ref=e264] [cursor=pointer]

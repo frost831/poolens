@@ -1,0 +1,117 @@
+{
+  "data": [
+    {
+      "type": "appStoreVersions",
+      "id": "39cd5096-b90b-4526-bb20-961d561b1655",
+      "attributes": {
+        "platform": "IOS",
+        "versionString": "1.0.8",
+        "appStoreState": "REJECTED",
+        "appVersionState": "REJECTED"
+      },
+      "links": {
+        "self": "https://api.appstoreconnect.apple.com/v1/appStoreVersions/39cd5096-b90b-4526-bb20-961d561b1655"
+      }
+    },
+    {
+      "type": "appStoreVersions",
+      "id": "120f5e85-2a72-4788-858e-ea0f8a898339",
+      "attributes": {
+        "platform": "IOS",
+        "versionString": "1.0.7",
+        "appStoreState": "READY_FOR_SALE",
+        "appVersionState": "READY_FOR_DISTRIBUTION"
+      },
+      "links": {
+        "self": "https://api.appstoreconnect.apple.com/v1/appStoreVersions/120f5e85-2a72-4788-858e-ea0f8a898339"
+      }
+    },
+    {
+      "type": "appStoreVersions",
+      "id": "5ff7d3e5-8264-4e35-bd1f-44f097da15a2",
+      "attributes": {
+        "platform": "IOS",
+        "versionString": "1.0.6",
+        "appStoreState": "READY_FOR_SALE",
+        "appVersionState": "READY_FOR_DISTRIBUTION"
+      },
+      "links": {
+        "self": "https://api.appstoreconnect.apple.com/v1/appStoreVersions/5ff7d3e5-8264-4e35-bd1f-44f097da15a2"
+      }
+    },
+    {
+      "type": "appStoreVersions",
+      "id": "3417af1d-f7ea-4a7b-a872-e595d9238040",
+      "attributes": {
+        "platform": "IOS",
+        "versionString": "1.0.4",
+        "appStoreState": "READY_FOR_SALE",
+        "appVersionState": "READY_FOR_DISTRIBUTION"
+      },
+      "links": {
+        "self": "https://api.appstoreconnect.apple.com/v1/appStoreVersions/3417af1d-f7ea-4a7b-a872-e595d9238040"
+      }
+    },
+    {
+      "type": "appStoreVersions",
+      "id": "ac084363-e767-4e3b-92c6-ad9768ea0a32",
+      "attributes": {
+        "platform": "IOS",
+        "versionString": "1.0.3",
+        "appStoreState": "READY_FOR_SALE",
+        "appVersionState": "READY_FOR_DISTRIBUTION"
+      },
+      "links": {
+        "self": "https://api.appstoreconnect.apple.com/v1/appStoreVersions/ac084363-e767-4e3b-92c6-ad9768ea0a32"
+      }
+    },
+    {
+      "type": "appStoreVersions",
+      "id": "6648796d-e31f-4725-944b-d8227ec2774a",
+      "attributes": {
+        "platform": "IOS",
+        "versionString": "1.0.2",
+        "appStoreState": "READY_FOR_SALE",
+        "appVersionState": "READY_FOR_DISTRIBUTION"
+      },
+      "links": {
+        "self": "https://api.appstoreconnect.apple.com/v1/appStoreVersions/6648796d-e31f-4725-944b-d8227ec2774a"
+      }
+    },
+    {
+      "type": "appStoreVersions",
+      "id": "ec107c1c-1bd0-4131-ab24-38fb0eac5c65",
+      "attributes": {
+        "platform": "IOS",
+        "versionString": "1.0.1",
+        "appStoreState": "READY_FOR_SALE",
+        "appVersionState": "READY_FOR_DISTRIBUTION"
+      },
+      "links": {
+        "self": "https://api.appstoreconnect.apple.com/v1/appStoreVersions/ec107c1c-1bd0-4131-ab24-38fb0eac5c65"
+      }
+    },
+    {
+      "type": "appStoreVersions",
+      "id": "68721c64-a109-44c6-97e9-a9463b00949c",
+      "attributes": {
+        "platform": "IOS",
+        "versionString": "1.0",
+        "appStoreState": "READY_FOR_SALE",
+        "appVersionState": "READY_FOR_DISTRIBUTION"
+      },
+      "links": {
+        "self": "https://api.appstoreconnect.apple.com/v1/appStoreVersions/68721c64-a109-44c6-97e9-a9463b00949c"
+      }
+    }
+  ],
+  "links": {
+    "self": "https://api.appstoreconnect.apple.com/v1/apps/6763644905/appStoreVersions?fields%5BappStoreVersions%5D=versionString%2CappStoreState%2CappVersionState%2Cplatform&filter%5Bplatform%5D=IOS&limit=20"
+  },
+  "meta": {
+    "paging": {
+      "total": 8,
+      "limit": 20
+    }
+  }
+}

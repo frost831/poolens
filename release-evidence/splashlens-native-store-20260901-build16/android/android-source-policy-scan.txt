@@ -1,0 +1,20 @@
+android-twa/app/build.gradle:26:    launchUrl: '/?store=android', // The start path for the TWA. Must be relative to the domain.
+android-twa/app/build.gradle:58:        minSdkVersion 21
+android-twa/app/build.gradle:59:        targetSdkVersion 36
+android-twa/app/build.gradle:60:        versionCode 8
+android-twa/app/build.gradle:61:        versionName "1.0.9"
+android-twa/app/build.gradle:70:        def launchUrl = "https://" + twaManifest.hostName + twaManifest.launchUrl
+android-twa/app/build.gradle:71:        resValue "string", "launchUrl", launchUrl
+android-twa/app/build.gradle:79:            resValue "string", "webManifestUrl", 'https://app.splashlens.com/manifest.json'
+android-twa/app/build/outputs/logs/manifest-merger-release-report.txt:41:	android:versionName
+android-twa/app/build/outputs/logs/manifest-merger-release-report.txt:43:	android:versionCode
+android-twa/app/build/outputs/logs/manifest-merger-release-report.txt:47:uses-permission#android.permission.POST_NOTIFICATIONS
+android-twa/app/build/outputs/logs/manifest-merger-release-report.txt:366:	android:targetSdkVersion
+android-twa/app/build/outputs/logs/manifest-merger-release-report.txt:368:	android:minSdkVersion
+android-twa/app/build/outputs/logs/manifest-merger-release-report.txt:408:uses-permission#${applicationId}.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION
+android-twa/app/build/outputs/logs/manifest-merger-release-report.txt:412:uses-permission#com.splashlens.fieldtools.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION
+android-twa/app/src/main/AndroidManifest.xml:23:    package="com.splashlens.fieldtools">
+android-twa/app/src/main/AndroidManifest.xml:26:        <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+android-twa/app/src/main/AndroidManifest.xml:53:                android:value="@string/webManifestUrl" />
+android-twa/app/src/main/AndroidManifest.xml:71:                    android:value="@string/launchUrl" />
+android-twa/app/src/main/AndroidManifest.xml:84:                android:value="@string/launchUrl" />

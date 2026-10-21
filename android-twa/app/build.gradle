@@ -56,9 +56,9 @@ android {
     defaultConfig {
         applicationId "com.splashlens.fieldtools"
         minSdkVersion 21
-        targetSdkVersion 35
-        versionCode 1
-        versionName "1"
+        targetSdkVersion 36
+        versionCode 10
+        versionName "1.0.9"
 
         // The name for the application
         resValue "string", "appName", twaManifest.name

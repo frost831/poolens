@@ -1,0 +1,33 @@
+{
+  "SplashLens.ipa" => [
+    0 => {
+      "architectures" => [
+        0 => "arm64"
+      ]
+      "buildNumber" => "16"
+      "certificate" => {
+        "dateExpires" => "5/16/27"
+        "SHA1" => "F4C3CB7C2EFD17F60127875780539A594ADF1C96"
+        "type" => "Apple Distribution"
+      }
+      "entitlements" => {
+        "application-identifier" => "2XSLXV9H74.com.splashlens.app"
+        "beta-reports-active" => true
+        "com.apple.developer.team-identifier" => "2XSLXV9H74"
+        "get-task-allow" => false
+      }
+      "name" => "SplashLens.app"
+      "profile" => {
+        "dateExpires" => "5/16/27"
+        "name" => "iOS Team Store Provisioning Profile: com.splashlens.app"
+        "UUID" => "1898b6af-59b9-4414-8502-c84805ca0e8b"
+      }
+      "symbols" => true
+      "team" => {
+        "id" => "2XSLXV9H74"
+        "name" => ""
+      }
+      "versionNumber" => "1.0.9"
+    }
+  ]
+}

@@ -1,0 +1,36 @@
+- generic [ref=e2]:
+  - banner [ref=e3]:
+    - generic [ref=e4]:
+      - generic [ref=e11]: SplashLens
+      - generic [ref=e12]: FIELD
+      - generic "Checking offline status..." [ref=e13]
+  - generic [ref=e14]:
+    - generic [ref=e15]: Preferred language
+    - combobox "Preferred language" [ref=e16]:
+      - option "English" [selected]
+      - option "Español"
+  - main [ref=e50]:
+    - generic [ref=e266]:
+      - generic [ref=e267]:
+        - button "ERRORS" [ref=e268] [cursor=pointer]
+        - button "PARTSNAP" [ref=e269] [cursor=pointer]
+        - button "STRIP" [ref=e270] [cursor=pointer]
+        - button "LOOKUP" [ref=e271] [cursor=pointer]
+        - button "CHEM" [ref=e272] [cursor=pointer]
+      - generic [ref=e273]: AI READY - 10 FREE SCANS LEFT
+      - generic [ref=e276]:
+        - generic [ref=e279]: AIM AT ERROR CODE DISPLAY - TAP CAPTURE
+        - generic [ref=e280]:
+          - button "CAPTURE" [ref=e281] [cursor=pointer]
+          - button "LIGHT" [ref=e282] [cursor=pointer]
+          - button "STOP" [ref=e283] [cursor=pointer]
+  - navigation "SplashLens field tools" [ref=e210]:
+    - button "Errors" [ref=e211] [cursor=pointer]
+    - button "Dosing" [ref=e216] [cursor=pointer]
+    - button "Volume" [ref=e220] [cursor=pointer]
+    - button "Filters" [ref=e224] [cursor=pointer]
+    - button "Guide" [ref=e228] [cursor=pointer]
+    - button "Report" [ref=e233] [cursor=pointer]
+    - button "Pools" [ref=e238] [cursor=pointer]
+    - button "Route" [ref=e243] [cursor=pointer]
+    - button "Scan" [active] [ref=e247] [cursor=pointer]

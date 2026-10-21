@@ -1,0 +1,48 @@
+{
+  "data": {
+    "type": "reviewSubmissions",
+    "id": "0fb1b183-6e15-4bf5-94b0-3471acdad271",
+    "attributes": {
+      "submittedDate": "2026-09-01T15:15:00.465Z",
+      "state": "WAITING_FOR_REVIEW"
+    },
+    "relationships": {
+      "items": {
+        "meta": {
+          "paging": {
+            "total": 1,
+            "limit": 10
+          }
+        },
+        "data": [
+          {
+            "type": "reviewSubmissionItems",
+            "id": "MGZiMWIxODMtNmUxNS00YmY1LTk0YjAtMzQ3MWFjZGFkMjcxfDZ8ODkwNjUzMjAz"
+          }
+        ],
+        "links": {
+          "self": "https://api.appstoreconnect.apple.com/v1/reviewSubmissions/0fb1b183-6e15-4bf5-94b0-3471acdad271/relationships/items",
+          "related": "https://api.appstoreconnect.apple.com/v1/reviewSubmissions/0fb1b183-6e15-4bf5-94b0-3471acdad271/items"
+        }
+      }
+    },
+    "links": {
+      "self": "https://api.appstoreconnect.apple.com/v1/reviewSubmissions/0fb1b183-6e15-4bf5-94b0-3471acdad271"
+    }
+  },
+  "included": [
+    {
+      "type": "reviewSubmissionItems",
+      "id": "MGZiMWIxODMtNmUxNS00YmY1LTk0YjAtMzQ3MWFjZGFkMjcxfDZ8ODkwNjUzMjAz",
+      "attributes": {
+        "state": "READY_FOR_REVIEW"
+      },
+      "links": {
+        "self": "https://api.appstoreconnect.apple.com/v1/reviewSubmissionItems/MGZiMWIxODMtNmUxNS00YmY1LTk0YjAtMzQ3MWFjZGFkMjcxfDZ8ODkwNjUzMjAz"
+      }
+    }
+  ],
+  "links": {
+    "self": "https://api.appstoreconnect.apple.com/v1/reviewSubmissions/0fb1b183-6e15-4bf5-94b0-3471acdad271?fields%5BreviewSubmissionItems%5D=appStoreVersion%2Cstate&fields%5BreviewSubmissions%5D=state%2CsubmittedDate%2Citems&include=items"
+  }
+}

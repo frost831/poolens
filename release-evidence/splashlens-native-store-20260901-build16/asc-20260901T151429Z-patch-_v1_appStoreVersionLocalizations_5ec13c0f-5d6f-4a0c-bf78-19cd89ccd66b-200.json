@@ -1,0 +1,41 @@
+{
+  "data": {
+    "type": "appStoreVersionLocalizations",
+    "id": "5ec13c0f-5d6f-4a0c-bf78-19cd89ccd66b",
+    "attributes": {
+      "description": "SplashLens helps pool and spa techs get off the pad faster.\n\nUse SplashLens to:\n\n- Identify the part with PartSnap and clear photo prompts\n- Check equipment codes and symptom references\n- Prove the visit with saved job history, notes, readings, and customer-safe summaries\n- Use PartSnap Pro and Saved Job Pro when more field capacity is needed\n- Give teams a shared Team Field View for cleaner handoffs\n- Use Facility Assist for daily checks, contamination events, and escalation packets\n- Watch repeat issues before leaving the stop\n- Calculate common chemical dosing adjustments\n- Keep manual lookup, calculators, notes, filters, and checklists available from the app shell after first load\n\nThe core app is free. Optional paid add-ons are available on the web, while native store mode keeps direct web checkout calls to action hidden.\n\nOnline AI scan features require internet access and are assistance only. Always verify scan output, part fit, code lookup, dosing math, and job notes against equipment manuals, model numbers, calibrated tests, label directions, and qualified field judgment.\n\nSplashLens does not guarantee diagnosis, repair, chemical safety, manufacturer support, part fit, or training certification.",
+      "locale": "en-US",
+      "keywords": "pool tech,PartSnap,parts,codes,pump,heater,salt,robot,proof,dosing,CPO,spa",
+      "marketingUrl": "https://splashlens.com",
+      "promotionalText": "Get off the pad faster. Identify the part, check the code, and prove the visit.",
+      "supportUrl": "https://splashlens.com",
+      "whatsNew": "Adds the current field workflow language for PartSnap Pro, Saved Job Pro, Team Field View, Facility Assist, Repeat Issue Watch, and saved job history. SplashLens remains a reference aid and does not replace manuals, model numbers, code requirements, or qualified judgment."
+    },
+    "relationships": {
+      "appScreenshotSets": {
+        "links": {
+          "self": "https://api.appstoreconnect.apple.com/v1/appStoreVersionLocalizations/5ec13c0f-5d6f-4a0c-bf78-19cd89ccd66b/relationships/appScreenshotSets",
+          "related": "https://api.appstoreconnect.apple.com/v1/appStoreVersionLocalizations/5ec13c0f-5d6f-4a0c-bf78-19cd89ccd66b/appScreenshotSets"
+        }
+      },
+      "appPreviewSets": {
+        "links": {
+          "self": "https://api.appstoreconnect.apple.com/v1/appStoreVersionLocalizations/5ec13c0f-5d6f-4a0c-bf78-19cd89ccd66b/relationships/appPreviewSets",
+          "related": "https://api.appstoreconnect.apple.com/v1/appStoreVersionLocalizations/5ec13c0f-5d6f-4a0c-bf78-19cd89ccd66b/appPreviewSets"
+        }
+      },
+      "searchKeywords": {
+        "links": {
+          "self": "https://api.appstoreconnect.apple.com/v1/appStoreVersionLocalizations/5ec13c0f-5d6f-4a0c-bf78-19cd89ccd66b/relationships/searchKeywords",
+          "related": "https://api.appstoreconnect.apple.com/v1/appStoreVersionLocalizations/5ec13c0f-5d6f-4a0c-bf78-19cd89ccd66b/searchKeywords"
+        }
+      }
+    },
+    "links": {
+      "self": "https://api.appstoreconnect.apple.com/v1/appStoreVersionLocalizations/5ec13c0f-5d6f-4a0c-bf78-19cd89ccd66b"
+    }
+  },
+  "links": {
+    "self": "https://api.appstoreconnect.apple.com/v1/appStoreVersionLocalizations/5ec13c0f-5d6f-4a0c-bf78-19cd89ccd66b"
+  }
+}

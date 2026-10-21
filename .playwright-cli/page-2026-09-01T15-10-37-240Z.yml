@@ -1,0 +1,255 @@
+- generic [ref=f3e2]:
+  - banner [ref=f3e3]:
+    - generic [ref=f3e4]:
+      - generic [ref=f3e11]: SplashLens
+      - generic [ref=f3e12]: FIELD
+      - generic "Offline ready - core tools cached" [ref=f3e13]
+    - button "Open Field Signals" [ref=f3e15] [cursor=pointer]:
+      - generic [ref=f3e18]: "1"
+  - generic [ref=f3e19]:
+    - generic [ref=f3e20]: Preferred language
+    - combobox "Preferred language" [ref=f3e21]:
+      - option "English" [selected]
+      - option "Español"
+  - main [ref=f3e22]:
+    - generic [ref=f3e24]:
+      - region "Route Brain" [ref=f3e25]:
+        - generic [ref=f3e26]:
+          - generic [ref=f3e27]:
+            - paragraph [ref=f3e28]: Route Brain
+            - heading "Photo-to-fix field companion" [level=2] [ref=f3e29]
+            - paragraph [ref=f3e30]: Build an equipment tree, run symptom checks, make an escalation packet, and save proof before leaving the pad.
+          - generic [ref=f3e31]: Live Sprint
+        - generic [ref=f3e32]:
+          - generic [ref=f3e33]: Tree
+          - generic [ref=f3e34]: Proof
+          - generic [ref=f3e35]: AI photo tree soon
+      - generic [ref=f3e36]:
+        - generic [ref=f3e37]:
+          - generic [ref=f3e38]:
+            - generic [ref=f3e39]: Pool
+            - combobox [ref=f3e40]:
+              - option "Temporary stop / no saved pool" [selected]
+          - generic [ref=f3e41]:
+            - generic [ref=f3e42]: Manufacturer / System
+            - combobox [ref=f3e43]:
+              - option "Unknown / all systems" [selected]
+              - option "Hayward"
+              - option "Pentair"
+              - option "Jandy / Zodiac"
+              - option "Maytronics (Dolphin)"
+              - option "Aiper"
+              - option "Raypak"
+              - option "Beatbot"
+              - option "Betta (BWT)"
+              - option "Polaris (Zodiac)"
+              - option "IntelliFlo (Pentair)"
+              - option "Hayward Salt (TurboCell / AquaRite)"
+              - option "Pentair Automation (IntelliTouch / EasyTouch)"
+              - option "AquaCal"
+              - option "Sta-Rite"
+              - option "Waterway"
+              - option "CMP / PAL / S.R. Smith Lighting"
+              - option "Robot Cleaners / Smart Robots"
+              - option "Connected Pool Network"
+              - option "Smart Chemical Dispensers"
+              - option "Handheld Vacuums / Leaf Vacs"
+              - option "Hot Tubs / Spas"
+              - option "Water Features / Valves / Actuators"
+              - option "UV / Ozone / AOP / Feeders"
+              - option "Commercial Chem Controllers"
+              - option "Automatic Covers"
+              - option "Pool Safety Monitoring"
+          - generic [ref=f3e44]:
+            - generic [ref=f3e45]: Hardware
+            - combobox [ref=f3e46]:
+              - option "Pick hardware" [selected]
+              - option "heater"
+              - option "heat pump"
+              - option "pump"
+              - option "filter"
+              - option "salt cell"
+              - option "automation"
+              - option "lighting"
+              - option "robot"
+              - option "water feature"
+              - option "valve actuator"
+              - option "UV / ozone / AOP"
+              - option "chemical controller"
+              - option "feeder"
+              - option "automatic cover"
+              - option "unknown"
+          - generic [ref=f3e47]:
+            - generic [ref=f3e48]: Model / Line
+            - textbox "e.g. IntelliBrite, OmniPL, Coverstar" [ref=f3e49]
+        - generic [ref=f3e50]:
+          - generic [ref=f3e51]: Visible Label / Photo Proof
+          - textbox "model plate, serial, transformer size, label photo filename" [ref=f3e52]
+        - generic [ref=f3e53]:
+          - generic [ref=f3e54]: Symptom
+          - textbox "e.g. light trips GFCI, robot will not climb, ORP low" [ref=f3e55]
+        - generic [ref=f3e56]:
+          - button "light trips GFCI" [ref=f3e57] [cursor=pointer]
+          - button "wrong light color" [ref=f3e58] [cursor=pointer]
+          - button "Omni offline" [ref=f3e59] [cursor=pointer]
+          - button "iAquaLink waiting connection" [ref=f3e60] [cursor=pointer]
+          - button "IntelliCenter no comm" [ref=f3e61] [cursor=pointer]
+          - button "valve actuator stuck" [ref=f3e62] [cursor=pointer]
+          - button "robot will not climb" [ref=f3e63] [cursor=pointer]
+          - button "robot Wi-Fi pairing" [ref=f3e64] [cursor=pointer]
+          - button "ORP low" [ref=f3e65] [cursor=pointer]
+          - button "pH high alarm" [ref=f3e66] [cursor=pointer]
+          - button "cover will not move" [ref=f3e67] [cursor=pointer]
+          - button "heater says LO" [ref=f3e68] [cursor=pointer]
+          - button "flow fault" [ref=f3e69] [cursor=pointer]
+          - button "pump not priming" [ref=f3e70] [cursor=pointer]
+        - generic [ref=f3e71]:
+          - generic [ref=f3e72]:
+            - generic [ref=f3e73]: Checks Already Done / Tech Note
+            - button "Dictate" [ref=f3e74] [cursor=pointer]
+          - textbox "What you saw, what you tested, readings, breaker/GFCI behavior..." [ref=f3e78]
+        - generic [ref=f3e79]:
+          - generic [ref=f3e80]:
+            - generic [ref=f3e81]: Checks Completed
+            - textbox "voltage checked, filter clean, photo captured..." [ref=f3e82]
+          - generic [ref=f3e83]:
+            - generic [ref=f3e84]: Part Confidence
+            - combobox [ref=f3e85]:
+              - option "visible marking"
+              - option "likely family"
+              - option "possible" [selected]
+              - option "unknown"
+        - generic [ref=f3e86]:
+          - button "Build Field Plan" [ref=f3e87] [cursor=pointer]
+          - button "Copy Escalation" [ref=f3e88] [cursor=pointer]
+          - button "Save Proof" [ref=f3e89] [cursor=pointer]
+          - button "Training Mode" [ref=f3e90] [cursor=pointer]
+      - region "New Tech Radar" [ref=f3e91]:
+        - paragraph [ref=f3e92]: New Tech Radar
+        - heading "PartSnap + Connected Pool Network" [level=2] [ref=f3e93]
+        - paragraph [ref=f3e94]: "Track the fast-moving stuff: robots, smart automation, lights, heat pumps, covers, sensors, feeders, and chemical controllers. Use it to capture proof, spot repeat issues, and build safer send-out notes."
+        - generic [ref=f3e95]:
+          - generic [ref=f3e96]: Daily data adds
+          - generic [ref=f3e97]: Weekly field cards
+          - generic [ref=f3e98]: Monthly update
+          - generic [ref=f3e99]: Partner cards ready
+      - group [ref=f3e100]:
+        - generic "Robots High priority Radar" [ref=f3e101] [cursor=pointer]:
+          - generic [ref=f3e102]:
+            - strong [ref=f3e103]: Robots
+            - generic [ref=f3e104]: High priority
+          - generic [ref=f3e105]: Radar
+      - group [ref=f3e106]:
+        - generic "Connected Pool Network Live reference layer Radar" [ref=f3e107] [cursor=pointer]:
+          - generic [ref=f3e108]:
+            - strong [ref=f3e109]: Connected Pool Network
+            - generic [ref=f3e110]: Live reference layer
+          - generic [ref=f3e111]: Radar
+      - group [ref=f3e112]:
+        - generic "Heat / Cool Expanding Radar" [ref=f3e113] [cursor=pointer]:
+          - generic [ref=f3e114]:
+            - strong [ref=f3e115]: Heat / Cool
+            - generic [ref=f3e116]: Expanding
+          - generic [ref=f3e117]: Radar
+      - group [ref=f3e118]:
+        - generic "Lighting Live reference layer Radar" [ref=f3e119] [cursor=pointer]:
+          - generic [ref=f3e120]:
+            - strong [ref=f3e121]: Lighting
+            - generic [ref=f3e122]: Live reference layer
+          - generic [ref=f3e123]: Radar
+      - group [ref=f3e124]:
+        - generic "Chem Controllers / Feeders Live reference layer Radar" [ref=f3e125] [cursor=pointer]:
+          - generic [ref=f3e126]:
+            - strong [ref=f3e127]: Chem Controllers / Feeders
+            - generic [ref=f3e128]: Live reference layer
+          - generic [ref=f3e129]: Radar
+      - group [ref=f3e130]:
+        - generic "Advanced Sanitizers Updated July 2026 Radar" [ref=f3e131] [cursor=pointer]:
+          - generic [ref=f3e132]:
+            - strong [ref=f3e133]: Advanced Sanitizers
+            - generic [ref=f3e134]: Updated July 2026
+          - generic [ref=f3e135]: Radar
+      - group [ref=f3e136]:
+        - generic "Pool Safety Monitoring New proof lane Radar" [ref=f3e137] [cursor=pointer]:
+          - generic [ref=f3e138]:
+            - strong [ref=f3e139]: Pool Safety Monitoring
+            - generic [ref=f3e140]: New proof lane
+          - generic [ref=f3e141]: Radar
+      - group [ref=f3e142]:
+        - generic "Covers / Safety Live reference layer Radar" [ref=f3e143] [cursor=pointer]:
+          - generic [ref=f3e144]:
+            - strong [ref=f3e145]: Covers / Safety
+            - generic [ref=f3e146]: Live reference layer
+          - generic [ref=f3e147]: Radar
+      - group [ref=f3e148]:
+        - generic "Salt Systems Updated July 2026 Radar" [ref=f3e149] [cursor=pointer]:
+          - generic [ref=f3e150]:
+            - strong [ref=f3e151]: Salt Systems
+            - generic [ref=f3e152]: Updated July 2026
+          - generic [ref=f3e153]: Radar
+      - group [ref=f3e154]:
+        - generic "Hot Tubs / Spas Live spa lane Radar" [ref=f3e155] [cursor=pointer]:
+          - generic [ref=f3e156]:
+            - strong [ref=f3e157]: Hot Tubs / Spas
+            - generic [ref=f3e158]: Live spa lane
+          - generic [ref=f3e159]: Radar
+      - generic [ref=f3e160]:
+        - generic [ref=f3e161]:
+          - heading "Manufacturer Learning Pages" [level=3] [ref=f3e162]
+          - generic [ref=f3e163]: Live
+        - paragraph [ref=f3e164]: Tap a manufacturer/system to review hardware families, symptoms, codes, field checks, and when to call a pro.
+        - generic [ref=f3e165]:
+          - button [ref=f3e166] [cursor=pointer]:
+            - strong [ref=f3e167]: Hayward
+            - text: H-Series Gas Heater / HeatPro Heat Pump +4
+          - button [ref=f3e168] [cursor=pointer]:
+            - strong [ref=f3e169]: Pentair
+            - text: MasterTemp / Max-E-Therm Gas Heater / UltraTemp Heat Pump +5
+          - button [ref=f3e170] [cursor=pointer]:
+            - strong [ref=f3e171]: Jandy / Zodiac
+            - text: LXi / LRZ Gas Heater / VS FloPro Pump +5
+          - button [ref=f3e172] [cursor=pointer]:
+            - strong [ref=f3e173]: Maytronics (Dolphin)
+            - text: Dolphin Robot Cleaners
+          - button [ref=f3e174] [cursor=pointer]:
+            - strong [ref=f3e175]: Aiper
+            - text: Aiper Robot Cleaners
+          - button [ref=f3e176] [cursor=pointer]:
+            - strong [ref=f3e177]: Raypak
+            - text: Raypak Gas Heater
+          - button [ref=f3e178] [cursor=pointer]:
+            - strong [ref=f3e179]: Beatbot
+            - text: Beatbot Robot Cleaners
+          - button [ref=f3e180] [cursor=pointer]:
+            - strong [ref=f3e181]: Betta (BWT)
+            - text: Betta Robot Cleaners
+          - button [ref=f3e182] [cursor=pointer]:
+            - strong [ref=f3e183]: Polaris (Zodiac)
+            - text: Polaris Pressure-Side Cleaners / Polaris Robot Cleaners (i-series)
+          - button [ref=f3e184] [cursor=pointer]:
+            - strong [ref=f3e185]: IntelliFlo (Pentair)
+            - text: IntelliFlo VF / VS / VSF Variable Speed Pump
+      - generic [ref=f3e186]:
+        - generic [ref=f3e187]:
+          - heading "Coming Soon Gates" [level=3] [ref=f3e188]
+          - generic [ref=f3e189]: Prepared
+        - paragraph [ref=f3e190]: "Positioned now, but gated until backend/partner lanes are ready: live photo-to-equipment-tree AI, manufacturer sponsored banners, instructor-shared lessons, team sync, and native iOS speech cleanup."
+      - generic [ref=f3e192]:
+        - paragraph [ref=f3e193]: Today's Route
+        - paragraph [ref=f3e194]: Tuesday, September 1
+      - generic [ref=f3e196]:
+        - paragraph [ref=f3e199]: No stops planned
+        - paragraph [ref=f3e200]: Add pool stops from your list or custom stops below.
+      - generic [ref=f3e201]:
+        - button "+ Pool Stop" [ref=f3e202] [cursor=pointer]
+        - button "+ Custom Stop" [ref=f3e203] [cursor=pointer]
+  - navigation "SplashLens field tools" [ref=f3e204]:
+    - button "Errors" [ref=f3e205] [cursor=pointer]
+    - button "Dosing" [ref=f3e210] [cursor=pointer]
+    - button "Volume" [ref=f3e214] [cursor=pointer]
+    - button "Filters" [ref=f3e218] [cursor=pointer]
+    - button "Guide" [ref=f3e222] [cursor=pointer]
+    - button "Report" [ref=f3e227] [cursor=pointer]
+    - button "Pools" [ref=f3e232] [cursor=pointer]
+    - button "Route" [ref=f3e237] [cursor=pointer]
+    - button "Scan" [ref=f3e241] [cursor=pointer]

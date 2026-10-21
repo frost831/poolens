@@ -1,0 +1,30 @@
+{
+  "data": {
+    "type": "appStoreReviewDetails",
+    "id": "2ba6ef44-38d0-4bc8-a0ec-b3abb0d92c97",
+    "attributes": {
+      "contactFirstName": "Joshua",
+      "contactLastName": "Frost",
+      "contactPhone": "8065550100",
+      "contactEmail": "support@splashlens.com",
+      "demoAccountName": "reviewer@splashlens.com",
+      "demoAccountPassword": "Magic link / Continue AR Demo",
+      "demoAccountRequired": false,
+      "notes": "SplashLens is a free pool and spa field reference app for equipment/code lookup, PartSnap part-reference workflows, calculators, notes, and Facility Assist. The app is not a diagnostic replacement and asks users to verify against manuals, model numbers, and qualified judgment. Store mode hides direct web checkout calls to action."
+    },
+    "relationships": {
+      "appStoreReviewAttachments": {
+        "links": {
+          "self": "https://api.appstoreconnect.apple.com/v1/appStoreReviewDetails/2ba6ef44-38d0-4bc8-a0ec-b3abb0d92c97/relationships/appStoreReviewAttachments",
+          "related": "https://api.appstoreconnect.apple.com/v1/appStoreReviewDetails/2ba6ef44-38d0-4bc8-a0ec-b3abb0d92c97/appStoreReviewAttachments"
+        }
+      }
+    },
+    "links": {
+      "self": "https://api.appstoreconnect.apple.com/v1/appStoreReviewDetails/2ba6ef44-38d0-4bc8-a0ec-b3abb0d92c97"
+    }
+  },
+  "links": {
+    "self": "https://api.appstoreconnect.apple.com/v1/appStoreReviewDetails/2ba6ef44-38d0-4bc8-a0ec-b3abb0d92c97"
+  }
+}

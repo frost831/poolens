@@ -1,0 +1,30 @@
+{
+  "data": {
+    "type": "appStoreReviewDetails",
+    "id": "6fdbb502-abf7-4bbd-8adc-0a7dd1825e29",
+    "attributes": {
+      "contactFirstName": "Joshua",
+      "contactLastName": "Frost",
+      "contactPhone": "8065550100",
+      "contactEmail": "support@splashlens.com",
+      "demoAccountName": "reviewer@splashlens.com",
+      "demoAccountPassword": "Magic link / Continue AR Demo",
+      "demoAccountRequired": false,
+      "notes": "SplashLens is a no-account pool service field reference app. No demo login is required.\n\nSuggested review path:\n1. Launch SplashLens.\n2. If the role picker appears, choose Technician.\n3. Open scanner or visit report workflows to review optional camera/photo flows.\n4. Open the dashboard/review queue links; they route outside the native web view when appropriate.\n5. Toggle offline/online as needed; core tools are cached, but private dashboard and API surfaces are intentionally not cached.\n\nCamera, photo, and microphone permissions are optional and are used only when the reviewer chooses scanner, selected-photo, or dictated-note flows.\n\nSplashLens is a field reference and service-proof aid. It does not replace manuals, manufacturer guidance, compliance programs, or qualified technician judgment."
+    },
+    "relationships": {
+      "appStoreReviewAttachments": {
+        "links": {
+          "self": "https://api.appstoreconnect.apple.com/v1/appStoreReviewDetails/6fdbb502-abf7-4bbd-8adc-0a7dd1825e29/relationships/appStoreReviewAttachments",
+          "related": "https://api.appstoreconnect.apple.com/v1/appStoreReviewDetails/6fdbb502-abf7-4bbd-8adc-0a7dd1825e29/appStoreReviewAttachments"
+        }
+      }
+    },
+    "links": {
+      "self": "https://api.appstoreconnect.apple.com/v1/appStoreReviewDetails/6fdbb502-abf7-4bbd-8adc-0a7dd1825e29"
+    }
+  },
+  "links": {
+    "self": "https://api.appstoreconnect.apple.com/v1/appStoreReviewDetails/6fdbb502-abf7-4bbd-8adc-0a7dd1825e29"
+  }
+}

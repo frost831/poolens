@@ -1,0 +1,12 @@
+/Users/macbookpro/SplashLens-asc-subscription-finish-2026-07-04/release-evidence/splashlens-native-store-20260901-build16/asc-screenshots/01-partsnap-field-start.png
+  pixelWidth: 1320
+  pixelHeight: 2868
+/Users/macbookpro/SplashLens-asc-subscription-finish-2026-07-04/release-evidence/splashlens-native-store-20260901-build16/asc-screenshots/02-partsnap-pro-scan.png
+  pixelWidth: 1320
+  pixelHeight: 2868
+/Users/macbookpro/SplashLens-asc-subscription-finish-2026-07-04/release-evidence/splashlens-native-store-20260901-build16/asc-screenshots/03-saved-job-history.png
+  pixelWidth: 1320
+  pixelHeight: 2868
+/Users/macbookpro/SplashLens-asc-subscription-finish-2026-07-04/release-evidence/splashlens-native-store-20260901-build16/asc-screenshots/04-repeat-issue-watch.png
+  pixelWidth: 1320
+  pixelHeight: 2868

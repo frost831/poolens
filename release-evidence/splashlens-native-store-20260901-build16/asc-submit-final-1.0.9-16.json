@@ -1,0 +1,289 @@
+{
+  "final": {
+    "appId": "6763644905",
+    "version": "1.0.9",
+    "versionId": "44f0d66b-0643-4459-9454-5246df13ca2a",
+    "buildNumber": "16",
+    "buildId": "e49a259f-13c2-44c7-bbff-bbde4fe7569d",
+    "reviewDetailId": "2ba6ef44-38d0-4bc8-a0ec-b3abb0d92c97",
+    "localizationId": "5ec13c0f-5d6f-4a0c-bf78-19cd89ccd66b",
+    "screenshotSetId": "39d4b411-3fd6-47cb-a0f8-c81795c132f1",
+    "screenshotDeletedCount": 4,
+    "screenshotIds": [
+      "38cc4f9b-f81a-456a-b43c-8c68cbfbd441",
+      "3a2e8b20-b0b7-48b0-ba89-91c197027502",
+      "9a0701fa-09b1-411b-a9e2-6ce55a36dd31",
+      "d050afb9-a598-47a0-b7fa-0d783f08f599"
+    ],
+    "reviewSubmissionId": "0fb1b183-6e15-4bf5-94b0-3471acdad271",
+    "reviewSubmissionItemId": "MGZiMWIxODMtNmUxNS00YmY1LTk0YjAtMzQ3MWFjZGFkMjcxfDZ8ODkwNjUzMjAz",
+    "reviewSubmissionState": "WAITING_FOR_REVIEW",
+    "submittedDate": "2026-09-01T15:15:00.465Z",
+    "submittedAt": "2026-09-01T15:15:02.898Z"
+  },
+  "readback": {
+    "version": {
+      "data": {
+        "type": "appStoreVersions",
+        "id": "44f0d66b-0643-4459-9454-5246df13ca2a",
+        "attributes": {
+          "platform": "IOS",
+          "versionString": "1.0.9",
+          "appStoreState": "WAITING_FOR_REVIEW",
+          "appVersionState": "WAITING_FOR_REVIEW"
+        },
+        "relationships": {
+          "build": {
+            "data": {
+              "type": "builds",
+              "id": "e49a259f-13c2-44c7-bbff-bbde4fe7569d"
+            },
+            "links": {
+              "self": "https://api.appstoreconnect.apple.com/v1/appStoreVersions/44f0d66b-0643-4459-9454-5246df13ca2a/relationships/build",
+              "related": "https://api.appstoreconnect.apple.com/v1/appStoreVersions/44f0d66b-0643-4459-9454-5246df13ca2a/build"
+            }
+          }
+        },
+        "links": {
+          "self": "https://api.appstoreconnect.apple.com/v1/appStoreVersions/44f0d66b-0643-4459-9454-5246df13ca2a"
+        }
+      },
+      "included": [
+        {
+          "type": "builds",
+          "id": "e49a259f-13c2-44c7-bbff-bbde4fe7569d",
+          "attributes": {
+            "version": "16",
+            "uploadedDate": "2026-09-01T08:12:45-07:00",
+            "processingState": "VALID",
+            "buildAudienceType": "APP_STORE_ELIGIBLE",
+            "usesNonExemptEncryption": false
+          },
+          "links": {
+            "self": "https://api.appstoreconnect.apple.com/v1/builds/e49a259f-13c2-44c7-bbff-bbde4fe7569d"
+          }
+        }
+      ],
+      "links": {
+        "self": "https://api.appstoreconnect.apple.com/v1/appStoreVersions/44f0d66b-0643-4459-9454-5246df13ca2a?fields%5BappStoreVersions%5D=versionString%2Cbuild%2CappStoreState%2CappVersionState%2Cplatform&fields%5Bbuilds%5D=processingState%2CbuildAudienceType%2CusesNonExemptEncryption%2CuploadedDate%2Cversion&include=build"
+      }
+    },
+    "reviewDetail": {
+      "data": {
+        "type": "appStoreReviewDetails",
+        "id": "2ba6ef44-38d0-4bc8-a0ec-b3abb0d92c97",
+        "attributes": {
+          "contactFirstName": "Joshua",
+          "contactLastName": "Frost",
+          "contactPhone": "8065550100",
+          "contactEmail": "support@splashlens.com",
+          "demoAccountName": "reviewer@splashlens.com",
+          "demoAccountPassword": "Magic link / Continue AR Demo",
+          "demoAccountRequired": false,
+          "notes": "SplashLens is a free pool and spa field reference app for equipment/code lookup, PartSnap part-reference workflows, calculators, notes, and Facility Assist. The app is not a diagnostic replacement and asks users to verify against manuals, model numbers, and qualified judgment. Store mode hides direct web checkout calls to action."
+        },
+        "relationships": {
+          "appStoreReviewAttachments": {
+            "links": {
+              "self": "https://api.appstoreconnect.apple.com/v1/appStoreReviewDetails/2ba6ef44-38d0-4bc8-a0ec-b3abb0d92c97/relationships/appStoreReviewAttachments",
+              "related": "https://api.appstoreconnect.apple.com/v1/appStoreReviewDetails/2ba6ef44-38d0-4bc8-a0ec-b3abb0d92c97/appStoreReviewAttachments"
+            }
+          }
+        },
+        "links": {
+          "self": "https://api.appstoreconnect.apple.com/v1/appStoreReviewDetails/2ba6ef44-38d0-4bc8-a0ec-b3abb0d92c97"
+        }
+      },
+      "links": {
+        "self": "https://api.appstoreconnect.apple.com/v1/appStoreVersions/44f0d66b-0643-4459-9454-5246df13ca2a/appStoreReviewDetail"
+      }
+    },
+    "localization": {
+      "data": [
+        {
+          "type": "appStoreVersionLocalizations",
+          "id": "5ec13c0f-5d6f-4a0c-bf78-19cd89ccd66b",
+          "attributes": {
+            "description": "SplashLens helps pool and spa techs get off the pad faster.\n\nUse SplashLens to:\n\n- Identify the part with PartSnap and clear photo prompts\n- Check equipment codes and symptom references\n- Prove the visit with saved job history, notes, readings, and customer-safe summaries\n- Use PartSnap Pro and Saved Job Pro when more field capacity is needed\n- Give teams a shared Team Field View for cleaner handoffs\n- Use Facility Assist for daily checks, contamination events, and escalation packets\n- Watch repeat issues before leaving the stop\n- Calculate common chemical dosing adjustments\n- Keep manual lookup, calculators, notes, filters, and checklists available from the app shell after first load\n\nThe core app is free. Optional paid add-ons are available on the web, while native store mode keeps direct web checkout calls to action hidden.\n\nOnline AI scan features require internet access and are assistance only. Always verify scan output, part fit, code lookup, dosing math, and job notes against equipment manuals, model numbers, calibrated tests, label directions, and qualified field judgment.\n\nSplashLens does not guarantee diagnosis, repair, chemical safety, manufacturer support, part fit, or training certification.",
+            "locale": "en-US",
+            "promotionalText": "Get off the pad faster. Identify the part, check the code, and prove the visit.",
+            "whatsNew": "Adds the current field workflow language for PartSnap Pro, Saved Job Pro, Team Field View, Facility Assist, Repeat Issue Watch, and saved job history. SplashLens remains a reference aid and does not replace manuals, model numbers, code requirements, or qualified judgment."
+          },
+          "links": {
+            "self": "https://api.appstoreconnect.apple.com/v1/appStoreVersionLocalizations/5ec13c0f-5d6f-4a0c-bf78-19cd89ccd66b"
+          }
+        }
+      ],
+      "links": {
+        "self": "https://api.appstoreconnect.apple.com/v1/appStoreVersions/44f0d66b-0643-4459-9454-5246df13ca2a/appStoreVersionLocalizations?fields%5BappStoreVersionLocalizations%5D=whatsNew%2Cdescription%2Clocale%2CpromotionalText&limit=50"
+      },
+      "meta": {
+        "paging": {
+          "total": 1,
+          "limit": 50
+        }
+      }
+    },
+    "screenshots": {
+      "data": [
+        {
+          "type": "appScreenshots",
+          "id": "38cc4f9b-f81a-456a-b43c-8c68cbfbd441",
+          "attributes": {
+            "fileSize": 375634,
+            "fileName": "01-partsnap-field-start.png",
+            "sourceFileChecksum": "d0070fb13540c7fabcfaf46e1269dda3",
+            "imageAsset": {
+              "templateUrl": "https://is1-ssl.mzstatic.com/image/thumb/PurpleSource211/v4/bc/e5/7a/bce57aa5-105e-29c2-594f-53b4823a7556/01-partsnap-field-start.png/{w}x{h}bb.{f}",
+              "width": 1320,
+              "height": 2868
+            },
+            "assetToken": "PurpleSource211/v4/bc/e5/7a/bce57aa5-105e-29c2-594f-53b4823a7556/01-partsnap-field-start.png",
+            "assetType": "SortedD74ScreenShot",
+            "uploadOperations": null,
+            "assetDeliveryState": {
+              "errors": [],
+              "warnings": null,
+              "state": "COMPLETE"
+            }
+          },
+          "links": {
+            "self": "https://api.appstoreconnect.apple.com/v1/appScreenshots/38cc4f9b-f81a-456a-b43c-8c68cbfbd441"
+          }
+        },
+        {
+          "type": "appScreenshots",
+          "id": "3a2e8b20-b0b7-48b0-ba89-91c197027502",
+          "attributes": {
+            "fileSize": 57240,
+            "fileName": "02-partsnap-pro-scan.png",
+            "sourceFileChecksum": "a37bdd7c3062778024ff86b002d0a7ea",
+            "imageAsset": {
+              "templateUrl": "https://is1-ssl.mzstatic.com/image/thumb/PurpleSource221/v4/e6/fb/56/e6fb5667-0380-5ea4-74b0-605f8ad0a877/02-partsnap-pro-scan.png/{w}x{h}bb.{f}",
+              "width": 1320,
+              "height": 2868
+            },
+            "assetToken": "PurpleSource221/v4/e6/fb/56/e6fb5667-0380-5ea4-74b0-605f8ad0a877/02-partsnap-pro-scan.png",
+            "assetType": "SortedD74ScreenShot",
+            "uploadOperations": null,
+            "assetDeliveryState": {
+              "errors": [],
+              "warnings": null,
+              "state": "COMPLETE"
+            }
+          },
+          "links": {
+            "self": "https://api.appstoreconnect.apple.com/v1/appScreenshots/3a2e8b20-b0b7-48b0-ba89-91c197027502"
+          }
+        },
+        {
+          "type": "appScreenshots",
+          "id": "9a0701fa-09b1-411b-a9e2-6ce55a36dd31",
+          "attributes": {
+            "fileSize": 408320,
+            "fileName": "03-saved-job-history.png",
+            "sourceFileChecksum": "b65867b7eef5a548dfe53e02290f50ac",
+            "imageAsset": {
+              "templateUrl": "https://is1-ssl.mzstatic.com/image/thumb/PurpleSource211/v4/39/74/0e/39740e21-6ff3-c7c7-9803-0fabfd3a56c1/03-saved-job-history.png/{w}x{h}bb.{f}",
+              "width": 1320,
+              "height": 2868
+            },
+            "assetToken": "PurpleSource211/v4/39/74/0e/39740e21-6ff3-c7c7-9803-0fabfd3a56c1/03-saved-job-history.png",
+            "assetType": "SortedD74ScreenShot",
+            "uploadOperations": null,
+            "assetDeliveryState": {
+              "errors": [],
+              "warnings": null,
+              "state": "COMPLETE"
+            }
+          },
+          "links": {
+            "self": "https://api.appstoreconnect.apple.com/v1/appScreenshots/9a0701fa-09b1-411b-a9e2-6ce55a36dd31"
+          }
+        },
+        {
+          "type": "appScreenshots",
+          "id": "d050afb9-a598-47a0-b7fa-0d783f08f599",
+          "attributes": {
+            "fileSize": 350345,
+            "fileName": "04-repeat-issue-watch.png",
+            "sourceFileChecksum": "c63c506d0e81e4f51bffdcc271920fa2",
+            "imageAsset": {
+              "templateUrl": "https://is1-ssl.mzstatic.com/image/thumb/PurpleSource221/v4/be/be/90/bebe9084-947d-ca51-5ef7-fc21d1a4513d/04-repeat-issue-watch.png/{w}x{h}bb.{f}",
+              "width": 1320,
+              "height": 2868
+            },
+            "assetToken": "PurpleSource221/v4/be/be/90/bebe9084-947d-ca51-5ef7-fc21d1a4513d/04-repeat-issue-watch.png",
+            "assetType": "SortedD74ScreenShot",
+            "uploadOperations": null,
+            "assetDeliveryState": {
+              "errors": [],
+              "warnings": null,
+              "state": "COMPLETE"
+            }
+          },
+          "links": {
+            "self": "https://api.appstoreconnect.apple.com/v1/appScreenshots/d050afb9-a598-47a0-b7fa-0d783f08f599"
+          }
+        }
+      ],
+      "links": {
+        "self": "https://api.appstoreconnect.apple.com/v1/appScreenshotSets/39d4b411-3fd6-47cb-a0f8-c81795c132f1/appScreenshots?limit=50"
+      },
+      "meta": {
+        "paging": {
+          "total": 4,
+          "limit": 50
+        }
+      }
+    },
+    "submission": {
+      "data": {
+        "type": "reviewSubmissions",
+        "id": "0fb1b183-6e15-4bf5-94b0-3471acdad271",
+        "attributes": {
+          "submittedDate": "2026-09-01T15:15:00.465Z",
+          "state": "WAITING_FOR_REVIEW"
+        },
+        "relationships": {
+          "items": {
+            "meta": {
+              "paging": {
+                "total": 1,
+                "limit": 10
+              }
+            },
+            "data": [
+              {
+                "type": "reviewSubmissionItems",
+                "id": "MGZiMWIxODMtNmUxNS00YmY1LTk0YjAtMzQ3MWFjZGFkMjcxfDZ8ODkwNjUzMjAz"
+              }
+            ],
+            "links": {
+              "self": "https://api.appstoreconnect.apple.com/v1/reviewSubmissions/0fb1b183-6e15-4bf5-94b0-3471acdad271/relationships/items",
+              "related": "https://api.appstoreconnect.apple.com/v1/reviewSubmissions/0fb1b183-6e15-4bf5-94b0-3471acdad271/items"
+            }
+          }
+        },
+        "links": {
+          "self": "https://api.appstoreconnect.apple.com/v1/reviewSubmissions/0fb1b183-6e15-4bf5-94b0-3471acdad271"
+        }
+      },
+      "included": [
+        {
+          "type": "reviewSubmissionItems",
+          "id": "MGZiMWIxODMtNmUxNS00YmY1LTk0YjAtMzQ3MWFjZGFkMjcxfDZ8ODkwNjUzMjAz",
+          "attributes": {
+            "state": "READY_FOR_REVIEW"
+          },
+          "links": {
+            "self": "https://api.appstoreconnect.apple.com/v1/reviewSubmissionItems/MGZiMWIxODMtNmUxNS00YmY1LTk0YjAtMzQ3MWFjZGFkMjcxfDZ8ODkwNjUzMjAz"
+          }
+        }
+      ],
+      "links": {
+        "self": "https://api.appstoreconnect.apple.com/v1/reviewSubmissions/0fb1b183-6e15-4bf5-94b0-3471acdad271?fields%5BreviewSubmissionItems%5D=appStoreVersion%2Cstate&fields%5BreviewSubmissions%5D=state%2CsubmittedDate%2Citems&include=items"
+      }
+    }
+  }
+}

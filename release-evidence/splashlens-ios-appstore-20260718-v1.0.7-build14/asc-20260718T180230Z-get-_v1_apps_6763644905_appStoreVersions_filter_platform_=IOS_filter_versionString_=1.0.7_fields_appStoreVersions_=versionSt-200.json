@@ -1,0 +1,12 @@
+{
+  "data": [],
+  "links": {
+    "self": "https://api.appstoreconnect.apple.com/v1/apps/6763644905/appStoreVersions?fields%5BappStoreVersions%5D=versionString%2CappStoreState%2CappVersionState%2Cplatform&filter%5Bplatform%5D=IOS&filter%5BversionString%5D=1.0.7&limit=5"
+  },
+  "meta": {
+    "paging": {
+      "total": 0,
+      "limit": 5
+    }
+  }
+}

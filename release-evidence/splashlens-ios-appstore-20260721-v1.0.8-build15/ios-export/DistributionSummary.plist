@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>SplashLens.ipa</key>
+	<array>
+		<dict>
+			<key>architectures</key>
+			<array>
+				<string>arm64</string>
+			</array>
+			<key>buildNumber</key>
+			<string>15</string>
+			<key>certificate</key>
+			<dict>
+				<key>SHA1</key>
+				<string>F4C3CB7C2EFD17F60127875780539A594ADF1C96</string>
+				<key>dateExpires</key>
+				<string>5/16/27</string>
+				<key>type</key>
+				<string>Apple Distribution</string>
+			</dict>
+			<key>entitlements</key>
+			<dict>
+				<key>application-identifier</key>
+				<string>2XSLXV9H74.com.splashlens.app</string>
+				<key>beta-reports-active</key>
+				<true/>
+				<key>com.apple.developer.team-identifier</key>
+				<string>2XSLXV9H74</string>
+				<key>get-task-allow</key>
+				<false/>
+			</dict>
+			<key>name</key>
+			<string>SplashLens.app</string>
+			<key>profile</key>
+			<dict>
+				<key>UUID</key>
+				<string>1898b6af-59b9-4414-8502-c84805ca0e8b</string>
+				<key>dateExpires</key>
+				<string>5/16/27</string>
+				<key>name</key>
+				<string>iOS Team Store Provisioning Profile: com.splashlens.app</string>
+			</dict>
+			<key>symbols</key>
+			<true/>
+			<key>team</key>
+			<dict>
+				<key>id</key>
+				<string>2XSLXV9H74</string>
+				<key>name</key>
+				<string></string>
+			</dict>
+			<key>versionNumber</key>
+			<string>1.0.8</string>
+		</dict>
+	</array>
+</dict>
+</plist>

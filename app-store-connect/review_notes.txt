@@ -1,7 +1,1 @@
-SplashLens is a free utility/reference wrapper around the SplashLens PWA at https://app.splashlens.com/?store=ios.
-
-No account is required for core use. Manual lookup, calculators, notes, filters, and checklists work from the app shell after first load. Camera/photo access is user-initiated and only used for the optional AI scanner. Online AI scan features require internet access.
-
-Store wrapper mode is intended to stay free-core and must not show direct Stripe checkout or web-subscription CTAs. AI scan output is assistance only and should be verified against equipment manuals, calibrated tests, label directions, and professional field judgment.
-
-This build does not include native paid entitlements, unlimited AI scanning, completed training certificates, manufacturer endorsement, or guaranteed diagnosis claims.
+SplashLens is a free pool and spa field reference app for equipment/code lookup, PartSnap part-reference workflows, calculators, notes, and Facility Assist. The app is not a diagnostic replacement and asks users to verify against manuals, model numbers, and qualified judgment. Store mode hides direct web checkout calls to action.

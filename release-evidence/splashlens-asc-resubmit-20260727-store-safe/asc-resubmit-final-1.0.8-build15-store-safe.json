@@ -1,0 +1,302 @@
+{
+  "final": {
+    "appId": "6763644905",
+    "versionId": "39cd5096-b90b-4526-bb20-961d561b1655",
+    "reviewDetailId": "d6423445-1883-4e85-9a88-48939d8ad8a5",
+    "reviewSubmissionId": "e36eb61b-762e-4a13-94d1-201c3244b786",
+    "reviewSubmissionItemId": "ZTM2ZWI2MWItNzYyZS00YTEzLTk0ZDEtMjAxYzMyNDRiNzg2fDZ8ODg4NjQwNTY4",
+    "beforeVersionState": {
+      "platform": "IOS",
+      "versionString": "1.0.8",
+      "appStoreState": "REJECTED",
+      "appVersionState": "REJECTED"
+    },
+    "beforeSubmissionState": "UNRESOLVED_ISSUES",
+    "beforeItemState": "REJECTED",
+    "submittedState": "WAITING_FOR_REVIEW",
+    "submittedDate": "2026-07-27T17:42:59.923Z",
+    "afterVersionState": {
+      "platform": "IOS",
+      "versionString": "1.0.8",
+      "appStoreState": "WAITING_FOR_REVIEW",
+      "appVersionState": "WAITING_FOR_REVIEW"
+    },
+    "afterSubmissionState": "WAITING_FOR_REVIEW",
+    "afterItemState": "READY_FOR_REVIEW",
+    "submittedAt": "2026-07-27T17:43:01.534Z"
+  },
+  "before": {
+    "version": {
+      "data": {
+        "type": "appStoreVersions",
+        "id": "39cd5096-b90b-4526-bb20-961d561b1655",
+        "attributes": {
+          "platform": "IOS",
+          "versionString": "1.0.8",
+          "appStoreState": "REJECTED",
+          "appVersionState": "REJECTED"
+        },
+        "relationships": {
+          "build": {
+            "data": {
+              "type": "builds",
+              "id": "c1e9bd2b-be36-45af-8c03-96e197152967"
+            },
+            "links": {
+              "self": "https://api.appstoreconnect.apple.com/v1/appStoreVersions/39cd5096-b90b-4526-bb20-961d561b1655/relationships/build",
+              "related": "https://api.appstoreconnect.apple.com/v1/appStoreVersions/39cd5096-b90b-4526-bb20-961d561b1655/build"
+            }
+          }
+        },
+        "links": {
+          "self": "https://api.appstoreconnect.apple.com/v1/appStoreVersions/39cd5096-b90b-4526-bb20-961d561b1655"
+        }
+      },
+      "included": [
+        {
+          "type": "builds",
+          "id": "c1e9bd2b-be36-45af-8c03-96e197152967",
+          "attributes": {
+            "version": "15",
+            "uploadedDate": "2026-07-21T09:00:35-07:00",
+            "expired": false,
+            "processingState": "VALID",
+            "buildAudienceType": "APP_STORE_ELIGIBLE",
+            "usesNonExemptEncryption": false
+          },
+          "links": {
+            "self": "https://api.appstoreconnect.apple.com/v1/builds/c1e9bd2b-be36-45af-8c03-96e197152967"
+          }
+        }
+      ],
+      "links": {
+        "self": "https://api.appstoreconnect.apple.com/v1/appStoreVersions/39cd5096-b90b-4526-bb20-961d561b1655?fields%5BappStoreVersions%5D=versionString%2Cbuild%2CappStoreState%2CappVersionState%2Cplatform&fields%5Bbuilds%5D=processingState%2CbuildAudienceType%2Cexpired%2CusesNonExemptEncryption%2CuploadedDate%2Cversion&include=build"
+      }
+    },
+    "buildRel": {
+      "data": {
+        "type": "builds",
+        "id": "c1e9bd2b-be36-45af-8c03-96e197152967"
+      },
+      "links": {
+        "self": "https://api.appstoreconnect.apple.com/v1/appStoreVersions/39cd5096-b90b-4526-bb20-961d561b1655/relationships/build",
+        "related": "https://api.appstoreconnect.apple.com/v1/appStoreVersions/39cd5096-b90b-4526-bb20-961d561b1655/build"
+      }
+    },
+    "reviewDetail": {
+      "data": {
+        "type": "appStoreReviewDetails",
+        "id": "d6423445-1883-4e85-9a88-48939d8ad8a5",
+        "attributes": {
+          "contactFirstName": "Joshua",
+          "contactLastName": "Frost",
+          "contactPhone": "8065550100",
+          "contactEmail": "support@splashlens.com",
+          "demoAccountName": "reviewer@splashlens.com",
+          "demoAccountPassword": "Magic link / Continue AR Demo",
+          "demoAccountRequired": false,
+          "notes": "SplashLens is a free utility/reference wrapper around the SplashLens PWA at https://app.splashlens.com/?store=ios.\n\nNo account or demo login is required for core use.\n\nJuly 27, 2026 resubmission note: the native store shell has been updated and deployed to production so store=ios runs as a free-core build only. The App Review path now shows no Stripe checkout links, no web-subscription CTAs, no paid-pilot lead capture, and no external purchase/upgrade buttons. Production evidence for the reviewed URL:\n- https://app.splashlens.com/?store=ios&mode=trainer&utm_source=field_learning_os\n- app.js cache marker: 20260727-store-safe-activation-funnel\n- GitHub commit: 52862c97de4ff3bb8f8a221c1c34e621b2c9976f\n- Cloudflare Pages production deployment: https://c1b5e99b.poolens.pages.dev\n\nSuggested review path:\n1. Launch SplashLens.\n2. If the role picker appears, choose Trainer.\n3. Open Report / Service Proof and use the Field Learning OS buttons: PartSnap Lesson, CPO Scenario, and Proof Review.\n4. Open Scan > PartSnap for optional photo/scanner reference assistance.\n5. Open Report / Service Proof to generate a customer-safe service proof/passport summary.\n6. Optional camera, photo, and microphone prompts appear only after the reviewer starts the related scan, selected-photo, or dictated-note flow.\n\nOnline AI scan features require internet access. PartSnap results are possible matches with visible-proof and missing-proof prompts, not confirmed part-fit results.\n\nSplashLens is a field reference, service-proof, and training-aid workflow. It does not replace equipment manuals, product labels, local code, official certification programs, manufacturer guidance, or qualified technician/CPO judgment. This build does not include completed training certificates, official Aquatic Council/CPO alignment, manufacturer endorsement, or guaranteed diagnosis/part-fit claims."
+        },
+        "relationships": {
+          "appStoreReviewAttachments": {
+            "links": {
+              "self": "https://api.appstoreconnect.apple.com/v1/appStoreReviewDetails/d6423445-1883-4e85-9a88-48939d8ad8a5/relationships/appStoreReviewAttachments",
+              "related": "https://api.appstoreconnect.apple.com/v1/appStoreReviewDetails/d6423445-1883-4e85-9a88-48939d8ad8a5/appStoreReviewAttachments"
+            }
+          }
+        },
+        "links": {
+          "self": "https://api.appstoreconnect.apple.com/v1/appStoreReviewDetails/d6423445-1883-4e85-9a88-48939d8ad8a5"
+        }
+      },
+      "links": {
+        "self": "https://api.appstoreconnect.apple.com/v1/appStoreVersions/39cd5096-b90b-4526-bb20-961d561b1655/appStoreReviewDetail"
+      }
+    },
+    "submission": {
+      "data": {
+        "type": "reviewSubmissions",
+        "id": "e36eb61b-762e-4a13-94d1-201c3244b786",
+        "attributes": {
+          "submittedDate": "2026-07-21T16:21:31.096Z",
+          "state": "UNRESOLVED_ISSUES"
+        },
+        "relationships": {
+          "items": {
+            "meta": {
+              "paging": {
+                "total": 1,
+                "limit": 10
+              }
+            },
+            "data": [
+              {
+                "type": "reviewSubmissionItems",
+                "id": "ZTM2ZWI2MWItNzYyZS00YTEzLTk0ZDEtMjAxYzMyNDRiNzg2fDZ8ODg4NjQwNTY4"
+              }
+            ],
+            "links": {
+              "self": "https://api.appstoreconnect.apple.com/v1/reviewSubmissions/e36eb61b-762e-4a13-94d1-201c3244b786/relationships/items",
+              "related": "https://api.appstoreconnect.apple.com/v1/reviewSubmissions/e36eb61b-762e-4a13-94d1-201c3244b786/items"
+            }
+          }
+        },
+        "links": {
+          "self": "https://api.appstoreconnect.apple.com/v1/reviewSubmissions/e36eb61b-762e-4a13-94d1-201c3244b786"
+        }
+      },
+      "included": [
+        {
+          "type": "reviewSubmissionItems",
+          "id": "ZTM2ZWI2MWItNzYyZS00YTEzLTk0ZDEtMjAxYzMyNDRiNzg2fDZ8ODg4NjQwNTY4",
+          "attributes": {
+            "state": "REJECTED"
+          },
+          "links": {
+            "self": "https://api.appstoreconnect.apple.com/v1/reviewSubmissionItems/ZTM2ZWI2MWItNzYyZS00YTEzLTk0ZDEtMjAxYzMyNDRiNzg2fDZ8ODg4NjQwNTY4"
+          }
+        }
+      ],
+      "links": {
+        "self": "https://api.appstoreconnect.apple.com/v1/reviewSubmissions/e36eb61b-762e-4a13-94d1-201c3244b786?fields%5BreviewSubmissionItems%5D=appStoreVersion%2Cstate&fields%5BreviewSubmissions%5D=state%2CsubmittedDate%2Citems&include=items"
+      }
+    }
+  },
+  "after": {
+    "version": {
+      "data": {
+        "type": "appStoreVersions",
+        "id": "39cd5096-b90b-4526-bb20-961d561b1655",
+        "attributes": {
+          "platform": "IOS",
+          "versionString": "1.0.8",
+          "appStoreState": "WAITING_FOR_REVIEW",
+          "appVersionState": "WAITING_FOR_REVIEW"
+        },
+        "relationships": {
+          "build": {
+            "data": {
+              "type": "builds",
+              "id": "c1e9bd2b-be36-45af-8c03-96e197152967"
+            },
+            "links": {
+              "self": "https://api.appstoreconnect.apple.com/v1/appStoreVersions/39cd5096-b90b-4526-bb20-961d561b1655/relationships/build",
+              "related": "https://api.appstoreconnect.apple.com/v1/appStoreVersions/39cd5096-b90b-4526-bb20-961d561b1655/build"
+            }
+          }
+        },
+        "links": {
+          "self": "https://api.appstoreconnect.apple.com/v1/appStoreVersions/39cd5096-b90b-4526-bb20-961d561b1655"
+        }
+      },
+      "included": [
+        {
+          "type": "builds",
+          "id": "c1e9bd2b-be36-45af-8c03-96e197152967",
+          "attributes": {
+            "version": "15",
+            "uploadedDate": "2026-07-21T09:00:35-07:00",
+            "expired": false,
+            "processingState": "VALID",
+            "buildAudienceType": "APP_STORE_ELIGIBLE",
+            "usesNonExemptEncryption": false
+          },
+          "links": {
+            "self": "https://api.appstoreconnect.apple.com/v1/builds/c1e9bd2b-be36-45af-8c03-96e197152967"
+          }
+        }
+      ],
+      "links": {
+        "self": "https://api.appstoreconnect.apple.com/v1/appStoreVersions/39cd5096-b90b-4526-bb20-961d561b1655?fields%5BappStoreVersions%5D=versionString%2Cbuild%2CappStoreState%2CappVersionState%2Cplatform&fields%5Bbuilds%5D=processingState%2CbuildAudienceType%2Cexpired%2CusesNonExemptEncryption%2CuploadedDate%2Cversion&include=build"
+      }
+    },
+    "buildRel": {
+      "data": {
+        "type": "builds",
+        "id": "c1e9bd2b-be36-45af-8c03-96e197152967"
+      },
+      "links": {
+        "self": "https://api.appstoreconnect.apple.com/v1/appStoreVersions/39cd5096-b90b-4526-bb20-961d561b1655/relationships/build",
+        "related": "https://api.appstoreconnect.apple.com/v1/appStoreVersions/39cd5096-b90b-4526-bb20-961d561b1655/build"
+      }
+    },
+    "reviewDetail": {
+      "data": {
+        "type": "appStoreReviewDetails",
+        "id": "d6423445-1883-4e85-9a88-48939d8ad8a5",
+        "attributes": {
+          "contactFirstName": "Joshua",
+          "contactLastName": "Frost",
+          "contactPhone": "8065550100",
+          "contactEmail": "support@splashlens.com",
+          "demoAccountName": "reviewer@splashlens.com",
+          "demoAccountPassword": "Magic link / Continue AR Demo",
+          "demoAccountRequired": false,
+          "notes": "SplashLens is a free utility/reference wrapper around the SplashLens PWA at https://app.splashlens.com/?store=ios.\n\nNo account or demo login is required for core use.\n\nJuly 27, 2026 resubmission note: the native store shell has been updated and deployed to production so store=ios runs as a free-core build only. The App Review path now shows no Stripe checkout links, no web-subscription CTAs, no paid-pilot lead capture, and no external purchase/upgrade buttons. Production evidence for the reviewed URL:\n- https://app.splashlens.com/?store=ios&mode=trainer&utm_source=field_learning_os\n- app.js cache marker: 20260727-store-safe-activation-funnel\n- GitHub commit: 52862c97de4ff3bb8f8a221c1c34e621b2c9976f\n- Cloudflare Pages production deployment: https://c1b5e99b.poolens.pages.dev\n\nSuggested review path:\n1. Launch SplashLens.\n2. If the role picker appears, choose Trainer.\n3. Open Report / Service Proof and use the Field Learning OS buttons: PartSnap Lesson, CPO Scenario, and Proof Review.\n4. Open Scan > PartSnap for optional photo/scanner reference assistance.\n5. Open Report / Service Proof to generate a customer-safe service proof/passport summary.\n6. Optional camera, photo, and microphone prompts appear only after the reviewer starts the related scan, selected-photo, or dictated-note flow.\n\nOnline AI scan features require internet access. PartSnap results are possible matches with visible-proof and missing-proof prompts, not confirmed part-fit results.\n\nSplashLens is a field reference, service-proof, and training-aid workflow. It does not replace equipment manuals, product labels, local code, official certification programs, manufacturer guidance, or qualified technician/CPO judgment. This build does not include completed training certificates, official Aquatic Council/CPO alignment, manufacturer endorsement, or guaranteed diagnosis/part-fit claims."
+        },
+        "relationships": {
+          "appStoreReviewAttachments": {
+            "links": {
+              "self": "https://api.appstoreconnect.apple.com/v1/appStoreReviewDetails/d6423445-1883-4e85-9a88-48939d8ad8a5/relationships/appStoreReviewAttachments",
+              "related": "https://api.appstoreconnect.apple.com/v1/appStoreReviewDetails/d6423445-1883-4e85-9a88-48939d8ad8a5/appStoreReviewAttachments"
+            }
+          }
+        },
+        "links": {
+          "self": "https://api.appstoreconnect.apple.com/v1/appStoreReviewDetails/d6423445-1883-4e85-9a88-48939d8ad8a5"
+        }
+      },
+      "links": {
+        "self": "https://api.appstoreconnect.apple.com/v1/appStoreVersions/39cd5096-b90b-4526-bb20-961d561b1655/appStoreReviewDetail"
+      }
+    },
+    "submission": {
+      "data": {
+        "type": "reviewSubmissions",
+        "id": "e36eb61b-762e-4a13-94d1-201c3244b786",
+        "attributes": {
+          "submittedDate": "2026-07-27T17:42:59.923Z",
+          "state": "WAITING_FOR_REVIEW"
+        },
+        "relationships": {
+          "items": {
+            "meta": {
+              "paging": {
+                "total": 1,
+                "limit": 10
+              }
+            },
+            "data": [
+              {
+                "type": "reviewSubmissionItems",
+                "id": "ZTM2ZWI2MWItNzYyZS00YTEzLTk0ZDEtMjAxYzMyNDRiNzg2fDZ8ODg4NjQwNTY4"
+              }
+            ],
+            "links": {
+              "self": "https://api.appstoreconnect.apple.com/v1/reviewSubmissions/e36eb61b-762e-4a13-94d1-201c3244b786/relationships/items",
+              "related": "https://api.appstoreconnect.apple.com/v1/reviewSubmissions/e36eb61b-762e-4a13-94d1-201c3244b786/items"
+            }
+          }
+        },
+        "links": {
+          "self": "https://api.appstoreconnect.apple.com/v1/reviewSubmissions/e36eb61b-762e-4a13-94d1-201c3244b786"
+        }
+      },
+      "included": [
+        {
+          "type": "reviewSubmissionItems",
+          "id": "ZTM2ZWI2MWItNzYyZS00YTEzLTk0ZDEtMjAxYzMyNDRiNzg2fDZ8ODg4NjQwNTY4",
+          "attributes": {
+            "state": "READY_FOR_REVIEW"
+          },
+          "links": {
+            "self": "https://api.appstoreconnect.apple.com/v1/reviewSubmissionItems/ZTM2ZWI2MWItNzYyZS00YTEzLTk0ZDEtMjAxYzMyNDRiNzg2fDZ8ODg4NjQwNTY4"
+          }
+        }
+      ],
+      "links": {
+        "self": "https://api.appstoreconnect.apple.com/v1/reviewSubmissions/e36eb61b-762e-4a13-94d1-201c3244b786?fields%5BreviewSubmissionItems%5D=appStoreVersion%2Cstate&fields%5BreviewSubmissions%5D=state%2CsubmittedDate%2Citems&include=items"
+      }
+    }
+  }
+}

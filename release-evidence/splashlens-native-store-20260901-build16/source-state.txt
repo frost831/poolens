@@ -1,0 +1,13 @@
+Tue Sep  1 14:57:57 UTC 2026
+origin	https://github.com/throttleshare/poolens.git (fetch)
+origin	https://github.com/throttleshare/poolens.git (push)
+## master...origin/master
+?? .playwright-cli/
+?? output/
+?? release-evidence/
+8830632 Clarify SplashLens handoff commit check
+8ced56b Add SplashLens native store handoff
+92b9d66 Remove callback-risk wording from app shell
+cc3c08f Polish SplashLens field language and cache version
+03d7300 Fix SplashLens PWA scanner recovery
+8830632b502dfbe441f12f098efa7799a0831342

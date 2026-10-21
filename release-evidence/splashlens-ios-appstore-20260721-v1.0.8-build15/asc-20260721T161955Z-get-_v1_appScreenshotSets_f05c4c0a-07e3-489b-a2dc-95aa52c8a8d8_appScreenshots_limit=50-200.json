@@ -1,0 +1,138 @@
+{
+  "data": [
+    {
+      "type": "appScreenshots",
+      "id": "b72d611c-7664-4d64-a50c-9f927cbfc77f",
+      "attributes": {
+        "fileSize": 1187536,
+        "fileName": "01-field-tools.png",
+        "sourceFileChecksum": "3fc77e5a6ed2cc16ae0b8c042ff3e157",
+        "imageAsset": {
+          "templateUrl": "https://is1-ssl.mzstatic.com/image/thumb/PurpleSource221/v4/d2/5a/84/d25a8409-eb46-fea5-5879-e8d2b385149f/01-field-tools.png/{w}x{h}bb.{f}",
+          "width": 1290,
+          "height": 2796
+        },
+        "assetToken": "PurpleSource221/v4/d2/5a/84/d25a8409-eb46-fea5-5879-e8d2b385149f/01-field-tools.png",
+        "assetType": "SortedD74ScreenShot",
+        "uploadOperations": null,
+        "assetDeliveryState": {
+          "errors": [],
+          "warnings": null,
+          "state": "COMPLETE"
+        }
+      },
+      "links": {
+        "self": "https://api.appstoreconnect.apple.com/v1/appScreenshots/b72d611c-7664-4d64-a50c-9f927cbfc77f"
+      }
+    },
+    {
+      "type": "appScreenshots",
+      "id": "a002b0d3-f997-4136-a5a8-32ed3488bfac",
+      "attributes": {
+        "fileSize": 1187536,
+        "fileName": "02-dosing-calculator.png",
+        "sourceFileChecksum": "4b4e0d432863ac4d2907365ddeab7d7c",
+        "imageAsset": {
+          "templateUrl": "https://is1-ssl.mzstatic.com/image/thumb/PurpleSource211/v4/c3/94/eb/c394eb1a-7821-4714-d3fd-e7ea532aef41/02-dosing-calculator.png/{w}x{h}bb.{f}",
+          "width": 1290,
+          "height": 2796
+        },
+        "assetToken": "PurpleSource211/v4/c3/94/eb/c394eb1a-7821-4714-d3fd-e7ea532aef41/02-dosing-calculator.png",
+        "assetType": "SortedD74ScreenShot",
+        "uploadOperations": null,
+        "assetDeliveryState": {
+          "errors": [],
+          "warnings": null,
+          "state": "COMPLETE"
+        }
+      },
+      "links": {
+        "self": "https://api.appstoreconnect.apple.com/v1/appScreenshots/a002b0d3-f997-4136-a5a8-32ed3488bfac"
+      }
+    },
+    {
+      "type": "appScreenshots",
+      "id": "8cea17c4-c37b-4a53-99ef-eebff9584a29",
+      "attributes": {
+        "fileSize": 1187536,
+        "fileName": "03-volume-tools.png",
+        "sourceFileChecksum": "d4de0c167d275acb59370ff1bd68fdd6",
+        "imageAsset": {
+          "templateUrl": "https://is1-ssl.mzstatic.com/image/thumb/PurpleSource221/v4/45/39/13/45391382-f884-f1eb-c0d9-26ad54b4140e/03-volume-tools.png/{w}x{h}bb.{f}",
+          "width": 1290,
+          "height": 2796
+        },
+        "assetToken": "PurpleSource221/v4/45/39/13/45391382-f884-f1eb-c0d9-26ad54b4140e/03-volume-tools.png",
+        "assetType": "SortedD74ScreenShot",
+        "uploadOperations": null,
+        "assetDeliveryState": {
+          "errors": [],
+          "warnings": null,
+          "state": "COMPLETE"
+        }
+      },
+      "links": {
+        "self": "https://api.appstoreconnect.apple.com/v1/appScreenshots/8cea17c4-c37b-4a53-99ef-eebff9584a29"
+      }
+    },
+    {
+      "type": "appScreenshots",
+      "id": "040dcdf0-0632-44ee-83d3-9c60fd7b3457",
+      "attributes": {
+        "fileSize": 1187536,
+        "fileName": "04-filter-guides.png",
+        "sourceFileChecksum": "df79ff06be36859eebe03f225337d554",
+        "imageAsset": {
+          "templateUrl": "https://is1-ssl.mzstatic.com/image/thumb/PurpleSource211/v4/db/ab/1b/dbab1b33-c6c3-971c-63b1-7cca92741a68/04-filter-guides.png/{w}x{h}bb.{f}",
+          "width": 1290,
+          "height": 2796
+        },
+        "assetToken": "PurpleSource211/v4/db/ab/1b/dbab1b33-c6c3-971c-63b1-7cca92741a68/04-filter-guides.png",
+        "assetType": "SortedD74ScreenShot",
+        "uploadOperations": null,
+        "assetDeliveryState": {
+          "errors": [],
+          "warnings": null,
+          "state": "COMPLETE"
+        }
+      },
+      "links": {
+        "self": "https://api.appstoreconnect.apple.com/v1/appScreenshots/040dcdf0-0632-44ee-83d3-9c60fd7b3457"
+      }
+    },
+    {
+      "type": "appScreenshots",
+      "id": "ba480229-4aa9-421c-b801-0440c7eada78",
+      "attributes": {
+        "fileSize": 1187536,
+        "fileName": "05-service-report.png",
+        "sourceFileChecksum": "2d4ebd92c6d2e3168bdd51bfa31e3261",
+        "imageAsset": {
+          "templateUrl": "https://is1-ssl.mzstatic.com/image/thumb/PurpleSource221/v4/7d/58/36/7d583610-6fce-69c2-00d8-a19990a1b36e/05-service-report.png/{w}x{h}bb.{f}",
+          "width": 1290,
+          "height": 2796
+        },
+        "assetToken": "PurpleSource221/v4/7d/58/36/7d583610-6fce-69c2-00d8-a19990a1b36e/05-service-report.png",
+        "assetType": "SortedD74ScreenShot",
+        "uploadOperations": null,
+        "assetDeliveryState": {
+          "errors": [],
+          "warnings": null,
+          "state": "COMPLETE"
+        }
+      },
+      "links": {
+        "self": "https://api.appstoreconnect.apple.com/v1/appScreenshots/ba480229-4aa9-421c-b801-0440c7eada78"
+      }
+    }
+  ],
+  "links": {
+    "self": "https://api.appstoreconnect.apple.com/v1/appScreenshotSets/f05c4c0a-07e3-489b-a2dc-95aa52c8a8d8/appScreenshots?limit=50"
+  },
+  "meta": {
+    "paging": {
+      "total": 5,
+      "limit": 50
+    }
+  }
+}

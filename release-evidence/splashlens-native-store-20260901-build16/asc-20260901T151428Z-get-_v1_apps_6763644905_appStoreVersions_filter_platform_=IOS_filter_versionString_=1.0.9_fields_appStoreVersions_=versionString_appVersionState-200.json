@@ -1,0 +1,26 @@
+{
+  "data": [
+    {
+      "type": "appStoreVersions",
+      "id": "44f0d66b-0643-4459-9454-5246df13ca2a",
+      "attributes": {
+        "platform": "IOS",
+        "versionString": "1.0.9",
+        "appStoreState": "PREPARE_FOR_SUBMISSION",
+        "appVersionState": "PREPARE_FOR_SUBMISSION"
+      },
+      "links": {
+        "self": "https://api.appstoreconnect.apple.com/v1/appStoreVersions/44f0d66b-0643-4459-9454-5246df13ca2a"
+      }
+    }
+  ],
+  "links": {
+    "self": "https://api.appstoreconnect.apple.com/v1/apps/6763644905/appStoreVersions?fields%5BappStoreVersions%5D=versionString%2CappStoreState%2CappVersionState%2Cplatform&filter%5Bplatform%5D=IOS&filter%5BversionString%5D=1.0.9&limit=5"
+  },
+  "meta": {
+    "paging": {
+      "total": 1,
+      "limit": 5
+    }
+  }
+}

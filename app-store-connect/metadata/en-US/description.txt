@@ -1,13 +1,19 @@
-SplashLens is a pool-service field reference app for technicians who need fast lookup, service math, notes, and lightweight field tools.
+SplashLens helps pool and spa techs get off the pad faster.
 
 Use SplashLens to:
 
-- Search pool equipment error codes and symptoms
+- Identify the part with PartSnap and clear photo prompts
+- Check equipment codes and symptom references
+- Prove the visit with saved job history, notes, readings, and customer-safe summaries
+- Use PartSnap Pro and Saved Job Pro when more field capacity is needed
+- Give teams a shared Team Field View for cleaner handoffs
+- Use Facility Assist for daily checks, contamination events, and escalation packets
+- Watch repeat issues before leaving the stop
 - Calculate common chemical dosing adjustments
-- Build service notes and report-style field records
-- Check filter guides, service checklists, and manual reference tools
-- Use optional online AI scan assistance for equipment displays, pool parts, and test strips
+- Keep manual lookup, calculators, notes, filters, and checklists available from the app shell after first load
 
-Manual lookup, calculators, notes, filters, and checklists are designed for field use and can work from the app shell after first load. Online AI scan features require internet access and are assistance only. Always verify AI scan output against equipment manuals, calibrated tests, label directions, and professional field judgment.
+The core app is free. Optional paid add-ons are available on the web, while native store mode keeps direct web checkout calls to action hidden.
 
-SplashLens does not guarantee diagnosis, repair, chemical safety, manufacturer support, or training certification.
+Online AI scan features require internet access and are assistance only. Always verify scan output, part fit, code lookup, dosing math, and job notes against equipment manuals, model numbers, calibrated tests, label directions, and qualified field judgment.
+
+SplashLens does not guarantee diagnosis, repair, chemical safety, manufacturer support, part fit, or training certification.

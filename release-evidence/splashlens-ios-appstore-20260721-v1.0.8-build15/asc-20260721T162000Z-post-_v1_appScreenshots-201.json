@@ -1,0 +1,39 @@
+{
+  "data": {
+    "type": "appScreenshots",
+    "id": "3ba0f05e-bc02-434e-a38d-a7b0fd095948",
+    "attributes": {
+      "fileSize": 283195,
+      "fileName": "02-field-learning-partsnap-lesson.png",
+      "sourceFileChecksum": null,
+      "imageAsset": null,
+      "assetToken": "PurpleSource221/v4/fb/c6/76/fbc6765b-a4ca-bdd2-5716-3a7c27447809/02-field-learning-partsnap-lesson.png",
+      "assetType": "SCREENSHOT",
+      "uploadOperations": [
+        {
+          "method": "PUT",
+          "url": "https://northamerica-1.object-storage.apple.com/itmspod12-assets-massilia-200001/PurpleSource221/v4/fb/c6/76/fbc6765b-a4ca-bdd2-5716-3a7c27447809/TD3CN3K5yrjqmw2GICTNQBOOL2HlMyilzdeDdDN5koY_U003d-1784650799959?partNumber=1&uploadId=054e47e0-8520-11f1-ac88-56c987fefd67&apple-asset-repo-correlation-key=XPX2Q6H35VNXRRR6WGNWUJTFAU&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Date=20260721T162000Z&X-Amz-SignedHeaders=host&X-Amz-Credential=PKIAI0ZGNAD8WKMSOOX0%2F20260721%2Fnorthamerica-1%2Fs3%2Faws4_request&X-Amz-Expires=604800&X-Amz-Signature=9cc236e409ab7a5587b73c95540b544f04e8ee9093451e50fa507e7b03e95581",
+          "length": 283195,
+          "offset": 0,
+          "requestHeaders": [
+            {
+              "name": "Content-Type",
+              "value": "image/png"
+            }
+          ]
+        }
+      ],
+      "assetDeliveryState": {
+        "errors": [],
+        "warnings": null,
+        "state": "AWAITING_UPLOAD"
+      }
+    },
+    "links": {
+      "self": "https://api.appstoreconnect.apple.com/v1/appScreenshots/3ba0f05e-bc02-434e-a38d-a7b0fd095948"
+    }
+  },
+  "links": {
+    "self": "https://api.appstoreconnect.apple.com/v1/appScreenshots"
+  }
+}

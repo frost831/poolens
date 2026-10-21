@@ -1,0 +1,58 @@
+- generic [ref=e2]:
+  - banner [ref=e3]:
+    - generic [ref=e4]:
+      - generic [ref=e11]: SplashLens
+      - generic [ref=e12]: FIELD
+      - generic "Checking offline status..." [ref=e13]
+    - button "Open Field Signals" [ref=e15] [cursor=pointer]:
+      - generic [ref=e269]: "1"
+  - generic [ref=e18]:
+    - generic [ref=e19]: Preferred language
+    - combobox "Preferred language" [ref=e20]:
+      - option "English" [selected]
+      - option "Español"
+  - main [ref=e64]:
+    - generic [ref=e294]:
+      - generic [ref=e295]:
+        - button "ERRORS" [ref=e296] [cursor=pointer]
+        - button "PARTSNAP" [ref=e297] [cursor=pointer]
+        - button "STRIP" [ref=e298] [cursor=pointer]
+        - button "LOOKUP" [ref=e299] [cursor=pointer]
+        - button "CHEM" [ref=e300] [cursor=pointer]
+      - generic [ref=e301]: AI READY - 10 FREE SCANS LEFT
+      - generic [ref=e304]:
+        - generic [ref=e305]: AIM AT EQUIPMENT PART - TAP IDENTIFY
+        - generic [ref=e306]:
+          - button "IDENTIFY PART" [ref=e307] [cursor=pointer]
+          - button "LIGHT" [ref=e308] [cursor=pointer]
+          - button "STOP" [ref=e309] [cursor=pointer]
+        - generic [ref=e311]:
+          - paragraph [ref=e312]: PartSnap AI Service
+          - paragraph [ref=e313]: Shoot the part, then shoot the label.
+          - generic [ref=e314]:
+            - generic [ref=e315]:
+              - generic [ref=e316]: 1. Part
+              - generic [ref=e317]: close + lit
+            - generic [ref=e318]:
+              - generic [ref=e319]: 2. Label
+              - generic [ref=e320]: model proof
+            - generic [ref=e321]:
+              - generic [ref=e322]: 3. Verify
+              - generic [ref=e323]: before buy
+            - generic [ref=e324]:
+              - generic [ref=e325]: 4. Packet
+              - generic [ref=e326]: send / save
+        - generic [ref=e328]:
+          - generic [ref=e329]: CAM
+          - paragraph [ref=e330]: Camera access not available or permission denied. Use Code Lookup to search manually.
+          - button "Go to Code Lookup" [ref=e331] [cursor=pointer]
+  - navigation "SplashLens field tools" [ref=e227]:
+    - button "Errors" [ref=e228] [cursor=pointer]
+    - button "Dosing" [ref=e233] [cursor=pointer]
+    - button "Volume" [ref=e237] [cursor=pointer]
+    - button "Filters" [ref=e241] [cursor=pointer]
+    - button "Guide" [ref=e245] [cursor=pointer]
+    - button "Report" [ref=e250] [cursor=pointer]
+    - button "Pools" [ref=e255] [cursor=pointer]
+    - button "Route" [ref=e260] [cursor=pointer]
+    - button "Scan" [ref=e264] [cursor=pointer]

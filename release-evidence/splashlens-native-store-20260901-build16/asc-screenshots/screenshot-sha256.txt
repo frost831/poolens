@@ -1,0 +1,4 @@
+9459f9af9ba5e0c9725dca17059f89c413a64eed75be717c0e88bd96acc5bc3f  release-evidence/splashlens-native-store-20260901-build16/asc-screenshots/01-partsnap-field-start.png
+5d91a9339bf40c2d8032bca7c64d848714ec9bb71f6943b279f03bb5e5caa193  release-evidence/splashlens-native-store-20260901-build16/asc-screenshots/02-partsnap-pro-scan.png
+9491b6b1856f8035a78c7f4dbc35a5d961fb099bfc7506c326e492a34d67bab0  release-evidence/splashlens-native-store-20260901-build16/asc-screenshots/03-saved-job-history.png
+25a37d9000a30cf0b0b1c24ad406221046324eb66093bcdcf088eecf4afe2b2a  release-evidence/splashlens-native-store-20260901-build16/asc-screenshots/04-repeat-issue-watch.png

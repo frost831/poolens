@@ -1,0 +1,140 @@
+{
+  "data": [
+    {
+      "type": "appScreenshots",
+      "id": "9489121f-a205-49fc-a1bc-e18d2b433a15",
+      "attributes": {
+        "fileSize": 388762,
+        "fileName": "01-partsnap-source-proof.png",
+        "sourceFileChecksum": null,
+        "imageAsset": null,
+        "assetToken": "PurpleSource211/v4/5f/7c/ad/5f7cadb1-74c6-0944-492f-34b9f58d16c5/01-partsnap-source-proof.png",
+        "assetType": "SCREENSHOT",
+        "uploadOperations": [
+          {
+            "method": "PUT",
+            "url": "https://northamerica-1.object-storage.apple.com/itmspod11-assets-massilia-200001/PurpleSource211/v4/5f/7c/ad/5f7cadb1-74c6-0944-492f-34b9f58d16c5/SRqZ0C_tqHcF4FSlppi8znOcT2L4WxyqpuGugcluPPw_U003d-1784650796044?partNumber=1&uploadId=02f9d090-8520-11f1-a71a-70b2b91727b9&apple-asset-repo-correlation-key=4IEFZRGKM4OB6T324VXKKPK6BY&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Date=20260721T161956Z&X-Amz-SignedHeaders=host&X-Amz-Credential=PKIAI0ZGNAD8WKMSOOX0%2F20260721%2Fnorthamerica-1%2Fs3%2Faws4_request&X-Amz-Expires=604800&X-Amz-Signature=78882828e7a7b21e8249b6c9b5948f8be40ffe84711bd7d05a04a9f2789d5eb9",
+            "length": 388762,
+            "offset": 0,
+            "requestHeaders": [
+              {
+                "name": "Content-Type",
+                "value": "image/png"
+              }
+            ]
+          }
+        ],
+        "assetDeliveryState": {
+          "errors": [],
+          "warnings": null,
+          "state": "UPLOAD_COMPLETE"
+        }
+      },
+      "links": {
+        "self": "https://api.appstoreconnect.apple.com/v1/appScreenshots/9489121f-a205-49fc-a1bc-e18d2b433a15"
+      }
+    },
+    {
+      "type": "appScreenshots",
+      "id": "3ba0f05e-bc02-434e-a38d-a7b0fd095948",
+      "attributes": {
+        "fileSize": 283195,
+        "fileName": "02-field-learning-partsnap-lesson.png",
+        "sourceFileChecksum": null,
+        "imageAsset": {
+          "templateUrl": "https://is1-ssl.mzstatic.com/image/thumb/PurpleSource221/v4/fb/c6/76/fbc6765b-a4ca-bdd2-5716-3a7c27447809/02-field-learning-partsnap-lesson.png/{w}x{h}bb.{f}",
+          "width": 1320,
+          "height": 2868
+        },
+        "assetToken": "PurpleSource221/v4/fb/c6/76/fbc6765b-a4ca-bdd2-5716-3a7c27447809/02-field-learning-partsnap-lesson.png",
+        "assetType": "SortedD74ScreenShot",
+        "uploadOperations": null,
+        "assetDeliveryState": {
+          "errors": [],
+          "warnings": null,
+          "state": "COMPLETE"
+        }
+      },
+      "links": {
+        "self": "https://api.appstoreconnect.apple.com/v1/appScreenshots/3ba0f05e-bc02-434e-a38d-a7b0fd095948"
+      }
+    },
+    {
+      "type": "appScreenshots",
+      "id": "4fa585a3-c884-4ee8-a5b0-659e16f41153",
+      "attributes": {
+        "fileSize": 280540,
+        "fileName": "03-cpo-scenario-answer-key.png",
+        "sourceFileChecksum": null,
+        "imageAsset": null,
+        "assetToken": "PurpleSource211/v4/2a/da/dc/2adadc66-e174-2e1c-3cad-11c336922a53/03-cpo-scenario-answer-key.png",
+        "assetType": "SCREENSHOT",
+        "uploadOperations": [
+          {
+            "method": "PUT",
+            "url": "https://northamerica-1.object-storage.apple.com/itmspod11-assets-massilia-200001/PurpleSource211/v4/2a/da/dc/2adadc66-e174-2e1c-3cad-11c336922a53/l-vAAUZHukvDbwHCwnvoYad5fWPHoRcTHcc78Nvm17g_U003d-1784650802027?partNumber=1&uploadId=068a9870-8520-11f1-aa52-4e625396d415&apple-asset-repo-correlation-key=W4HK5R6N7BRTOMV2XDTWS7WV54&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Date=20260721T162002Z&X-Amz-SignedHeaders=host&X-Amz-Credential=PKIAI0ZGNAD8WKMSOOX0%2F20260721%2Fnorthamerica-1%2Fs3%2Faws4_request&X-Amz-Expires=604800&X-Amz-Signature=90163860658b78e6ae53d7f3a450fd4dfc5f7e638c92da418d3fa63352fa8810",
+            "length": 280540,
+            "offset": 0,
+            "requestHeaders": [
+              {
+                "name": "Content-Type",
+                "value": "image/png"
+              }
+            ]
+          }
+        ],
+        "assetDeliveryState": {
+          "errors": [],
+          "warnings": null,
+          "state": "UPLOAD_COMPLETE"
+        }
+      },
+      "links": {
+        "self": "https://api.appstoreconnect.apple.com/v1/appScreenshots/4fa585a3-c884-4ee8-a5b0-659e16f41153"
+      }
+    },
+    {
+      "type": "appScreenshots",
+      "id": "249e9885-6f26-4b9f-bdc6-7afdac6f8341",
+      "attributes": {
+        "fileSize": 283509,
+        "fileName": "04-service-proof-handoff.png",
+        "sourceFileChecksum": null,
+        "imageAsset": null,
+        "assetToken": "PurpleSource221/v4/7b/d9/d2/7bd9d2e7-4034-e93d-d942-b96612101c6f/04-service-proof-handoff.png",
+        "assetType": "SCREENSHOT",
+        "uploadOperations": [
+          {
+            "method": "PUT",
+            "url": "https://northamerica-1.object-storage.apple.com/itmspod12-assets-massilia-200001/PurpleSource221/v4/7b/d9/d2/7bd9d2e7-4034-e93d-d942-b96612101c6f/eVC9Oi2CtosmJyDZcSxKeGtB9lxEwej6eaJT8ua-2go_U003d-1784650804034?partNumber=1&uploadId=07bbec80-8520-11f1-a1e3-70b2b9104691&apple-asset-repo-correlation-key=XVKAIHSY3PFUH3MHQZLJWA6UYU&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Date=20260721T162004Z&X-Amz-SignedHeaders=host&X-Amz-Credential=PKIAI0ZGNAD8WKMSOOX0%2F20260721%2Fnorthamerica-1%2Fs3%2Faws4_request&X-Amz-Expires=604800&X-Amz-Signature=16df3e4afbad68855f0688a864050d1bda58c7b652499f4ea6c8977caf661178",
+            "length": 283509,
+            "offset": 0,
+            "requestHeaders": [
+              {
+                "name": "Content-Type",
+                "value": "image/png"
+              }
+            ]
+          }
+        ],
+        "assetDeliveryState": {
+          "errors": [],
+          "warnings": null,
+          "state": "UPLOAD_COMPLETE"
+        }
+      },
+      "links": {
+        "self": "https://api.appstoreconnect.apple.com/v1/appScreenshots/249e9885-6f26-4b9f-bdc6-7afdac6f8341"
+      }
+    }
+  ],
+  "links": {
+    "self": "https://api.appstoreconnect.apple.com/v1/appScreenshotSets/f05c4c0a-07e3-489b-a2dc-95aa52c8a8d8/appScreenshots?limit=50"
+  },
+  "meta": {
+    "paging": {
+      "total": 4,
+      "limit": 50
+    }
+  }
+}
