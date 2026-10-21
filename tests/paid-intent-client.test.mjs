@@ -430,6 +430,76 @@ test('store paid lane does not open a purchase path while native link-out is on 
   await context.openSplashLensPaidLane('partsnap_pro_monthly', 'Pro');
   assert.match(notice, /unavailable inside this store app/);
   assert.equal(events.some(event => event.name === 'checkout_click'), false);
+  assert.equal(events.some(event => event.name === 'paid_lane_click'), true);
+  assert.equal(events.some(event => event.name === 'store_paid_lane_blocked'), true);
+});
+
+test('captured upgrade clicks still record post-value and account checkout events', () => {
+  const callbacks = {};
+  const calls = [];
+  let current;
+  const document = { body: {}, visibilityState: 'visible', querySelectorAll: () => [],
+    addEventListener: (name, callback) => { callbacks[name] = callback; } };
+  const { context, events } = harness(['initCheckoutClientTracking'], {
+    document,
+    startWebCheckout: (...args) => { calls.push(args); },
+    window: { addEventListener: () => {} },
+    MutationObserver: class { observe() {} },
+    requestAnimationFrame: callback => callback(),
+  });
+  context.initCheckoutClientTracking();
+  current = {
+    dataset: { checkoutPlan: 'monthly', checkoutPlacement: 'field_stop_saved' },
+    getAttribute: () => "this.href=trackPostValueUpgrade('monthly','field_stop_saved')",
+  };
+  callbacks.click({ target: { closest: () => current }, preventDefault() {}, stopImmediatePropagation() {} });
+  current = {
+    dataset: { checkoutPlan: 'monthly', checkoutPlacement: 'account_dashboard' },
+    getAttribute: () => "trackSplashLensEvent('account_pro_checkout_clicked',{plan:'monthly',source:'account_dashboard'})",
+  };
+  callbacks.click({ target: { closest: () => current }, preventDefault() {}, stopImmediatePropagation() {} });
+  assert.deepEqual(calls, [['monthly', 'field_stop_saved'], ['monthly', 'account_dashboard']]);
+  assert.deepEqual(names(events), ['post_value_upgrade_clicked', 'account_pro_checkout_clicked']);
+  assert.equal(events[0].props.feature, 'unlimited_partsnap');
+  assert.equal(events[0].props.placement, 'field_stop_saved');
+  assert.equal(events[1].props.source, 'account_dashboard');
+});
+
+test('Sept-Nov upgrade offer shows Closing Pro beside monthly and yearly', () => {
+  const functions = [...checkoutFunctions, 'closingProSeasonActive', 'renderClosingProUpgradeLink', 'renderPartSnapResultUpgradeOffer'];
+  const october = harness(functions, { isPartSnapPro: () => false });
+  october.context.closingProSeasonActive.month = 9;
+  const html = october.context.renderPartSnapResultUpgradeOffer('first_value_dose_calculator');
+  assert.match(html, /data-checkout-plan="monthly"/);
+  assert.match(html, /data-checkout-plan="yearly"/);
+  assert.match(html, /data-checkout-plan="closing_pass_60d"/);
+  assert.match(html, /upgrade=closing_pass_60d/);
+  assert.match(html, /upgrade\.closingProPrice/);
+  assert.match(html, /trackPostValueUpgrade\('closing_pass_60d'/);
+  const january = harness(functions, { isPartSnapPro: () => false });
+  january.context.closingProSeasonActive.month = 0;
+  assert.doesNotMatch(january.context.renderPartSnapResultUpgradeOffer('first_value_volume_calculator'), /closing_pass_60d/);
+  const store = harness(functions, { isPartSnapPro: () => false, isStoreShellMode: () => true });
+  store.context.closingProSeasonActive.month = 9;
+  assert.equal(store.context.renderPartSnapResultUpgradeOffer('first_value_dose_calculator'), '');
+  const pro = harness(functions, { isPartSnapPro: () => true });
+  pro.context.closingProSeasonActive.month = 9;
+  assert.equal(pro.context.renderPartSnapResultUpgradeOffer('first_value_dose_calculator'), '');
+});
+
+test('a useful calculator result records first action before first value', () => {
+  const result = { isConnected: true, innerHTML: '<p>2.4 oz</p>', getClientRects: () => [{}], querySelector: () => null, insertAdjacentHTML() {} };
+  const { context, events } = harness([...valueFunctions, 'trackCalculationCompleted', 'showFirstValueUpgradeOffer'], {
+    document: { getElementById: id => id === 'dose-result' ? result : null },
+    isPartSnapPro: () => false,
+  });
+  context.trackCalculationCompleted('dose', { role: 'tech' });
+  const funnel = names(events).filter(name => name === 'first_action_started' || name === 'first_value_completed');
+  assert.deepEqual(funnel, ['first_action_started', 'first_value_completed']);
+  assert.equal(events.find(event => event.name === 'first_action_started').props.method, 'dose');
+  assert.equal(events.find(event => event.name === 'first_action_started').props.action, 'dose_calculator');
+  assert.equal(events.find(event => event.name === 'first_action_started').props.qualified_result, undefined);
+  assert.equal(events.find(event => event.name === 'first_value_completed').props.method, 'dose');
 });
 
 test('CTA shown waits for visible viewport content and deduplicates each actual element', () => {

@@ -89,6 +89,52 @@ test('partsnap evidence session keeps traffic tags when its workflow source is n
   assert.equal(sent[0].user_properties.is_internal, false);
 });
 
+test('pay-funnel UI events are forwarded to Amplitude with array groups', async (t) => {
+  const eventNames = [
+    'checkout_cta_shown',
+    'upgrade_click',
+    'post_value_upgrade_clicked',
+    'store_paid_lane_blocked',
+    'paid_lane_click',
+    'account_pro_checkout_clicked',
+  ];
+  const db = database();
+  t.after(() => db.sql.close());
+  const sent = [];
+  t.mock.method(globalThis, 'fetch', async (_url, options) => {
+    sent.push(JSON.parse(options.body).events[0]);
+    return Response.json({ code: 200, events_ingested: 1 });
+  });
+  for (const event of eventNames) {
+    const response = await ingestEvent({
+      request: new Request('https://app.splashlens.com/api/events', {
+        method: 'POST', headers: { 'Content-Type': 'application/json', 'User-Agent': safari },
+        body: JSON.stringify({
+          event, source: 'app', path: '/',
+          props: {
+            plan: event === 'paid_lane_click' ? 'partsnap_pro_monthly' : 'monthly',
+            placement: 'field_stop_saved',
+            store: 'web',
+            source: 'app',
+            attribution_source: 'poolpro',
+            client_id: '5d46a1e0-a882-4c96-9c93-6558d2e34149',
+          },
+        }),
+      }),
+      env: { SUBSCRIBERS_DB: db, AMPLITUDE_API_KEY: 'fixture' },
+    });
+    assert.equal(response.status, 200, event);
+    const payload = await response.json();
+    assert.equal(payload.amplitudeQueued, true, event);
+  }
+  assert.deepEqual(sent.map(event => event.event_type), eventNames);
+  for (const event of sent) {
+    assert.deepEqual(event.groups.publisher, ['poolpro']);
+    assert.equal(event.event_properties.traffic_class, 'real');
+    assert.equal(event.user_properties.is_internal, false);
+  }
+});
+
 test('POST checkout rejects missing attribution, bot and prefetch before Stripe', async (t) => {
   const stripeCalls = [];
   t.mock.method(globalThis, 'fetch', async (...args) => { stripeCalls.push(args); throw new Error('Stripe must not run'); });

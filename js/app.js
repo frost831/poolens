@@ -1163,17 +1163,33 @@ function renderRoleNextAction(role = getSplashLensRole()) {
 }
 
 function trackFirstActionStarted(role, action, props = {}) {
-  if (/partsnap|identify part/i.test(action) && !props.has_frame) return;
+  const eventProps = { ...props };
+  const qualifiedResult = eventProps.qualified_result === true;
+  delete eventProps.qualified_result;
+  if (/partsnap|identify part/i.test(action) && !eventProps.has_frame && !qualifiedResult) return;
   const key = 'splashlens-first-action-started-v1';
   if (trackFirstActionStarted.completed) return;
   try { if (sessionStorage.getItem(key)) return; } catch {}
   const challenge = getFieldChallengeContext();
+  const actionName = String(action || '');
+  const method = eventProps.method || (
+    /partsnap/i.test(actionName) ? 'partsnap'
+    : /checklist|closing/i.test(actionName) ? 'checklist'
+    : /packet|proof/i.test(actionName) ? 'packet'
+    : /strip|ocr/i.test(actionName) ? 'ocr'
+    : /voice/i.test(actionName) ? 'voice'
+    : /calc|dose|lsi|volume|slam|turnover|drain|treatment/i.test(actionName) ? 'dose'
+    : /code|lookup|manual/i.test(actionName) ? 'manual_code_search'
+    : 'tool'
+  );
+  delete eventProps.method;
   trackSplashLensEvent('first_action_started', {
     role: normalizeSplashLensRole(role) || getSplashLensRole() || '',
     action,
     workflow_style: getWorkflowStyle(),
     challenge_path: challenge.challenge_path || '',
-    ...props,
+    ...eventProps,
+    method,
   });
   trackFirstActionStarted.completed = true;
   try { sessionStorage.setItem(key, '1'); } catch {}
@@ -3813,10 +3829,38 @@ function trackFirstUsefulResult(workflow, resultEl, props = {}) {
   try {
     if (sessionStorage.getItem(key)) return;
   } catch {}
-  trackSplashLensEvent('first_value_completed', { workflow, ...props });
+  const workflowName = String(workflow || '');
+  const method = /partsnap/i.test(workflowName) ? 'partsnap'
+    : /checklist|closing/i.test(workflowName) ? 'checklist'
+    : /packet|proof/i.test(workflowName) ? 'packet'
+    : /strip|ocr/i.test(workflowName) ? 'ocr'
+    : /voice/i.test(workflowName) ? 'voice'
+    : /calc|dose|lsi|volume|slam|turnover|drain|treatment/i.test(workflowName) ? 'dose'
+    : /code|lookup|manual/i.test(workflowName) ? 'manual_code_search'
+    : 'tool';
+  if (typeof trackFirstActionStarted === 'function') {
+    trackFirstActionStarted(props.role || (typeof getSplashLensRole === 'function' ? getSplashLensRole() : ''), workflow, {
+      qualified_result: true,
+      ...(props.has_frame === true ? { has_frame: true } : {}),
+    });
+  }
+  trackSplashLensEvent('first_value_completed', { workflow, method, ...props });
   trackFirstUsefulResult.completed = true;
+  if (typeof showFirstValueUpgradeOffer === 'function') showFirstValueUpgradeOffer(workflow, resultEl);
   try {
     sessionStorage.setItem(key, '1');
+  } catch {}
+}
+
+// Most activations happen in calculators/checklists, which never showed a paywall.
+// Offer the web upgrade once per session right after the first useful non-PartSnap result.
+function showFirstValueUpgradeOffer(workflow, resultEl) {
+  try {
+    if (!resultEl || /partsnap/i.test(String(workflow || ''))) return;
+    if (resultEl.querySelector?.('[data-checkout-plan]')) return;
+    const placement = `first_value_${String(workflow || 'tool').toLowerCase().replace(/[^a-z0-9_]+/g, '_').slice(0, 40)}`;
+    const offer = renderPartSnapResultUpgradeOffer(placement);
+    if (offer) resultEl.insertAdjacentHTML('beforeend', offer);
   } catch {}
 }
 
@@ -4740,6 +4784,9 @@ function closingChecklistStatus() {
 function trackClosingChecklistStart() {
   if (closingChecklistStarted) return;
   closingChecklistStarted = true;
+  if (typeof trackFirstActionStarted === 'function') {
+    trackFirstActionStarted(typeof getSplashLensRole === 'function' ? getSplashLensRole() : '', 'closing_checklist');
+  }
   const { checked, photos } = closingChecklistStatus();
   trackSplashLensEvent('closing_checklist_started', { steps: checked, photos });
 }
@@ -10094,6 +10141,7 @@ function showScanLimitModal(result, status) {
           <a data-checkout-plan="monthly" data-checkout-placement="scan_limit_reached" href="${getCheckoutUrl('monthly', 'scan_limit_reached')}" target="_blank" rel="noopener" onclick="this.href=trackCheckoutIntent('monthly','scan_limit_reached')" style="background:#0284c7;color:#fff;text-decoration:none;border-radius:10px;padding:12px 8px;font-size:13px;font-weight:900;">$19 / mo</a>
           <a data-checkout-plan="yearly" data-checkout-placement="scan_limit_reached" href="${getCheckoutUrl('yearly', 'scan_limit_reached')}" target="_blank" rel="noopener" onclick="this.href=trackCheckoutIntent('yearly','scan_limit_reached')" style="background:#16a34a;color:#fff;text-decoration:none;border-radius:10px;padding:12px 8px;font-size:13px;font-weight:900;">$149 / yr</a>
         </div>
+        ${typeof renderClosingProUpgradeLink === 'function' ? renderClosingProUpgradeLink('scan_limit_reached') : ''}
         <button onclick="restorePartSnapPro()" style="width:100%;background:#334155;color:#e2e8f0;border:0;border-radius:10px;padding:10px 8px;font-size:12px;font-weight:900;cursor:pointer;">Restore Pro from checkout email</button>
         <p style="color:#64748b;font-size:10px;line-height:1.4;margin-top:10px;">After web checkout, use the signed activation link. If browser storage is cleared, restore with the checkout email. Store builds remain FreeCore until native billing is added.</p>
       </div>`;
@@ -10172,14 +10220,24 @@ function trackSplashLensEvent(name, props = {}) {
 
   try {
     const beaconBody = new Blob([payload], { type: 'application/json' });
-    if (navigator.sendBeacon?.(SPLASHLENS_EVENT_ENDPOINT, beaconBody)) return;
-    fetch(SPLASHLENS_EVENT_ENDPOINT, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', ...getLanguageHeaders() },
-      body: payload,
-      keepalive: true,
-    }).catch(() => {});
-  } catch {}
+    const beacon = () => {
+      try { return navigator.sendBeacon?.(SPLASHLENS_EVENT_ENDPOINT, beaconBody) === true; } catch { return false; }
+    };
+    // fetch keepalive keeps back-to-back pay-funnel events. sendBeacon can
+    // report success and still drop a second JSON body in the same turn.
+    if (typeof fetch === 'function') {
+      fetch(SPLASHLENS_EVENT_ENDPOINT, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...getLanguageHeaders() },
+        body: payload,
+        keepalive: true,
+      }).catch(() => { beacon(); });
+      return;
+    }
+    beacon();
+  } catch {
+    try { navigator.sendBeacon?.(SPLASHLENS_EVENT_ENDPOINT, new Blob([payload], { type: 'application/json' })); } catch {}
+  }
 }
 
 const PRODUCT_INTELLIGENCE = {
@@ -11118,6 +11176,19 @@ function savePartSnapFieldStop() {
   window.SplashLensFieldSignals?.offerSystemNotificationsAfterValue('partsnap_field_stop_saved');
 }
 
+function closingProSeasonActive() {
+  const month = Number.isInteger(closingProSeasonActive.month) ? closingProSeasonActive.month : new Date().getMonth();
+  return month >= 8 && month <= 10;
+}
+
+function renderClosingProUpgradeLink(placement) {
+  if (!closingProSeasonActive()) return '';
+  if (typeof isStoreShellMode === 'function' && isStoreShellMode()) return '';
+  if (typeof isPartSnapPro === 'function' && isPartSnapPro()) return '';
+  const safePlacement = escAttr(placement);
+  return `<a data-checkout-plan="closing_pass_60d" data-checkout-placement="${safePlacement}" href="/?upgrade=closing_pass_60d&placement=${safePlacement}" target="_blank" rel="noopener" onclick="this.href=trackPostValueUpgrade('closing_pass_60d','${safePlacement}')" style="display:block;margin-top:7px;background:#f59e0b;color:#1c1917;text-decoration:none;text-align:center;border-radius:8px;padding:10px 7px;font-size:11px;font-weight:950;">${a3Text('upgrade.closingProPrice')}</a>`;
+}
+
 function renderPostValueUpgradeOffer() {
   if (isPartSnapPro() || isStoreShellMode()) return '';
   if (!claimPostValueOffer('field_stop_saved')) return '';
@@ -11131,6 +11202,7 @@ function renderPostValueUpgradeOffer() {
         <a data-checkout-plan="monthly" data-checkout-placement="field_stop_saved" href="${getCheckoutUrl('monthly', 'field_stop_saved')}" target="_blank" rel="noopener" onclick="this.href=trackPostValueUpgrade('monthly','field_stop_saved')" style="background:#0284c7;color:#fff;text-decoration:none;text-align:center;border-radius:8px;padding:10px 7px;font-size:11px;font-weight:950;">${a3Text('upgrade.monthlyPrice')}</a>
         <a data-checkout-plan="yearly" data-checkout-placement="field_stop_saved" href="${getCheckoutUrl('yearly', 'field_stop_saved')}" target="_blank" rel="noopener" onclick="this.href=trackPostValueUpgrade('yearly','field_stop_saved')" style="background:#16a34a;color:#fff;text-decoration:none;text-align:center;border-radius:8px;padding:10px 7px;font-size:11px;font-weight:950;">${a3Text('upgrade.yearlyPrice')}</a>
       </div>
+      ${typeof renderClosingProUpgradeLink === 'function' ? renderClosingProUpgradeLink('field_stop_saved') : ''}
     </div>`;
 }
 
@@ -11146,6 +11218,7 @@ function renderPartSnapResultUpgradeOffer(placement = 'partsnap_result') {
         <a data-checkout-plan="monthly" data-checkout-placement="${escAttr(placement)}" href="${getCheckoutUrl('monthly', placement)}" target="_blank" rel="noopener" onclick="this.href=trackPostValueUpgrade('monthly','${escAttr(placement)}')" style="background:#0ea5e9;color:#082f49;text-decoration:none;text-align:center;border-radius:8px;padding:10px 7px;font-size:11px;font-weight:950;">${a3Text('upgrade.goProPrice')}</a>
         <a data-checkout-plan="yearly" data-checkout-placement="${escAttr(placement)}" href="${getCheckoutUrl('yearly', placement)}" target="_blank" rel="noopener" onclick="this.href=trackPostValueUpgrade('yearly','${escAttr(placement)}')" style="background:#22c55e;color:#052e16;text-decoration:none;text-align:center;border-radius:8px;padding:10px 7px;font-size:11px;font-weight:950;">${a3Text('upgrade.saveYearly')}</a>
       </div>
+      ${typeof renderClosingProUpgradeLink === 'function' ? renderClosingProUpgradeLink(placement) : ''}
     </div>`;
 }
 
@@ -11189,6 +11262,7 @@ function showThirdScanSoftGate(result, mode) {
         <a data-checkout-plan="monthly" data-checkout-placement="${placement}" href="${getCheckoutUrl('monthly', placement)}" target="_blank" rel="noopener" onclick="this.href=trackPostValueUpgrade('monthly','soft_gate_scan3')" style="background:#0ea5e9;color:#082f49;text-decoration:none;text-align:center;border-radius:8px;padding:10px 7px;font-size:12px;font-weight:900;">${a3Text('upgrade.monthly')}</a>
         <a data-checkout-plan="yearly" data-checkout-placement="${placement}" href="${getCheckoutUrl('yearly', placement)}" target="_blank" rel="noopener" onclick="this.href=trackPostValueUpgrade('yearly','soft_gate_scan3')" style="background:#22c55e;color:#052e16;text-decoration:none;text-align:center;border-radius:8px;padding:10px 7px;font-size:12px;font-weight:900;">${a3Text('upgrade.yearly')}</a>
       </div>
+      ${typeof renderClosingProUpgradeLink === 'function' ? renderClosingProUpgradeLink(placement) : ''}
       <button type="button" onclick="dismissThirdScanSoftGate();setScanMode('lookup')" style="background:transparent;border:0;color:#cbd5e1;padding:10px 0 0;font-size:12px;font-weight:800;cursor:pointer;">${a3Text('upgrade.softGateManual')}</button>
     </div>`);
   trackSplashLensEvent('soft_gate_shown', { placement, mode, scan_count: SCAN_LIMIT_FREE, remaining_scans: 0, limit: SCAN_LIMIT_FREE });
@@ -11214,7 +11288,11 @@ function trackCheckoutIntent(plan, placement) {
 function trackPostValueUpgrade(plan, placement = 'partsnap_result') {
   const url = trackCheckoutIntent(plan, placement);
   if (!url) return '';
-  trackSplashLensEvent('post_value_upgrade_clicked', { plan, feature: 'unlimited_partsnap', placement });
+  trackSplashLensEvent('post_value_upgrade_clicked', {
+    plan,
+    feature: plan === 'closing_pass_60d' ? 'closing_pass' : 'unlimited_partsnap',
+    placement,
+  });
   return url;
 }
 
@@ -11367,24 +11445,45 @@ function initCheckoutClientTracking() {
   window.addEventListener('scroll', schedule, true);
   window.addEventListener('resize', schedule);
   document.addEventListener('visibilitychange', schedule);
+  function openRenderedCheckoutLink(link) {
+    const plan = link.dataset.checkoutPlan;
+    const placement = link.dataset.checkoutPlacement;
+    const onclick = String(link.getAttribute?.('onclick') || '');
+    startWebCheckout(plan, placement);
+    if (onclick.includes('trackPostValueUpgrade')) {
+      trackSplashLensEvent('post_value_upgrade_clicked', {
+        plan,
+        feature: plan === 'closing_pass_60d' ? 'closing_pass' : 'unlimited_partsnap',
+        placement,
+      });
+    }
+    if (onclick.includes('account_pro_checkout_clicked')) {
+      trackSplashLensEvent('account_pro_checkout_clicked', { plan: plan || 'monthly', source: 'account_dashboard' });
+    }
+  }
   document.addEventListener('click', event => {
     const link = event.target.closest?.('a[data-checkout-plan]');
     if (link && !isStoreShellMode()) {
       event.preventDefault();
       event.stopImmediatePropagation();
-      startWebCheckout(link.dataset.checkoutPlan, link.dataset.checkoutPlacement);
+      openRenderedCheckoutLink(link);
       return;
     }
     if (!isStoreShellMode() || !event.target.closest?.(selector)) return;
     event.preventDefault();
     event.stopImmediatePropagation();
+    const blocked = event.target.closest?.(selector);
+    const plan = blocked?.dataset?.checkoutPlan || '';
+    const label = String(blocked?.textContent || '').trim().slice(0, 80);
+    if (plan) trackSplashLensEvent('paid_lane_click', { plan_key: plan, label, store: getStoreShellMode() });
+    trackSplashLensEvent('store_paid_lane_blocked', { plan_key: plan, label, store: getStoreShellMode(), source: 'checkout_control' });
     showSplashLensNotice('Web checkout is unavailable in this native store build.');
   }, true);
   document.addEventListener('auxclick', event => {
     const link = event.target.closest?.('a[data-checkout-plan]');
     if (!link || event.button !== 1) return;
     event.preventDefault();
-    if (!isStoreShellMode()) startWebCheckout(link.dataset.checkoutPlan, link.dataset.checkoutPlacement);
+    if (!isStoreShellMode()) openRenderedCheckoutLink(link);
   }, true);
   scan();
 }
@@ -12360,6 +12459,7 @@ function renderManualLookupUpgradeOffer(resultCount, query) {
         <a data-checkout-plan="monthly" data-checkout-placement="scan_lookup_search" href="${getCheckoutUrl('monthly', 'scan_lookup_search')}" target="_blank" rel="noopener" onclick="this.href=trackPostValueUpgrade('monthly','scan_lookup_search')" style="background:#0ea5e9;color:#082f49;text-decoration:none;text-align:center;border-radius:8px;padding:10px 7px;font-size:11px;font-weight:950;">${a3Text('upgrade.goProPrice')}</a>
         <a data-checkout-plan="yearly" data-checkout-placement="scan_lookup_search" href="${getCheckoutUrl('yearly', 'scan_lookup_search')}" target="_blank" rel="noopener" onclick="this.href=trackPostValueUpgrade('yearly','scan_lookup_search')" style="background:#22c55e;color:#052e16;text-decoration:none;text-align:center;border-radius:8px;padding:10px 7px;font-size:11px;font-weight:950;">${a3Text('upgrade.saveYearly')}</a>
       </div>
+      ${typeof renderClosingProUpgradeLink === 'function' ? renderClosingProUpgradeLink('scan_lookup_search') : ''}
     </div>`;
 }
 

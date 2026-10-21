@@ -59,7 +59,11 @@ function sanitizeProps(props = {}) {
 function groups(props) {
   const campaign = clean(props.attribution_campaign || props.campaign || '', 120);
   const publisher = clean(props.publication || props.publisher || props.attribution_source || '', 80);
-  const value = pruneObject({ campaign, publisher });
+  // Amplitude rejects the whole event when group values are strings.
+  const value = pruneObject({
+    campaign: campaign ? [campaign] : undefined,
+    publisher: publisher ? [publisher] : undefined,
+  });
   return Object.keys(value).length ? value : undefined;
 }
 

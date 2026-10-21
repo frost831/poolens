@@ -1,10 +1,10 @@
-const CACHE = 'splashlens-v55-partsnap-analytics';
+const CACHE = 'splashlens-v56-upgrade-offer';
 const ASSETS = [
   '/',
   '/js/errors.js?v=20261010-hayward-safety',
   '/js/data.js?v=20261013-crew',
-  '/js/i18n.js?v=20261013-crew',
-  '/js/app.js?v=20261021-partsnap-analytics',
+  '/js/i18n.js?v=20261021-closing-pro',
+  '/js/app.js?v=20261021-upgrade-offer',
   '/js/stop-flow.js?v=20261012-stop-flow',
   '/js/day-recap.js?v=20261012-day-recap',
   '/js/morning-route.js?v=20261012-morning-route',
