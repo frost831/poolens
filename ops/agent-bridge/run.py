@@ -30,7 +30,8 @@ ALLOWED_REPOS = {
         'prompt_scope': 'PC owns this web/site repository. Mac runner jobs are not enabled for poolens-site.',
     },
 }
-REPO = 'frost831/throttleshare'
+# The checkout remote and required checks must follow the repository that queued the job.
+REPO = os.environ.get('GITHUB_REPOSITORY') or 'frost831/poolens'
 
 
 def execute(args, *, cwd=None, env=None, check=True, **kwargs):
@@ -262,7 +263,7 @@ def main():
         previous = continuation_pr(prs, number)
         remote_branch = previous['headRefName'] if previous else branch
         base = previous['headRefName'] if previous else policy['default_branch']
-        create_isolated_checkout(root, worktree, base, branch, env,
+        create_isolated_checkout(root, worktree, base, branch, env, remote=f'https://github.com/{repo}.git',
                                  expected_sha=previous['headRefOid'] if previous else None)
         execute(['git', 'config', 'user.name', 'Joshua Frost'], cwd=worktree, env=env)
         execute(['git', 'config', 'user.email', 'frost@belowzeromedia.com'], cwd=worktree, env=env)
