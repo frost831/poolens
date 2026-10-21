@@ -57,7 +57,7 @@ test('every static a3Text key and dynamic severity/phase key is present', () => 
   for (let phase = 1; phase <= 6; phase++) assert.ok(I18N.es[`closing.phase${phase}`]);
 });
 
-test('first open picker runs once and skips profiles, deep links and explicit language', () => {
+test('first open leaves task starts unobstructed while retaining explicit language controls', () => {
   const sheet = [];
   const select = { value: '', addEventListener() {} };
   const context = vm.createContext({
@@ -78,7 +78,7 @@ test('first open picker runs once and skips profiles, deep links and explicit la
   });
   vm.runInContext(functionSource('initLanguageLayer'), context);
   context.initLanguageLayer({ firstOpen: true });
-  assert.deepEqual(sheet, ['first_open']);
+  assert.deepEqual(sheet, []);
   sheet.length = 0;
   context.localStorage.setItem('splashlens_language_profile', JSON.stringify({ preferredLanguage: 'en' }));
   context.initLanguageLayer({ firstOpen: true });

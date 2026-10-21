@@ -90,6 +90,8 @@
       <span class="tiny">Top queries, last 7 days</span>
     </section>
     <section class="card"><div id="libraryMisses"></div></section>
+    <section class="section-title"><h2>Follow-up requests</h2><span class="tiny">Store Pro interest and PartSnap miss notifications</span></section>
+    <section class="card"><div id="followups"></div></section>
     <section class="section-title">
       <h2>Commercial Control Room</h2>
       <div class="actions">
@@ -242,6 +244,7 @@
           metric('Entitlements granted 30d', m.entitlementGranted30d || 0, 'Server-verified access grants'),
           metric('Active entitlements', t.entitlementsActive || 0, `${t.entitlementsTotal || 0} total`),
           metric('Open access requests', t.intakeOpen || 0, 'Teams, facility, partner, training'),
+          metric('Follow-up requests', t.followupOpen || 0, 'Pro interest and PartSnap misses'),
           metric('Proof records 30d', t.proofLast30 || 0, 'Server-side proof metadata'),
           metric('Team workspaces', t.teamWorkspaces || 0, 'Active teams'),
         ].join('');
@@ -256,6 +259,13 @@
           { label:'Count', key:'count' },
           { label:'Last seen', render:(r) => esc(String(r.lastSeen || '').slice(0, 16)) },
           { label:'Status', render:(r) => `<select data-miss-index="${r.index}" onchange="changeLibraryMissStatus(this)" aria-label="Library miss status for ${esc(r.query || r.model || r.brand)}">${['new','reviewing','resolved','dismissed'].map((value) => `<option value="${value}" ${r.status === value ? 'selected' : ''}>${value}</option>`).join('')}</select>` },
+        ]);
+        document.getElementById('followups').innerHTML = table(admin.recentFollowups, [
+          { label:'Type', key:'kind' },
+          { label:'Email', key:'email' },
+          { label:'Store', key:'store' },
+          { label:'Part', render:(r) => esc([r.brand, r.model, r.query].filter(Boolean).join(' / ')) },
+          { label:'When', render:(r) => esc(String(r.createdAt || '').slice(0, 16)) },
         ]);
         document.getElementById('entitlements').innerHTML = table(admin.recentEntitlements, [
           { label:'Email', key:'email' },

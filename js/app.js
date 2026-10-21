@@ -358,13 +358,9 @@ function initLanguageLayer(counterStart) {
       selectAppLanguage(select.value);
     });
   }
-  const directIntent = ['tab', 'mode', 'workflow', 'checklist', 'challenge', 'activate_scan', 'token', 'session_id', 'sl_login_email', 'sl_login_code', 'upgrade', 'open'].some(key => params.has(key)) || getFacilityDeepLinkParts();
-  let hasProfile = false;
-  try { hasProfile = Boolean(localStorage.getItem(LANGUAGE_STORAGE_KEY)); } catch {}
   refreshFirstUsePreferenceButtons();
   applySplashLensLocalization();
   initLocalizationObserver();
-  if (counterStart.firstOpen && !hasProfile && !params.has('lang') && !directIntent) openLanguageSheet('first_open');
   trackLanguageModeOpen(params);
   trackMarketInterestOpen(params);
 }
@@ -719,8 +715,32 @@ function initCounterModeHome(start) {
   const params = new URLSearchParams(window.location.search);
   if (params.get('open') === 'last_pool' || ['tab', 'mode', 'workflow', 'checklist', 'challenge', 'activate_scan', 'token', 'session_id', 'sl_login_email', 'sl_login_code', 'upgrade'].some(key => params.has(key)) || getFacilityDeepLinkParts()) return;
   counterFirstOpen = Boolean(start.firstOpen);
+  const starts = typeof document !== 'undefined' ? document.getElementById('first-open-starts') : null;
+  if (starts) starts.style.display = start.firstOpen ? '' : 'none';
   if (start.lastTab) showTab(start.lastTab);
   else if (start.firstOpen) showTab('counter');
+}
+
+function openFirstStart(path) {
+  if (!['closing', 'chlorine', 'salt', 'partsnap'].includes(path)) return;
+  trackSplashLensEvent('first_open_start_selected', { path });
+  trackFirstActionStarted(getSplashLensRole() || 'tech', `first_open_${path}`);
+  if (path === 'closing') {
+    showTab('guide');
+    switchClType('closing');
+  } else if (path === 'partsnap') {
+    showTab('scan');
+    setScanMode('parts');
+  } else {
+    showTab('dosing');
+    const target = document.getElementById(path === 'salt' ? 'salt-calculator' : 'dose-param');
+    if (path === 'chlorine' && target) {
+      target.value = 'fc';
+      onParamChange();
+    }
+    target?.scrollIntoView({ block: 'center' });
+    target?.focus();
+  }
 }
 
 function openCounterTool(button) {
@@ -2249,8 +2269,9 @@ function renderVerifiedProofNetwork() {
         <button type="button" class="brain-action green" onclick="startServiceProofWorkflow('visit')">Build proof</button>
         <button type="button" class="brain-action secondary" onclick="renderFieldLearningOS('proof')">Proof Review</button>
         <button type="button" class="brain-action secondary" onclick="showTab('scan');setTimeout(()=>setScanMode('lookup'),80)">Manual Lookup</button>
+        <button type="button" class="brain-action secondary" onclick="openStoreProLinkCapture()">Email me my Pro link</button>
       </div>
-      <p style="color:#64748b;font-size:11px;line-height:1.45;margin-top:10px;">Web subscriptions, checkout links, and paid lead capture are intentionally unavailable in native store shell mode.</p>`
+      <p style="color:#64748b;font-size:11px;line-height:1.45;margin-top:10px;">Core tools stay free. We can follow up by email about Pro. No purchase opens in the store app.</p>`
     );
     trackSplashLensEvent('store_paid_lane_blocked', { source: 'verified_proof_network', store: getStoreShellMode() });
     return;
@@ -2293,8 +2314,12 @@ async function openSplashLensPaidLane(planKey, label) {
   const safeLabel = String(label || 'SplashLens paid lane').trim();
   trackSplashLensEvent('paid_lane_click', { plan_key: safePlan, label: safeLabel });
   if (isStoreShellMode()) {
-    trackSplashLensEvent('store_paid_lane_blocked', { plan_key: safePlan, label: safeLabel, store: getStoreShellMode() });
-    showSplashLensNotice('Paid access is unavailable inside this store app. Manual lookup and core field tools remain free.');
+    if (safePlan === 'partsnap_pro_monthly' || safePlan === 'partsnap_pro_yearly' || safePlan === 'pro') {
+      await openStoreProLinkCapture();
+    } else {
+      trackSplashLensEvent('store_paid_lane_blocked', { plan_key: safePlan, label: safeLabel, store: getStoreShellMode() });
+      showSplashLensNotice('This plan is unavailable inside the store app. Core field tools remain free.');
+    }
     return;
   }
   try {
@@ -2338,6 +2363,53 @@ async function openSplashLensPaidLane(planKey, label) {
     const body = encodeURIComponent(`Hi Joshua,\n\nI want to talk about ${safeLabel} for SplashLens.\n\nEmail: ${email}\n\nTalk Soon,`);
     window.location.href = `mailto:hello@splashlens.com?subject=${subject}&body=${body}`;
   }
+}
+
+async function captureFieldFollowup(kind, details = {}) {
+  const store = getStoreShellMode() || 'web';
+  const request = await openSplashLensSheet({
+    eyebrow: kind === 'pro_link' ? 'Pro updates' : 'PartSnap library',
+    title: kind === 'pro_link' ? 'Email me my Pro link' : "We'll add this part. Notify me.",
+    body: kind === 'pro_link'
+      ? 'Leave your email for a Pro follow-up. This does not start a purchase or activate Pro.'
+      : 'Leave your email so we can follow up when this part has a reviewed library entry. Verify the model and manufacturer before ordering.',
+    primaryLabel: 'Send request',
+    fields: [{ name: 'email', label: 'Email', type: 'email', autocomplete: 'email', maxlength: 180 }],
+    validate: ({ email }) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email || '').trim()) ? '' : 'Enter a valid email address.',
+  });
+  if (!request) return false;
+  const email = String(request.email || '').trim().toLowerCase();
+  try {
+    const response = await fetch('/api/field-followup', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ kind, email, store, ...details }),
+    });
+    const result = await response.json();
+    if (!response.ok || !result.ok) throw new Error('capture_failed');
+    rememberSplashLensIdentity({ email, role: getSplashLensRole() }, 'field_followup');
+    trackSplashLensEvent(kind === 'pro_link' ? 'paid_lane_lead_captured' : 'partsnap_miss_notify_captured', {
+      kind, store, plan_key: kind === 'pro_link' ? 'pro' : '',
+    });
+    showSplashLensNotice(kind === 'pro_link' ? 'Request saved. Watch your email for a Pro follow-up.' : 'Request saved. We will notify you when this part has a reviewed entry.');
+    return true;
+  } catch {
+    showSplashLensNotice('Could not save your request. Please try again when you have a connection.');
+    return false;
+  }
+}
+
+function openStoreProLinkCapture() {
+  if (!isStoreShellMode()) return false;
+  return captureFieldFollowup('pro_link');
+}
+
+function openPartSnapMissCapture() {
+  const part = _lastPartSnapResult || {};
+  return captureFieldFollowup('partsnap_miss', {
+    brand: libraryMissText(part.manufacturer, 60),
+    model: libraryMissText(part.model, 80),
+    query: libraryMissText(part.partNumber || part.component || 'unidentified pool part', 120),
+  });
 }
 
 function getFieldSaveAccount() {
@@ -6383,6 +6455,13 @@ function renderSaltSection() {
     <div style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;padding:10px 12px;margin-bottom:12px;">
       <p style="color:#0369a1;font-size:12px;font-weight:800;">Salt to Raise Level</p>
       <p style="color:#374151;font-size:12px;margin-top:4px;">0.83 lbs per 1,000 gallons per 100 ppm rise · Test with a digital salt meter, not strips</p>
+      <div id="salt-calculator" style="display:grid;gap:8px;margin-top:10px;">
+        <label>Pool volume (gallons)<input id="salt-volume" type="number" min="100" max="1000000" inputmode="decimal"></label>
+        <label>Measured salt (ppm)<input id="salt-current" type="number" min="0" max="10000" inputmode="decimal"></label>
+        <label>Equipment manual target (ppm)<input id="salt-target" type="number" min="0" max="10000" inputmode="decimal"></label>
+        <button type="button" onclick="calculateSaltAdjustment()" style="padding:10px;border:0;border-radius:8px;background:#0369a1;color:#fff;font-weight:800;">Calculate salt adjustment</button>
+        <div id="salt-result" role="status" aria-live="polite"></div>
+      </div>
       <p style="color:#0369a1;font-size:12px;font-weight:800;margin-top:8px;">CYA Recommendation for Salt Pools</p>
       <p style="color:#374151;font-size:12px;margin-top:4px;">${data.cyaRecommendation}</p>
     </div>
@@ -6396,6 +6475,29 @@ function renderSaltSection() {
       <p style="color:#92400e;font-weight:800;font-size:13px;margin-bottom:8px;">Low Output Causes</p>
       ${data.lowOutputCauses.map(s => `<p style="color:#374151;font-size:12px;padding:4px 0;display:flex;gap:7px;"><span style="color:#dc2626;flex-shrink:0;">•</span>${s}</p>`).join('')}
     </div>`);
+}
+
+function calculateSaltAdjustment() {
+  const volumeInput = document.getElementById('salt-volume')?.value;
+  const currentInput = document.getElementById('salt-current')?.value;
+  const targetInput = document.getElementById('salt-target')?.value;
+  const volume = Number(volumeInput);
+  const current = Number(currentInput);
+  const target = Number(targetInput);
+  const result = document.getElementById('salt-result');
+  if (!result) return;
+  if ([volumeInput, currentInput, targetInput].some(value => value == null || String(value).trim() === '') ||
+      ![volume, current, target].every(Number.isFinite) || volume < 100 || volume > 1000000 || current < 0 || current > 10000 || target <= 0 || target > 10000) {
+    result.textContent = 'Enter a valid volume and measured/current target salt levels.';
+    return;
+  }
+  if (target <= current) {
+    result.textContent = 'No salt addition calculated. Recheck readings and follow the equipment manual.';
+    return;
+  }
+  const pounds = 0.83 * (volume / 1000) * ((target - current) / 100);
+  result.textContent = `Estimated salt to add: ${pounds.toFixed(1)} lb. Add in stages, circulate, retest with a reliable meter, and follow the salt system manual and product label.`;
+  trackFirstUsefulResult('salt_calculator', result, { result_count: 1 });
 }
 
 // ═══════════════════════════════════════════
@@ -8930,7 +9032,7 @@ function revealNoCameraFallback(noCam, vWrap, reason = 'camera_unavailable') {
   const upload = document.getElementById('scan-upload-photo');
   if (upload) upload.textContent = cameraFallbackCopy('camera.uploadPhoto', 'Upload photo');
   const search = document.getElementById('scan-manual-search');
-  if (search) search.textContent = cameraFallbackCopy('camera.searchManually', 'Search manually');
+  if (search) search.textContent = denied && _scanMode === 'parts' ? 'Type a model number instead' : cameraFallbackCopy('camera.searchManually', 'Search manually');
   const status = document.getElementById('scan-camera-status');
   if (status) status.textContent = 'CAMERA UNAVAILABLE - RETRY OR UPLOAD A PHOTO';
   noCam.style.scrollMarginBottom = 'calc(184px + env(safe-area-inset-bottom))';
@@ -8958,7 +9060,11 @@ function openPartSnapManualSearch() {
     });
   }
   setScanMode('lookup');
-  document.getElementById('scan-code-input')?.focus();
+  const input = document.getElementById('scan-code-input');
+  if (input) {
+    input.placeholder = 'Type a model number or equipment code';
+    input.focus();
+  }
 }
 
 function retryCameraAccess() {
@@ -10127,6 +10233,7 @@ function showScanLimitModal(result, status) {
           <p style="color:#94a3b8;font-size:13px;line-height:1.5;margin-bottom:14px;">Manual code lookup, dosing, reports, filters, and checklists stay free.</p>
           <div style="display:grid;grid-template-columns:1fr;gap:8px;">
             <button onclick="setScanMode('lookup');document.getElementById('scan-result').innerHTML=''" style="background:#334155;color:#fff;border:0;border-radius:10px;padding:11px 14px;font-size:12px;font-weight:800;cursor:pointer;width:100%;">Use Manual Lookup</button>
+            <button type="button" onclick="openStoreProLinkCapture()" style="background:#0f766e;color:#fff;border:0;border-radius:10px;padding:11px 14px;font-size:12px;font-weight:800;cursor:pointer;width:100%;">Email me my Pro link</button>
           </div>
         </div>`;
     }
@@ -10951,6 +11058,13 @@ function renderPartsSnapResult(ai, result, status) {
         ? 'low_confidence'
         : 'no_match';
   trackPartSnapResultFailure(reason, { confidence: confidence || 'unknown' });
+  if (['library_miss', 'no_match', 'low_confidence'].includes(reason)) {
+    result.innerHTML += `<div class="partsnap-miss-followup" style="margin:12px 0;padding:12px;border:1px solid #fbbf24;border-radius:10px;background:#fffbeb;color:#78350f;">
+      <strong>Part not in the reviewed library yet</strong>
+      <p style="margin:5px 0 9px;font-size:12px;">We logged this miss. Keep the part on order hold until you verify its model, measurements, and current manufacturer diagram.</p>
+      <button type="button" onclick="openPartSnapMissCapture()" style="padding:10px;border:0;border-radius:8px;background:#92400e;color:#fff;font-weight:800;">We'll add this part, notify me</button>
+    </div>`;
+  }
   return false;
 }
 

@@ -420,18 +420,18 @@ test('paid lane checks configuration and posts the same click identity before na
   assert.equal(navigated, 'https://checkout.stripe.com/c/pay/test');
 });
 
-test('store paid lane does not open a purchase path while native link-out is on hold', async () => {
-  let notice = '';
+test('store Pro lane opens email capture without requesting checkout', async () => {
+  let captured = 0;
   const { context, events } = harness(['openSplashLensPaidLane'], {
     getStoreShellMode: () => 'ios', isStoreShellMode: () => true,
-    showSplashLensNotice: message => { notice = message; },
+    openStoreProLinkCapture: () => { captured += 1; },
     fetch: () => { throw new Error('store mode must not request checkout'); },
   });
   await context.openSplashLensPaidLane('partsnap_pro_monthly', 'Pro');
-  assert.match(notice, /unavailable inside this store app/);
+  assert.equal(captured, 1);
   assert.equal(events.some(event => event.name === 'checkout_click'), false);
   assert.equal(events.some(event => event.name === 'paid_lane_click'), true);
-  assert.equal(events.some(event => event.name === 'store_paid_lane_blocked'), true);
+  assert.equal(events.some(event => event.name === 'store_paid_lane_blocked'), false);
 });
 
 test('captured upgrade clicks still record post-value and account checkout events', () => {
