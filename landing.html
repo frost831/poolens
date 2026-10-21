@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SplashLens — Free Field Rescue App for Pool Techs</title>
+  <title>SplashLens - Free Field Rescue App for Pool Techs</title>
   <meta name="description" content="Error codes for every major brand, chemical dosing, SLAM calculator, sand filter reference. Built for field techs. Free. Manual tools work offline.">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -13,7 +13,7 @@
     html { scroll-behavior: smooth; }
     body { font-family: 'Inter', system-ui, sans-serif; background: #fff; color: #0f172a; -webkit-font-smoothing: antialiased; }
 
-    /* ─── NAV ─── */
+    /* --- NAV --- */
     nav {
       position: fixed; top: 0; left: 0; right: 0; z-index: 100;
       display: flex; align-items: center; justify-content: space-between;
@@ -30,7 +30,7 @@
     .nav-cta { background: #fff; color: #0369a1; font-size: 13px; font-weight: 800; padding: 8px 18px; border-radius: 8px; text-decoration: none; transition: all 0.15s; }
     .nav-cta:hover { background: #e0f2fe; }
 
-    /* ─── HERO ─── */
+    /* --- HERO --- */
     .hero {
       min-height: 100vh;
       padding-top: 60px;
@@ -183,7 +183,7 @@
     .hero-wave { position: absolute; bottom: -2px; left: 0; right: 0; line-height: 0; }
     .hero-wave svg { width: 100%; height: auto; }
 
-    /* ─── SECTIONS ─── */
+    /* --- SECTIONS --- */
     section { padding: 80px 24px; }
     .section-inner { max-width: 1100px; margin: 0 auto; }
 
@@ -203,7 +203,7 @@
     }
     .section-sub { font-size: 17px; color: #64748b; margin-bottom: 40px; max-width: 600px; line-height: 1.6; }
 
-    /* ─── LIVE FEATURES ─── */
+    /* --- LIVE FEATURES --- */
     .features-bg { background: #f8fafc; }
     .features-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
     @media (max-width: 900px) { .features-grid { grid-template-columns: repeat(2, 1fr); } }
@@ -230,7 +230,7 @@
       font-size: 10px; font-weight: 800; padding: 3px 10px; border-radius: 20px;
     }
 
-    /* ─── STATS BAR ─── */
+    /* --- STATS BAR --- */
     .stats-bar {
       background: linear-gradient(135deg, #0369a1, #0284c7);
       color: #fff;
@@ -241,7 +241,7 @@
     .stat-num { font-size: 36px; font-weight: 900; letter-spacing: -1px; color: #fff; margin-bottom: 4px; }
     .stat-label { font-size: 13px; color: rgba(255,255,255,0.75); font-weight: 600; }
 
-    /* ─── COMPARISON TABLE ─── */
+    /* --- COMPARISON TABLE --- */
     .comparison-section { background: #fff; }
     .compare-table { width: 100%; border-collapse: collapse; font-size: 14px; }
     .compare-table th { padding: 14px 16px; text-align: center; font-weight: 800; font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; border-bottom: 2px solid #e2e8f0; }
@@ -261,7 +261,7 @@
     .c-price.red { color: #94a3b8; }
     .compare-wrap { overflow-x: auto; border-radius: 16px; border: 1.5px solid #e2e8f0; }
 
-    /* ─── ROADMAP ─── */
+    /* --- ROADMAP --- */
     .roadmap-bg { background: linear-gradient(180deg, #f0f9ff 0%, #e0f2fe 100%); }
     .phases { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
     @media (max-width: 900px) { .phases { grid-template-columns: repeat(2, 1fr); } }
@@ -281,7 +281,7 @@
     .phase-when.green { color: #10b981; }
     .phase-items { list-style: none; }
     .phase-items li { font-size: 13px; color: #475569; padding: 4px 0; display: flex; gap: 8px; align-items: flex-start; }
-    .phase-items li::before { content: '→'; color: #38bdf8; font-weight: 800; flex-shrink: 0; }
+    .phase-items li::before { content: '->'; color: #38bdf8; font-weight: 800; flex-shrink: 0; }
     .phase-card.active .phase-items li::before { color: #10b981; }
     .phase-status {
       position: absolute; top: 14px; right: 14px;
@@ -291,7 +291,7 @@
     .phase-status.building { background: #fef3c7; color: #92400e; }
     .phase-status.planned { background: #ede9fe; color: #5b21b6; }
 
-    /* ─── VISION STATEMENT ─── */
+    /* --- VISION STATEMENT --- */
     .vision-section { background: linear-gradient(135deg, #0c1a2e, #0369a1); color: #fff; text-align: center; }
     .vision-section h2 { font-size: clamp(28px, 4vw, 48px); font-weight: 900; color: #fff; letter-spacing: -1px; margin-bottom: 20px; line-height: 1.1; }
     .vision-section p { font-size: 18px; color: rgba(255,255,255,0.75); max-width: 680px; margin: 0 auto 32px; line-height: 1.7; }
@@ -299,7 +299,7 @@
     .vs-pill { background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2); color: rgba(255,255,255,0.85); font-size: 13px; font-weight: 700; padding: 8px 16px; border-radius: 8px; }
     .vs-pill.highlight { background: #38bdf8; color: #0c1a2e; border-color: #38bdf8; }
 
-    /* ─── WAITLIST ─── */
+    /* --- WAITLIST --- */
     .waitlist-section { background: #f8fafc; }
     .waitlist-card {
       background: linear-gradient(135deg, #0369a1, #0284c7);
@@ -338,7 +338,7 @@
     .waitlist-btn:hover { background: #e0f2fe; transform: translateY(-1px); }
     #waitlist-msg { color: #bae6fd; font-size: 13px; margin-top: 14px; height: 20px; position: relative; }
 
-    /* ─── FOOTER ─── */
+    /* --- FOOTER --- */
     footer {
       background: #0c1a2e; color: rgba(255,255,255,0.5);
       padding: 32px 24px; font-size: 13px;
@@ -351,7 +351,7 @@
 </head>
 <body>
 
-  <!-- ═══ NAV ═══ -->
+  <!-- === NAV === -->
   <nav>
     <div class="nav-logo">
       <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 32 32">
@@ -368,11 +368,11 @@
       <a href="#features" class="nav-link">Features</a>
       <a href="#roadmap" class="nav-link">Roadmap</a>
       <a href="#waitlist" class="nav-link">Early Access</a>
-      <a href="index.html" class="nav-cta">Open the App →</a>
+      <a href="index.html" class="nav-cta">Open the App -></a>
     </div>
   </nav>
 
-  <!-- ═══ HERO ═══ -->
+  <!-- === HERO === -->
   <section class="hero">
     <div class="caustics"></div>
     <div class="bubbles">
@@ -387,7 +387,7 @@
       <div>
         <div class="hero-launch-badge">
           <div class="live-dot"></div>
-          Live Now — Free for Pool Professionals
+          Live Now - Free for Pool Professionals
         </div>
         <h1>The Field Tool<br>Pool Techs<br><em>Actually Want</em></h1>
         <p class="hero-sub">Error codes for every major brand. Chemistry math that works. Sand filter reference. Opening checklist. Manual tools work offline after first load. Built for the job site, not the office.</p>
@@ -396,7 +396,7 @@
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
             Open SplashLens
           </a>
-          <a href="#waitlist" class="btn-waitlist">Get Camera Features →</a>
+          <a href="#waitlist" class="btn-waitlist">Get Camera Features -></a>
         </div>
         <div class="hero-brands">
           <span style="color:rgba(255,255,255,0.55);font-size:11px;font-weight:700;">Covers:</span>
@@ -422,21 +422,21 @@
             <span class="phone-badge-sm">FIELD</span>
           </div>
           <div class="phone-body" style="padding:10px;">
-            <div class="phone-search">🔍  Search error codes, symptoms…</div>
+            <div class="phone-search">  Search error codes, symptoms...</div>
             <div class="phone-brand-row">
               <div class="phone-brand-chip active">Hayward</div>
               <div class="phone-brand-chip">Pentair</div>
               <div class="phone-brand-chip">Jandy</div>
               <div class="phone-brand-chip">More</div>
             </div>
-            <div style="color:#253a50;font-size:7px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;margin-bottom:5px;">H-Series Gas Heater · 12 models</div>
+            <div style="color:#253a50;font-size:7px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;margin-bottom:5px;">H-Series Gas Heater   12 models</div>
             <div class="phone-card">
               <div class="phone-card-code">
                 <span class="phone-code-badge">E04</span>
                 <span class="phone-sev">HIGH</span>
               </div>
               <div class="phone-card-name">High Limit Fault</div>
-              <div class="phone-card-detail">Low water flow · Dirty filter · Closed valves</div>
+              <div class="phone-card-detail">Low water flow   Dirty filter   Closed valves</div>
             </div>
             <div class="phone-card" style="border-left-color:#166534;opacity:0.7;">
               <div class="phone-card-code"><span class="phone-code-badge">SF</span><span style="background:#0a2218;color:#4ade80;font-size:7px;font-weight:800;padding:1px 4px;border-radius:3px;">LOW</span></div>
@@ -465,7 +465,7 @@
     </div>
   </section>
 
-  <!-- ═══ STATS BAR ═══ -->
+  <!-- === STATS BAR === -->
   <div class="stats-bar">
     <div class="stats-inner">
       <div><div class="stat-num">6</div><div class="stat-label">Major Brands Covered</div></div>
@@ -475,10 +475,10 @@
     </div>
   </div>
 
-  <!-- ═══ LIVE FEATURES ═══ -->
+  <!-- === LIVE FEATURES === -->
   <section class="features-bg" id="features">
     <div class="section-inner">
-      <div class="section-label green">LIVE NOW · FREE</div>
+      <div class="section-label green">LIVE NOW   FREE</div>
       <h2 class="section-title">The Field Reference Layer</h2>
       <p class="section-sub">Manual tools are free and cache for offline use after first load. Online scanner features require internet.</p>
 
@@ -488,8 +488,8 @@
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1d4ed8" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
           </div>
           <h3>Error Code Lookup</h3>
-          <p>Every Hayward, Pentair, Jandy, Maytronics, Aiper, and Raypak error code — with causes, fix steps, and severity. No manual hunting.</p>
-          <span class="feature-badge">6 Brands · 80+ Codes</span>
+          <p>Every Hayward, Pentair, Jandy, Maytronics, Aiper, and Raypak error code - with causes, fix steps, and severity. No manual hunting.</p>
+          <span class="feature-badge">6 Brands   80+ Codes</span>
         </div>
         <div class="feature-card">
           <div class="feature-icon" style="background:#ecfdf5;">
@@ -535,7 +535,7 @@
     </div>
   </section>
 
-  <!-- ═══ COMPARISON ═══ -->
+  <!-- === COMPARISON === -->
   <section class="comparison-section" id="compare">
     <div class="section-inner">
       <div class="section-label">BY THE NUMBERS</div>
@@ -555,15 +555,15 @@
             </tr>
           </thead>
           <tbody>
-            <tr><td>Error codes — all major brands</td><td class="highlight"><span class="c-yes">✓</span></td><td><span class="c-no">✗</span></td><td><span class="c-no">✗</span></td><td><span class="c-no">✗</span></td><td><span class="c-no">✗</span></td></tr>
-            <tr><td>Chemical dosing (Pool Math)</td><td class="highlight"><span class="c-yes">✓</span></td><td><span class="c-partial">Basic</span></td><td><span class="c-partial">Beta</span></td><td><span class="c-yes">✓</span></td><td><span class="c-no">✗</span></td></tr>
-            <tr><td>SLAM calculator</td><td class="highlight"><span class="c-yes">✓</span></td><td><span class="c-no">✗</span></td><td><span class="c-no">✗</span></td><td><span class="c-no">✗</span></td><td><span class="c-no">✗</span></td></tr>
-            <tr><td>Sand filter calculator</td><td class="highlight"><span class="c-yes">✓</span></td><td><span class="c-no">✗</span></td><td><span class="c-no">✗</span></td><td><span class="c-no">✗</span></td><td><span class="c-no">✗</span></td></tr>
-            <tr><td>Manual tools offline</td><td class="highlight"><span class="c-yes">✓</span></td><td><span class="c-partial">Building</span></td><td><span class="c-no">✗</span></td><td><span class="c-no">✗</span></td><td><span class="c-no">✗</span></td></tr>
-            <tr><td>Camera test strip reading</td><td class="highlight"><span class="c-soon">Coming</span></td><td><span class="c-no">✗</span></td><td><span class="c-no">✗</span></td><td><span class="c-yes">✓</span></td><td><span class="c-no">✗</span></td></tr>
-            <tr><td>Equipment photo → model ID</td><td class="highlight"><span class="c-soon">Coming</span></td><td><span class="c-no">✗</span></td><td><span class="c-no">✗</span></td><td><span class="c-no">✗</span></td><td><span class="c-no">✗</span></td></tr>
-            <tr><td>Route planning</td><td class="highlight"><span class="c-soon">Coming</span></td><td><span class="c-yes">✓</span></td><td><span class="c-partial">Basic</span></td><td><span class="c-no">✗</span></td><td><span class="c-yes">✓</span></td></tr>
-            <tr><td>Customer CRM</td><td class="highlight"><span class="c-soon">Coming</span></td><td><span class="c-yes">✓</span></td><td><span class="c-yes">✓</span></td><td><span class="c-partial">Basic</span></td><td><span class="c-yes">✓</span></td></tr>
+            <tr><td>Error codes - all major brands</td><td class="highlight"><span class="c-yes">Yes</span></td><td><span class="c-no">No</span></td><td><span class="c-no">No</span></td><td><span class="c-no">No</span></td><td><span class="c-no">No</span></td></tr>
+            <tr><td>Chemical dosing (Pool Math)</td><td class="highlight"><span class="c-yes">Yes</span></td><td><span class="c-partial">Basic</span></td><td><span class="c-partial">Beta</span></td><td><span class="c-yes">Yes</span></td><td><span class="c-no">No</span></td></tr>
+            <tr><td>SLAM calculator</td><td class="highlight"><span class="c-yes">Yes</span></td><td><span class="c-no">No</span></td><td><span class="c-no">No</span></td><td><span class="c-no">No</span></td><td><span class="c-no">No</span></td></tr>
+            <tr><td>Sand filter calculator</td><td class="highlight"><span class="c-yes">Yes</span></td><td><span class="c-no">No</span></td><td><span class="c-no">No</span></td><td><span class="c-no">No</span></td><td><span class="c-no">No</span></td></tr>
+            <tr><td>Manual tools offline</td><td class="highlight"><span class="c-yes">Yes</span></td><td><span class="c-partial">Building</span></td><td><span class="c-no">No</span></td><td><span class="c-no">No</span></td><td><span class="c-no">No</span></td></tr>
+            <tr><td>Camera test strip reading</td><td class="highlight"><span class="c-soon">Coming</span></td><td><span class="c-no">No</span></td><td><span class="c-no">No</span></td><td><span class="c-yes">Yes</span></td><td><span class="c-no">No</span></td></tr>
+            <tr><td>Equipment photo -> model ID</td><td class="highlight"><span class="c-soon">Coming</span></td><td><span class="c-no">No</span></td><td><span class="c-no">No</span></td><td><span class="c-no">No</span></td><td><span class="c-no">No</span></td></tr>
+            <tr><td>Route planning</td><td class="highlight"><span class="c-soon">Coming</span></td><td><span class="c-yes">Yes</span></td><td><span class="c-partial">Basic</span></td><td><span class="c-no">No</span></td><td><span class="c-yes">Yes</span></td></tr>
+            <tr><td>Customer CRM</td><td class="highlight"><span class="c-soon">Coming</span></td><td><span class="c-yes">Yes</span></td><td><span class="c-yes">Yes</span></td><td><span class="c-partial">Basic</span></td><td><span class="c-yes">Yes</span></td></tr>
             <tr>
               <td style="font-weight:800;color:#0f172a;">Monthly cost</td>
               <td class="highlight"><span class="c-price green">FREE</span></td>
@@ -579,7 +579,7 @@
     </div>
   </section>
 
-  <!-- ═══ ROADMAP ═══ -->
+  <!-- === ROADMAP === -->
   <section class="roadmap-bg" id="roadmap">
     <div class="section-inner">
       <div class="section-label amber">WHAT'S COMING</div>
@@ -593,7 +593,7 @@
           <div class="phase-title">Field Intelligence</div>
           <div class="phase-when green">Available Now</div>
           <ul class="phase-items">
-            <li>Error codes — 6 brands</li>
+            <li>Error codes - 6 brands</li>
             <li>Chemical dosing calc</li>
             <li>SLAM calculator</li>
             <li>Sand filter reference</li>
@@ -608,7 +608,7 @@
           <div class="phase-when">Summer 2026</div>
           <ul class="phase-items">
             <li>Test strip photo reader</li>
-            <li>Equipment photo → model ID</li>
+            <li>Equipment photo -> model ID</li>
             <li>Auto-log chemistry from photo</li>
             <li>Works in sunlight + shade</li>
           </ul>
@@ -643,7 +643,7 @@
     </div>
   </section>
 
-  <!-- ═══ VISION STATEMENT ═══ -->
+  <!-- === VISION STATEMENT === -->
   <section class="vision-section">
     <div class="section-inner">
       <h2>"Built backwards from what techs need at the job site.<br>Not forwards from what office software already had."</h2>
@@ -655,11 +655,11 @@
         <span class="vs-pill">Pool Math formulas</span>
         <span class="vs-pill">Free for field techs</span>
       </div>
-      <a href="index.html" style="display:inline-block;background:#38bdf8;color:#0c1a2e;font-weight:800;font-size:15px;padding:14px 32px;border-radius:10px;text-decoration:none;transition:all 0.15s;" onmouseover="this.style.background='#7dd3fc'" onmouseout="this.style.background='#38bdf8'">Open SplashLens — It's Free →</a>
+      <a href="index.html" style="display:inline-block;background:#38bdf8;color:#0c1a2e;font-weight:800;font-size:15px;padding:14px 32px;border-radius:10px;text-decoration:none;transition:all 0.15s;" onmouseover="this.style.background='#7dd3fc'" onmouseout="this.style.background='#38bdf8'">Open SplashLens - It's Free -></a>
     </div>
   </section>
 
-  <!-- ═══ WAITLIST ═══ -->
+  <!-- === WAITLIST === -->
   <section class="waitlist-section" id="waitlist">
     <div class="section-inner">
       <div class="waitlist-card">
@@ -674,7 +674,7 @@
     </div>
   </section>
 
-  <!-- ═══ FOOTER ═══ -->
+  <!-- === FOOTER === -->
   <footer>
     <a href="landing.html" class="footer-logo">
       <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 32 32"><rect width="32" height="32" rx="7" fill="#0284c7"/><path d="M5 20 Q9 16 13 20 Q17 24 21 20 Q25 16 29 20" stroke="white" stroke-width="2.5" fill="none" stroke-linecap="round"/><circle cx="16" cy="11" r="5.5" fill="none" stroke="white" stroke-width="2.5"/><circle cx="16" cy="11" r="2" fill="white"/></svg>
@@ -682,11 +682,11 @@
     </a>
     <div style="display:flex;gap:20px;flex-wrap:wrap;">
       <a href="index.html">Open the App</a>
-      <a href="privacy.html">Privacy</a>
-      <a href="terms.html">Terms</a>
+      <a href="https://splashlens.com/privacy.html">Privacy</a>
+      <a href="https://splashlens.com/terms.html">Terms</a>
       <a href="mailto:hello@splashlens.com">Contact</a>
     </div>
-    <span>© 2026 SplashLens. Built for pool professionals.</span>
+    <span>(c) 2026 SplashLens. Built for pool professionals.</span>
   </footer>
 
   <script>
@@ -695,7 +695,7 @@
       const email = document.getElementById('wl-email').value.trim();
       const btn = document.getElementById('wl-btn');
       const msg = document.getElementById('waitlist-msg');
-      btn.textContent = 'Joining…';
+      btn.textContent = 'Joining...';
       btn.disabled = true;
       try {
         // Store locally for now; CF function endpoint when ready
@@ -709,7 +709,7 @@
           body: JSON.stringify({ email, source: 'landing' })
         }).catch(() => {});
         msg.style.color = '#86efac';
-        msg.textContent = "✓ You're on the list. We'll reach out when camera features drop.";
+        msg.textContent = "You're on the list. We'll reach out when camera features drop.";
         document.getElementById('wl-email').value = '';
       } catch(err) {
         msg.style.color = '#fca5a5';

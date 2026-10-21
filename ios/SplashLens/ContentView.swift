@@ -24,7 +24,7 @@ struct SplashLensWebView: UIViewRepresentable {
         webView.scrollView.contentInsetAdjustmentBehavior = .never
         webView.isOpaque = false
         webView.backgroundColor = UIColor(red: 0.02, green: 0.07, blue: 0.09, alpha: 1)
-        webView.load(URLRequest(url: storeURL, cachePolicy: .returnCacheDataElseLoad, timeoutInterval: 30))
+        webView.load(URLRequest(url: storeURL, cachePolicy: .reloadIgnoringLocalCacheData, timeoutInterval: 30))
         return webView
     }
 
@@ -60,7 +60,7 @@ struct SplashLensWebView: UIViewRepresentable {
                 items.append(URLQueryItem(name: "store", value: "ios"))
                 components?.queryItems = items
                 if let adjusted = components?.url {
-                    webView.load(URLRequest(url: adjusted))
+                    webView.load(URLRequest(url: adjusted, cachePolicy: .reloadIgnoringLocalCacheData, timeoutInterval: 30))
                     decisionHandler(.cancel)
                     return
                 }
@@ -70,7 +70,7 @@ struct SplashLensWebView: UIViewRepresentable {
         }
 
         func webViewWebContentProcessDidTerminate(_ webView: WKWebView) {
-            webView.load(URLRequest(url: storeURL, cachePolicy: .returnCacheDataElseLoad, timeoutInterval: 30))
+            webView.load(URLRequest(url: storeURL, cachePolicy: .reloadIgnoringLocalCacheData, timeoutInterval: 30))
         }
     }
 }

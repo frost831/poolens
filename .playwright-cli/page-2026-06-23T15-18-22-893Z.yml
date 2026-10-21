@@ -1,0 +1,60 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - generic [ref=e3]:
+      - img [ref=e4]
+      - generic [ref=e10]: SplashLens
+      - generic [ref=e11]: FIELD
+      - generic "Offline ready - all data cached" [ref=e12]
+  - main [ref=e13]:
+    - generic [ref=e14]:
+      - generic [ref=e15]:
+        - paragraph [ref=e16]: SplashLens field rescue
+        - heading "Find the part. Fix the stop." [level=1] [ref=e17]
+        - paragraph [ref=e18]: Tap the big thing you need. Get a short answer. Verify before buying.
+        - generic [ref=e19]:
+          - button "PartSnap Parts ID Photo the part. Then photo the label." [ref=e20] [cursor=pointer]:
+            - strong [ref=e21]: PartSnap Parts ID
+            - generic [ref=e22]: Photo the part. Then photo the label.
+          - button "Scan Code Point at the display." [ref=e23] [cursor=pointer]:
+            - strong [ref=e24]: Scan Code
+            - generic [ref=e25]: Point at the display.
+          - button "Search Code Type E05, FLO, IF, LO." [ref=e26] [cursor=pointer]:
+            - strong [ref=e27]: Search Code
+            - generic [ref=e28]: Type E05, FLO, IF, LO.
+          - button "Dose Pool Gallons in. Amount out." [ref=e29] [cursor=pointer]:
+            - strong [ref=e30]: Dose Pool
+            - generic [ref=e31]: Gallons in. Amount out.
+          - button "Service Note Clean note. Copy it." [ref=e32] [cursor=pointer]:
+            - strong [ref=e33]: Service Note
+            - generic [ref=e34]: Clean note. Copy it.
+      - generic [ref=e35]:
+        - img
+        - searchbox "Search code, symptom, brand..." [ref=e36]
+      - generic [ref=e37]:
+        - button "Hayward" [ref=e38] [cursor=pointer]
+        - button "Pentair" [ref=e39] [cursor=pointer]
+        - button "Jandy / Zodiac" [ref=e40] [cursor=pointer]
+        - button "Maytronics (Dolphin)" [ref=e41] [cursor=pointer]
+        - button "Raypak" [ref=e42] [cursor=pointer]
+        - button "Polaris (Zodiac)" [ref=e43] [cursor=pointer]
+        - button "More brands (15)" [ref=e44] [cursor=pointer]
+      - generic [ref=e46]:
+        - img [ref=e47]
+        - paragraph [ref=e50]: Pick a brand or search
+        - paragraph [ref=e51]: Hayward / Pentair / Jandy / Raypak
+  - navigation "Primary tools" [ref=e52]:
+    - button "Fix" [ref=e53] [cursor=pointer]:
+      - img [ref=e54]
+      - generic [ref=e57]: Fix
+    - button "Dose" [ref=e58] [cursor=pointer]:
+      - img [ref=e59]
+      - generic [ref=e61]: Dose
+    - button "Parts" [ref=e62] [cursor=pointer]:
+      - img [ref=e63]
+      - generic [ref=e66]: Parts
+    - button "Report" [ref=e67] [cursor=pointer]:
+      - img [ref=e68]
+      - generic [ref=e71]: Report
+    - button "More" [ref=e72] [cursor=pointer]:
+      - img [ref=e73]
+      - generic [ref=e77]: More

@@ -1,8 +1,8 @@
-// SplashLens app.js — field intelligence UI logic
+// SplashLens app.js - field intelligence UI logic
 
-// ═══════════════════════════════════════════
+// -------------------------------------------
 // STATE
-// ═══════════════════════════════════════════
+// -------------------------------------------
 const S = {
   tab: 'errors',
   brand: null,
@@ -175,9 +175,9 @@ const DOSE_NEED_LABELS = {
   cya: 'Raise stabilizer'
 };
 
-// ═══════════════════════════════════════════
+// -------------------------------------------
 // BOOT
-// ═══════════════════════════════════════════
+// -------------------------------------------
 document.addEventListener('DOMContentLoaded', () => {
   initLanguageLayer();
   captureScanEntitlementFromUrl();
@@ -195,22 +195,44 @@ document.addEventListener('DOMContentLoaded', () => {
   trackSplashLensEvent('app_open', { tab: S.tab });
 });
 
-// ═══════════════════════════════════════════
+// -------------------------------------------
 // TABS
-// ═══════════════════════════════════════════
+// -------------------------------------------
 function showTab(name) {
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
   const panel = document.getElementById(`tab-${name}`);
   const btn   = document.getElementById(`nav-${name}`);
   if (panel) panel.classList.add('active');
-  if (btn)   btn.classList.add('active');
   if (S.tab === 'scan' && name !== 'scan') stopCamera();
   S.tab = name;
+  toggleMoreTools(false);
+  if (btn)   btn.classList.add('active');
+  else if (['volume', 'sand', 'guide', 'pools', 'route'].includes(name)) document.getElementById('nav-more')?.classList.add('active');
   window.scrollTo(0, 0);
   if (name === 'route')  renderRoute();
   if (name === 'scan')   initScanTab();
   if (name === 'dosing') renderSlamBanner();
+}
+
+function toggleMoreTools(force) {
+  const panel = document.getElementById('more-tools-panel');
+  const nav = document.getElementById('nav-more');
+  if (!panel) return;
+  const open = typeof force === 'boolean' ? force : !panel.classList.contains('open');
+  panel.classList.toggle('open', open);
+  if (!nav) return;
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  if (open || ['volume', 'sand', 'guide', 'pools', 'route'].includes(S.tab)) {
+    nav.classList.add('active');
+  } else {
+    document.getElementById(`nav-${S.tab}`)?.classList.add('active');
+  }
+}
+
+function openToolTab(name) {
+  showTab(name);
+  toggleMoreTools(false);
 }
 
 function initDeepLink() {
@@ -219,9 +241,9 @@ function initDeepLink() {
   if (tab && allowed.has(tab)) showTab(tab);
 }
 
-// ═══════════════════════════════════════════
+// -------------------------------------------
 // PERSISTENT POOL VOLUME
-// ═══════════════════════════════════════════
+// -------------------------------------------
 function onVolumeChange(val) {
   const n = parseFloat(val);
   if (n > 0) {
@@ -273,9 +295,9 @@ function quickServiceNote() {
   }, 80);
 }
 
-// ═══════════════════════════════════════════
+// -------------------------------------------
 // ERROR CODES
-// ═══════════════════════════════════════════
+// -------------------------------------------
 let activeVoiceNote = null;
 
 function speechRecognitionCtor() {
@@ -390,9 +412,15 @@ function initErrors() {
 
 function renderBrandGrid() {
   const el = document.getElementById('brand-grid');
-  el.innerHTML = Object.entries(window.ERROR_DB).map(([id, b]) =>
+  const topBrands = ['hayward', 'pentair', 'jandy', 'maytronics', 'raypak', 'polaris'];
+  const entries = Object.entries(window.ERROR_DB);
+  const visible = renderBrandGrid.showAll ? entries : entries.filter(([id]) => topBrands.includes(id));
+  const hiddenCount = Math.max(0, entries.length - visible.length);
+  el.innerHTML = visible.map(([id, b]) =>
     `<button class="brand-btn" id="brand-${id}" onclick="selectBrand('${id}')">${b.label}</button>`
-  ).join('');
+  ).join('') + (!renderBrandGrid.showAll && hiddenCount
+    ? `<button class="brand-btn" type="button" onclick="renderBrandGrid.showAll=true;renderBrandGrid()" style="grid-column:1 / -1;background:#f8fafc;color:#0369a1;">More brands (${hiddenCount})</button>`
+    : '');
 }
 
 function selectBrand(id) {
@@ -461,7 +489,7 @@ function renderCodesForBrand(brandId, catFilter) {
           <span style="color:#0f172a;font-weight:800;font-size:13px;">${catName}</span>
         </div>
         ${cat.note ? `<div class="warn-box" style="margin-bottom:8px;font-size:11px;">${cat.note}</div>` : ''}
-        <p style="color:#64748b;font-size:11px;margin-bottom:8px;">Models: ${cat.models.slice(0,5).join(' · ')}${cat.models.length > 5 ? ` +${cat.models.length - 5}` : ''}</p>
+        <p style="color:#64748b;font-size:11px;margin-bottom:8px;">Models: ${cat.models.slice(0,5).join(' / ')}${cat.models.length > 5 ? ` +${cat.models.length - 5}` : ''}</p>
         ${cat.codes.map((c, i) => codeCard(c, `${brandId}-${slug(catName)}-${i}`, brand.color)).join('')}
       </div>`;
   });
@@ -472,6 +500,10 @@ function renderCodesForBrand(brandId, catFilter) {
 function codeCard(code, uid, brandColor) {
   const isLED = code.code.startsWith('LED:') || code.code.startsWith('No ');
   const sevClass = { low: 'badge-low', medium: 'badge-med', high: 'badge-high' }[code.severity] || 'badge-med';
+  const causes = (code.causes || []).filter(Boolean).slice(0, 3);
+  const fixes = (code.fix || []).filter(Boolean).slice(0, 4);
+  const extraCauseCount = Math.max(0, (code.causes || []).length - causes.length);
+  const extraFixCount = Math.max(0, (code.fix || []).length - fixes.length);
   return `
     <div class="error-card" style="border-left:3px solid ${brandColor};">
       <button class="error-toggle" onclick="toggleCode('${uid}')">
@@ -487,15 +519,17 @@ function codeCard(code, uid, brandColor) {
       </button>
       <div id="det-${uid}" class="error-detail">
         <div style="padding-top:12px;">
-          <p style="color:#64748b;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;margin-bottom:7px;">Possible Causes</p>
-          <ul style="list-style:none;">
-            ${code.causes.map(c => `<li style="display:flex;gap:7px;padding:3px 0;font-size:13px;color:#374151;"><span style="color:#dc2626;flex-shrink:0;margin-top:1px;">•</span>${c}</li>`).join('')}
-          </ul>
-          <p style="color:#64748b;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;margin:12px 0 7px;">Fix Steps</p>
-          <ol style="list-style:none;">
-            ${code.fix.map((f, i) => `<li style="display:flex;gap:8px;padding:4px 0;font-size:13px;color:#374151;"><span style="color:#0284c7;font-weight:900;flex-shrink:0;min-width:16px;">${i+1}.</span>${f}</li>`).join('')}
-          </ol>
-          ${code.callpro ? `<div class="badge-pro" style="margin-top:10px;padding:8px 10px;border-radius:8px;font-size:12px;font-weight:600;text-transform:none;letter-spacing:0;">⚠ This fault typically requires a licensed technician. Do not bypass safety controls.</div>` : ''}
+          <p style="color:#64748b;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.06em;margin-bottom:7px;">Likely cause</p>
+          <div style="display:grid;gap:6px;">
+            ${causes.map(c => `<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:9px 10px;font-size:13px;line-height:1.35;color:#334155;">${c}</div>`).join('')}
+          </div>
+          ${extraCauseCount ? `<p style="color:#94a3b8;font-size:11px;margin-top:6px;">${extraCauseCount} more cause${extraCauseCount === 1 ? '' : 's'} in the full reference.</p>` : ''}
+          <p style="color:#64748b;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.06em;margin:14px 0 7px;">Do next</p>
+          <div style="display:grid;gap:7px;">
+            ${fixes.map((f, i) => `<div style="display:grid;grid-template-columns:24px 1fr;gap:8px;align-items:start;background:#ffffff;border:1px solid #e2e8f0;border-radius:8px;padding:9px 10px;font-size:13px;line-height:1.35;color:#334155;"><span style="color:#0284c7;font-weight:900;">${i+1}</span><span>${f}</span></div>`).join('')}
+          </div>
+          ${extraFixCount ? `<p style="color:#94a3b8;font-size:11px;margin-top:6px;">${extraFixCount} more check${extraFixCount === 1 ? '' : 's'} in the full reference.</p>` : ''}
+          ${code.callpro ? `<div class="badge-pro" style="margin-top:10px;padding:9px 10px;border-radius:8px;font-size:12px;font-weight:700;text-transform:none;letter-spacing:0;">Safety: licensed tech recommended. Do not bypass safety controls.</div>` : ''}
         </div>
       </div>
     </div>`;
@@ -512,6 +546,7 @@ function onErrorSearch(q) {
   q = q.trim().toLowerCase();
   const clearBtn = document.getElementById('search-clear');
   clearBtn.style.display = q ? '' : 'none';
+  setErrorSearchMode(Boolean(q));
   if (!q) {
     if (S.brand) renderCodesForBrand(S.brand, S.category);
     else document.getElementById('error-results').innerHTML = emptyState();
@@ -535,17 +570,27 @@ function onErrorSearch(q) {
     `<div style="margin-bottom:4px;">
        <p style="color:#64748b;font-size:11px;margin-bottom:3px;display:flex;align-items:center;gap:5px;">
          <span style="width:7px;height:7px;border-radius:50%;background:${brand.color};display:inline-block;"></span>
-         ${brand.label} — ${catName}
+         ${brand.label} - ${catName}
        </p>
        ${codeCard(code, `srch-${brandId}-${i}`, brand.color)}
      </div>`
   ).join('');
 }
 
+function setErrorSearchMode(active) {
+  const hero = document.getElementById('rescue-hero');
+  const brands = document.getElementById('brand-grid');
+  const categories = document.getElementById('category-strip');
+  if (hero) hero.style.display = active ? 'none' : '';
+  if (brands) brands.style.display = active ? 'none' : 'grid';
+  if (categories && active) categories.style.display = 'none';
+}
+
 function clearSearch() {
   const el = document.getElementById('error-search');
   el.value = '';
   document.getElementById('search-clear').style.display = 'none';
+  setErrorSearchMode(false);
   if (S.brand) renderCodesForBrand(S.brand, S.category);
   else document.getElementById('error-results').innerHTML = emptyState();
   el.focus();
@@ -555,13 +600,13 @@ function emptyState() {
   return `<div style="text-align:center;padding:40px 16px;">
     <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="1.5" style="margin:0 auto 14px;display:block;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
     <p style="font-size:15px;color:#475569;margin-bottom:5px;font-weight:600;">Pick a brand or search</p>
-    <p style="font-size:12px;color:#94a3b8;">Hayward · Pentair · Jandy · Maytronics · Aiper · Raypak</p>
+    <p style="font-size:12px;color:#94a3b8;">Hayward / Pentair / Jandy / Raypak</p>
   </div>`;
 }
 
-// ═══════════════════════════════════════════
+// -------------------------------------------
 // DOSING CALCULATOR
-// ═══════════════════════════════════════════
+// -------------------------------------------
 function initDosing() {
   renderSlamBanner();
   renderSlamTypeBtns();
@@ -646,7 +691,7 @@ function calculateDose() {
       unit    = p.unit;
       product = p.label;
       note    = p.note;
-      basis   = `${volume.toLocaleString()} gal · raising FC by ${delta.toFixed(1)} ppm`;
+      basis   = `${volume.toLocaleString()} gal  /  raising FC by ${delta.toFixed(1)} ppm`;
       break;
     }
     case 'ph_lower': {
@@ -666,7 +711,7 @@ function calculateDose() {
         product = 'Dry Acid (Sodium Bisulfate)';
         note    = 'Broadcast across surface with pump running. Safer to handle than muriatic.';
       }
-      basis = `${volume.toLocaleString()} gal · lowering pH by ${delta.toFixed(2)} · TA ${ta} ppm`;
+      basis = `${volume.toLocaleString()} gal  /  lowering pH by ${delta.toFixed(2)}  /  TA ${ta} ppm`;
       break;
     }
     case 'ph_raise': {
@@ -676,7 +721,7 @@ function calculateDose() {
       unit    = 'oz dry';
       product = 'Soda Ash (pH Up)';
       note    = 'Broadcast across the deep end with pump running. Also raises TA slightly.';
-      basis   = `${volume.toLocaleString()} gal · raising pH by ${delta.toFixed(2)}`;
+      basis   = `${volume.toLocaleString()} gal  /  raising pH by ${delta.toFixed(2)}`;
       break;
     }
     case 'ta': {
@@ -686,7 +731,7 @@ function calculateDose() {
       unit    = 'lbs';
       product = 'Baking Soda (Sodium Bicarbonate)';
       note    = 'Broadcast across the surface. Retest in 1 hour. Minor pH rise expected.';
-      basis   = `${volume.toLocaleString()} gal · raising TA by ${delta} ppm`;
+      basis   = `${volume.toLocaleString()} gal  /  raising TA by ${delta} ppm`;
       break;
     }
     case 'ch': {
@@ -695,8 +740,8 @@ function calculateDose() {
       amount  = (delta / 10) * vf * window.CHEM_DATA.dosing.ch.raise[0].factor;
       unit    = 'lbs';
       product = 'Calcium Chloride';
-      note    = '⚠ Extremely exothermic. Always pre-dissolve in a bucket of water before adding. Never add dry directly to pool.';
-      basis   = `${volume.toLocaleString()} gal · raising CH by ${delta} ppm`;
+      note    = 'Warning: Extremely exothermic. Always pre-dissolve in a bucket of water before adding. Never add dry directly to pool.';
+      basis   = `${volume.toLocaleString()} gal  /  raising CH by ${delta} ppm`;
       break;
     }
     case 'cya': {
@@ -705,8 +750,8 @@ function calculateDose() {
       amount  = (delta / 10) * vf * window.CHEM_DATA.dosing.cya.raise[0].factor;
       unit    = 'lbs';
       product = 'Cyanuric Acid (Stabilizer)';
-      note    = 'Place in a sock in the skimmer basket. Dissolves slowly — takes 1-2 weeks. Retest accurately after 7 days.';
-      basis   = `${volume.toLocaleString()} gal · raising CYA by ${delta} ppm`;
+      note    = 'Place in a sock in the skimmer basket. Dissolves slowly - takes 1-2 weeks. Retest accurately after 7 days.';
+      basis   = `${volume.toLocaleString()} gal  /  raising CYA by ${delta} ppm`;
       break;
     }
   }
@@ -861,9 +906,9 @@ function calculateLsiPreview(opts = {}) {
   return { before: beforeVal, after: afterVal };
 }
 
-// ═══════════════════════════════════════════
+// -------------------------------------------
 // SLAM CALCULATOR
-// ═══════════════════════════════════════════
+// -------------------------------------------
 function renderSlamTypeBtns() {
   document.getElementById('slam-type-btns').innerHTML =
     Object.entries(window.CHEM_DATA.slam).map(([id, t]) =>
@@ -937,14 +982,14 @@ function calculateSlam() {
       <p style="color:#94a3b8;font-size:10px;margin-top:8px;">OCLT: After SLAM, test FC at dusk and dawn. Pass = loss &lt; 1 ppm overnight.</p>
       <button onclick="startSlamTracker(${targetFC},'${S.slamType}',${vol},${cya})"
         style="width:100%;margin-top:12px;padding:14px;background:#92400e;color:#fef3c7;border:none;border-radius:10px;font-size:14px;font-weight:800;cursor:pointer;letter-spacing:.02em;">
-        ▶ Start SLAM Tracker (Multi-Day)
+        Start SLAM Tracker (Multi-Day)
       </button>
     </div>`);
 }
 
-// ═══════════════════════════════════════════
+// -------------------------------------------
 // SLAM MULTI-DAY TRACKER
-// ═══════════════════════════════════════════
+// -------------------------------------------
 const SLAM_KEY = 'poolens-slam';
 
 function getSlamState() {
@@ -988,8 +1033,8 @@ function renderSlamBanner() {
 
   const dayNum    = Math.floor((Date.now() - new Date(s.startDate)) / 86400000) + 1;
   const lastCheck = s.checks.length ? s.checks[s.checks.length - 1] : null;
-  const lastFC    = lastCheck ? `${lastCheck.fc} ppm` : '—';
-  const lastTime  = lastCheck ? new Date(lastCheck.time).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) : '—';
+  const lastFC    = lastCheck ? `${lastCheck.fc} ppm` : '-';
+  const lastTime  = lastCheck ? new Date(lastCheck.time).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) : '-';
   const passCount = s.checks.filter(c => c.pass).length;
   const checkCount = s.checks.length;
   const ocltReady  = passCount >= 2 && checkCount >= 4;
@@ -1018,7 +1063,7 @@ function renderSlamBanner() {
         </div>
         <div style="background:${ocltReady?'rgba(21,128,61,0.4)':'rgba(0,0,0,0.2)'};border-radius:8px;padding:8px;text-align:center;">
           <p style="font-size:9px;opacity:.7;font-weight:700;text-transform:uppercase;margin-bottom:3px;">OCLT</p>
-          <p style="font-size:18px;font-weight:900;">${s.oclt.dawn !== null ? '✓' : ocltReady ? '→' : '⏳'}</p>
+          <p style="font-size:18px;font-weight:900;">${s.oclt.dawn !== null ? 'OK' : ocltReady ? '->' : 'WAIT'}</p>
           <p style="font-size:9px;opacity:.6;">${s.oclt.dawn !== null ? 'Done' : ocltReady ? 'Ready' : 'Hold'}</p>
         </div>
       </div>
@@ -1035,12 +1080,12 @@ function renderSlamBanner() {
           ${[...s.checks].reverse().slice(0,5).map(c => `
             <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.08);">
               <span style="font-size:12px;opacity:.7;">${new Date(c.time).toLocaleString([],{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})}</span>
-              <span style="font-size:14px;font-weight:700;color:${c.pass?'#86efac':'#fca5a5'};">${c.fc} ppm ${c.pass?'✓':'✗'}</span>
+              <span style="font-size:14px;font-weight:700;color:${c.pass?'#86efac':'#fca5a5'};">${c.fc} ppm ${c.pass?'OK':'NO'}</span>
             </div>`).join('')}
         </div>` : ''}
       ${ocltReady && !s.oclt.dusk ? `
         <div style="margin-top:10px;background:rgba(21,128,61,0.3);border:1px solid rgba(134,239,172,0.3);border-radius:8px;padding:12px;">
-          <p style="font-size:12px;font-weight:700;margin-bottom:8px;">🌅 Ready for OCLT — Log Dusk FC</p>
+          <p style="font-size:12px;font-weight:700;margin-bottom:8px;">Dusk Ready for OCLT - Log Dusk FC</p>
           <div style="display:flex;gap:8px;align-items:center;">
             <input id="slam-dusk-fc" type="number" placeholder="Dusk FC" inputmode="decimal" min="0" max="50"
               style="flex:1;padding:10px;background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.2);border-radius:8px;color:#fff;font-size:16px;font-weight:700;outline:none;">
@@ -1049,8 +1094,8 @@ function renderSlamBanner() {
         </div>` : ''}
       ${s.oclt.dusk && !s.oclt.dawn ? `
         <div style="margin-top:10px;background:rgba(30,64,175,0.3);border:1px solid rgba(147,197,253,0.3);border-radius:8px;padding:12px;">
-          <p style="font-size:12px;font-weight:700;margin-bottom:4px;">🌄 Log Dawn FC (next morning)</p>
-          <p style="font-size:11px;opacity:.7;margin-bottom:8px;">Dusk reading: ${s.oclt.dusk} ppm · Pass = loss &lt; 1 ppm</p>
+          <p style="font-size:12px;font-weight:700;margin-bottom:4px;">Dawn Log Dawn FC (next morning)</p>
+          <p style="font-size:11px;opacity:.7;margin-bottom:8px;">Dusk reading: ${s.oclt.dusk} ppm  /  Pass = loss &lt; 1 ppm</p>
           <div style="display:flex;gap:8px;align-items:center;">
             <input id="slam-dawn-fc" type="number" placeholder="Dawn FC" inputmode="decimal" min="0" max="50"
               style="flex:1;padding:10px;background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.2);border-radius:8px;color:#fff;font-size:16px;font-weight:700;outline:none;">
@@ -1060,7 +1105,7 @@ function renderSlamBanner() {
       ${conditionsMet ? `
         <div style="margin-top:10px;background:rgba(21,128,61,0.4);border:1px solid rgba(134,239,172,0.4);border-radius:8px;padding:14px;text-align:center;">
           <p style="font-size:16px;font-weight:900;margin-bottom:4px;">SLAM COMPLETE</p>
-          <p style="font-size:12px;opacity:.8;margin-bottom:10px;">FC loss ${s.oclt.dusk - s.oclt.dawn} ppm — OCLT PASSED</p>
+          <p style="font-size:12px;opacity:.8;margin-bottom:10px;">FC loss ${s.oclt.dusk - s.oclt.dawn} ppm - OCLT PASSED</p>
           <button onclick="clearSlamState();renderSlamBanner();" style="background:#86efac;color:#14532d;border:none;border-radius:8px;padding:10px 20px;font-size:14px;font-weight:800;cursor:pointer;">Close Tracker</button>
         </div>` : ''}
     </div>`;
@@ -1081,7 +1126,7 @@ function logSlamCheckIn() {
     // Brief feedback
     const lbl = document.createElement('p');
     lbl.style.cssText = 'color:#fca5a5;font-size:12px;margin-top:6px;text-align:center;';
-    lbl.textContent = `FC below target (${s.targetFC} ppm) — dose and retest in 4-6 hrs`;
+    lbl.textContent = `FC below target (${s.targetFC} ppm) - dose and retest in 4-6 hrs`;
     document.getElementById('slam-banner')?.querySelector('input')?.insertAdjacentElement('afterend', lbl);
     setTimeout(() => lbl.remove(), 4000);
   }
@@ -1101,9 +1146,9 @@ function logSlamOCLT(type) {
 // Call renderSlamBanner() when Dosing tab is shown
 // (hooked into showTab below)
 
-// ═══════════════════════════════════════════
+// -------------------------------------------
 // RANGES TABLE
-// ═══════════════════════════════════════════
+// -------------------------------------------
 function renderRangesTable() {
   const ranges = window.CHEM_DATA.ranges;
   const labels = { fc:'Free Chlorine', cc:'Combined Chlorine', ph:'pH', ta:'Total Alkalinity', ch:'Calcium Hardness', cya:'CYA / Stabilizer' };
@@ -1120,9 +1165,9 @@ function renderRangesTable() {
   setEl('ranges-table', rows);
 }
 
-// ═══════════════════════════════════════════
+// -------------------------------------------
 // ADDITION ORDER
-// ═══════════════════════════════════════════
+// -------------------------------------------
 function renderAdditionOrder() {
   setEl('addition-order',
     window.CHEM_DATA.additionOrder.map(s => `
@@ -1136,10 +1181,10 @@ function renderAdditionOrder() {
       </div>`).join(''));
 }
 
-// ═══════════════════════════════════════════
+// -------------------------------------------
 // VOLUME CALCULATOR
-// ═══════════════════════════════════════════
-const SHAPE_ICONS = { rectangle:'▬', oval:'⬬', round:'●', kidney:'⁀', lshape:'⌐', freeform:'〜' };
+// -------------------------------------------
+const SHAPE_ICONS = { rectangle:'Rect', oval:'Oval', round:'Round', kidney:'Kidney', lshape:'L', freeform:'Free' };
 const FIELD_LABELS = {
   length:'Length (ft)', width:'Width (ft)', shallowEnd:'Shallow End (ft)', deepEnd:'Deep End (ft)',
   diameter:'Diameter (ft)', length1:'Section 1 Length (ft)', width1:'Section 1 Width (ft)',
@@ -1154,7 +1199,7 @@ function renderShapeGrid() {
   setEl('shape-grid',
     window.POOL_VOLUME_DATA.shapes.map(s => `
       <button class="shape-btn" id="shape-${s.id}" onclick="selectShape('${s.id}')">
-        <div style="font-size:22px;margin-bottom:5px;">${SHAPE_ICONS[s.id] || '⬛'}</div>
+        <div style="font-size:22px;margin-bottom:5px;">${SHAPE_ICONS[s.id] || 'Shape'}</div>
         ${s.label}
       </button>`).join(''));
 }
@@ -1171,7 +1216,7 @@ function selectShape(id) {
     </div>`).join('');
   setEl('shape-fields', `
     <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:10px;padding:14px;margin-bottom:12px;box-shadow:0 1px 3px rgba(0,0,0,0.06);">
-      <p style="color:#64748b;font-size:12px;margin-bottom:14px;">💡 ${shape.tip}</p>
+      <p style="color:#64748b;font-size:12px;margin-bottom:14px;">Tip: ${shape.tip}</p>
       ${fields}
       <button class="btn-calc" onclick="calcVolume()">Calculate Gallons</button>
     </div>`);
@@ -1202,7 +1247,7 @@ function calcVolume() {
       <div class="result-note" style="text-align:left;margin-top:14px;">
         Use this number in the Dosing tab for accurate chemical calculations.
         <button onclick="useVolumeInDosing(${Math.round(gallons)})" style="display:block;margin-top:8px;background:#eff6ff;border:1px solid #93c5fd;border-radius:6px;color:#0369a1;font-size:11px;font-weight:800;padding:5px 12px;cursor:pointer;width:100%;">
-          → Use in Dosing Calculator
+          -> Use in Dosing Calculator
         </button>
       </div>
     </div>`);
@@ -1214,9 +1259,9 @@ function useVolumeInDosing(gallons) {
   showTab('dosing');
 }
 
-// ═══════════════════════════════════════════
+// -------------------------------------------
 // SAND FILTER
-// ═══════════════════════════════════════════
+// -------------------------------------------
 function initSandFilter() {
   renderSandTable();
   renderAltMedia();
@@ -1231,7 +1276,7 @@ function renderSandTable() {
       <td style="padding:8px 12px;color:#0f172a;font-weight:800;">${r.dia}"</td>
       <td style="padding:8px 12px;color:#0369a1;font-weight:700;">${r.sand} lbs</td>
       <td style="padding:8px 12px;color:#374151;">${r.flow}</td>
-      <td style="padding:8px 12px;color:#64748b;">${r.sqft} ft²</td>
+      <td style="padding:8px 12px;color:#64748b;">${r.sqft} ft2</td>
     </tr>`).join('');
   setEl('sand-quick-table', `
     <thead>
@@ -1269,7 +1314,7 @@ function lookupSandFilter(dia) {
         <div>
           <p style="color:#64748b;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Sand Required${approx ? ` (nearest: ${match.dia}")` : ''}</p>
           <p class="result-amount" style="font-size:40px;">${match.sand} lbs</p>
-          <p class="result-alt">#20 Silica Sand · ${match.dia}" tank</p>
+          <p class="result-alt">#20 Silica Sand  /  ${match.dia}" tank</p>
         </div>
         <div style="text-align:right;">
           <p style="color:#0f172a;font-size:16px;font-weight:800;">${match.flow}</p>
@@ -1279,13 +1324,13 @@ function lookupSandFilter(dia) {
       </div>
       <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:10px 12px;">
         <p style="color:#64748b;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px;">Common Models</p>
-        <p style="color:#0369a1;font-size:12px;line-height:1.5;">${match.commonModels.join(' · ')}</p>
+        <p style="color:#0369a1;font-size:12px;line-height:1.5;">${match.commonModels.join('  /  ')}</p>
       </div>
     </div>
     <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:10px;padding:12px;margin-bottom:12px;box-shadow:0 1px 3px rgba(0,0,0,0.06);">
       <p style="color:#92400e;font-size:12px;font-weight:700;margin-bottom:8px;">Signs Sand Needs Replacing</p>
-      ${signs.map(s => `<p style="color:#374151;font-size:12px;padding:3px 0;display:flex;gap:7px;"><span style="color:#dc2626;">•</span>${s}</p>`).join('')}
-      <p style="color:#94a3b8;font-size:10px;margin-top:8px;">Residential: 3–5 years · Commercial: 1–2 years</p>
+      ${signs.map(s => `<p style="color:#374151;font-size:12px;padding:3px 0;display:flex;gap:7px;"><span style="color:#dc2626;">-</span>${s}</p>`).join('')}
+      <p style="color:#94a3b8;font-size:10px;margin-top:8px;">Residential: 3-5 years  /  Commercial: 1-2 years</p>
     </div>`);
 }
 
@@ -1302,9 +1347,9 @@ function renderAltMedia() {
     </div>`);
 }
 
-// ═══════════════════════════════════════════
+// -------------------------------------------
 // FILTER TYPE SUB-NAV
-// ═══════════════════════════════════════════
+// -------------------------------------------
 function switchFilterType(type) {
   S.filterType = type;
   ['sand', 'de', 'cart'].forEach(t => {
@@ -1315,17 +1360,17 @@ function switchFilterType(type) {
   });
 }
 
-// ═══════════════════════════════════════════
+// -------------------------------------------
 // DE FILTER REFERENCE
-// ═══════════════════════════════════════════
+// -------------------------------------------
 function renderDeSection() {
   const data = window.DE_FILTER_DATA;
   const tableRows = data.filters.map((f, i) =>
     `<tr class="sand-row" onclick="tapDeRow(${f.sqft || 0})" style="background:${i % 2 ? '#f8fafc' : '#ffffff'};">
       <td style="padding:7px 10px;color:#0f172a;font-weight:700;font-size:12px;">${f.brand}</td>
       <td style="padding:7px 10px;color:#0369a1;font-size:12px;font-weight:700;">${f.model}</td>
-      <td style="padding:7px 10px;color:#374151;font-size:12px;">${f.sqft ? f.sqft + ' ft²' : '—'}</td>
-      <td style="padding:7px 10px;color:#0284c7;font-size:12px;font-weight:800;">${f.deChargeLbs ? f.deChargeLbs + ' lbs' : '—'}</td>
+      <td style="padding:7px 10px;color:#374151;font-size:12px;">${f.sqft ? f.sqft + ' ft2' : '-'}</td>
+      <td style="padding:7px 10px;color:#0284c7;font-size:12px;font-weight:800;">${f.deChargeLbs ? f.deChargeLbs + ' lbs' : '-'}</td>
     </tr>`).join('');
 
   setEl('de-section', `
@@ -1353,7 +1398,7 @@ function renderDeSection() {
         <input type="number" id="de-sqft" placeholder="e.g. 48" min="1" max="200" inputmode="decimal" oninput="calcDeCharge(this.value)">
       </div>
       <div id="de-charge-result"></div>
-      <div class="warn-box" style="margin-top:10px;font-size:11px;">⚠ Wear a dust mask when handling DE powder — silica is a respiratory hazard.</div>
+      <div class="warn-box" style="margin-top:10px;font-size:11px;">Warning: Wear a dust mask when handling DE powder - silica is a respiratory hazard.</div>
     </div>
 
     <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:10px;padding:14px;margin-bottom:12px;box-shadow:0 1px 3px rgba(0,0,0,0.06);">
@@ -1367,7 +1412,7 @@ function renderDeSection() {
 
     <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:10px;padding:14px;margin-bottom:12px;box-shadow:0 1px 3px rgba(0,0,0,0.06);">
       <p style="color:#92400e;font-size:13px;font-weight:800;margin-bottom:8px;">Grid Replacement Signs</p>
-      ${data.gridReplacement.signs.map(s => `<p style="color:#374151;font-size:12px;padding:4px 0;display:flex;gap:7px;"><span style="color:#dc2626;flex-shrink:0;">•</span>${s}</p>`).join('')}
+      ${data.gridReplacement.signs.map(s => `<p style="color:#374151;font-size:12px;padding:4px 0;display:flex;gap:7px;"><span style="color:#dc2626;flex-shrink:0;">-</span>${s}</p>`).join('')}
       <p style="color:#94a3b8;font-size:10px;margin-top:10px;">${data.gridReplacement.interval}</p>
       <div class="info-box" style="margin-top:8px;font-size:11px;">Acid wash: ${data.gridReplacement.acidWash}</div>
     </div>`);
@@ -1397,19 +1442,19 @@ function calcDeCharge(sqft) {
         <p style="color:#16a34a;font-size:11px;">lbs DE</p>
       </div>
     </div>
-    <p style="color:#94a3b8;font-size:10px;margin-top:8px;text-align:center;">${sqft} sq ft filter · 0.1 lbs/sq ft initial · 0.08 lbs/sq ft after backwash</p>`);
+    <p style="color:#94a3b8;font-size:10px;margin-top:8px;text-align:center;">${sqft} sq ft filter  /  0.1 lbs/sq ft initial  /  0.08 lbs/sq ft after backwash</p>`);
 }
 
-// ═══════════════════════════════════════════
+// -------------------------------------------
 // CARTRIDGE FILTER REFERENCE
-// ═══════════════════════════════════════════
+// -------------------------------------------
 function renderCartridgeSection() {
   const data = window.CARTRIDGE_FILTER_DATA;
   const tableRows = data.filters.map((f, i) =>
     `<tr style="background:${i % 2 ? '#f8fafc' : '#ffffff'};">
       <td style="padding:7px 10px;color:#0f172a;font-weight:700;font-size:12px;">${f.brand}</td>
       <td style="padding:7px 10px;color:#0369a1;font-size:12px;font-weight:700;">${f.model}</td>
-      <td style="padding:7px 10px;color:#374151;font-size:12px;">${f.sqft} ft²</td>
+      <td style="padding:7px 10px;color:#374151;font-size:12px;">${f.sqft} ft2</td>
       <td style="padding:7px 10px;color:#64748b;font-size:11px;">${f.elements} elem.</td>
     </tr>`).join('');
 
@@ -1430,7 +1475,7 @@ function renderCartridgeSection() {
       </table>
     </div>
 
-    <div class="info-box" style="margin-bottom:12px;">Clean when pressure is 8+ PSI above your clean baseline. Most filters: every 3–6 months minimum.</div>
+    <div class="info-box" style="margin-bottom:12px;">Clean when pressure is 8+ PSI above your clean baseline. Most filters: every 3-6 months minimum.</div>
 
     <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:10px;padding:14px;margin-bottom:12px;box-shadow:0 1px 3px rgba(0,0,0,0.06);">
       <p style="color:#0369a1;font-weight:800;font-size:13px;margin-bottom:10px;">Cleaning Procedure</p>
@@ -1444,13 +1489,13 @@ function renderCartridgeSection() {
 
     <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:10px;padding:14px;margin-bottom:12px;box-shadow:0 1px 3px rgba(0,0,0,0.06);">
       <p style="color:#92400e;font-size:13px;font-weight:800;margin-bottom:8px;">Replacement Signs</p>
-      ${data.cleaning.signs.map(s => `<p style="color:#374151;font-size:12px;padding:4px 0;display:flex;gap:7px;"><span style="color:#dc2626;flex-shrink:0;">•</span>${s}</p>`).join('')}
+      ${data.cleaning.signs.map(s => `<p style="color:#374151;font-size:12px;padding:4px 0;display:flex;gap:7px;"><span style="color:#dc2626;flex-shrink:0;">-</span>${s}</p>`).join('')}
     </div>`);
 }
 
-// ═══════════════════════════════════════════
+// -------------------------------------------
 // OPENING CHECKLIST
-// ═══════════════════════════════════════════
+// -------------------------------------------
 function initGuide() {
   // Migrate old single-key format to per-type keys
   const old = localStorage.getItem('poolens-cl');
@@ -1529,9 +1574,9 @@ function resetChecklist() {
   renderChecklist();
 }
 
-// ═══════════════════════════════════════════
+// -------------------------------------------
 // VISIT REPORT
-// ═══════════════════════════════════════════
+// -------------------------------------------
 let _chemRowId = 0;
 let _reportPoolId = null;
 
@@ -1562,7 +1607,7 @@ function addChemRow() {
   if (!container) return;
   const div = document.createElement('div');
   div.id = `chem-row-${id}`;
-  div.style.cssText = 'display:grid;grid-template-columns:minmax(92px,1fr) 60px 54px 64px 36px;gap:4px;margin-bottom:8px;align-items:center;';
+  div.style.cssText = 'display:grid;grid-template-columns:minmax(92px,1fr) 60px 54px 64px 40px;gap:4px;margin-bottom:8px;align-items:center;';
   div.innerHTML = `
     <input type="text" id="cr-name-${id}" placeholder="Chemical..." oninput="updateReportCostSummary()" style="background:#ffffff;border:1px solid #cbd5e1;color:#0f172a;border-radius:9px;padding:10px 10px;font-size:13px;font-family:inherit;width:100%;min-width:0;">
     <input type="text" id="cr-amt-${id}"  placeholder="Amt" inputmode="decimal" oninput="updateReportCostSummary()" style="background:#ffffff;border:1px solid #cbd5e1;color:#0f172a;border-radius:9px;padding:10px 8px;font-size:13px;font-family:inherit;width:100%;min-width:0;">
@@ -1572,7 +1617,7 @@ function addChemRow() {
       <option>Restock</option>
       <option>Customer</option>
     </select>
-    <button type="button" onclick="removeChemRow(${id})" style="background:#fee2e2;border:1px solid #fca5a5;color:#991b1b;border-radius:8px;padding:0;height:36px;width:36px;cursor:pointer;font-size:18px;line-height:1;">×</button>`;
+    <button type="button" onclick="removeChemRow(${id})" style="background:#fee2e2;border:1px solid #fca5a5;color:#991b1b;border-radius:8px;padding:0;height:40px;width:40px;cursor:pointer;font-size:18px;line-height:1;">x</button>`;
   container.appendChild(div);
   updateReportCostSummary();
 }
@@ -1675,10 +1720,10 @@ function buildReportText() {
     const rid  = row.id.replace('chem-row-', '');
     const name = _rptVal(`cr-name-${rid}`);
     const amt  = _rptVal(`cr-amt-${rid}`);
-    if (name) chems.push(`  • ${name}${amt ? ' — ' + amt : ''}`);
+    if (name) chems.push(`  - ${name}${amt ? ' - ' + amt : ''}`);
   });
 
-  const HR = '─'.repeat(42);
+  const HR = '----------------------------------------';
   const lines = [
     `POOL SERVICE REPORT`, date,
     HR,
@@ -1853,9 +1898,9 @@ function printReport() {
   win.document.close();
 }
 
-// ═══════════════════════════════════════════
+// -------------------------------------------
 // TREATMENT PLAN GENERATOR
-// ═══════════════════════════════════════════
+// -------------------------------------------
 function calcTreatmentPlan() {
   const fc  = gf('plan-fc');
   const cc  = gf('plan-cc');
@@ -1878,15 +1923,15 @@ function calcTreatmentPlan() {
     if (ta < 60) {
       const delta = 80 - ta;
       const dose = (!isNaN(vol) && vol > 0) ? ((delta / 10) * (vol / 10000) * 1.5).toFixed(1) + ' lbs Baking Soda' : 'baking soda (see Dosing Calculator for dose)';
-      steps.push({ num:1, type:'ta', icon:'↑', label:'Raise Total Alkalinity',
-        detail:`TA is ${ta} ppm — low. Target 80–100 ppm.`,
+      steps.push({ num:1, type:'ta', icon:'raise', label:'Raise Total Alkalinity',
+        detail:`TA is ${ta} ppm - low. Target 80-100 ppm.`,
         action:`Add ${dose}. Broadcast across the surface with pump running.`,
         wait:'15 min, retest before adjusting pH' });
     } else if (ta > 130) {
-      steps.push({ num:1, type:'ta', icon:'↓', label:'Lower Total Alkalinity',
-        detail:`TA is ${ta} ppm — high. Target 80–100 ppm.`,
+      steps.push({ num:1, type:'ta', icon:'lower', label:'Lower Total Alkalinity',
+        detail:`TA is ${ta} ppm - high. Target 80-100 ppm.`,
         action:'Add muriatic acid to lower TA, then aerate aggressively (jets, fountains, waterfall) to raise pH without adding more TA. Multiple doses over several days.',
-        wait:'Multiple sessions — retest daily' });
+        wait:'Multiple sessions - retest daily' });
     }
   }
 
@@ -1895,13 +1940,13 @@ function calcTreatmentPlan() {
     if (ph < 7.2) {
       const delta = 7.4 - ph;
       const oz = (!isNaN(vol) && vol > 0) ? Math.round((delta / 0.1) * (vol / 10000) * 3.0) + ' oz Soda Ash (pH Up)' : 'soda ash (see Dosing Calculator)';
-      steps.push({ num:2, type:'ph', icon:'↑', label:'Raise pH',
-        detail:`pH is ${ph} — too low. Target 7.4–7.6.`,
+      steps.push({ num:2, type:'ph', icon:'raise', label:'Raise pH',
+        detail:`pH is ${ph} - too low. Target 7.4-7.6.`,
         action:`Add ${oz}. Broadcast across the deep end with pump running.`,
         wait:'30 min, then retest' });
     } else if (ph > 7.8) {
-      steps.push({ num:2, type:'ph', icon:'↓', label:'Lower pH',
-        detail:`pH is ${ph} — too high. Target 7.4–7.6.`,
+      steps.push({ num:2, type:'ph', icon:'lower', label:'Lower pH',
+        detail:`pH is ${ph} - too high. Target 7.4-7.6.`,
         action:'Add muriatic acid (or dry acid). Pre-dilute in a bucket of water first. See Dosing Calculator for exact dose based on your TA level.',
         wait:'30 min, then retest' });
     }
@@ -1912,17 +1957,17 @@ function calcTreatmentPlan() {
     if (cya < 30) {
       const delta = 40 - cya;
       const dose = (!isNaN(vol) && vol > 0) ? ((delta / 10) * (vol / 10000) * 0.73).toFixed(2) + ' lbs Cyanuric Acid' : 'cyanuric acid (see Dosing Calculator)';
-      steps.push({ num:3, type:'cya', icon:'↑', label:'Add Stabilizer (CYA)',
-        detail:`CYA is ${cya} ppm — low. Target 30–50 ppm (salt pools: 60–80).`,
+      steps.push({ num:3, type:'cya', icon:'raise', label:'Add Stabilizer (CYA)',
+        detail:`CYA is ${cya} ppm - low. Target 30-50 ppm (salt pools: 60-80).`,
         action:`Add ${dose} in a sock hung in the skimmer basket. Dissolves slowly.`,
-        wait:'7–14 days before retesting (dissolves slowly)' });
+        wait:'7-14 days before retesting (dissolves slowly)' });
     } else if (cya > 80) {
       const drainPct = Math.round((1 - 50 / cya) * 100);
       const drainGal = (!isNaN(vol) && vol > 0) ? ` (${Math.round(vol * drainPct / 100).toLocaleString()} gallons)` : '';
-      steps.push({ num:3, type:'cya', icon:'⚠', label:'Lower CYA — Partial Drain Required',
-        detail:`CYA is ${cya} ppm — above 80. No chemical removes CYA.`,
+      steps.push({ num:3, type:'cya', icon:'Warning:', label:'Lower CYA - Partial Drain Required',
+        detail:`CYA is ${cya} ppm - above 80. No chemical removes CYA.`,
         action:`Drain and replace approximately ${drainPct}%${drainGal} of pool water. Rebalance all chemistry after refill.`,
-        wait:'After refill — retest and rebalance' });
+        wait:'After refill - retest and rebalance' });
     }
   }
 
@@ -1931,29 +1976,29 @@ function calcTreatmentPlan() {
     if (ch < 150) {
       const delta = 250 - ch;
       const dose = (!isNaN(vol) && vol > 0) ? ((delta / 10) * (vol / 10000) * 1.25).toFixed(1) + ' lbs Calcium Chloride' : 'calcium chloride (see Dosing Calculator)';
-      steps.push({ num:4, type:'ch', icon:'↑', label:'Raise Calcium Hardness',
-        detail:`CH is ${ch} ppm — low. Target 200–400 ppm.`,
-        action:`Add ${dose}. ⚠ Pre-dissolve in a bucket of water — extremely exothermic. Pour slowly around pool edge.`,
+      steps.push({ num:4, type:'ch', icon:'raise', label:'Raise Calcium Hardness',
+        detail:`CH is ${ch} ppm - low. Target 200-400 ppm.`,
+        action:`Add ${dose}. Warning: Pre-dissolve in a bucket of water - extremely exothermic. Pour slowly around pool edge.`,
         wait:'4 hours before next addition' });
     } else if (ch > 450) {
       const drainPct = Math.round((1 - 300 / ch) * 100);
-      steps.push({ num:4, type:'ch', icon:'↓', label:'Lower Calcium Hardness — Dilute',
-        detail:`CH is ${ch} ppm — scaling risk at this level.`,
+      steps.push({ num:4, type:'ch', icon:'lower', label:'Lower Calcium Hardness - Dilute',
+        detail:`CH is ${ch} ppm - scaling risk at this level.`,
         action:`Drain and replace approximately ${drainPct}% of pool water. No chemical lowers CH.`,
-        wait:'After refill — retest and rebalance' });
+        wait:'After refill - retest and rebalance' });
     }
   }
 
-  // SLAM (priority 0 — rendered first despite being added last)
+  // SLAM (priority 0 - rendered first despite being added last)
   if (needsSlam) {
     const slamCYA = (!isNaN(cya) && cya > 0) ? cya : 40;
     const slamFC = Math.round(slamCYA * 0.40);
     const reason = (!isNaN(cc) && cc >= 0.5)
-      ? `CC is ${cc} ppm — combined chlorine indicates contamination. Must shock to breakpoint.`
-      : `FC is ${!isNaN(fc) ? fc : '?'} ppm — critically low vs CYA level.`;
-    steps.unshift({ num:0, type:'slam', icon:'🚨', label:'SLAM Required — Shock to Breakpoint',
+      ? `CC is ${cc} ppm - combined chlorine indicates contamination. Must shock to breakpoint.`
+      : `FC is ${!isNaN(fc) ? fc : '?'} ppm - critically low vs CYA level.`;
+    steps.unshift({ num:0, type:'slam', icon:'Urgent:', label:'SLAM Required - Shock to Breakpoint',
       detail: reason,
-      action:`Raise FC to ${slamFC} ppm (CYA × 40%). Use liquid chlorine or cal-hypo. Test every 4–6 hours and maintain SLAM level until: CC < 0.5, water is visually clear, and OCLT passes (< 1 ppm FC loss overnight).`,
+      action:`Raise FC to ${slamFC} ppm (CYA x 40%). Use liquid chlorine or cal-hypo. Test every 4-6 hours and maintain SLAM level until: CC < 0.5, water is visually clear, and OCLT passes (< 1 ppm FC loss overnight).`,
       wait:'Continue until all 3 pass criteria met before moving to other adjustments' });
   } else if (!isNaN(fc) && fc < minFC) {
     const delta = minFC - fc;
@@ -1961,8 +2006,8 @@ function calcTreatmentPlan() {
       const oz = delta * (vol / 10000) * 12.85;
       return oz >= 128 ? (oz / 128).toFixed(1) + ' gal' : oz.toFixed(0) + ' fl oz';
     })() + ' Liquid Chlorine 10%' : 'chlorine (see Dosing Calculator)';
-    steps.push({ num:5, type:'fc', icon:'↑', label:'Add Chlorine',
-      detail:`FC is ${fc} ppm — below minimum target of ${minFC.toFixed(0)} ppm for your CYA level.`,
+    steps.push({ num:5, type:'fc', icon:'raise', label:'Add Chlorine',
+      detail:`FC is ${fc} ppm - below minimum target of ${minFC.toFixed(0)} ppm for your CYA level.`,
       action:`Add ${doseStr}. Distribute around pool perimeter with pump running.`,
       wait:'15 min circulation, then retest' });
   }
@@ -1970,7 +2015,7 @@ function calcTreatmentPlan() {
   if (steps.length === 0) {
     return setEl('plan-result', `
       <div style="background:#f0fdf4;border:2px solid #86efac;border-radius:12px;padding:20px;text-align:center;">
-        <div style="font-size:36px;margin-bottom:10px;">✓</div>
+        <div style="font-size:36px;margin-bottom:10px;">OK</div>
         <p style="color:#166534;font-size:16px;font-weight:900;margin-bottom:6px;">Water is Balanced!</p>
         <p style="color:#374151;font-size:13px;">All parameters are within target range. No adjustments needed today.</p>
       </div>`);
@@ -1986,12 +2031,12 @@ function calcTreatmentPlan() {
   };
 
   const slamWarn = needsSlam
-    ? `<div class="warn-box" style="margin-bottom:14px;font-size:12px;">⚠ SLAM condition — complete Step 1 before adjusting pH, TA, or CH. Do not cover pool during SLAM.</div>`
+    ? `<div class="warn-box" style="margin-bottom:14px;font-size:12px;">Warning: SLAM condition - complete Step 1 before adjusting pH, TA, or CH. Do not cover pool during SLAM.</div>`
     : '';
 
   setEl('plan-result', `
     <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;padding:16px;box-shadow:0 1px 3px rgba(0,0,0,0.06);">
-      <p style="color:#0369a1;font-weight:900;font-size:14px;margin-bottom:12px;">Treatment Plan — ${steps.length} step${steps.length !== 1 ? 's' : ''}</p>
+      <p style="color:#0369a1;font-weight:900;font-size:14px;margin-bottom:12px;">Treatment Plan - ${steps.length} step${steps.length !== 1 ? 's' : ''}</p>
       ${slamWarn}
       ${steps.map((step, i) => {
         const c = typeColors[step.type] || typeColors.fc;
@@ -2011,9 +2056,9 @@ function calcTreatmentPlan() {
     </div>`);
 }
 
-// ═══════════════════════════════════════════
+// -------------------------------------------
 // DRAIN / REFILL CALCULATOR
-// ═══════════════════════════════════════════
+// -------------------------------------------
 function calcDrainRefill() {
   const vol     = gf('drain-vol');
   const current = gf('drain-current');
@@ -2042,13 +2087,13 @@ function calcDrainRefill() {
           <p style="color:#64748b;font-size:10px;">gallons fresh</p>
         </div>
       </div>
-      <div class="result-note" style="margin-top:12px;">Draining ${pct.toFixed(0)}% reduces level from ${current} → approximately ${Math.round(current * (1 - pct / 100))} ppm. Rebalance all chemistry after refill.</div>
+      <div class="result-note" style="margin-top:12px;">Draining ${pct.toFixed(0)}% reduces level from ${current} -> approximately ${Math.round(current * (1 - pct / 100))} ppm. Rebalance all chemistry after refill.</div>
     </div>`);
 }
 
-// ═══════════════════════════════════════════
+// -------------------------------------------
 // TURNOVER RATE CALCULATOR
-// ═══════════════════════════════════════════
+// -------------------------------------------
 function calcTurnoverRate() {
   const vol = gf('turn-vol');
   const gpm = gf('turn-gpm');
@@ -2071,16 +2116,16 @@ function calcTurnoverRate() {
         <p style="color:#374151;font-size:12px;margin-top:4px;">
           ${isGood ? 'On target. Residential pools need at least 1 full turnover per 8 hours of pump runtime.'
           : isOk   ? `Run pump at least ${dailyRec > 1 ? dailyRec + ' turnovers/day (extend runtime)' : 'longer daily'}.`
-                   : `Flow rate is too low. Check filter PSI, basket blockage, or impeller wear. Target: ≤ 8 hrs per turnover.`}
+                   : `Flow rate is too low. Check filter PSI, basket blockage, or impeller wear. Target: <= 8 hrs per turnover.`}
         </p>
       </div>
-      <p class="result-basis">${vol.toLocaleString()} gal ÷ ${gpm} GPM · Recommended: &le; 8 hrs residential, &le; 6 hrs commercial</p>
+      <p class="result-basis">${vol.toLocaleString()} gal / ${gpm} GPM  /  Recommended: &le; 8 hrs residential, &le; 6 hrs commercial</p>
     </div>`);
 }
 
-// ═══════════════════════════════════════════
+// -------------------------------------------
 // SALT CHLORINATOR REFERENCE
-// ═══════════════════════════════════════════
+// -------------------------------------------
 function renderSaltSection() {
   const data = window.SALT_CHLORINATOR_DATA;
   const brandRows = data.saltTargets.map((b, i) =>
@@ -2102,25 +2147,25 @@ function renderSaltSection() {
 
     <div style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;padding:10px 12px;margin-bottom:12px;">
       <p style="color:#0369a1;font-size:12px;font-weight:800;">Salt to Raise Level</p>
-      <p style="color:#374151;font-size:12px;margin-top:4px;">0.83 lbs per 1,000 gallons per 100 ppm rise · Test with a digital salt meter, not strips</p>
+      <p style="color:#374151;font-size:12px;margin-top:4px;">0.83 lbs per 1,000 gallons per 100 ppm rise  /  Test with a digital salt meter, not strips</p>
       <p style="color:#0369a1;font-size:12px;font-weight:800;margin-top:8px;">CYA Recommendation for Salt Pools</p>
       <p style="color:#374151;font-size:12px;margin-top:4px;">${data.cyaRecommendation}</p>
     </div>
 
     <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:10px;padding:14px;margin-bottom:12px;box-shadow:0 1px 3px rgba(0,0,0,0.06);">
       <p style="color:#0369a1;font-weight:800;font-size:13px;margin-bottom:10px;">Cell Maintenance</p>
-      ${data.maintenance.map(s => `<p style="color:#374151;font-size:12px;padding:4px 0;display:flex;gap:7px;border-bottom:1px solid #f1f5f9;"><span style="color:#0284c7;flex-shrink:0;">•</span>${s}</p>`).join('')}
+      ${data.maintenance.map(s => `<p style="color:#374151;font-size:12px;padding:4px 0;display:flex;gap:7px;border-bottom:1px solid #f1f5f9;"><span style="color:#0284c7;flex-shrink:0;">-</span>${s}</p>`).join('')}
     </div>
 
     <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:10px;padding:14px;margin-bottom:4px;box-shadow:0 1px 3px rgba(0,0,0,0.06);">
       <p style="color:#92400e;font-weight:800;font-size:13px;margin-bottom:8px;">Low Output Causes</p>
-      ${data.lowOutputCauses.map(s => `<p style="color:#374151;font-size:12px;padding:4px 0;display:flex;gap:7px;"><span style="color:#dc2626;flex-shrink:0;">•</span>${s}</p>`).join('')}
+      ${data.lowOutputCauses.map(s => `<p style="color:#374151;font-size:12px;padding:4px 0;display:flex;gap:7px;"><span style="color:#dc2626;flex-shrink:0;">-</span>${s}</p>`).join('')}
     </div>`);
 }
 
-// ═══════════════════════════════════════════
+// -------------------------------------------
 // CHEMICAL SAFETY / DANGER GUIDE
-// ═══════════════════════════════════════════
+// -------------------------------------------
 function renderDangerSection() {
   const data = window.CHEM_DANGER_DATA;
   const sevColor = { deadly:'#991b1b', high:'#92400e' };
@@ -2129,7 +2174,7 @@ function renderDangerSection() {
 
   setEl('danger-section', `
     <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:10px;padding:14px;margin-bottom:12px;box-shadow:0 1px 3px rgba(0,0,0,0.06);">
-      <p style="color:#991b1b;font-weight:900;font-size:13px;margin-bottom:12px;">☠ Never Mix These</p>
+      <p style="color:#991b1b;font-weight:900;font-size:13px;margin-bottom:12px;">Danger: Never Mix These</p>
       ${data.neverMix.map(d => `
         <div style="background:${sevBg[d.severity]};border:1px solid ${sevBdr[d.severity]};border-radius:8px;padding:10px;margin-bottom:8px;">
           <p style="color:${sevColor[d.severity]};font-size:13px;font-weight:800;margin-bottom:4px;">${d.icon} ${d.combo}</p>
@@ -2138,13 +2183,13 @@ function renderDangerSection() {
     </div>
     <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:10px;padding:14px;margin-bottom:12px;box-shadow:0 1px 3px rgba(0,0,0,0.06);">
       <p style="color:#0369a1;font-weight:800;font-size:13px;margin-bottom:10px;">Safe Handling Rules</p>
-      ${data.safeHandling.map(s => `<p style="color:#374151;font-size:12px;padding:4px 0;display:flex;gap:7px;border-bottom:1px solid #f1f5f9;"><span style="color:#0369a1;flex-shrink:0;">✓</span>${s}</p>`).join('')}
+      ${data.safeHandling.map(s => `<p style="color:#374151;font-size:12px;padding:4px 0;display:flex;gap:7px;border-bottom:1px solid #f1f5f9;"><span style="color:#0369a1;flex-shrink:0;">OK</span>${s}</p>`).join('')}
     </div>`);
 }
 
-// ═══════════════════════════════════════════
+// -------------------------------------------
 // REPORT: LOAD FROM POOL PROFILE
-// ═══════════════════════════════════════════
+// -------------------------------------------
 function toggleReportPoolPicker() {
   const picker = document.getElementById('rpt-pool-picker');
   if (!picker) return;
@@ -2185,29 +2230,29 @@ function loadReportFromPool(poolId) {
   if (rptHead) { rptHead.parentNode.insertBefore(confirm, rptHead); setTimeout(() => confirm.remove(), 2500); }
 }
 
-// ═══════════════════════════════════════════
+// -------------------------------------------
 // OFFLINE STATUS INDICATOR
-// ═══════════════════════════════════════════
+// -------------------------------------------
 function checkOfflineStatus() {
   const dot = document.getElementById('offline-dot');
   if (!dot) return;
   const setDot = (color, title) => { dot.style.background = color; dot.title = title; };
   if (!('serviceWorker' in navigator)) return;
   if (navigator.serviceWorker.controller) {
-    setDot('#4ade80', 'Offline ready — all data cached');
+    setDot('#4ade80', 'Offline ready - all data cached');
   } else {
     navigator.serviceWorker.ready.then(() => {
-      setDot('#4ade80', 'Offline ready — all data cached');
-    }).catch(() => setDot('#fbbf24', 'Caching in progress…'));
+      setDot('#4ade80', 'Offline ready - all data cached');
+    }).catch(() => setDot('#fbbf24', 'Caching in progress...'));
   }
   navigator.serviceWorker.addEventListener('controllerchange', () => {
-    setDot('#4ade80', 'Offline ready — all data cached');
+    setDot('#4ade80', 'Offline ready - all data cached');
   });
 }
 
-// ═══════════════════════════════════════════
+// -------------------------------------------
 // UTILITIES
-// ═══════════════════════════════════════════
+// -------------------------------------------
 function gv(id) { const el = document.getElementById(id); return el ? el.value : ''; }
 function gf(id) { const el = document.getElementById(id); return el ? parseFloat(el.value) : NaN; }
 function setEl(id, html) { const el = document.getElementById(id); if (el) el.innerHTML = html; }
@@ -2249,9 +2294,9 @@ function interpMuriatic(ta) {
   return f[100];
 }
 
-// ═══════════════════════════════════════════
-// POOLS — CUSTOMER PROFILES
-// ═══════════════════════════════════════════
+// -------------------------------------------
+// POOLS - CUSTOMER PROFILES
+// -------------------------------------------
 const POOLS_KEY = 'poolens-pools';
 
 function getPools() {
@@ -2267,7 +2312,7 @@ function initPools() {
   renderPoolList();
 }
 
-// ─── POOL LIST VIEW ───────────────────────
+// ------------------------------------------- POOL LIST VIEW -------------------------------------------
 function renderPoolList() {
   S.poolView = 'list';
   S.pool = null;
@@ -2305,7 +2350,7 @@ function renderPoolList() {
           <div style="flex:1;min-width:0;">
             <div class="pool-card-name">${escHtml(p.name)}</div>
             ${p.address ? `<div class="pool-card-meta" style="margin-bottom:3px;">${escHtml(p.address)}</div>` : ''}
-            <div class="pool-card-meta">${[p.type, p.sanitizer, gallonsDisplay].filter(Boolean).join(' · ')}</div>
+            <div class="pool-card-meta">${[p.type, p.sanitizer, gallonsDisplay].filter(Boolean).join('  /  ')}</div>
           </div>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="2.5" stroke-linecap="round" style="flex-shrink:0;margin-top:4px;"><polyline points="9 18 15 12 9 6"/></svg>
         </div>
@@ -2324,7 +2369,7 @@ function renderPoolList() {
     ${cards}`;
 }
 
-// ─── POOL DETAIL VIEW ─────────────────────
+// ------------------------------------------- POOL DETAIL VIEW -------------------------------------------
 function renderPoolDetail(id) {
   S.poolView = 'detail';
   S.pool = id;
@@ -2351,7 +2396,7 @@ function renderPoolDetail(id) {
           <div style="display:flex;align-items:center;justify-content:space-between;">
             <div>
               <span style="color:#0f172a;font-size:13px;font-weight:700;">${dateStr}</span>
-              ${r.note ? `<span style="color:#64748b;font-size:11px;margin-left:8px;">· ${escHtml(r.note)}</span>` : ''}
+              ${r.note ? `<span style="color:#64748b;font-size:11px;margin-left:8px;"> /  ${escHtml(r.note)}</span>` : ''}
             </div>
             <svg id="rchev-${uid}" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="2.5" stroke-linecap="round" style="flex-shrink:0;transition:transform 0.2s;"><polyline points="6 9 12 15 18 9"/></svg>
           </div>
@@ -2401,13 +2446,13 @@ function renderPoolDetail(id) {
         <p class="field-label">Notes</p>
         ${voiceNoteButton('pool-notes-ta')}
       </div>
-      <textarea id="pool-notes-ta" class="pool-textarea" rows="3" placeholder="Gate code, special instructions…" onblur="savePoolNotes('${id}')">${escHtml(p.notes || '')}</textarea>
+      <textarea id="pool-notes-ta" class="pool-textarea" rows="3" placeholder="Gate code, special instructions..." onblur="savePoolNotes('${id}')">${escHtml(p.notes || '')}</textarea>
     </div>
 
     <!-- Use in Dosing -->
     ${p.gallons ? `
     <button class="btn-outline-blue" style="margin-bottom:14px;" onclick="usePoolInDosing(${Number(p.gallons)})">
-      → Use ${Number(p.gallons).toLocaleString()} gal in Dosing Calculator
+      -> Use ${Number(p.gallons).toLocaleString()} gal in Dosing Calculator
     </button>` : ''}
 
     <!-- Chemistry History -->
@@ -2561,7 +2606,7 @@ function savePoolNotes(id) {
   savePools(pools);
 }
 
-// ─── CHEM READING FORM ────────────────────
+// ------------------------------------------- CHEM READING FORM -------------------------------------------
 function showChemForm(poolId) {
   const wrap = document.getElementById(`chem-form-wrap-${poolId}`);
   if (!wrap) return;
@@ -2583,19 +2628,19 @@ function showChemForm(poolId) {
         </select>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px;">
-        <div><label class="field-label">FC</label><input type="number" id="cf-fc-${poolId}" placeholder="—" inputmode="decimal" step="0.1" min="0"></div>
-        <div><label class="field-label">CC</label><input type="number" id="cf-cc-${poolId}" placeholder="—" inputmode="decimal" step="0.1" min="0"></div>
-        <div><label class="field-label">pH</label><input type="number" id="cf-ph-${poolId}" placeholder="—" inputmode="decimal" step="0.1" min="0"></div>
-        <div><label class="field-label">TA</label><input type="number" id="cf-ta-${poolId}" placeholder="—" inputmode="decimal" min="0"></div>
-        <div><label class="field-label">CH</label><input type="number" id="cf-ch-${poolId}" placeholder="—" inputmode="decimal" min="0"></div>
-        <div><label class="field-label">CYA</label><input type="number" id="cf-cya-${poolId}" placeholder="—" inputmode="decimal" min="0"></div>
+        <div><label class="field-label">FC</label><input type="number" id="cf-fc-${poolId}" placeholder="-" inputmode="decimal" step="0.1" min="0"></div>
+        <div><label class="field-label">CC</label><input type="number" id="cf-cc-${poolId}" placeholder="-" inputmode="decimal" step="0.1" min="0"></div>
+        <div><label class="field-label">pH</label><input type="number" id="cf-ph-${poolId}" placeholder="-" inputmode="decimal" step="0.1" min="0"></div>
+        <div><label class="field-label">TA</label><input type="number" id="cf-ta-${poolId}" placeholder="-" inputmode="decimal" min="0"></div>
+        <div><label class="field-label">CH</label><input type="number" id="cf-ch-${poolId}" placeholder="-" inputmode="decimal" min="0"></div>
+        <div><label class="field-label">CYA</label><input type="number" id="cf-cya-${poolId}" placeholder="-" inputmode="decimal" min="0"></div>
       </div>
       <div class="field-group">
         <div class="note-tools">
           <label class="field-label">Note (optional)</label>
           ${voiceNoteButton(`cf-note-${poolId}`)}
         </div>
-        <textarea id="cf-note-${poolId}" class="pool-textarea" rows="2" placeholder="Backwashed filter, added shock…"></textarea>
+        <textarea id="cf-note-${poolId}" class="pool-textarea" rows="2" placeholder="Backwashed filter, added shock..."></textarea>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
         <button onclick="saveChemReading('${poolId}')" style="background:linear-gradient(135deg,#0284c7,#0369a1);color:white;border:none;border-radius:9px;padding:12px;font-weight:800;font-size:14px;cursor:pointer;">Save</button>
@@ -2649,7 +2694,7 @@ function saveChemReading(poolId) {
   renderPoolDetail(poolId);
 }
 
-// ─── NEW / EDIT POOL FORM ─────────────────
+// ------------------------------------------- NEW / EDIT POOL FORM -------------------------------------------
 function renderPoolForm(id) {
   S.poolView = id ? 'edit' : 'new';
   const pools = getPools();
@@ -2686,7 +2731,7 @@ function renderPoolForm(id) {
       <div class="field-group">
         <label class="field-label">Pool Type</label>
         <select id="pf-type">
-          <option value="">— Select —</option>
+          <option value="">- Select -</option>
           <option value="Inground Gunite" ${sel('type','Inground Gunite')}>Inground Gunite</option>
           <option value="Inground Vinyl" ${sel('type','Inground Vinyl')}>Inground Vinyl</option>
           <option value="Inground Fiberglass" ${sel('type','Inground Fiberglass')}>Inground Fiberglass</option>
@@ -2696,7 +2741,7 @@ function renderPoolForm(id) {
       <div class="field-group">
         <label class="field-label">Sanitizer</label>
         <select id="pf-sanitizer">
-          <option value="">— Select —</option>
+          <option value="">- Select -</option>
           <option value="Chlorine" ${sel('sanitizer','Chlorine')}>Chlorine</option>
           <option value="Salt" ${sel('sanitizer','Salt')}>Salt</option>
           <option value="Bromine" ${sel('sanitizer','Bromine')}>Bromine</option>
@@ -2705,7 +2750,7 @@ function renderPoolForm(id) {
       <div class="field-group">
         <label class="field-label">Filter Type</label>
         <select id="pf-filter" onchange="toggleFilterDia()">
-          <option value="">— Select —</option>
+          <option value="">- Select -</option>
           <option value="Sand" ${sel('filter','Sand')}>Sand</option>
           <option value="Cartridge" ${sel('filter','Cartridge')}>Cartridge</option>
           <option value="DE" ${sel('filter','DE')}>DE (Diatomaceous Earth)</option>
@@ -2724,7 +2769,7 @@ function renderPoolForm(id) {
           <label class="field-label">Notes</label>
           ${voiceNoteButton('pf-notes')}
         </div>
-        <textarea id="pf-notes" class="pool-textarea" rows="3" placeholder="Gate code, special instructions…">${escHtml(v('notes'))}</textarea>
+        <textarea id="pf-notes" class="pool-textarea" rows="3" placeholder="Gate code, special instructions...">${escHtml(v('notes'))}</textarea>
       </div>
 
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px;">
@@ -2779,7 +2824,7 @@ function savePool(id) {
   renderPoolDetail(pool.id);
 }
 
-// ─── DELETE POOL ──────────────────────────
+// ------------------------------------------- DELETE POOL -------------------------------------------
 function deletePool(id) {
   if (!confirm('Delete this pool profile and all its history? This cannot be undone.')) return;
   const pools = getPools().filter(x => x.id !== id);
@@ -2787,14 +2832,14 @@ function deletePool(id) {
   renderPoolList();
 }
 
-// ─── USE POOL IN DOSING ───────────────────
+// ------------------------------------------- USE POOL IN DOSING -------------------------------------------
 function usePoolInDosing(gallons) {
   const el = document.getElementById('dose-volume');
   if (el) { el.value = gallons; onVolumeChange(gallons); }
   showTab('dosing');
 }
 
-// ─── POOL HTML HELPERS ────────────────────
+// ------------------------------------------- POOL HTML HELPERS -------------------------------------------
 function escHtml(s) {
   if (s == null) return '';
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
@@ -2815,9 +2860,9 @@ function copyText(text, btn) {
   }).catch(() => {});
 }
 
-// ═══════════════════════════════════════════
+// -------------------------------------------
 // ROUTE / DAY VIEW
-// ═══════════════════════════════════════════
+// -------------------------------------------
 const ROUTE_KEY = 'poolens-route';
 const ROUTE_BRAIN_KEY = 'splashlens-route-brain-state';
 
@@ -2963,7 +3008,7 @@ function routeBrainPanel() {
         <button class="brain-action" onclick="runRouteBrain()">Build Field Plan</button>
         <button class="brain-action secondary" onclick="copyRouteBrainPacket()">Copy Escalation</button>
         <button class="brain-action green" onclick="saveRouteBrainToPool()">Save Proof</button>
-        <button class="brain-action orange" onclick="makeRouteBrainTraining()">Training Mode</button>
+        <button class="brain-action orange" onclick="makeRouteBrainTraining()">Practice Mode</button>
       </div>
     </section>
 
@@ -3276,7 +3321,7 @@ function makeRouteBrainTraining() {
   result.innerHTML = `
     <section class="brain-card">
       <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px;">
-        <h3>Training Session Mode</h3>
+        <h3>Practice Session Mode</h3>
         <span class="brain-pill ready">Instructor-ready</span>
       </div>
       <p><strong>Scenario:</strong> A tech arrives to investigate ${escHtml(state.hardware || 'equipment')} with symptom "${escHtml(state.symptom || 'unknown symptom')}".</p>
@@ -3381,7 +3426,7 @@ function renderRoute() {
     <div id="route-pool-picker" style="display:none;"></div>
     <div id="route-manual-wrap" style="display:none;margin-top:8px;">
       <div style="display:grid;grid-template-columns:1fr auto;gap:8px;">
-        <input type="text" id="route-manual-name" placeholder="Stop description…" style="font-size:16px;">
+        <input type="text" id="route-manual-name" placeholder="Stop description..." style="font-size:16px;">
         <button onclick="confirmAddManualRouteStop()" style="background:#0369a1;color:white;border:none;border-radius:9px;padding:12px 16px;font-weight:800;cursor:pointer;">Add</button>
       </div>
     </div>
@@ -3404,11 +3449,11 @@ function routeJobCard(job, idx) {
           <p style="font-size:14px;font-weight:800;${tx}">${escHtml(job.name)}</p>
           ${job.address ? `<p style="color:#64748b;font-size:12px;margin-top:2px;">${escHtml(job.address)}</p>` : ''}
           ${job.type === 'pool' && job.poolId
-            ? `<button onclick="openPoolFromRoute('${job.poolId}')" style="background:none;border:none;color:#0284c7;font-size:11px;font-weight:700;cursor:pointer;padding:0;margin-top:4px;">View Profile →</button>`
+            ? `<button onclick="openPoolFromRoute('${job.poolId}')" style="background:none;border:none;color:#0284c7;font-size:11px;font-weight:700;cursor:pointer;padding:0;margin-top:4px;">View Profile -></button>`
             : ''}
         </div>
         <button onclick="deleteRouteJob(${idx})"
-                style="background:none;border:none;color:#cbd5e1;cursor:pointer;padding:4px;flex-shrink:0;font-size:20px;line-height:1;">×</button>
+                style="background:none;border:none;color:#cbd5e1;cursor:pointer;padding:4px;flex-shrink:0;font-size:20px;line-height:1;">x</button>
       </div>
     </div>`;
 }
@@ -3529,9 +3574,9 @@ function infoBox(main, sub) {
   </div>`;
 }
 
-// ═══════════════════════════════════════════
-// SCAN TAB — Camera AI + Code Lookup + Chem
-// ═══════════════════════════════════════════
+// -------------------------------------------
+// SCAN TAB - Camera AI + Code Lookup + Chem
+// -------------------------------------------
 
 let _scanStream    = null;
 let _scanMode      = 'camera';
@@ -3569,7 +3614,7 @@ function updateAIStatusBar() {
     label.style.color      = '#4ade80';
   } else {
     dot.style.background   = '#64748b';
-    label.textContent      = 'OFFLINE — CODE LOOKUP AVAILABLE';
+    label.textContent      = 'OFFLINE - CODE LOOKUP AVAILABLE';
     label.style.color      = '#64748b';
   }
 }
@@ -3577,7 +3622,7 @@ function updateAIStatusBar() {
 function setScanMode(mode) {
   _scanMode = mode;
   const isCameraMode = mode === 'camera' || mode === 'parts' || mode === 'strip';
-  // Update mode buttons — all camera sub-modes share the camera panel
+  // Update mode buttons - all camera sub-modes share the camera panel
   ['camera','parts','strip','lookup','chem'].forEach(m => {
     const btn = document.getElementById(`scan-mode-${m}`);
     if (!btn) return;
@@ -3589,6 +3634,7 @@ function setScanMode(mode) {
   const lookupPanel = document.getElementById('scan-lookup-panel');
   const chemPanel   = document.getElementById('scan-chem-panel');
   if (camPanel)    camPanel.style.display    = isCameraMode ? 'block' : 'none';
+  if (camPanel && mode !== 'parts') camPanel.classList.remove('result-ready');
   if (lookupPanel) lookupPanel.style.display = mode === 'lookup' ? 'block' : 'none';
   if (chemPanel)   chemPanel.style.display   = mode === 'chem'   ? 'block' : 'none';
 
@@ -3596,14 +3642,14 @@ function setScanMode(mode) {
   const status = document.getElementById('scan-camera-status');
   const capBtn = document.getElementById('scan-capture-btn');
   if (mode === 'parts') {
-    if (status) status.textContent = 'AIM AT EQUIPMENT PART — TAP IDENTIFY';
-    if (capBtn) capBtn.textContent = '🔧 IDENTIFY PART';
+    if (status) status.textContent = 'Aim at the part. Tap identify.';
+    if (capBtn) capBtn.textContent = 'Identify Part';
   } else if (mode === 'strip') {
-    if (status) status.textContent = 'AIM AT TEST STRIP IN GOOD LIGHT — TAP SCAN';
-    if (capBtn) capBtn.textContent = '🧪 SCAN STRIP';
+    if (status) status.textContent = 'Aim at the strip in good light.';
+    if (capBtn) capBtn.textContent = 'Scan Strip';
   } else {
-    if (status) status.textContent = 'AIM AT ERROR CODE DISPLAY — TAP CAPTURE';
-    if (capBtn) capBtn.textContent = '⬤ CAPTURE';
+    if (status) status.textContent = 'Aim at error code. Tap capture.';
+    if (capBtn) capBtn.textContent = 'Capture';
   }
 
   if (isCameraMode) startCamera();
@@ -3614,23 +3660,28 @@ function setScanMode(mode) {
   updateAIStatusBar();
 }
 
+function setScanResultReady(ready) {
+  document.getElementById('scan-camera-panel')?.classList.toggle('result-ready', Boolean(ready));
+}
+
 function renderPartSnapPrimer() {
   const result = document.getElementById('scan-result');
+  setScanResultReady(false);
   if (!result || result.innerHTML.trim()) return;
   result.innerHTML = `
     <div style="margin:12px 0 16px;background:linear-gradient(135deg,#062b2f,#0f172a);border:1px solid #0f766e;border-radius:14px;padding:14px;border-left:4px solid #14b8a6;">
-      <p style="color:#5eead4;font-size:10px;font-weight:950;letter-spacing:.12em;text-transform:uppercase;margin-bottom:6px;">PartSnap AI Service</p>
-      <p style="color:#f8fafc;font-size:18px;font-weight:950;line-height:1.1;margin-bottom:8px;">Shoot the part, then shoot the label.</p>
-      <p style="color:#cbd5e1;font-size:12px;line-height:1.45;margin-bottom:12px;">Best results come from two photos: the mystery part up close, then the equipment model plate or molded number. PartSnap returns possible matches, missing proof, and a clean escalation packet.</p>
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;">
-        <div style="background:#042f2e;border:1px solid #0f766e;border-radius:8px;padding:8px;text-align:center;"><b style="display:block;color:#ccfbf1;font-size:11px;">1. Part</b><span style="display:block;color:#99f6e4;font-size:9px;margin-top:2px;">close + lit</span></div>
-        <div style="background:#111827;border:1px solid #334155;border-radius:8px;padding:8px;text-align:center;"><b style="display:block;color:#e2e8f0;font-size:11px;">2. Label</b><span style="display:block;color:#94a3b8;font-size:9px;margin-top:2px;">model proof</span></div>
-        <div style="background:#431407;border:1px solid #b45309;border-radius:8px;padding:8px;text-align:center;"><b style="display:block;color:#fed7aa;font-size:11px;">3. Verify</b><span style="display:block;color:#fdba74;font-size:9px;margin-top:2px;">before buy</span></div>
+      <p style="color:#5eead4;font-size:10px;font-weight:950;letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px;">PartSnap</p>
+      <p style="color:#f8fafc;font-size:21px;font-weight:950;line-height:1.08;margin-bottom:8px;">Part first. Label second.</p>
+      <p style="color:#cbd5e1;font-size:13px;line-height:1.35;margin-bottom:12px;">Get close. Fill the box. If there is no model label, do not order yet.</p>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:7px;">
+        <div style="background:#042f2e;border:1px solid #0f766e;border-radius:8px;padding:10px 6px;text-align:center;"><b style="display:block;color:#ccfbf1;font-size:13px;">Part</b><span style="display:block;color:#99f6e4;font-size:10px;margin-top:2px;font-weight:800;">close</span></div>
+        <div style="background:#111827;border:1px solid #334155;border-radius:8px;padding:10px 6px;text-align:center;"><b style="display:block;color:#e2e8f0;font-size:13px;">Label</b><span style="display:block;color:#94a3b8;font-size:10px;margin-top:2px;font-weight:800;">model</span></div>
+        <div style="background:#431407;border:1px solid #b45309;border-radius:8px;padding:10px 6px;text-align:center;"><b style="display:block;color:#fed7aa;font-size:13px;">Verify</b><span style="display:block;color:#fdba74;font-size:10px;margin-top:2px;font-weight:800;">before buy</span></div>
       </div>
     </div>`;
 }
 
-// ── Camera ──────────────────────────────────
+// ------------------------------------------- Camera -------------------------------------------
 
 function startCamera() {
   const video  = document.getElementById('scan-video');
@@ -3701,7 +3752,7 @@ function captureAndAnalyze() {
   const isPartsScan  = _scanMode === 'parts';
   const isStripScan  = _scanMode === 'strip';
 
-  if (status) status.textContent = navigator.onLine ? 'AI ANALYZING…' : 'SCANNING…';
+  if (status) status.textContent = navigator.onLine ? 'Analyzing...' : 'Scanning...';
 
   // AI-first path: call CF Worker when online
   if (navigator.onLine) {
@@ -3714,11 +3765,11 @@ function captureAndAnalyze() {
     return;
   }
 
-  // Offline strip and parts need AI — show message
+  // Offline strip and parts need AI - show message
   if (isStripScan || isPartsScan) {
-    if (status) status.textContent = 'INTERNET REQUIRED FOR AI SCAN';
+    if (status) status.textContent = 'Internet required for AI scan';
     if (result) result.innerHTML = `<div style="background:#1e293b;border:1px solid #334155;border-radius:10px;padding:20px;text-align:center;">
-      <p style="color:#fbbf24;font-size:14px;font-weight:700;margin-bottom:8px;">${isStripScan ? '🧪 Test Strip' : '🔧 PartSnap'} requires AI</p>
+      <p style="color:#fbbf24;font-size:14px;font-weight:700;margin-bottom:8px;">${isStripScan ? 'Test Strip' : 'PartSnap'} needs internet</p>
       <p style="color:#64748b;font-size:12px;line-height:1.5;">Connect to internet and try again, or use Code Lookup to search manually.</p>
     </div>`;
     return;
@@ -3920,7 +3971,7 @@ async function callAIScan(canvas, mode, result, status) {
         <div style="background:#1e293b;border:1px solid #334155;border-radius:10px;padding:12px;margin-bottom:10px;">
           <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px;">
             <span style="background:#7c3aed;color:#fff;padding:2px 10px;border-radius:100px;font-size:10px;font-weight:700;">AI READ - VERIFY</span>
-            ${brand ? `<span style="color:#94a3b8;font-size:11px;">${brand}${model ? ' · '+model : ''}</span>` : ''}
+            ${brand ? `<span style="color:#94a3b8;font-size:11px;">${brand}${model ? '  /  '+model : ''}</span>` : ''}
           </div>
           <p style="color:#f1f5f9;font-size:18px;font-weight:900;letter-spacing:.08em;margin-bottom:4px;">${codes.join('  ')}</p>
           ${context ? `<p style="color:#7dd3fc;font-size:12px;">${context}</p>` : ''}
@@ -3930,7 +3981,7 @@ async function callAIScan(canvas, mode, result, status) {
         ${!hits.length ? `<div style="text-align:center;padding:16px 0;"><button onclick="showCaptureWithManualEntry(document.getElementById('scan-canvas'),'${codes[0]}',document.getElementById('scan-result'),document.getElementById('scan-camera-status'))" style="background:#334155;color:#94a3b8;border:none;border-radius:8px;padding:10px 20px;font-size:13px;cursor:pointer;">Edit Code Manually</button></div>` : ''}
       `;
     } else {
-      // AI not confident — try TextDetector then manual
+      // AI not confident - try TextDetector then manual
       if ('TextDetector' in window) {
         canvas.convertToBlob({ type: 'image/jpeg' }).then(blob =>
           createImageBitmap(blob).then(bmp =>
@@ -3947,8 +3998,8 @@ async function callAIScan(canvas, mode, result, status) {
       }
     }
   } catch (err) {
-    // Network error or worker unavailable — fall back to offline path
-    if (status) status.textContent = 'AI UNAVAILABLE — USING LOCAL SCAN';
+    // Network error or worker unavailable - fall back to offline path
+    if (status) status.textContent = 'AI UNAVAILABLE - USING LOCAL SCAN';
     if ('TextDetector' in window) {
       canvas.convertToBlob({ type: 'image/jpeg' }).then(blob =>
         createImageBitmap(blob).then(bmp =>
@@ -3984,15 +4035,16 @@ function getScanClientId() {
 
 function renderPartsSnapResult(ai, result, status) {
   if (!result) return;
+  setScanResultReady(true);
+  stopCamera();
   _lastPartSnapResult = ai || {};
   const visibleEvidence = Array.isArray(_lastPartSnapResult.visibleEvidence) ? _lastPartSnapResult.visibleEvidence.filter(Boolean).slice(0, 4) : [];
   const missingProof = Array.isArray(_lastPartSnapResult.missingProof) ? _lastPartSnapResult.missingProof.filter(Boolean).slice(0, 4) : [];
   const alternates = Array.isArray(_lastPartSnapResult.alternates) ? _lastPartSnapResult.alternates.filter(Boolean).slice(0, 3) : [];
-  const { manufacturer, category, component, model, partNumber, description, condition, replacementNotes, verificationNotes, searchTerms, confidence } = ai;
+  const { manufacturer, category, component, model, partNumber, description, condition, replacementNotes, verificationNotes, searchTerms, confidence } = ai || {};
   const low = confidence === 'low';
-  const notes = verificationNotes || replacementNotes;
 
-  if (status) status.textContent = low ? 'PART NOT IDENTIFIED — TRY CLOSER' : `POSSIBLE MATCH: ${component || 'Unknown part'}`;
+  if (status) status.textContent = low ? 'Part not identified. Try closer.' : `Possible match: ${component || 'Unknown part'}`;
 
   if (status && status.textContent.startsWith('POSSIBLE MATCH:')) {
     status.textContent = status.textContent.replace('POSSIBLE MATCH:', 'POSSIBLE MATCH:');
@@ -4001,40 +4053,38 @@ function renderPartsSnapResult(ai, result, status) {
   const condColor = { new:'#16a34a', good:'#16a34a', worn:'#d97706', damaged:'#dc2626', unknown:'#64748b' }[condition] || '#64748b';
 
   const ladder = partConfidenceLadder(confidence, partNumber, manufacturer, model, component);
-  const buyLinks = ladder.allowLinks ? renderPartBuyLinks(searchTerms, partNumber, manufacturer, component) : '';
+  const safeSearchTerms = Array.isArray(searchTerms) ? searchTerms.filter(Boolean).slice(0, 6) : [];
+  const buyLinks = ladder.allowLinks ? renderPartBuyLinks(safeSearchTerms, partNumber, manufacturer, component) : '';
+  const escalationSummary = _lastPartSnapResult.escalationSummary || '';
   trackSplashLensEvent('partsnap_result', { confidence: confidence || 'unknown', category: category || 'unknown' });
 
+  const canOrderText = ladder.allowLinks ? 'Verify fit before buying' : 'Do not order yet';
+  const safeComponent = escHtml(component || 'Unknown part');
+  const safeMeta = escHtml([manufacturer, model, category].filter(Boolean).join(' / ') || 'Need label or marking proof');
   result.innerHTML = `
     <div style="background:#1e293b;border:1px solid ${low?'#334155':'#14b8a6'};border-radius:12px;padding:16px;margin-bottom:10px;border-left:4px solid ${low?'#334155':'#14b8a6'};">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap;">
-        <span style="background:#0f766e;color:#fff;padding:2px 10px;border-radius:100px;font-size:10px;font-weight:900;letter-spacing:.04em;">PARTSNAP SERVICE</span>
-        ${manufacturer ? `<span style="color:#94a3b8;font-size:11px;">${manufacturer}</span>` : ''}
-        ${category ? `<span style="color:#64748b;font-size:11px;text-transform:uppercase;">${category}</span>` : ''}
-        <span style="margin-left:auto;background:${condColor};color:#fff;padding:2px 8px;border-radius:100px;font-size:10px;font-weight:700;">${(condition||'unknown').toUpperCase()}</span>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
+        <span style="background:#0f766e;color:#fff;padding:4px 10px;border-radius:7px;font-size:11px;font-weight:950;letter-spacing:0;">PartSnap</span>
+        <span style="background:${low ? '#334155' : '#0f766e'};color:#fff;padding:4px 10px;border-radius:7px;font-size:11px;font-weight:950;">${escHtml((confidence || 'unknown').toUpperCase())}</span>
+        <span style="margin-left:auto;background:${ladder.allowLinks ? '#92400e' : '#7f1d1d'};color:#fff;padding:4px 10px;border-radius:7px;font-size:11px;font-weight:950;">${canOrderText}</span>
       </div>
-      <p style="color:#f1f5f9;font-size:18px;font-weight:800;margin-bottom:4px;">${component || 'Unknown Part'}</p>
-      ${model ? `<p style="color:#7dd3fc;font-size:12px;margin-bottom:6px;">${model}</p>` : ''}
-      ${description ? `<p style="color:#94a3b8;font-size:13px;line-height:1.5;margin-bottom:10px;">${description}</p>` : ''}
+      <p style="color:#f1f5f9;font-size:22px;font-weight:950;line-height:1.08;margin-bottom:5px;">${safeComponent}</p>
+      <p style="color:#94a3b8;font-size:12px;font-weight:800;margin-bottom:10px;">${safeMeta}</p>
+      ${description ? `<p style="color:#cbd5e1;font-size:13px;line-height:1.4;margin-bottom:10px;">${escHtml(description)}</p>` : ''}
       ${partNumber ? `
         <div style="background:#0f172a;border-radius:8px;padding:10px 12px;margin-bottom:10px;">
-          <p style="color:#64748b;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px;">POSSIBLE OEM / MODEL NUMBER</p>
-          <p style="color:#fbbf24;font-size:16px;font-weight:800;letter-spacing:.05em;">${partNumber}</p>
+          <p style="color:#64748b;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px;">Possible number</p>
+          <p style="color:#fbbf24;font-size:16px;font-weight:800;letter-spacing:.05em;">${escHtml(partNumber)}</p>
         </div>
       ` : ''}
-      ${replacementNotes ? `<p style="color:#fbbf24;font-size:12px;font-weight:600;margin-bottom:10px;">⚠ ${replacementNotes}</p>` : ''}
-      ${verificationNotes ? `<p style="color:#fbbf24;font-size:12px;font-weight:600;margin-bottom:10px;">Check: ${verificationNotes}</p>` : ''}
+      ${replacementNotes ? `<p style="color:#fbbf24;font-size:12px;font-weight:700;margin-bottom:10px;">Warning: ${escHtml(replacementNotes)}</p>` : ''}
+      ${verificationNotes ? `<p style="color:#fbbf24;font-size:12px;font-weight:600;margin-bottom:10px;">Check: ${escHtml(verificationNotes)}</p>` : ''}
       ${renderPartConfidenceLadder(ladder)}
       ${renderPartEvidencePanel(visibleEvidence, missingProof)}
       ${renderPartAlternates(alternates)}
-      ${searchTerms?.length ? `
-        <p style="color:#64748b;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">SEARCH ONLINE</p>
-        <div style="display:flex;flex-wrap:wrap;gap:6px;">
-          ${searchTerms.map(t => `<span style="background:#0f172a;color:#7dd3fc;padding:5px 10px;border-radius:6px;font-size:11px;font-weight:600;">${t}</span>`).join('')}
-        </div>
-      ` : ''}
-      ${buyLinks}
+      ${renderPartSearchTools(safeSearchTerms, buyLinks)}
       ${!ladder.allowLinks ? `<div style="margin-top:12px;background:#0f172a;border:1px solid #334155;border-radius:8px;padding:10px;"><p style="color:#fbbf24;font-size:12px;font-weight:900;margin-bottom:4px;">Hold buying links until proof improves</p><p style="color:#94a3b8;font-size:11px;line-height:1.45;">Need: ${ladder.missing.map(escHtml).join(', ')}.</p></div>` : ''}
-      ${ai.escalationSummary ? `<div style="margin-top:12px;background:#020617;border:1px solid #334155;border-radius:10px;padding:11px;"><p style="color:#94a3b8;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px;">Escalation packet</p><p style="color:#e2e8f0;font-size:12px;line-height:1.45;">${escHtml(ai.escalationSummary)}</p></div>` : ''}
+      ${escalationSummary ? `<div style="margin-top:12px;background:#020617;border:1px solid #334155;border-radius:10px;padding:11px;"><p style="color:#94a3b8;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px;">Escalation packet</p><p style="color:#e2e8f0;font-size:12px;line-height:1.45;">${escHtml(escalationSummary)}</p></div>` : ''}
       <p style="color:#94a3b8;font-size:11px;line-height:1.45;margin-top:10px;">Reference only. Confirm model, dimensions, and the current manufacturer parts diagram before ordering.</p>
       ${low ? `<p style="color:#64748b;font-size:12px;margin-top:12px;text-align:center;">Try getting closer, better lighting, or a different angle</p>` : ''}
     </div>
@@ -4047,11 +4097,28 @@ function renderPartsSnapResult(ai, result, status) {
   `;
 }
 
+function renderPartSearchTools(searchTerms, buyLinks) {
+  if (!searchTerms?.length && !buyLinks) return '';
+  return `
+    <details style="margin:10px 0;background:#0f172a;border:1px solid #334155;border-radius:8px;padding:0;">
+      <summary style="list-style:none;cursor:pointer;padding:12px;color:#7dd3fc;font-size:12px;font-weight:950;text-transform:uppercase;letter-spacing:.04em;">Search / price check</summary>
+      <div style="border-top:1px solid #334155;padding:10px 12px 12px;">
+        ${searchTerms?.length ? `
+          <p style="color:#64748b;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">Search terms</p>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;">
+            ${searchTerms.map(t => `<span style="background:#020617;color:#7dd3fc;padding:5px 10px;border-radius:6px;font-size:11px;font-weight:600;">${escHtml(t)}</span>`).join('')}
+          </div>
+        ` : ''}
+        ${buyLinks}
+      </div>
+    </details>`;
+}
+
 function renderPartEvidencePanel(visibleEvidence, missingProof) {
   if (!visibleEvidence.length && !missingProof.length) return '';
   const list = (items, color) => items.map(item => `<li style="color:${color};font-size:11px;line-height:1.35;margin-bottom:4px;">${escHtml(item)}</li>`).join('');
   return `
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0;">
+    <div style="display:grid;grid-template-columns:1fr;gap:8px;margin:10px 0;">
       <div style="background:#052e2b;border:1px solid #0f766e;border-radius:8px;padding:10px;">
         <p style="color:#5eead4;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;">Visible proof</p>
         <ul style="padding-left:14px;margin:0;">${visibleEvidence.length ? list(visibleEvidence, '#ccfbf1') : '<li style="color:#94a3b8;font-size:11px;">No strong visible proof yet</li>'}</ul>
@@ -4137,7 +4204,7 @@ async function submitMysteryPartFeedback() {
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     trackSplashLensEvent('partsnap_mystery_submitted', { confidence: (_lastPartSnapResult || {}).confidence || 'unknown' });
-    if (status) status.textContent = 'Sent. This is now a training candidate.';
+    if (status) status.textContent = 'Sent. This is now a review candidate.';
   } catch {
     if (status) status.textContent = 'Could not send. Copy the packet and email hello@splashlens.com.';
   }
@@ -4163,14 +4230,14 @@ function renderPartConfidenceLadder(ladder) {
   const steps = ['visible marking','likely family','possible','unknown'];
   return `
     <div style="background:#0f172a;border:1px solid #334155;border-radius:8px;padding:10px;margin:10px 0;">
-      <p style="color:#94a3b8;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;">Part Confidence Ladder</p>
+      <p style="color:#94a3b8;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;">Confidence</p>
       <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:5px;">
         ${steps.map(step => {
           const active = ladder.level === step;
           return `<span style="text-align:center;border-radius:6px;padding:6px 3px;font-size:9px;font-weight:900;border:1px solid ${active ? '#14b8a6' : '#334155'};background:${active ? '#0f766e' : '#1e293b'};color:${active ? '#fff' : '#94a3b8'};">${escHtml(step)}</span>`;
         }).join('')}
       </div>
-      <p style="color:#64748b;font-size:10px;line-height:1.4;margin-top:8px;">Buying links unlock only when the result has enough visible evidence to avoid guessing.</p>
+      <p style="color:#64748b;font-size:10px;line-height:1.4;margin-top:8px;">No visible proof means no ordering.</p>
     </div>`;
 }
 
@@ -4250,7 +4317,7 @@ function runCodeSearch(code, result, status) {
   }
 }
 
-// ── Code Lookup ─────────────────────────────
+// ------------------------------------------- Code Lookup -------------------------------------------
 
 function renderScanBrandFilter() {
   const el = document.getElementById('scan-brand-filter');
@@ -4324,27 +4391,32 @@ function renderScanHits(hits, query) {
       <p style="color:#64748b;font-size:13px;">No matches for <strong style="color:#94a3b8">"${query}"</strong></p>
       <p style="color:#475569;font-size:12px;margin-top:6px;">Try the brand name + code, or search a keyword (e.g. "ignition", "flow", "pressure")</p>
     </div>`;
-  return hits.map(h => `
+  return hits.map(h => {
+    const causes = (h.causes || []).filter(Boolean).slice(0, 2);
+    const fixes = (h.fix || []).filter(Boolean).slice(0, 3);
+    const extraFixCount = Math.max(0, (h.fix || []).length - fixes.length);
+    return `
     <div style="background:#1e293b;border:1px solid #334155;border-radius:12px;padding:14px;margin-bottom:10px;border-left:4px solid ${h.brandColor};">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap;">
-        <span style="background:${h.brandColor};color:#fff;padding:2px 10px;border-radius:100px;font-size:11px;font-weight:700;">${h.brandLabel}</span>
+        <span style="background:${h.brandColor};color:#fff;padding:4px 10px;border-radius:7px;font-size:11px;font-weight:900;">${h.brandLabel}</span>
         <span style="color:#94a3b8;font-size:11px;">${h.category}</span>
-        <span style="margin-left:auto;background:${h.severity==='high'?'#dc2626':h.severity==='medium'?'#d97706':'#16a34a'};color:#fff;padding:2px 8px;border-radius:100px;font-size:10px;font-weight:700;">${(h.severity||'').toUpperCase()}</span>
+        <span style="margin-left:auto;background:${h.severity==='high'?'#dc2626':h.severity==='medium'?'#d97706':'#16a34a'};color:#fff;padding:4px 8px;border-radius:7px;font-size:10px;font-weight:900;">${(h.severity||'').toUpperCase()}</span>
       </div>
-      <div style="font-size:20px;font-weight:900;color:#f1f5f9;letter-spacing:.08em;margin-bottom:4px;">${h.code}</div>
-      <div style="font-size:14px;font-weight:700;color:#7dd3fc;margin-bottom:10px;">${h.name}</div>
-      ${h.causes?.length ? `
-        <p style="color:#64748b;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;">Likely Causes</p>
-        <ul style="margin:0 0 10px;padding-left:16px;">${h.causes.map(c=>`<li style="color:#94a3b8;font-size:13px;line-height:1.5;">${c}</li>`).join('')}</ul>
+      <div style="font-size:24px;font-weight:950;color:#f1f5f9;letter-spacing:.04em;margin-bottom:4px;">${h.code}</div>
+      <div style="font-size:15px;font-weight:800;color:#7dd3fc;margin-bottom:12px;line-height:1.2;">${h.name}</div>
+      ${causes.length ? `
+        <p style="color:#64748b;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;">Likely cause</p>
+        <div style="display:grid;gap:6px;margin-bottom:12px;">${causes.map(c=>`<div style="background:#0f172a;border:1px solid #334155;border-radius:8px;padding:9px 10px;color:#cbd5e1;font-size:13px;line-height:1.35;">${c}</div>`).join('')}</div>
       ` : ''}
-      ${h.fix?.length ? `
-        <p style="color:#64748b;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;">Next Checks</p>
-        <ol style="margin:0;padding-left:16px;">${h.fix.map(f=>`<li style="color:#e2e8f0;font-size:13px;line-height:1.6;margin-bottom:2px;">${f}</li>`).join('')}</ol>
+      ${fixes.length ? `
+        <p style="color:#64748b;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;">Do next</p>
+        <div style="display:grid;gap:7px;">${fixes.map((f,i)=>`<div style="display:grid;grid-template-columns:24px 1fr;gap:8px;background:#0f172a;border:1px solid #334155;border-radius:8px;padding:9px 10px;color:#e2e8f0;font-size:13px;line-height:1.35;"><span style="color:#7dd3fc;font-weight:900;">${i+1}</span><span>${f}</span></div>`).join('')}</div>
+        ${extraFixCount ? `<p style="color:#64748b;font-size:11px;margin-top:7px;">${extraFixCount} more check${extraFixCount === 1 ? '' : 's'} in lookup.</p>` : ''}
       ` : ''}
-      ${h.callpro ? `<p style="color:#fbbf24;font-size:12px;font-weight:700;margin-top:10px;">⚠ Recommend calling a certified technician for this fault.</p>` : ''}
+      ${h.callpro ? `<p style="color:#fbbf24;font-size:12px;font-weight:700;margin-top:10px;">Warning: Recommend calling a certified technician for this fault.</p>` : ''}
       <p style="color:#64748b;font-size:10px;line-height:1.45;margin-top:10px;">Reference only. Confirm the code, model, and procedure against the current manufacturer manual before repair or parts ordering.</p>
     </div>
-  `).join('');
+  `; }).join('');
 }
 
 function renderStripResult(ai, result, status) {
@@ -4353,7 +4425,7 @@ function renderStripResult(ai, result, status) {
 
   if (status) status.textContent = 'TEST STRIP READING COMPLETE';
 
-  const val  = (v, unit='ppm') => v !== null && v !== undefined ? `<span style="font-size:22px;font-weight:900;color:#f1f5f9;">${v}</span> <span style="font-size:12px;color:#64748b;">${unit}</span>` : '<span style="color:#334155;font-size:18px;">—</span>';
+  const val  = (v, unit='ppm') => v !== null && v !== undefined ? `<span style="font-size:22px;font-weight:900;color:#f1f5f9;">${v}</span> <span style="font-size:12px;color:#64748b;">${unit}</span>` : '<span style="color:#334155;font-size:18px;">-</span>';
   const flag = (v, lo, hi) => {
     if (v === null || v === undefined) return '#334155';
     return v < lo || v > hi ? '#d97706' : '#16a34a';
@@ -4370,7 +4442,7 @@ function renderStripResult(ai, result, status) {
   result.innerHTML = `
     <div style="background:#1e293b;border:1px solid #334155;border-radius:12px;padding:16px;margin-bottom:10px;">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
-        <span style="background:#0284c7;color:#fff;padding:2px 10px;border-radius:100px;font-size:10px;font-weight:700;">🧪 TEST STRIP AI READ</span>
+        <span style="background:#0284c7;color:#fff;padding:2px 10px;border-radius:100px;font-size:10px;font-weight:700;">Strip TEST STRIP AI READ</span>
         <span style="margin-left:auto;background:#334155;color:#94a3b8;padding:2px 8px;border-radius:100px;font-size:10px;font-weight:700;">${(confidence||'medium').toUpperCase()}</span>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">
@@ -4378,7 +4450,7 @@ function renderStripResult(ai, result, status) {
           <div style="background:#0f172a;border:1px solid ${flag(r.v, r.lo, r.hi)};border-radius:8px;padding:10px;border-left:3px solid ${flag(r.v, r.lo, r.hi)};">
             <p style="color:#64748b;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;">${r.label}</p>
             ${val(r.v, r.unit !== undefined ? r.unit : 'ppm')}
-            ${r.v !== null && r.v !== undefined ? (r.v < r.lo || r.v > r.hi ? '<p style="color:#fbbf24;font-size:9px;margin-top:3px;">⚠ Out of range</p>' : '<p style="color:#4ade80;font-size:9px;margin-top:3px;">✓ In range</p>') : ''}
+            ${r.v !== null && r.v !== undefined ? (r.v < r.lo || r.v > r.hi ? '<p style="color:#fbbf24;font-size:9px;margin-top:3px;">Warning: Out of range</p>' : '<p style="color:#4ade80;font-size:9px;margin-top:3px;">OK In range</p>') : ''}
           </div>`).join('')}
       </div>
       ${notes ? `<p style="color:#7dd3fc;font-size:13px;line-height:1.5;margin-bottom:10px;">${notes}</p>` : ''}
@@ -4386,31 +4458,31 @@ function renderStripResult(ai, result, status) {
       <p style="color:#fbbf24;font-size:10px;line-height:1.4;margin-top:6px;">Confirm readings with a calibrated kit before using the dosing calculator.</p>
     </div>
     <div style="text-align:center;padding:0 0 16px;">
-      <button onclick="showTab('dosing')" style="background:#0284c7;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;margin-right:8px;">Calculate Doses →</button>
+      <button onclick="showTab('dosing')" style="background:#0284c7;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;margin-right:8px;">Calculate Doses -></button>
       <button onclick="setScanMode('strip');document.getElementById('scan-result').innerHTML=''" style="background:#334155;color:#94a3b8;border:none;border-radius:8px;padding:10px 16px;font-size:13px;cursor:pointer;">Scan Again</button>
     </div>
   `;
 }
 
-// ── Chem Catalog ─────────────────────────────
+// ------------------------------------------- Chem Catalog -------------------------------------------
 
 function renderChemCatalogHome() {
   const el = document.getElementById('scan-chem-results');
   if (!el) return;
   if (!window.CHEM_CATALOG) {
-    el.innerHTML = `<p style="color:#475569;font-size:13px;text-align:center;padding:24px 0;">Chemical catalog loading…</p>`;
+    el.innerHTML = `<p style="color:#475569;font-size:13px;text-align:center;padding:24px 0;">Chemical catalog loading...</p>`;
     return;
   }
   const { homeAlternatives } = window.CHEM_CATALOG;
   if (homeAlternatives?.length) {
     el.innerHTML = `
-      <p style="color:#7dd3fc;font-size:12px;font-weight:700;letter-spacing:.06em;margin-bottom:12px;">💰 HOME STORE ALTERNATIVES</p>
+      <p style="color:#7dd3fc;font-size:12px;font-weight:700;letter-spacing:.06em;margin-bottom:12px;">Savings: HOME STORE ALTERNATIVES</p>
       ${homeAlternatives.map(a => `
         <div style="background:#1e293b;border:1px solid #334155;border-radius:10px;padding:12px;margin-bottom:8px;border-left:3px solid #16a34a;">
           <p style="color:#86efac;font-size:12px;font-weight:700;margin-bottom:4px;">${a.chemical}</p>
           <p style="color:#f1f5f9;font-size:14px;font-weight:700;margin-bottom:4px;">${a.homeProduct}</p>
           <p style="color:#94a3b8;font-size:12px;margin-bottom:4px;">${a.savings}</p>
-          ${a.caution ? `<p style="color:#fbbf24;font-size:11px;font-weight:600;">⚠ ${a.caution}</p>` : ''}
+          ${a.caution ? `<p style="color:#fbbf24;font-size:11px;font-weight:600;">Warning: ${a.caution}</p>` : ''}
         </div>
       `).join('')}
     `;
@@ -4443,11 +4515,11 @@ function scanChemSearch(val) {
     <div style="background:#1e293b;border:1px solid #334155;border-radius:12px;padding:14px;margin-bottom:10px;">
       <p style="color:#7dd3fc;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;">${p.catLabel}</p>
       <p style="color:#f1f5f9;font-size:15px;font-weight:700;margin-bottom:2px;">${p.name}</p>
-      <p style="color:#94a3b8;font-size:12px;margin-bottom:8px;">${p.genericName}${p.activeIngredient ? ' · ' + p.activeIngredient : ''}</p>
+      <p style="color:#94a3b8;font-size:12px;margin-bottom:8px;">${p.genericName}${p.activeIngredient ? '  /  ' + p.activeIngredient : ''}</p>
       ${p.brands?.length ? `<p style="color:#64748b;font-size:11px;font-weight:600;margin-bottom:6px;">Brands: ${p.brands.join(', ')}</p>` : ''}
       ${p.notes ? `<p style="color:#94a3b8;font-size:12px;line-height:1.5;margin-bottom:8px;">${p.notes}</p>` : ''}
       ${p.alternatives?.length ? `
-        <p style="color:#86efac;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;">💰 Store Alternatives</p>
+        <p style="color:#86efac;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;">Savings: Store Alternatives</p>
         ${p.alternatives.map(a => `
           <div style="background:#0f172a;border-radius:6px;padding:8px 10px;margin-bottom:4px;display:flex;gap:10px;align-items:flex-start;">
             <span style="background:#16a34a;color:#fff;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;white-space:nowrap;flex-shrink:0;">${a.store}</span>
@@ -4458,7 +4530,7 @@ function scanChemSearch(val) {
           </div>
         `).join('')}
       ` : ''}
-      ${p.incompatible?.length ? `<p style="color:#fbbf24;font-size:11px;font-weight:600;margin-top:8px;">⚠ Never mix with: ${p.incompatible.join(', ')}</p>` : ''}
+      ${p.incompatible?.length ? `<p style="color:#fbbf24;font-size:11px;font-weight:600;margin-top:8px;">Warning: Never mix with: ${p.incompatible.join(', ')}</p>` : ''}
     </div>
   `).join('');
 }

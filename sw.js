@@ -1,4 +1,4 @@
-const CACHE = 'splashlens-v6-partsnap-ai';
+const CACHE = 'splashlens-v9-report-polish';
 const ASSETS = ['/', '/index.html', '/js/errors.js', '/js/data.js', '/js/app.js', '/favicon.svg', '/manifest.json'];
 
 self.addEventListener('install', e => {

@@ -33,8 +33,8 @@ window.CHEM_DATA = {
       ],
       // pH adjust factors: more complex due to TA dependence
       // fl oz muriatic per 0.1 pH decrease per 10k gallons (at various TA levels)
-      muriaticFactor: { 50: 2.0, 75: 2.8, 100: 3.5, 125: 4.2, 150: 5.0 }, // TA → fl oz
-      sodaAshFactor: 3.0  // oz dry per 0.1 pH increase per 10k gal (rough — varies with TA)
+      muriaticFactor: { 50: 2.0, 75: 2.8, 100: 3.5, 125: 4.2, 150: 5.0 }, // TA -> fl oz
+      sodaAshFactor: 3.0  // oz dry per 0.1 pH increase per 10k gal (rough - varies with TA)
     },
     ta: {
       label: "Total Alkalinity (TA)",
@@ -55,7 +55,7 @@ window.CHEM_DATA = {
       raise: [
         { id:"calciumChloride", label:"Calcium Chloride (dry)", unit:"lbs",
           factor: 1.25,  // lbs per 10 ppm per 10,000 gal
-          note:"Pre-dissolve in bucket — extremely exothermic. Add slowly." }
+          note:"Pre-dissolve in bucket - extremely exothermic. Add slowly." }
       ],
       lower: [ { id:"drain", label:"Partial drain / dilution only", unit:"", note:"No chemical lowers CH. Must dilute with fresh water." } ]
     },
@@ -65,17 +65,17 @@ window.CHEM_DATA = {
       raise: [
         { id:"cyanuricAcid", label:"Cyanuric Acid (Stabilizer)", unit:"lbs",
           factor: 0.73,  // lbs per 10 ppm per 10,000 gal
-          note:"Add inside a sock hung in the skimmer. Dissolves slowly — takes 1-2 weeks to read accurately." }
+          note:"Add inside a sock hung in the skimmer. Dissolves slowly - takes 1-2 weeks to read accurately." }
       ],
       lower: [ { id:"drain", label:"Partial drain / dilution only", unit:"", note:"No chemical removes CYA. Must drain and dilute." } ]
     }
   },
 
-  // SLAM protocol targets (FC = CYA × multiplier)
+  // SLAM protocol targets (FC = CYA x multiplier)
   slam: {
     greenPool:    { label:"Green Pool / Algae Kill",   mult: 0.40, note:"Maintain until: CC < 0.5 + water clear + passes OCLT" },
     maintenance:  { label:"Maintenance Shock",          mult: 0.20, note:"Standard weekly shock level" },
-    mustardAlgae: { label:"Mustard (Yellow) Algae",     mult: 0.60, note:"Harder to kill — requires thorough brushing and sustained high FC" },
+    mustardAlgae: { label:"Mustard (Yellow) Algae",     mult: 0.60, note:"Harder to kill - requires thorough brushing and sustained high FC" },
     blackAlgae:   { label:"Black Algae",                mult: 0.80, note:"Very resistant. Must physically scrub spots. Consider a long SLAM." },
     clearPool:    { label:"Already Clear Pool",         mult: 0.10, note:"Normal operating target" }
   },
@@ -93,7 +93,7 @@ window.CHEM_DATA = {
   // Ideal chemistry ranges
   ranges: {
     fc:   { low: 2,   high: 10,  ideal: "3-6",     unit: "ppm" },
-    cc:   { low: 0,   high: 0.5, ideal: "0-0.2",   unit: "ppm", note:"Combined chlorine — above 0.5 = shock needed" },
+    cc:   { low: 0,   high: 0.5, ideal: "0-0.2",   unit: "ppm", note:"Combined chlorine - above 0.5 = shock needed" },
     ph:   { low: 7.2, high: 7.8, ideal: "7.4-7.6", unit: "" },
     ta:   { low: 80,  high: 120, ideal: "80-100",   unit: "ppm" },
     ch:   { low: 200, high: 400, ideal: "200-400",  unit: "ppm", note:"Plaster/gunite pools lean 250-350; vinyl/fiberglass 150-250 OK" },
@@ -105,12 +105,12 @@ window.CHEM_DATA = {
   // Partial drain calculator data
   drainCalc: {
     description: "Used when CYA, CH, or TDS is too high. Calculate % to drain and replace with fresh water.",
-    // Target = current × (1 - drain_pct) + 0 × drain_pct  →  drain_pct = 1 - (target / current)
+    // Target = current x (1 - drain_pct) + 0 x drain_pct  ->  drain_pct = 1 - (target / current)
   }
 };
 
 window.SAND_FILTER_DATA = {
-  // Sand weight by tank diameter (inches) → pounds of #20 silica sand
+  // Sand weight by tank diameter (inches) -> pounds of #20 silica sand
   sandByDiameter: [
     { dia:16,  sand:50,  flow:"25-35 GPM",  sqft:1.4, commonModels:["Hayward S166T","Pentair TR40","Sand Dollar SD40"] },
     { dia:18,  sand:75,  flow:"35-50 GPM",  sqft:1.77, commonModels:["Hayward S180T","Pentair TR40C","Jacuzzi SL15"] },
@@ -140,9 +140,9 @@ window.SAND_FILTER_DATA = {
   },
   // Alternative media
   alternatMedia: [
-    { name:"ZeoSand (Zeolite)",    amount:"lbs = sand_lbs × 0.5", note:"50% less by weight. Better filtration to 2-3 microns. Good for high-bather loads." },
-    { name:"FilterGlass",          amount:"lbs = sand_lbs × 0.75", note:"Lasts 10+ years. Better filtration. No biological growth." },
-    { name:"Polybead (Polyester)", amount:"lbs = sand_lbs × 0.5", note:"Environmentally friendly. Better than sand on small particles." }
+    { name:"ZeoSand (Zeolite)",    amount:"lbs = sand_lbs x 0.5", note:"50% less by weight. Better filtration to 2-3 microns. Good for high-bather loads." },
+    { name:"FilterGlass",          amount:"lbs = sand_lbs x 0.75", note:"Lasts 10+ years. Better filtration. No biological growth." },
+    { name:"Polybead (Polyester)", amount:"lbs = sand_lbs x 0.5", note:"Environmentally friendly. Better than sand on small particles." }
   ]
 };
 
@@ -188,38 +188,38 @@ window.POOL_VOLUME_DATA = {
 };
 
 window.CLOSING_CHECKLIST = [
-  { phase:"Chemistry — Pre-Close (do first, run pump 24h after)", steps:[
+  { phase:"Chemistry - Pre-Close (do first, run pump 24h after)", steps:[
     "Test all 6: FC, CC, pH, TA, CH, CYA",
-    "Adjust pH to 7.2–7.4 — slightly low prevents winter scale",
-    "Adjust TA to 80–100 ppm",
-    "Adjust CH to 200–400 ppm",
-    "Shock pool to 10+ ppm FC using Cal-Hypo — big kill before cover goes on",
-    "Add PolyQuat 60 algaecide per label (preferred — no foaming, works under cover)",
+    "Adjust pH to 7.2-7.4 - slightly low prevents winter scale",
+    "Adjust TA to 80-100 ppm",
+    "Adjust CH to 200-400 ppm",
+    "Shock pool to 10+ ppm FC using Cal-Hypo - big kill before cover goes on",
+    "Add PolyQuat 60 algaecide per label (preferred - no foaming, works under cover)",
     "Add phosphate remover if phosphates were above 500 ppb",
     "Add metal sequestrant if source water is high in iron or copper",
-    "DO NOT add extra CYA — it persists and you waste stabilizer"
+    "DO NOT add extra CYA - it persists and you waste stabilizer"
   ]},
   { phase:"Equipment Shutdown", steps:[
     "Run pump/filter minimum 24 hours after adding closing chemicals",
     "Backwash sand/DE filter OR clean cartridge elements before shutdown",
-    "For DE filters: disassemble and hose off grids — rinse thoroughly",
-    "Turn off heater FIRST — allow 15 min to cool before shutting pump off",
-    "Shut off salt chlorinator — clean cell with acid wash per spec",
+    "For DE filters: disassemble and hose off grids - rinse thoroughly",
+    "Turn off heater FIRST - allow 15 min to cool before shutting pump off",
+    "Shut off salt chlorinator - clean cell with acid wash per spec",
     "Remove and store salt cell indoors for winter",
     "Disconnect and store automation equipment and remote controls",
     "Clean pump strainer basket thoroughly",
-    "Turn off main power at breaker panel — tape breaker if pool is near public access"
+    "Turn off main power at breaker panel - tape breaker if pool is near public access"
   ]},
   { phase:"Winterize Plumbing", steps:[
     "Lower water level below skimmer opening (or mid-tile on vinyl/fiberglass)",
-    "Blow out return lines with compressor — work pump → returns",
+    "Blow out return lines with compressor - work pump -> returns",
     "Insert Gizzmo / winterization plug into each skimmer throat",
-    "Blow out skimmer line — plug when water clears",
-    "Blow out main drain line — close valve or plug if accessible",
+    "Blow out skimmer line - plug when water clears",
+    "Blow out main drain line - close valve or plug if accessible",
     "Add propylene glycol antifreeze to lines in hard-freeze climates (NEVER ethylene glycol)",
-    "Drain pump completely — remove drain plug and store in basket",
-    "Drain filter tank — remove drain cap",
-    "Drain heater heat exchanger and chlorinator — open all unions",
+    "Drain pump completely - remove drain plug and store in basket",
+    "Drain filter tank - remove drain cap",
+    "Drain heater heat exchanger and chlorinator - open all unions",
     "Store all drain plugs in pump basket or labeled bag"
   ]},
   { phase:"Cover Installation", steps:[
@@ -227,44 +227,44 @@ window.CLOSING_CHECKLIST = [
     "Install underwater return plugs before installing cover",
     "Install safety cover: all anchors fully seated and tensioned evenly",
     "For mesh safety covers: use water tubes or sandbags at perimeter against wind",
-    "For solid covers: install submersible cover pump — must drain rain/snowmelt",
+    "For solid covers: install submersible cover pump - must drain rain/snowmelt",
     "For above-ground: install air pillow first to absorb ice expansion pressure",
-    "Verify cover cannot be lifted by wind — check all attachment points"
+    "Verify cover cannot be lifted by wind - check all attachment points"
   ]},
   { phase:"Final Steps", steps:[
-    "Photograph equipment pad — show plugs removed, drains open (reference for spring)",
+    "Photograph equipment pad - show plugs removed, drains open (reference for spring)",
     "Wrap exposed pipe unions with foam pipe insulation in freeze climates",
     "Lock and secure equipment enclosure",
     "Log closing date, all chemical levels, and any issues in notes",
-    "Schedule spring opening 2–3 weeks before first use (chemistry needs time to stabilize)"
+    "Schedule spring opening 2-3 weeks before first use (chemistry needs time to stabilize)"
   ]}
 ];
 
 window.WEEKLY_CHECKLIST = [
   { phase:"Water Testing", steps:[
-    "Test Free Chlorine (FC) — target 3–6 ppm (salt pools: 3–5 ppm)",
-    "Test pH — target 7.4–7.6",
-    "Test Combined Chlorine (CC) — must stay below 0.5 ppm",
-    "If CC ≥ 0.5: shock to breakpoint chlorination (see SLAM calculator)",
+    "Test Free Chlorine (FC) - target 3-6 ppm (salt pools: 3-5 ppm)",
+    "Test pH - target 7.4-7.6",
+    "Test Combined Chlorine (CC) - must stay below 0.5 ppm",
+    "If CC >= 0.5: shock to breakpoint chlorination (see SLAM calculator)",
     "Spot-check CYA after heavy rain or significant splash-out",
-    "Check salt level if applicable — verify 2700–3400 ppm",
+    "Check salt level if applicable - verify 2700-3400 ppm",
     "Adjust any out-of-range parameters using the Dosing Calculator"
   ]},
   { phase:"Physical Maintenance", steps:[
-    "Skim surface — remove leaves, insects, pollen, debris",
-    "Brush all walls, steps, and corners — algae anchors here first",
+    "Skim surface - remove leaves, insects, pollen, debris",
+    "Brush all walls, steps, and corners - algae anchors here first",
     "Brush waterline tile to prevent calcium ring buildup",
-    "Vacuum pool floor — use WASTE mode for heavy debris (bypasses filter)",
-    "Clean pump strainer basket — reduced flow = reduced filtration",
+    "Vacuum pool floor - use WASTE mode for heavy debris (bypasses filter)",
+    "Clean pump strainer basket - reduced flow = reduced filtration",
     "Clean skimmer basket",
     "Empty robotic cleaner bag / filter tray if applicable"
   ]},
   { phase:"Equipment Check", steps:[
-    "Note current filter PSI — compare to your clean baseline",
+    "Note current filter PSI - compare to your clean baseline",
     "Backwash sand/DE filter if pressure is 8+ PSI above clean baseline",
-    "Verify pump is primed and running — no air bubbles in sight glass",
+    "Verify pump is primed and running - no air bubbles in sight glass",
     "Confirm heater is reaching set temperature",
-    "Check salt cell display — inspect for scale if output is low",
+    "Check salt cell display - inspect for scale if output is low",
     "Verify automation timers / schedules are correct",
     "Look for any drips or wet spots at unions, valves, and fittings"
   ]}
@@ -273,74 +273,74 @@ window.WEEKLY_CHECKLIST = [
 window.MONTHLY_CHECKLIST = [
   { phase:"Full Water Balance Panel", steps:[
     "Test all 6 parameters: FC, CC, pH, TA, CH, CYA",
-    "Test TDS if possible — above 1500 ppm consider partial drain",
-    "Test phosphates — above 500 ppb treat with phosphate remover before algae starts",
-    "Check CH trend — calcium only goes up; if above 400 consider dilution",
-    "Verify CYA hasn't crept above 80 ppm — drain to lower it",
+    "Test TDS if possible - above 1500 ppm consider partial drain",
+    "Test phosphates - above 500 ppb treat with phosphate remover before algae starts",
+    "Check CH trend - calcium only goes up; if above 400 consider dilution",
+    "Verify CYA hasn't crept above 80 ppm - drain to lower it",
     "Add metal sequestrant if source water has elevated iron or copper",
-    "Calculate LSI (Langelier Saturation Index) if plaster pool — target -0.3 to +0.3"
+    "Calculate LSI (Langelier Saturation Index) if plaster pool - target -0.3 to +0.3"
   ]},
   { phase:"Filter Service", steps:[
     "Backwash sand or DE filter regardless of current PSI reading",
-    "For DE filters: inspect grids for tears — a single torn grid bypasses all filtration",
+    "For DE filters: inspect grids for tears - a single torn grid bypasses all filtration",
     "For cartridge filters: remove, hose off pleats, inspect for wear or tears",
-    "Log post-service pressure — this is your updated clean baseline",
+    "Log post-service pressure - this is your updated clean baseline",
     "Check multi-port or push-pull valve for bypassing or stiff handle",
-    "Inspect sight glass — should clear within 15–30 seconds of backwash",
+    "Inspect sight glass - should clear within 15-30 seconds of backwash",
     "Check for sand channeling: water should spread across sand surface, not sinkhole"
   ]},
   { phase:"Equipment Deep Inspection", steps:[
-    "Listen to pump motor — unusual noise or heat = bearing or capacitor issue",
-    "Check all O-rings and unions — lubricate with Teflon-compatible lube (not petroleum)",
-    "Inspect pump lid O-ring — replace if cracked, compressed flat, or leaking",
+    "Listen to pump motor - unusual noise or heat = bearing or capacitor issue",
+    "Check all O-rings and unions - lubricate with Teflon-compatible lube (not petroleum)",
+    "Inspect pump lid O-ring - replace if cracked, compressed flat, or leaking",
     "Inspect heater burner compartment for debris, spider nests, or carbon buildup",
-    "Check gas line connections with soapy water — bubbles = leak, call a tech",
+    "Check gas line connections with soapy water - bubbles = leak, call a tech",
     "Acid wash salt cell if output is low (muriatic 4:1 dilution, 15 min max)",
-    "Inspect all return jets — verify directional flow is sweeping the pool",
-    "Inspect main drain cover for cracks — must be VGB anti-vortex compliant"
+    "Inspect all return jets - verify directional flow is sweeping the pool",
+    "Inspect main drain cover for cracks - must be VGB anti-vortex compliant"
   ]},
   { phase:"Surfaces & Waterline", steps:[
     "Treat waterline tile with calcium lime remover or dilute muriatic on rag",
     "Brush corners, steps, and any discolored spots before they anchor",
-    "Identify stains before treating — metal, organic, and mineral stains need different chemicals",
+    "Identify stains before treating - metal, organic, and mineral stains need different chemicals",
     "Inspect pool light lens for moisture intrusion or cracking",
-    "Check deck drains for flow direction — must drain away from pool",
-    "Inspect coping and expansion joints — seal cracks before water infiltrates and freezes"
+    "Check deck drains for flow direction - must drain away from pool",
+    "Inspect coping and expansion joints - seal cracks before water infiltrates and freezes"
   ]}
 ];
 
 window.OPENING_CHECKLIST = [
   { phase:"Before Filling", steps:[
-    "Remove and store winter cover — clean before storing",
+    "Remove and store winter cover - clean before storing",
     "Remove all winterization plugs and gizzmos from returns and skimmer",
     "Re-install all return fittings and drain plugs",
-    "Reinstall main drain cover (check VGB compliance — anti-vortex cover required)",
+    "Reinstall main drain cover (check VGB compliance - anti-vortex cover required)",
     "Remove ice compensation bags / pillows (above-ground)",
     "Check equipment pad: look for freeze damage on heater unions, pump, filter",
     "Check all plumbing for cracks from freeze expansion"
   ]},
   { phase:"Fill & Equipment Start", steps:[
     "Fill pool to middle of skimmer opening",
-    "Prime pump — fill pump basket and housing with water",
-    "Start pump — verify priming within 2-3 minutes",
+    "Prime pump - fill pump basket and housing with water",
+    "Start pump - verify priming within 2-3 minutes",
     "Check filter pressure at startup (note as your 'clean baseline' for the season)",
     "Bleed air from filter tank (on DE/cartridge: open air relief valve until water flows)",
-    "Turn heater on — check for error codes (E01, E05 most common on cold startup)",
+    "Turn heater on - check for error codes (E01, E05 most common on cold startup)",
     "Verify all returns are flowing",
     "Check for any water leaks at unions, fittings, or filter"
   ]},
-  { phase:"Water Chemistry — Test First", steps:[
+  { phase:"Water Chemistry - Test First", steps:[
     "Test: pH, FC, TC/CC, TA, CH, CYA (all 6 before adding anything)",
     "If water is green/cloudy: SLAM protocol (see Dosing Calculator)",
-    "Balance in ORDER: pH → TA → CH → CYA → then chlorine last",
-    "If CYA is 0 (fresh water): add stabilizer first — takes 1-2 weeks to absorb",
+    "Balance in ORDER: pH -> TA -> CH -> CYA -> then chlorine last",
+    "If CYA is 0 (fresh water): add stabilizer first - takes 1-2 weeks to absorb",
     "If CYA > 80: partial drain recommended before shocking",
-    "Shock to breakpoint: FC should be 10× CC reading (or 10× CYA for SLAM)"
+    "Shock to breakpoint: FC should be 10x CC reading (or 10x CYA for SLAM)"
   ]},
   { phase:"Filter & Cleanup", steps:[
     "Backwash sand or DE filter (winter debris in filter)",
     "For DE filter: breakdown and hose off grids if not done at closing",
-    "Brush all pool surfaces — algae hides in corners and on steps",
+    "Brush all pool surfaces - algae hides in corners and on steps",
     "Vacuum to waste if heavy debris on bottom (bypass filter to avoid clogging)",
     "Run filter 24/7 until water is clear",
     "Check salt cell reading if applicable (clean with acid wash if needed)",
@@ -357,7 +357,7 @@ window.DE_FILTER_DATA = {
   // Standard: 1 lb per 10 sq ft (or 1.5 oz per sq ft)
   chargePerSqFt: { lbs: 0.1, oz: 1.5 },
 
-  // Common DE filter grids by model — sq footage and initial DE charge
+  // Common DE filter grids by model - sq footage and initial DE charge
   filters: [
     { brand:"Hayward", model:"EC40",   sqft:40,  deChargeLbs:4.0,  backwashGPM:60,  noteableFeature:"Vertical grid. Common residential." },
     { brand:"Hayward", model:"EC50",   sqft:50,  deChargeLbs:5.0,  backwashGPM:75,  noteableFeature:"Vertical grid." },
@@ -370,7 +370,7 @@ window.DE_FILTER_DATA = {
     { brand:"Jandy",   model:"DEV48",  sqft:48,  deChargeLbs:4.8,  backwashGPM:70,  noteableFeature:"Vertical grid. Common with Jandy systems." },
     { brand:"Jandy",   model:"DEV60",  sqft:60,  deChargeLbs:6.0,  backwashGPM:85,  noteableFeature:"Large residential." },
     { brand:"Sta-Rite",model:"System:3 S8D110", sqft:48, deChargeLbs:4.8, backwashGPM:70, noteableFeature:"Modular design. Easy grid access." },
-    { brand:"Generic", model:"Custom — Calculate", sqft:null, deChargeLbs:null, backwashGPM:null, noteableFeature:"Enter sq footage below to calculate DE charge." }
+    { brand:"Generic", model:"Custom - Calculate", sqft:null, deChargeLbs:null, backwashGPM:null, noteableFeature:"Enter sq footage below to calculate DE charge." }
   ],
 
   // How to recharge after backwash
@@ -378,11 +378,11 @@ window.DE_FILTER_DATA = {
     steps: [
       "Mix DE powder with water in a bucket to form a slurry BEFORE adding to skimmer",
       "With pump running on FILTER, slowly pour slurry into skimmer",
-      "Never add dry DE powder directly — clumping damages grids",
+      "Never add dry DE powder directly - clumping damages grids",
       "After backwash, only add back 80% of original charge (some DE remains on grids)",
       "After full teardown and hose-off: add 100% of original charge"
     ],
-    safetyNote: "Wear a dust mask when handling DE powder — silica is a respiratory hazard. Use cellulose alternative (Perlite) if preferred."
+    safetyNote: "Wear a dust mask when handling DE powder - silica is a respiratory hazard. Use cellulose alternative (Perlite) if preferred."
   },
 
   // Signs grids need replacement
@@ -400,10 +400,10 @@ window.DE_FILTER_DATA = {
 };
 
 // ---------------------------------------------------------------------------
-// Route/Day View — Schema Reference
+// Route/Day View - Schema Reference
 // ---------------------------------------------------------------------------
-// Route/Day view — stored in localStorage as 'poolens-route'
-// Schema reference (not a window global — stored in localStorage directly):
+// Route/Day view - stored in localStorage as 'poolens-route'
+// Schema reference (not a window global - stored in localStorage directly):
 // {
 //   date: "2026-05-24",
 //   jobs: [
@@ -418,27 +418,27 @@ window.ROUTE_SCHEMA_VERSION = 1; // bump to invalidate old localStorage data if 
 // ---------------------------------------------------------------------------
 window.SALT_CHLORINATOR_DATA = {
   saltTargets: [
-    { brand:"Hayward AquaRite",        target:"3000–3400 ppm", low:2700, high:3400 },
-    { brand:"Pentair IntelliChlor",    target:"3100–3400 ppm", low:3100, high:3400 },
-    { brand:"Zodiac / Jandy AquaPure", target:"3000–3500 ppm", low:3000, high:3500 },
-    { brand:"CircuPool",               target:"3000–3500 ppm", low:3000, high:3500 },
-    { brand:"Generic / most brands",   target:"2700–3400 ppm", low:2700, high:3400 },
+    { brand:"Hayward AquaRite",        target:"3000-3400 ppm", low:2700, high:3400 },
+    { brand:"Pentair IntelliChlor",    target:"3100-3400 ppm", low:3100, high:3400 },
+    { brand:"Zodiac / Jandy AquaPure", target:"3000-3500 ppm", low:3000, high:3500 },
+    { brand:"CircuPool",               target:"3000-3500 ppm", low:3000, high:3500 },
+    { brand:"Generic / most brands",   target:"2700-3400 ppm", low:2700, high:3400 },
   ],
   saltToRaiseFactor: 0.83, // lbs per 1,000 gallons per 100 ppm rise
-  cyaRecommendation: "60–80 ppm (UV degrades chlorine faster without a stabilizer buffer)",
+  cyaRecommendation: "60-80 ppm (UV degrades chlorine faster without a stabilizer buffer)",
   maintenance: [
-    "Inspect cell every 3 months — remove and look for calcium buildup on plates",
+    "Inspect cell every 3 months - remove and look for calcium buildup on plates",
     "Acid wash when scale is visible: 4:1 water:muriatic acid, 15 min max, rinse thoroughly",
-    "Check controller output % — low output with adequate salt = scaling or aging cell",
-    "Replace cell every 3–7 years depending on salt level and bather load",
+    "Check controller output % - low output with adequate salt = scaling or aging cell",
+    "Replace cell every 3-7 years depending on salt level and bather load",
     "Winterize: remove cell, flush with fresh water, store indoors above freezing",
-    "Never exceed 3,500 ppm — excess salt accelerates corrosion on metal components",
+    "Never exceed 3,500 ppm - excess salt accelerates corrosion on metal components",
   ],
   lowOutputCauses: [
     "Salt level out of range (test with dedicated salt meter)",
     "Calcium scale on cell plates (acid wash needed)",
-    "Water temperature below 60°F — cells produce 25–50% less in cold water",
-    "Cell age — efficiency decreases after 3–5 years of service",
+    "Water temperature below 60 deg F - cells produce 25-50% less in cold water",
+    "Cell age - efficiency decreases after 3-5 years of service",
     "Flow switch not sensing adequate flow (check basket, impeller, filter PSI)",
   ]
 };
@@ -448,20 +448,20 @@ window.SALT_CHLORINATOR_DATA = {
 // ---------------------------------------------------------------------------
 window.CHEM_DANGER_DATA = {
   neverMix: [
-    { combo:"Chlorine + Muriatic Acid",         result:"Chlorine gas — immediately life-threatening. Even residue + fumes is dangerous.", icon:"☠", severity:"deadly" },
-    { combo:"Trichlor + Cal-Hypo",              result:"Violent reaction — fire and explosion risk. Never allow these two to contact each other.", icon:"💥", severity:"deadly" },
-    { combo:"Any two chlorine products (dry)",  result:"Different chlorine formulas react dangerously. Always add each product separately into pool water.", icon:"⚠", severity:"high" },
-    { combo:"Chlorine + Ammonia-based algaecide",result:"Produces chloramine gas. Use only PolyQuat (quaternary ammonium) algaecides.", icon:"⚠", severity:"high" },
-    { combo:"Acid + chlorine in confined space", result:"Fumes combine to create chlorine gas — always handle outdoors or in excellent ventilation.", icon:"☠", severity:"deadly" },
+    { combo:"Chlorine + Muriatic Acid",         result:"Chlorine gas - immediately life-threatening. Even residue + fumes is dangerous.", icon:"Danger:", severity:"deadly" },
+    { combo:"Trichlor + Cal-Hypo",              result:"Violent reaction - fire and explosion risk. Never allow these two to contact each other.", icon:"Danger:", severity:"deadly" },
+    { combo:"Any two chlorine products (dry)",  result:"Different chlorine formulas react dangerously. Always add each product separately into pool water.", icon:"Warning:", severity:"high" },
+    { combo:"Chlorine + Ammonia-based algaecide",result:"Produces chloramine gas. Use only PolyQuat (quaternary ammonium) algaecides.", icon:"Warning:", severity:"high" },
+    { combo:"Acid + chlorine in confined space", result:"Fumes combine to create chlorine gas - always handle outdoors or in excellent ventilation.", icon:"Danger:", severity:"deadly" },
   ],
   safeHandling: [
-    "Always add chemicals TO water — never add water to concentrated chemicals",
-    "Add one chemical at a time, 15–30 min apart, with pump running",
+    "Always add chemicals TO water - never add water to concentrated chemicals",
+    "Add one chemical at a time, 15-30 min apart, with pump running",
     "Never use the same measuring cup for different chemicals without rinsing",
-    "Store acid and chlorine on opposite sides of the storage area — never adjacent",
+    "Store acid and chlorine on opposite sides of the storage area - never adjacent",
     "Keep all chemicals in original, labeled containers with lids sealed",
-    "Wear nitrile gloves and eye protection every time — no exceptions",
-    "Have a water hose ready — flush eyes or skin for 15 min if contact occurs",
+    "Wear nitrile gloves and eye protection every time - no exceptions",
+    "Have a water hose ready - flush eyes or skin for 15 min if contact occurs",
     "Never store pool chemicals near heat sources, open flame, or in direct sunlight",
   ]
 };
@@ -484,14 +484,14 @@ window.CARTRIDGE_FILTER_DATA = {
   ],
   cleaning: {
     steps: [
-      "Turn pump OFF — never remove cartridge under pressure",
+      "Turn pump OFF - never remove cartridge under pressure",
       "Release air pressure via air relief valve before opening",
-      "Remove cartridge — hose off pleats top-to-bottom (never side-to-side — damages pleats)",
+      "Remove cartridge - hose off pleats top-to-bottom (never side-to-side - damages pleats)",
       "Inspect for tears, cracks, collapsed ends, or crushed core",
       "Soak overnight in cartridge cleaner or 1:10 muriatic acid solution for deep clean",
-      "Rinse thoroughly — no acid residue before reinstalling",
-      "Never use a pressure washer — destroys pleat fabric",
-      "Reinstall — hand-tighten lid only, no tools needed on most models"
+      "Rinse thoroughly - no acid residue before reinstalling",
+      "Never use a pressure washer - destroys pleat fabric",
+      "Reinstall - hand-tighten lid only, no tools needed on most models"
     ],
     replacementInterval: "Every 1-3 years depending on bather load and chemical balance",
     signs: [
@@ -504,7 +504,7 @@ window.CARTRIDGE_FILTER_DATA = {
 };
 
 // ---------------------------------------------------------------------------
-// Chemical Product Catalog — Reference (NOT a dosing calculator)
+// Chemical Product Catalog - Reference (NOT a dosing calculator)
 // Helps techs identify products, generic equivalents, and retail alternatives.
 // ---------------------------------------------------------------------------
 window.CHEM_CATALOG = {
@@ -521,7 +521,7 @@ window.CHEM_CATALOG = {
         {
           name: "Liquid Chlorine 10% / 12.5%",
           genericName: "Sodium Hypochlorite",
-          activeIngredient: "Sodium Hypochlorite 10–12.5%",
+          activeIngredient: "Sodium Hypochlorite 10-12.5%",
           brands: [
             "HTH Pool Shock Liquid",
             "In The Swim Liquid Chlorine",
@@ -529,12 +529,12 @@ window.CHEM_CATALOG = {
             "Leslie's Liquid Chlorine"
           ],
           alternatives: [
-            { store: "Walmart", product: "Clorox Splash-Less Bleach 8.25%", note: "Works but more dilute — use more oz per dose. No added thickeners." },
+            { store: "Walmart", product: "Clorox Splash-Less Bleach 8.25%", note: "Works but more dilute - use more oz per dose. No added thickeners." },
             { store: "Sam's Club", product: "Member's Mark Liquid Chlorine 12.5%", note: "Commercial grade, excellent value per gallon. Same as pool store stock." },
-            { store: "Home Depot", product: "HTH Pool Liquid 10%", note: "Standard retail liquid chlorine — same product as pool store, usually cheaper." },
-            { store: "Costco", product: "Kirkland Sodium Hypochlorite (when available)", note: "Check concentration on label. Often 8.25% — adjust dose accordingly." }
+            { store: "Home Depot", product: "HTH Pool Liquid 10%", note: "Standard retail liquid chlorine - same product as pool store, usually cheaper." },
+            { store: "Costco", product: "Kirkland Sodium Hypochlorite (when available)", note: "Check concentration on label. Often 8.25% - adjust dose accordingly." }
           ],
-          notes: "Most economical sanitizer for active service. No stabilizer added — good for SLAM. Buy fresh and rotate stock — degrades ~50% potency within 6 months of manufacture. Never mix with other chemicals directly.",
+          notes: "Most economical sanitizer for active service. No stabilizer added - good for SLAM. Buy fresh and rotate stock - degrades ~50% potency within 6 months of manufacture. Never mix with other chemicals directly.",
           incompatible: ["Cal-Hypo", "Trichlor", "Dichlor", "muriatic acid", "ammonia-based algaecides"]
         },
         {
@@ -549,12 +549,12 @@ window.CHEM_CATALOG = {
             "Zappit 65"
           ],
           alternatives: [
-            { store: "Sam's Club", product: "Member's Mark Pool Shock 68%", note: "Bulk bags significantly cheaper than pool store — same chemical." },
-            { store: "Costco", product: "HTH Super Shock (bulk pack)", note: "Seasonal availability — stock up when available." },
-            { store: "Home Depot", product: "HTH Super Shock 1-lb bags", note: "Standard retail — convenient but costs more per pound than bulk." },
-            { store: "Walmart", product: "In The Swim Shock (seasonal)", note: "Available in season — verify concentration on bag." }
+            { store: "Sam's Club", product: "Member's Mark Pool Shock 68%", note: "Bulk bags significantly cheaper than pool store - same chemical." },
+            { store: "Costco", product: "HTH Super Shock (bulk pack)", note: "Seasonal availability - stock up when available." },
+            { store: "Home Depot", product: "HTH Super Shock 1-lb bags", note: "Standard retail - convenient but costs more per pound than bulk." },
+            { store: "Walmart", product: "In The Swim Shock (seasonal)", note: "Available in season - verify concentration on bag." }
           ],
-          notes: "Raises calcium hardness — track CH when shocking frequently. NEVER add directly to skimmer or dissolve in plastic bucket. Pre-dissolve in a dedicated 5-gal bucket of water, pour around perimeter. Keep dry and away from all other chemicals — reacts violently with Trichlor.",
+          notes: "Raises calcium hardness - track CH when shocking frequently. NEVER add directly to skimmer or dissolve in plastic bucket. Pre-dissolve in a dedicated 5-gal bucket of water, pour around perimeter. Keep dry and away from all other chemicals - reacts violently with Trichlor.",
           incompatible: ["Trichlor", "Dichlor", "liquid chlorine (never mix concentrates)", "acids"]
         },
         {
@@ -568,9 +568,9 @@ window.CHEM_CATALOG = {
             "BioGuard Super Soluble"
           ],
           alternatives: [
-            { store: "Pool Supply Wholesale", product: "73% Cal-Hypo in 25/50-lb pails", note: "Not typically at consumer retail — source through pool supply distributors." }
+            { store: "Pool Supply Wholesale", product: "73% Cal-Hypo in 25/50-lb pails", note: "Not typically at consumer retail - source through pool supply distributors." }
           ],
-          notes: "Professional/commercial grade. Higher concentration means less product per dose — calculate carefully. Same calcium-raise concern as 65% but stronger. Pre-dissolve protocol is mandatory — never shortcut this step.",
+          notes: "Professional/commercial grade. Higher concentration means less product per dose - calculate carefully. Same calcium-raise concern as 65% but stronger. Pre-dissolve protocol is mandatory - never shortcut this step.",
           incompatible: ["Trichlor", "Dichlor", "all chlorine concentrates", "acids", "flammable materials"]
         },
         {
@@ -586,12 +586,12 @@ window.CHEM_CATALOG = {
           ],
           alternatives: [
             { store: "Sam's Club", product: "Member's Mark 3\" Chlorine Tabs (3-lb or 35-lb bucket)", note: "Bulk purchase saves 30-60% vs pool store. Same trichlor chemistry." },
-            { store: "Costco", product: "HTH 3\" Chlorine Tabs 35-lb bucket (seasonal)", note: "Best price per pound when available — stock up in spring." },
-            { store: "Walmart", product: "HTH 3\" Tabs or Clorox Pool Tabs 5-lb bucket", note: "Retail pricing — acceptable for smaller pools or convenience." },
+            { store: "Costco", product: "HTH 3\" Chlorine Tabs 35-lb bucket (seasonal)", note: "Best price per pound when available - stock up in spring." },
+            { store: "Walmart", product: "HTH 3\" Tabs or Clorox Pool Tabs 5-lb bucket", note: "Retail pricing - acceptable for smaller pools or convenience." },
             { store: "Home Depot", product: "HTH Pool Tabs 3-lb or 5-lb bucket", note: "Standard retail. Compare per-pound price to warehouse clubs." }
           ],
-          notes: "Each tab slowly lowers pH and raises CYA — monitor both monthly. Use ONLY in floating dispensers or erosion feeders, never directly in skimmer (corrosive to pump). Raises CYA ~2-4 ppm per tab per 10,000 gal over time — CYA creep is the primary reason pools get over-stabilized.",
-          incompatible: ["Cal-Hypo (violent reaction — fire/explosion risk)", "liquid chlorine (never mix concentrates)", "other chlorine products", "acids"]
+          notes: "Each tab slowly lowers pH and raises CYA - monitor both monthly. Use ONLY in floating dispensers or erosion feeders, never directly in skimmer (corrosive to pump). Raises CYA ~2-4 ppm per tab per 10,000 gal over time - CYA creep is the primary reason pools get over-stabilized.",
+          incompatible: ["Cal-Hypo (violent reaction - fire/explosion risk)", "liquid chlorine (never mix concentrates)", "other chlorine products", "acids"]
         },
         {
           name: "Dichlor Granular",
@@ -605,9 +605,9 @@ window.CHEM_CATALOG = {
           ],
           alternatives: [
             { store: "Sam's Club", product: "Member's Mark Dichlor (seasonal)", note: "Bulk savings available seasonally." },
-            { store: "Home Depot / Walmart", product: "HTH Granular Shock (verify Dichlor on label)", note: "Some HTH granular is Dichlor, some is Cal-Hypo — read the label carefully." }
+            { store: "Home Depot / Walmart", product: "HTH Granular Shock (verify Dichlor on label)", note: "Some HTH granular is Dichlor, some is Cal-Hypo - read the label carefully." }
           ],
-          notes: "Dissolves quickly and is good for vinyl liner pools (won't bleach). RAISES CYA approximately 1.5× the chlorine added — heavy use causes CYA to skyrocket. Not recommended for routine maintenance in stabilized pools. Better as a one-time or seasonal opener product.",
+          notes: "Dissolves quickly and is good for vinyl liner pools (won't bleach). RAISES CYA approximately 1.5x the chlorine added - heavy use causes CYA to skyrocket. Not recommended for routine maintenance in stabilized pools. Better as a one-time or seasonal opener product.",
           incompatible: ["Cal-Hypo", "liquid chlorine concentrates", "acids"]
         },
         {
@@ -622,9 +622,9 @@ window.CHEM_CATALOG = {
             "In The Swim Non-Chlorine Shock"
           ],
           alternatives: [
-            { store: "Walmart / Amazon", product: "Clorox Pool & Spa Shock Xtra Blue (verify KMPS formula)", note: "Some Clorox shock is KMPS-based — read label. Good for maintenance oxidation." }
+            { store: "Walmart / Amazon", product: "Clorox Pool & Spa Shock Xtra Blue (verify KMPS formula)", note: "Some Clorox shock is KMPS-based - read label. Good for maintenance oxidation." }
           ],
-          notes: "Oxidizes organic contaminants (sweat, oils, sunscreen) without adding chlorine or raising CYA. Does NOT kill algae alone — requires active chlorine. Use after heavy bather load to burn off organics. Pool can be re-entered 15 min after addition. Will give a false CC reading for 24 hours — do not test CC the same day.",
+          notes: "Oxidizes organic contaminants (sweat, oils, sunscreen) without adding chlorine or raising CYA. Does NOT kill algae alone - requires active chlorine. Use after heavy bather load to burn off organics. Pool can be re-entered 15 min after addition. Will give a false CC reading for 24 hours - do not test CC the same day.",
           incompatible: ["Cal-Hypo (in concentrated form)", "never mix dry chemicals directly"]
         }
       ]
@@ -635,7 +635,7 @@ window.CHEM_CATALOG = {
     // -----------------------------------------------------------------------
     {
       id: "baquacil",
-      label: "Baquacil System (Biguanide — Chlorine-Free)",
+      label: "Baquacil System (Biguanide - Chlorine-Free)",
       products: [
         {
           name: "Baquacil Sanitizer & Algistat",
@@ -649,7 +649,7 @@ window.CHEM_CATALOG = {
           alternatives: [
             { store: "Pool specialty only", product: "No consumer retail equivalent", note: "PHMB is not sold outside the pool/spa channel. Must purchase from pool store or online pool supplier." }
           ],
-          notes: "PRIMARY sanitizer in the Baquacil system. Maintains 30–50 ppm PHMB in water. Completely incompatible with chlorine — even trace chlorine contact destroys the biguanide system and creates a white floc that clogs filters. Requires its own dedicated oxidizer and shock products.",
+          notes: "PRIMARY sanitizer in the Baquacil system. Maintains 30-50 ppm PHMB in water. Completely incompatible with chlorine - even trace chlorine contact destroys the biguanide system and creates a white floc that clogs filters. Requires its own dedicated oxidizer and shock products.",
           incompatible: ["ALL chlorine products (liquid, tablet, granular, shock)", "bromine", "copper-based algaecides"]
         },
         {
@@ -662,9 +662,9 @@ window.CHEM_CATALOG = {
             "Baquashield"
           ],
           alternatives: [
-            { store: "Note", product: "Do NOT substitute drugstore H2O2 (3%)", note: "Consumer hydrogen peroxide is only 3% — far too dilute. Pool-grade 27% is required for effective oxidation." }
+            { store: "Note", product: "Do NOT substitute drugstore H2O2 (3%)", note: "Consumer hydrogen peroxide is only 3% - far too dilute. Pool-grade 27% is required for effective oxidation." }
           ],
-          notes: "The oxidizer component of the Baquacil 3-part system. Applied weekly at 1 qt per 10,000 gal. Breaks down organic waste that PHMB alone cannot address. Keep levels at 30–50 ppm oxidizer. Do not substitute with chlorine-based shock under any circumstances.",
+          notes: "The oxidizer component of the Baquacil 3-part system. Applied weekly at 1 qt per 10,000 gal. Breaks down organic waste that PHMB alone cannot address. Keep levels at 30-50 ppm oxidizer. Do not substitute with chlorine-based shock under any circumstances.",
           incompatible: ["All chlorine products", "never mix with Baquacil CDX in concentrated form"]
         },
         {
@@ -676,9 +676,9 @@ window.CHEM_CATALOG = {
             "BioGuard SoftSwim CDX"
           ],
           alternatives: [
-            { store: "Pool specialty only", product: "No generic equivalent", note: "CDX is a specialized product with no consumer substitute — must use brand product." }
+            { store: "Pool specialty only", product: "No generic equivalent", note: "CDX is a specialized product with no consumer substitute - must use brand product." }
           ],
-          notes: "The 'intelligent shock' that bridges the Baquacil Sanitizer and Oxidizer, preventing the characteristic pink/gray slime that occurs in neglected biguanide pools. Applied monthly. Many service techs underuse this — it's the most common reason biguanide pools develop chronic problems.",
+          notes: "The 'intelligent shock' that bridges the Baquacil Sanitizer and Oxidizer, preventing the characteristic pink/gray slime that occurs in neglected biguanide pools. Applied monthly. Many service techs underuse this - it's the most common reason biguanide pools develop chronic problems.",
           incompatible: ["All chlorine products", "acids in concentrated form"]
         },
         {
@@ -689,7 +689,7 @@ window.CHEM_CATALOG = {
           alternatives: [
             { store: "Pool specialty only", product: "Functionally identical to Baquacil Sanitizer & Algistat", note: "Different brand, same chemistry. Either product maintains a biguanide pool." }
           ],
-          notes: "BioGuard's version of the Baquacil Sanitizer. Same PHMB chemistry at the same concentration — interchangeable with Baquacil Sanitizer & Algistat. All chlorine compatibility warnings apply equally.",
+          notes: "BioGuard's version of the Baquacil Sanitizer. Same PHMB chemistry at the same concentration - interchangeable with Baquacil Sanitizer & Algistat. All chlorine compatibility warnings apply equally.",
           incompatible: ["ALL chlorine products", "bromine", "copper algaecides"]
         },
         {
@@ -698,9 +698,9 @@ window.CHEM_CATALOG = {
           activeIngredient: "Hydrogen Peroxide 27%",
           brands: ["BioGuard SoftSwim C"],
           alternatives: [
-            { store: "Note", product: "Interchangeable with Baquacil Oxidizer", note: "Same chemistry — different brand. Either product works in a SoftSwim or Baquacil system." }
+            { store: "Note", product: "Interchangeable with Baquacil Oxidizer", note: "Same chemistry - different brand. Either product works in a SoftSwim or Baquacil system." }
           ],
-          notes: "BioGuard's version of the Baquacil Oxidizer. Applied weekly as the oxidation component of the 3-part SoftSwim system. Identical chemistry to Baquacil Oxidizer — can be used interchangeably.",
+          notes: "BioGuard's version of the Baquacil Oxidizer. Applied weekly as the oxidation component of the 3-part SoftSwim system. Identical chemistry to Baquacil Oxidizer - can be used interchangeably.",
           incompatible: ["All chlorine products"]
         }
       ],
@@ -726,10 +726,10 @@ window.CHEM_CATALOG = {
             "Leslie's pH Up"
           ],
           alternatives: [
-            { store: "Walmart / Grocery", product: "Arm & Hammer Super Washing Soda (NOT baking soda)", note: "100% sodium carbonate — exact same chemical as pool store pH Up at a fraction of the cost. Confirm label reads 'sodium carbonate' not 'sodium bicarbonate'." },
-            { store: "Walmart", product: "OxiClean Versatile Stain Remover (sodium carbonate only formula)", note: "Some versions are pure sodium carbonate — verify ingredients before use." }
+            { store: "Walmart / Grocery", product: "Arm & Hammer Super Washing Soda (NOT baking soda)", note: "100% sodium carbonate - exact same chemical as pool store pH Up at a fraction of the cost. Confirm label reads 'sodium carbonate' not 'sodium bicarbonate'." },
+            { store: "Walmart", product: "OxiClean Versatile Stain Remover (sodium carbonate only formula)", note: "Some versions are pure sodium carbonate - verify ingredients before use." }
           ],
-          notes: "Raises both pH and Total Alkalinity. Add slowly — 1 lb at a time per 10,000 gal. Pre-dissolve in a bucket of water first to prevent localized high-pH damage to plaster or vinyl. Significant pH jumps (>0.4 in one dose) cause cloudy water — dose conservatively.",
+          notes: "Raises both pH and Total Alkalinity. Add slowly - 1 lb at a time per 10,000 gal. Pre-dissolve in a bucket of water first to prevent localized high-pH damage to plaster or vinyl. Significant pH jumps (>0.4 in one dose) cause cloudy water - dose conservatively.",
           incompatible: ["Muriatic acid (never mix concentrates)", "dry acid"]
         },
         {
@@ -744,12 +744,12 @@ window.CHEM_CATALOG = {
             "BioGuard Balance Pak 100"
           ],
           alternatives: [
-            { store: "Walmart", product: "Arm & Hammer Baking Soda (large bags)", note: "100% identical chemical to any pool store product — same sodium bicarbonate. Saves $2+ per pound vs pool store branding." },
-            { store: "Sam's Club", product: "Member's Mark Baking Soda (12-lb bags)", note: "Best price per pound — exact same chemical in bulk." },
-            { store: "Costco", product: "Arm & Hammer Baking Soda (bulk)", note: "Seasonal availability — significant savings over pool store TA increaser." }
+            { store: "Walmart", product: "Arm & Hammer Baking Soda (large bags)", note: "100% identical chemical to any pool store product - same sodium bicarbonate. Saves $2+ per pound vs pool store branding." },
+            { store: "Sam's Club", product: "Member's Mark Baking Soda (12-lb bags)", note: "Best price per pound - exact same chemical in bulk." },
+            { store: "Costco", product: "Arm & Hammer Baking Soda (bulk)", note: "Seasonal availability - significant savings over pool store TA increaser." }
           ],
-          notes: "Raises Total Alkalinity with minimal pH impact (unlike soda ash). The grocery and pool store products are chemically identical — no difference in pool performance. Broadcast across the surface with pump running. Add in increments — 1.5 lbs per 10 ppm per 10,000 gal.",
-          incompatible: ["Muriatic acid (neutralizes — never mix concentrates)", "dry acid"]
+          notes: "Raises Total Alkalinity with minimal pH impact (unlike soda ash). The grocery and pool store products are chemically identical - no difference in pool performance. Broadcast across the surface with pump running. Add in increments - 1.5 lbs per 10 ppm per 10,000 gal.",
+          incompatible: ["Muriatic acid (neutralizes - never mix concentrates)", "dry acid"]
         },
         {
           name: "Muriatic Acid (pH Down / Acid)",
@@ -763,12 +763,12 @@ window.CHEM_CATALOG = {
             "Klean Strip Muriatic Acid"
           ],
           alternatives: [
-            { store: "Home Depot", product: "Klean Strip Muriatic Acid 31.45% (concrete section)", note: "EXACT same product and concentration as pool store acid — typically 20-50% cheaper. Look in the concrete/masonry aisle, not the pool section." },
-            { store: "Lowe's", product: "Muriatic Acid 31.45% (masonry/concrete aisle)", note: "Identical product, same concentration. Check diluted formulas — some are 20% and require larger doses." },
-            { store: "Tractor Supply", product: "Muriatic Acid (farm/livestock aisle)", note: "Same chemical — verify concentration. Used for livestock waterer cleaning and concrete etching." }
+            { store: "Home Depot", product: "Klean Strip Muriatic Acid 31.45% (concrete section)", note: "EXACT same product and concentration as pool store acid - typically 20-50% cheaper. Look in the concrete/masonry aisle, not the pool section." },
+            { store: "Lowe's", product: "Muriatic Acid 31.45% (masonry/concrete aisle)", note: "Identical product, same concentration. Check diluted formulas - some are 20% and require larger doses." },
+            { store: "Tractor Supply", product: "Muriatic Acid (farm/livestock aisle)", note: "Same chemical - verify concentration. Used for livestock waterer cleaning and concrete etching." }
           ],
-          notes: "Strong acid — always add acid TO pool water, never the reverse. Pre-dilute in a bucket of water (pour acid into water, not water into acid) before adding to pool. Pour slowly around the deep end with pump running. Lowers both pH and TA. Wear eye protection and gloves every time — no exceptions.",
-          incompatible: ["Chlorine gas forms if mixed with chlorine in any form", "soda ash / baking soda (neutralization — never mix concentrates)", "any oxidizer"]
+          notes: "Strong acid - always add acid TO pool water, never the reverse. Pre-dilute in a bucket of water (pour acid into water, not water into acid) before adding to pool. Pour slowly around the deep end with pump running. Lowers both pH and TA. Wear eye protection and gloves every time - no exceptions.",
+          incompatible: ["Chlorine gas forms if mixed with chlorine in any form", "soda ash / baking soda (neutralization - never mix concentrates)", "any oxidizer"]
         },
         {
           name: "Dry Acid (pH Minus)",
@@ -782,9 +782,9 @@ window.CHEM_CATALOG = {
             "Leslie's Dry Acid"
           ],
           alternatives: [
-            { store: "Amazon / Pool Supply", product: "Sodium Bisulfate granular (pool grade)", note: "No common consumer retail equivalent at a meaningful savings. Dry acid is more expensive than muriatic per unit of pH change — use muriatic for cost efficiency." }
+            { store: "Amazon / Pool Supply", product: "Sodium Bisulfate granular (pool grade)", note: "No common consumer retail equivalent at a meaningful savings. Dry acid is more expensive than muriatic per unit of pH change - use muriatic for cost efficiency." }
           ],
-          notes: "Safer to handle than muriatic acid — no liquid acid fumes, easier to store. Same effect as muriatic (lowers pH and TA) but at higher cost per unit of pH change. Good choice for situations where liquid acid is inconvenient or unsafe. Dissolve in a bucket of water before adding to pool.",
+          notes: "Safer to handle than muriatic acid - no liquid acid fumes, easier to store. Same effect as muriatic (lowers pH and TA) but at higher cost per unit of pH change. Good choice for situations where liquid acid is inconvenient or unsafe. Dissolve in a bucket of water before adding to pool.",
           incompatible: ["Chlorine products (in concentrated dry form)", "calcium hypochlorite", "soda ash"]
         }
       ]
@@ -809,11 +809,11 @@ window.CHEM_CATALOG = {
             "Leslie's Alkalinity Up"
           ],
           alternatives: [
-            { store: "Walmart", product: "Arm & Hammer Baking Soda (1-lb, 4-lb, 12-lb bags)", note: "Exact same chemical. $0.55/lb at Walmart vs $2.50–$4/lb at pool store. Zero difference in pool performance." },
+            { store: "Walmart", product: "Arm & Hammer Baking Soda (1-lb, 4-lb, 12-lb bags)", note: "Exact same chemical. $0.55/lb at Walmart vs $2.50-$4/lb at pool store. Zero difference in pool performance." },
             { store: "Sam's Club", product: "Member's Mark Baking Soda 12-lb", note: "Cheapest per-pound option. Perfect for high-TA pools that need repeated treatment." },
             { store: "Costco", product: "Arm & Hammer Baking Soda bulk (seasonal)", note: "Stock up in early season. Store in airtight container." }
           ],
-          notes: "This is the single biggest money-saving tip to share with pool owners: pool store Alkalinity Up IS baking soda at 3–5× markup. The chemical is identical — same purity, same performance. Dose: approximately 1.5 lbs raises TA by 10 ppm per 10,000 gallons.",
+          notes: "This is the single biggest money-saving tip to share with pool owners: pool store Alkalinity Up IS baking soda at 3-5x markup. The chemical is identical - same purity, same performance. Dose: approximately 1.5 lbs raises TA by 10 ppm per 10,000 gallons.",
           incompatible: ["Muriatic acid (do not mix concentrates)"]
         }
       ]
@@ -829,7 +829,7 @@ window.CHEM_CATALOG = {
         {
           name: "Calcium Chloride (CH Up)",
           genericName: "Calcium Chloride",
-          activeIngredient: "Calcium Chloride (CaCl2) 77–83%",
+          activeIngredient: "Calcium Chloride (CaCl2) 77-83%",
           brands: [
             "HTH Calcium Up",
             "In The Swim Calcium Hardness Increaser",
@@ -838,12 +838,12 @@ window.CHEM_CATALOG = {
             "Ultima Calcium Hardness Increaser"
           ],
           alternatives: [
-            { store: "Home Depot / Lowe's", product: "DowFlake Xtra Calcium Chloride 77–83% (25-lb or 50-lb bag)", note: "Exact same chemical as pool store CH increaser — significantly cheaper per pound in bulk hardware bags." },
-            { store: "Hardware stores / farm supply", product: "Peladow Calcium Chloride pellets 94-97%", note: "Higher concentration — adjust dose down by ~20%. Works identically." },
+            { store: "Home Depot / Lowe's", product: "DowFlake Xtra Calcium Chloride 77-83% (25-lb or 50-lb bag)", note: "Exact same chemical as pool store CH increaser - significantly cheaper per pound in bulk hardware bags." },
+            { store: "Hardware stores / farm supply", product: "Peladow Calcium Chloride pellets 94-97%", note: "Higher concentration - adjust dose down by ~20%. Works identically." },
             { store: "Costco / Sam's Club", product: "Calcium Chloride ice melt (verify label)", note: "CAUTION: must confirm bag says 'Calcium Chloride' specifically. Many ice melts are sodium chloride (rock salt) which does NOTHING for CH. Read the label." },
             { store: "Tractor Supply / Farm Fleet", product: "Calcium Chloride flake or pellet (cattle/livestock grade)", note: "Same chemical. Bulk pricing available. Verify concentration on label." }
           ],
-          notes: "Extremely exothermic when dissolved — pre-dissolve in a 5-gallon bucket of water, add calcium to water (not the reverse), stir, and allow to cool before adding to pool. Can raise water temp 10-15°F if added directly. Calcium only goes up — lowering CH requires partial drain. Never add more than 10 lbs per 10,000 gal per day.",
+          notes: "Extremely exothermic when dissolved - pre-dissolve in a 5-gallon bucket of water, add calcium to water (not the reverse), stir, and allow to cool before adding to pool. Can raise water temp 10-15 deg F if added directly. Calcium only goes up - lowering CH requires partial drain. Never add more than 10 lbs per 10,000 gal per day.",
           incompatible: ["Cal-Hypo (violent heat reaction if mixed dry)"]
         }
       ]
@@ -868,10 +868,10 @@ window.CHEM_CATALOG = {
             "BioGuard Stabilizer 100"
           ],
           alternatives: [
-            { store: "Pool supply / Amazon", product: "Cyanuric Acid pool-grade granular", note: "No true consumer retail equivalent at a major savings. Sam's Club sometimes carries it seasonally — compare price per pound. Online pool suppliers often beat pool store pricing by 30-50%." }
+            { store: "Pool supply / Amazon", product: "Cyanuric Acid pool-grade granular", note: "No true consumer retail equivalent at a major savings. Sam's Club sometimes carries it seasonally - compare price per pound. Online pool suppliers often beat pool store pricing by 30-50%." }
           ],
-          notes: "The only chemical that reduces UV degradation of free chlorine — essential for outdoor pools. Add by placing in a nylon sock hung in the skimmer basket — do NOT pour directly into pool or skimmer as it dissolves very slowly and can block skimmer flow. Takes 7-14 days to fully dissolve and register accurately on a test. Raise CYA no more than 10 ppm at a time and retest. There is NO chemical that removes CYA — only partial drain dilutes it. Target 30-50 ppm (60-80 ppm for salt pools).",
-          incompatible: ["No dangerous incompatibilities — but CYA reduces chlorine effectiveness at high levels (above 80 ppm)"]
+          notes: "The only chemical that reduces UV degradation of free chlorine - essential for outdoor pools. Add by placing in a nylon sock hung in the skimmer basket - do NOT pour directly into pool or skimmer as it dissolves very slowly and can block skimmer flow. Takes 7-14 days to fully dissolve and register accurately on a test. Raise CYA no more than 10 ppm at a time and retest. There is NO chemical that removes CYA - only partial drain dilutes it. Target 30-50 ppm (60-80 ppm for salt pools).",
+          incompatible: ["No dangerous incompatibilities - but CYA reduces chlorine effectiveness at high levels (above 80 ppm)"]
         }
       ]
     },
@@ -895,10 +895,10 @@ window.CHEM_CATALOG = {
             "Clorox Pool Algaecide 60"
           ],
           alternatives: [
-            { store: "Amazon / Pool Supply Online", product: "PolyQuat 60 generic", note: "Generic PolyQuat 60 formulas available from online pool suppliers — verify 60% concentration. Significant savings over branded pool store versions." }
+            { store: "Amazon / Pool Supply Online", product: "PolyQuat 60 generic", note: "Generic PolyQuat 60 formulas available from online pool suppliers - verify 60% concentration. Significant savings over branded pool store versions." }
           ],
           notes: "The preferred algaecide for service professionals. Compatible with all sanitizer systems including chlorine, bromine, and biguanide. Non-foaming at normal doses. Works preventatively and curatively. Use at closing and opening. Weekly maintenance dose extends algae-free intervals. Does not stain pool surfaces.",
-          incompatible: ["None with chlorine — this is the safe choice. Do NOT use ammonia-based algaecides."]
+          incompatible: ["None with chlorine - this is the safe choice. Do NOT use ammonia-based algaecides."]
         },
         {
           name: "PolyQuat 30% Algaecide (Maintenance Grade)",
@@ -911,15 +911,15 @@ window.CHEM_CATALOG = {
             "BioGuard Algistat"
           ],
           alternatives: [
-            { store: "Walmart / Home Depot", product: "Clorox Pool & Spa Algae Eliminator", note: "Verify PolyQuat formulation on label — some cheaper algaecides are copper-based. PolyQuat is preferred." }
+            { store: "Walmart / Home Depot", product: "Clorox Pool & Spa Algae Eliminator", note: "Verify PolyQuat formulation on label - some cheaper algaecides are copper-based. PolyQuat is preferred." }
           ],
-          notes: "Lower concentration maintenance product. Good for weekly preventative doses. Less cost-effective than 60% for treating active algae — use 60% for any real algae problems. Non-staining, non-foaming at label doses.",
+          notes: "Lower concentration maintenance product. Good for weekly preventative doses. Less cost-effective than 60% for treating active algae - use 60% for any real algae problems. Non-staining, non-foaming at label doses.",
           incompatible: ["No dangerous incompatibilities when chlorine levels are maintained"]
         },
         {
           name: "Copper-Based Algaecide",
           genericName: "Copper Chelate or Copper Sulfate",
-          activeIngredient: "Chelated Copper 7–9%",
+          activeIngredient: "Chelated Copper 7-9%",
           brands: [
             "BioGuard Algae All 60",
             "HTH Algae Guard",
@@ -944,13 +944,13 @@ window.CHEM_CATALOG = {
             "In The Swim Yellow Algaecide"
           ],
           alternatives: [
-            { store: "Pool specialty", product: "Limited retail availability — pool store or online pool supply", note: "Specialized product — not commonly found at mass retail." }
+            { store: "Pool specialty", product: "Limited retail availability - pool store or online pool supply", note: "Specialized product - not commonly found at mass retail." }
           ],
-          notes: "Specifically formulated for Cladophora (yellow/mustard algae) which is chlorine-resistant and clings to walls and steps. Must be used in combination with a high-FC SLAM — the algaecide alone is insufficient. Brush all surfaces thoroughly before and after application. SLAM target for mustard algae is FC = CYA × 0.60.",
+          notes: "Specifically formulated for Cladophora (yellow/mustard algae) which is chlorine-resistant and clings to walls and steps. Must be used in combination with a high-FC SLAM - the algaecide alone is insufficient. Brush all surfaces thoroughly before and after application. SLAM target for mustard algae is FC = CYA x 0.60.",
           incompatible: ["Do not mix with other algaecides simultaneously"]
         }
       ],
-      categoryWarning: "NEVER use ammonia-based algaecides (non-PolyQuat ammonium compounds) in a chlorinated pool. Ammonia + chlorine produces chloramine gas and creates a severe odor and health hazard. Always verify the algaecide is PolyQuat (polyquaternary ammonium) — the label should say 'PolyQuat' or 'poly[oxyethylene]' in the active ingredient."
+      categoryWarning: "NEVER use ammonia-based algaecides (non-PolyQuat ammonium compounds) in a chlorinated pool. Ammonia + chlorine produces chloramine gas and creates a severe odor and health hazard. Always verify the algaecide is PolyQuat (polyquaternary ammonium) - the label should say 'PolyQuat' or 'poly[oxyethylene]' in the active ingredient."
     },
 
     // -----------------------------------------------------------------------
@@ -973,10 +973,10 @@ window.CHEM_CATALOG = {
             "SeaKlear Phosphate Remover"
           ],
           alternatives: [
-            { store: "Amazon / Pool Supply Online", product: "Generic lanthanum chloride phosphate remover", note: "Generic formulas available — compare lanthanum concentration per ounce. Brand products are often heavily marked up." }
+            { store: "Amazon / Pool Supply Online", product: "Generic lanthanum chloride phosphate remover", note: "Generic formulas available - compare lanthanum concentration per ounce. Brand products are often heavily marked up." }
           ],
-          notes: "IMPORTANT application protocol: (1) Shut off pump or reduce to minimum flow. (2) Add slowly near return jets. (3) Run filter for 1 hour only. (4) BACKWASH or clean filter immediately — lanthanum creates a heavy white precipitate that clogs filters rapidly. Failure to backwash = complete filter blockage. Treat when phosphates exceed 500 ppb. High phosphates feed algae — eliminating them reduces chlorine demand.",
-          incompatible: ["Do not add with pump at high speed — white cloud needs to settle into filter"]
+          notes: "IMPORTANT application protocol: (1) Shut off pump or reduce to minimum flow. (2) Add slowly near return jets. (3) Run filter for 1 hour only. (4) BACKWASH or clean filter immediately - lanthanum creates a heavy white precipitate that clogs filters rapidly. Failure to backwash = complete filter blockage. Treat when phosphates exceed 500 ppb. High phosphates feed algae - eliminating them reduces chlorine demand.",
+          incompatible: ["Do not add with pump at high speed - white cloud needs to settle into filter"]
         }
       ]
     },
@@ -998,10 +998,10 @@ window.CHEM_CATALOG = {
             "Jack's Magic Purple Stuff (for scale + metals)"
           ],
           alternatives: [
-            { store: "Pool specialty / Amazon", product: "Jack's Magic is the industry standard — limited direct substitutes", note: "Industry preferred for a reason — most generic sequestrants don't perform as reliably on iron/manganese. Worth the cost." }
+            { store: "Pool specialty / Amazon", product: "Jack's Magic is the industry standard - limited direct substitutes", note: "Industry preferred for a reason - most generic sequestrants don't perform as reliably on iron/manganese. Worth the cost." }
           ],
-          notes: "Industry standard for metal sequestration. Use when source water has elevated iron, copper, or manganese, and when opening or after large water additions. Holds metals in solution so they can be filtered out rather than depositing as stains. Maintain weekly or monthly — sequestrants degrade over time and need replenishment. Different formulas (Blue/Pink/Purple) target different metal profiles — read the selector guide.",
-          incompatible: ["No dangerous incompatibilities — but effectiveness is reduced below pH 7.2"]
+          notes: "Industry standard for metal sequestration. Use when source water has elevated iron, copper, or manganese, and when opening or after large water additions. Holds metals in solution so they can be filtered out rather than depositing as stains. Maintain weekly or monthly - sequestrants degrade over time and need replenishment. Different formulas (Blue/Pink/Purple) target different metal profiles - read the selector guide.",
+          incompatible: ["No dangerous incompatibilities - but effectiveness is reduced below pH 7.2"]
         },
         {
           name: "Natural Chemistry Metal Free",
@@ -1014,9 +1014,9 @@ window.CHEM_CATALOG = {
             "Orenda CV-600"
           ],
           alternatives: [
-            { store: "Amazon / Pool Supply", product: "HEDP-based metal sequestrant (generic)", note: "Generic HEDP sequestrants available at lower cost — verify active ingredient matches." }
+            { store: "Amazon / Pool Supply", product: "HEDP-based metal sequestrant (generic)", note: "Generic HEDP sequestrants available at lower cost - verify active ingredient matches." }
           ],
-          notes: "Good general-purpose metal sequestrant. Add at opening and after any large water additions. Regular monthly maintenance dose prevents metal staining buildup over a season. Most effective when pH is in range (7.4-7.6). Separate product from phosphate removers — metal sequestrants keep metals dissolved; phosphate removers remove phosphates from water.",
+          notes: "Good general-purpose metal sequestrant. Add at opening and after any large water additions. Regular monthly maintenance dose prevents metal staining buildup over a season. Most effective when pH is in range (7.4-7.6). Separate product from phosphate removers - metal sequestrants keep metals dissolved; phosphate removers remove phosphates from water.",
           incompatible: ["No hazardous incompatibilities"]
         }
       ]
@@ -1043,7 +1043,7 @@ window.CHEM_CATALOG = {
           alternatives: [
             { store: "Walmart / Home Depot", product: "Clorox Pool & Spa Super Water Clarifier", note: "Good retail option. Same clarifier chemistry as pool store brands." }
           ],
-          notes: "Clumps fine particles together (coagulation) so the filter can capture them. For mildly cloudy water or as a weekly maintenance product. Does NOT replace good filtration or chemistry balance — address root chemistry cause first. If water is cloudy from chemistry imbalance, fix the chemistry before adding clarifier.",
+          notes: "Clumps fine particles together (coagulation) so the filter can capture them. For mildly cloudy water or as a weekly maintenance product. Does NOT replace good filtration or chemistry balance - address root chemistry cause first. If water is cloudy from chemistry imbalance, fix the chemistry before adding clarifier.",
           incompatible: ["No dangerous incompatibilities"]
         },
         {
@@ -1057,10 +1057,10 @@ window.CHEM_CATALOG = {
             "BioGuard Floc Out"
           ],
           alternatives: [
-            { store: "Pool supply / water treatment supplier", product: "Alum (aluminum sulfate) granular — same as used in municipal water treatment", note: "Pool floc and water treatment alum are the same chemical. Agricultural/water treatment sources offer significantly lower pricing per pound." }
+            { store: "Pool supply / water treatment supplier", product: "Alum (aluminum sulfate) granular - same as used in municipal water treatment", note: "Pool floc and water treatment alum are the same chemical. Agricultural/water treatment sources offer significantly lower pricing per pound." }
           ],
-          notes: "SLAM-level clarifier — causes all suspended particles to drop rapidly to the pool floor as a visible cloud of sediment. Requires the pool to be still (pump off for 8-24 hours) while floc drops. Then vacuum ALL settled material to WASTE — do not send through filter. Run pump on WASTE setting, not filter. Expect to lose 1-3 inches of water. Not a routine product — for severe green water or post-algae cleanup.",
-          incompatible: ["Do not add while pump is running at speed — defeats the settling action"]
+          notes: "SLAM-level clarifier - causes all suspended particles to drop rapidly to the pool floor as a visible cloud of sediment. Requires the pool to be still (pump off for 8-24 hours) while floc drops. Then vacuum ALL settled material to WASTE - do not send through filter. Run pump on WASTE setting, not filter. Expect to lose 1-3 inches of water. Not a routine product - for severe green water or post-algae cleanup.",
+          incompatible: ["Do not add while pump is running at speed - defeats the settling action"]
         }
       ]
     },
@@ -1075,7 +1075,7 @@ window.CHEM_CATALOG = {
         {
           name: "Pool Perfect (Enzyme Treatment)",
           genericName: "Naturally-derived enzyme blend (lipase/protease)",
-          activeIngredient: "Enzyme complex — lipase, protease, cellulase",
+          activeIngredient: "Enzyme complex - lipase, protease, cellulase",
           brands: [
             "Natural Chemistry Pool Perfect",
             "Natural Chemistry Pool Perfect + PHOSfree (combo)",
@@ -1083,10 +1083,10 @@ window.CHEM_CATALOG = {
             "Leisure Time Enzyme"
           ],
           alternatives: [
-            { store: "Amazon / Pool Supply", product: "Generic enzyme pool treatment", note: "Generic enzyme products available — compare enzyme types on label. Natural Chemistry is the market leader for a reason — enzyme quality varies in generics." }
+            { store: "Amazon / Pool Supply", product: "Generic enzyme pool treatment", note: "Generic enzyme products available - compare enzyme types on label. Natural Chemistry is the market leader for a reason - enzyme quality varies in generics." }
           ],
-          notes: "Breaks down non-living organic waste — body oils, sunscreen, cosmetics, bird droppings — that accumulate in pool water and waterline tile. Reduces chlorine demand, prevents waterline ring buildup, and improves water clarity. Weekly maintenance dose (typically 4-8 oz per 10,000 gal) is more effective than infrequent large doses. Works gradually — noticeable improvement over 2-4 weeks.",
-          incompatible: ["No dangerous incompatibilities — enzymes are biologically degraded by high chlorine, so add when FC is under 5 ppm for best efficacy"]
+          notes: "Breaks down non-living organic waste - body oils, sunscreen, cosmetics, bird droppings - that accumulate in pool water and waterline tile. Reduces chlorine demand, prevents waterline ring buildup, and improves water clarity. Weekly maintenance dose (typically 4-8 oz per 10,000 gal) is more effective than infrequent large doses. Works gradually - noticeable improvement over 2-4 weeks.",
+          incompatible: ["No dangerous incompatibilities - enzymes are biologically degraded by high chlorine, so add when FC is under 5 ppm for best efficacy"]
         },
         {
           name: "BioGuard Optimizer Plus (Borates)",
@@ -1099,7 +1099,7 @@ window.CHEM_CATALOG = {
             "TurboBoost"
           ],
           alternatives: [
-            { store: "Pool supply / Amazon", product: "20 Mule Team Borax (household) — at 50 ppm, requires pH adjustment calculation", note: "Borax raises pH and borates simultaneously — requires muriatic acid to counteract pH rise. More complex than purpose-made pool borates but significantly cheaper. Look up the borate-from-Borax method online." }
+            { store: "Pool supply / Amazon", product: "20 Mule Team Borax (household) - at 50 ppm, requires pH adjustment calculation", note: "Borax raises pH and borates simultaneously - requires muriatic acid to counteract pH rise. More complex than purpose-made pool borates but significantly cheaper. Look up the borate-from-Borax method online." }
           ],
           notes: "Maintains pool at 50 ppm borate, which provides three benefits: (1) stabilizes pH against drift, (2) water feels noticeably softer and silkier, (3) reduces algae growth and chlorine demand by ~15-20%. A one-time addition that persists all season unless water is diluted. Highly recommended for pools with chronic pH fluctuation problems.",
           incompatible: ["No dangerous incompatibilities"]
@@ -1123,10 +1123,10 @@ window.CHEM_CATALOG = {
             "Orenda Technologies Scale Control"
           ],
           alternatives: [
-            { store: "Pool specialty / Orenda distributor", product: "Orenda is specifically engineered for professional pool care — limited generic substitutes", note: "Popular with service tech professionals for its consistent results on scale-prone pools." }
+            { store: "Pool specialty / Orenda distributor", product: "Orenda is specifically engineered for professional pool care - limited generic substitutes", note: "Popular with service tech professionals for its consistent results on scale-prone pools." }
           ],
           notes: "Professional-grade scale inhibitor favored by pool service technicians for its reliability on heater scale, salt cell calcium buildup, and waterline calcium deposits. Use at opening and monthly maintenance. Particularly valuable in high-CH areas or pools with aggressive water or high heat. Regular SC-1000 treatment significantly extends heater and salt cell life.",
-          incompatible: ["No hazardous incompatibilities — compatible with all sanitizer types"]
+          incompatible: ["No hazardous incompatibilities - compatible with all sanitizer types"]
         },
         {
           name: "Natural Chemistry Scale Free",
@@ -1139,9 +1139,9 @@ window.CHEM_CATALOG = {
             "SeaKlear Scale Prevent & Remove"
           ],
           alternatives: [
-            { store: "Amazon / Pool Supply", product: "Generic polymaleic acid scale inhibitor", note: "Generic formulas available from online pool suppliers at 30-50% savings — verify active ingredient." }
+            { store: "Amazon / Pool Supply", product: "Generic polymaleic acid scale inhibitor", note: "Generic formulas available from online pool suppliers at 30-50% savings - verify active ingredient." }
           ],
-          notes: "Prevents and helps remove calcium scaling on pool surfaces, tile, heaters, and salt cells. Monthly maintenance dose (following opening treatment) is the most cost-effective approach — scaling is far harder to remove than to prevent. High-LSI water (high pH + high CH + high TA) requires consistent scale inhibitor use. Calculate LSI when in doubt.",
+          notes: "Prevents and helps remove calcium scaling on pool surfaces, tile, heaters, and salt cells. Monthly maintenance dose (following opening treatment) is the most cost-effective approach - scaling is far harder to remove than to prevent. High-LSI water (high pH + high CH + high TA) requires consistent scale inhibitor use. Calculate LSI when in doubt.",
           incompatible: ["No hazardous incompatibilities"]
         }
       ]
@@ -1156,32 +1156,32 @@ window.CHEM_CATALOG = {
     {
       chemical: "Sodium Bicarbonate (TA Up / Alkalinity Up)",
       homeProduct: "Arm & Hammer Baking Soda",
-      savings: "~$2.50/lb at pool store → $0.55/lb at Walmart. 100% identical chemical.",
-      caution: "Must verify pure sodium bicarbonate — no additives. Large bags at Sam's Club are cheapest per pound."
+      savings: "~$2.50/lb at pool store -> $0.55/lb at Walmart. 100% identical chemical.",
+      caution: "Must verify pure sodium bicarbonate - no additives. Large bags at Sam's Club are cheapest per pound."
     },
     {
       chemical: "Sodium Carbonate (pH Up / Soda Ash)",
       homeProduct: "Arm & Hammer Super Washing Soda",
-      savings: "~$3/lb at pool store → $1/lb at Walmart. 100% identical.",
-      caution: "Do NOT confuse with baking soda — different chemical, different effect. Box says 'Sodium Carbonate' not 'Sodium Bicarbonate'."
+      savings: "~$3/lb at pool store -> $1/lb at Walmart. 100% identical.",
+      caution: "Do NOT confuse with baking soda - different chemical, different effect. Box says 'Sodium Carbonate' not 'Sodium Bicarbonate'."
     },
     {
       chemical: "Muriatic Acid (pH Down)",
       homeProduct: "Muriatic Acid from Home Depot / Lowe's Concrete Section",
-      savings: "20-50% cheaper than pool store. Identical product — same 31.45% concentration.",
-      caution: "Same chemical — same safety precautions apply. Always dilute in water before adding to pool. Look in masonry/concrete aisle, not pool aisle."
+      savings: "20-50% cheaper than pool store. Identical product - same 31.45% concentration.",
+      caution: "Same chemical - same safety precautions apply. Always dilute in water before adding to pool. Look in masonry/concrete aisle, not pool aisle."
     },
     {
       chemical: "Calcium Chloride (CH Up)",
       homeProduct: "DowFlake Xtra or any ice melt bag labeled 'Calcium Chloride'",
       savings: "Hardware store 50-lb bags are significantly cheaper than pool store per pound.",
-      caution: "Verify label says Calcium Chloride specifically — NOT Rock Salt (NaCl) or Magnesium Chloride which do nothing for CH hardness."
+      caution: "Verify label says Calcium Chloride specifically - NOT Rock Salt (NaCl) or Magnesium Chloride which do nothing for CH hardness."
     },
     {
       chemical: "Trichlor Tablets",
       homeProduct: "Sam's Club / Costco 3-lb or 35-lb bucket trichlor tabs",
       savings: "Bulk purchase saves 30-60% vs pool store per-tab pricing.",
-      caution: "Same chemical — store properly in cool, dry place away from other chemicals. Never mix with other chlorine products."
+      caution: "Same chemical - store properly in cool, dry place away from other chemicals. Never mix with other chlorine products."
     }
   ]
 

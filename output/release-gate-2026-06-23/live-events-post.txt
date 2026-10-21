@@ -1,0 +1,1 @@
+{"ok":true,"stored":true,"alertQueued":false,"emailConfigured":true}
