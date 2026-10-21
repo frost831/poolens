@@ -8900,18 +8900,16 @@ function revealNoCameraFallback(noCam, vWrap, reason = 'camera_unavailable') {
 }
 
 function uploadPartSnapPhoto() {
-  trackSplashLensEvent('partsnap_upload_photo_clicked', {
-    mode: _scanMode,
-    store: (typeof getStoreShellMode === 'function' ? getStoreShellMode() : '') || 'web',
-  });
   return requestGalleryPhotoFallback();
 }
 
 function openPartSnapManualSearch() {
-  trackSplashLensEvent('partsnap_manual_search_opened', {
-    mode: _scanMode,
-    store: (typeof getStoreShellMode === 'function' ? getStoreShellMode() : '') || 'web',
-  });
+  if (_scanMode === 'parts') {
+    trackSplashLensEvent('partsnap_manual_search_opened', {
+      mode: _scanMode,
+      store: (typeof getStoreShellMode === 'function' ? getStoreShellMode() : '') || 'web',
+    });
+  }
   setScanMode('lookup');
   document.getElementById('scan-code-input')?.focus();
 }
@@ -8939,6 +8937,12 @@ async function analyzeUploadedScanPhoto(input) {
 }
 
 async function requestGalleryPhotoFallback() {
+  if (_scanMode === 'parts') {
+    trackSplashLensEvent('partsnap_upload_photo_clicked', {
+      mode: _scanMode,
+      store: (typeof getStoreShellMode === 'function' ? getStoreShellMode() : '') || 'web',
+    });
+  }
   trackSplashLensEvent('scanner_gallery_fallback_clicked', { mode: _scanMode, store: getStoreShellMode() || 'web' });
   if (_scanMode === 'parts') {
     trackSplashLensEvent('partsnap_gallery_fallback_clicked', { store: getStoreShellMode() || 'web' });
@@ -10167,10 +10171,8 @@ function trackSplashLensEvent(name, props = {}) {
   }));
 
   try {
-    if (navigator.sendBeacon) {
-      navigator.sendBeacon(SPLASHLENS_EVENT_ENDPOINT, new Blob([payload], { type: 'application/json' }));
-      return;
-    }
+    const beaconBody = new Blob([payload], { type: 'application/json' });
+    if (navigator.sendBeacon?.(SPLASHLENS_EVENT_ENDPOINT, beaconBody)) return;
     fetch(SPLASHLENS_EVENT_ENDPOINT, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...getLanguageHeaders() },
@@ -10540,7 +10542,7 @@ async function callAIScan(canvas, mode, result, status) {
         <p style="font-size:12px;line-height:1.45;margin-bottom:12px;">Check your connection and retry the evidence set. Free manual Code Lookup is still available.</p>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
           <button type="button" onclick="captureAndAnalyze()" style="padding:12px;border:0;border-radius:8px;background:#0284c7;color:#fff;font-weight:800;">Retry analysis</button>
-          <button type="button" onclick="setScanMode('lookup')" style="padding:12px;border:1px solid #7dd3fc;border-radius:8px;background:#fff;color:#0369a1;font-weight:800;">Code Lookup</button>
+          <button type="button" onclick="openPartSnapManualSearch()" style="padding:12px;border:1px solid #7dd3fc;border-radius:8px;background:#fff;color:#0369a1;font-weight:800;">Code Lookup</button>
         </div>
       </div>`;
       return;
@@ -10860,11 +10862,7 @@ function renderPartsSnapResult(ai, result, status) {
     description,
     missingProof: missingProof.length ? missingProof : ladder.missing,
   });
-  if (!showGuidedRetry && !low && (component || corpusCandidates.length)) {
-    if (!knownPartSnapComponent(ai) && !corpusCandidates.length) {
-      trackPartSnapResultFailure('no_match', { confidence: confidence || 'unknown' });
-      return false;
-    }
+  if (!showGuidedRetry && !low && (knownPartSnapComponent(ai) || corpusCandidates.length > 0)) {
     trackSplashLensEvent('partsnap_result_success', {
       source: 'app', workflow: 'partsnap_result', confidence: confidence || 'unknown',
       result_count: Math.max(1, corpusCandidates.length), verification_ready: orderGate.verificationReady,
@@ -10885,15 +10883,27 @@ function renderPartsSnapResult(ai, result, status) {
       result.insertAdjacentHTML('beforeend', renderPartSnapResultUpgradeOffer('partsnap_result'));
     }
     return true;
-  } else {
-    trackPartSnapResultFailure(showGuidedRetry ? 'more_proof_needed' : low ? 'low_confidence' : 'no_match', { confidence: confidence || 'unknown' });
-    return false;
   }
+  const namedPart = knownPartSnapComponent(ai);
+  const reason = showGuidedRetry
+    ? 'more_proof_needed'
+    : namedPart && corpusCandidates.length === 0
+      ? 'library_miss'
+      : namedPart
+        ? 'low_confidence'
+        : 'no_match';
+  trackPartSnapResultFailure(reason, { confidence: confidence || 'unknown' });
+  return false;
 }
 
 function trackPartSnapResultFailure(reason, props = {}) {
-  trackSplashLensEvent('partsnap_result_fail', { source: 'app', workflow: 'partsnap_result', reason, ...props });
-  if (reason === 'low_confidence' || reason === 'no_match') {
+  trackSplashLensEvent('partsnap_result_fail', {
+    source: 'app',
+    workflow: 'partsnap_result',
+    ...props,
+    reason,
+  });
+  if (reason === 'low_confidence' || reason === 'no_match' || reason === 'library_miss') {
     const part = _lastPartSnapResult || {};
     reportLibraryMiss(reason === 'low_confidence' ? 'partsnap_low' : 'partsnap_no_match', {
       brand: part.manufacturer || '', model: part.model || '',

@@ -91,7 +91,7 @@ test('calculator value is counted only after its output exists', () => {
 test('PartSnap value follows its result and excludes guided retry or low confidence', () => {
   const partSnap = functionSource('renderPartsSnapResult', 'renderPartSnapFeedbackTrap');
   assert.ok(partSnap.indexOf('result.innerHTML = `') < partSnap.indexOf("trackFirstUsefulResult('partsnap_result'"));
-  assert.match(partSnap, /if \(!showGuidedRetry && !low && \(component \|\| corpusCandidates\.length\)\)/);
+  assert.match(partSnap, /if \(!showGuidedRetry && !low && \(knownPartSnapComponent\(ai\) \|\| corpusCandidates\.length > 0\)\)/);
 });
 
 test('brand-filtered zero result offers an all-brand retry without losing the query', () => {

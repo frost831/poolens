@@ -644,6 +644,12 @@ test('upload photo and manual search stay available after a camera denial', () =
   assert.deepEqual(modes, ['lookup']);
   assert.deepEqual(focused, ['scan-code-input']);
   assert.deepEqual(names(events), ['partsnap_upload_photo_clicked', 'scanner_gallery_fallback_clicked', 'partsnap_gallery_fallback_clicked', 'partsnap_manual_search_opened']);
+  events.length = 0;
+  context.requestGalleryPhotoFallback();
+  assert.equal(names(events)[0], 'partsnap_upload_photo_clicked');
+  const shell = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+  assert.match(shell, /onclick="requestGalleryPhotoFallback\(\)"[^>]*>Pick Gallery/);
+  assert.match(shell, /onclick="openPartSnapManualSearch\(\)"[^>]*>Code Lookup/);
   const eventsEndpoint = readFileSync(new URL('../functions/api/events.js', import.meta.url), 'utf8');
   const lowSignal = eventsEndpoint.match(/LOW_SIGNAL_EVENTS = new Set\(\[([^\]]*)\]/)[1];
   for (const name of ['partsnap_camera_fallback_shown', 'partsnap_upload_photo_clicked', 'partsnap_manual_search_opened']) {
@@ -698,6 +704,7 @@ test('useful PartSnap success retains legacy result and counts value after rende
 });
 
 test('low-confidence, unknown, empty, and guided-retry PartSnap results fail without first value', () => {
+  const reasons = [];
   for (const [ai, guided] of [
     [{ component: 'Pump lid', confidence: 'low' }, false],
     [{ component: 'Unknown part', confidence: 'medium' }, false],
@@ -711,7 +718,9 @@ test('low-confidence, unknown, empty, and guided-retry PartSnap results fail wit
     assert.equal(names(events).includes('partsnap_result_fail'), true);
     assert.equal(names(events).includes('partsnap_result_success'), false);
     assert.equal(names(events).includes('first_value_completed'), false);
+    reasons.push(events.find(event => event.name === 'partsnap_result_fail').props.reason);
   }
+  assert.deepEqual(reasons, ['library_miss', 'no_match', 'no_match', 'more_proof_needed']);
 });
 
 test('failed PartSnap requests record failure and retain a working manual/retry path', async () => {
@@ -727,5 +736,5 @@ test('failed PartSnap requests record failure and retain a working manual/retry 
   await context.callAIScan({ toDataURL: () => 'data:image/jpeg;base64,AA==' }, 'parts_snap', result, {});
   assert.deepEqual(names(events), ['ai_scan_attempted', 'ai_scan_failed', 'partsnap_result_fail']);
   assert.match(result.innerHTML, /captureAndAnalyze\(\)/);
-  assert.match(result.innerHTML, /setScanMode\('lookup'\)/);
+  assert.match(result.innerHTML, /openPartSnapManualSearch\(\)/);
 });
