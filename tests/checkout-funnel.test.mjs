@@ -233,6 +233,25 @@ test('active paid checkout issues a signed token that a verified account can res
   assert.match((await restored.json()).token, /^sl_scan_v1\./);
 });
 
+test('a paid Preview checkout keeps its activation link on the configured Preview origin', async (t) => {
+  t.mock.method(globalThis, 'fetch', async (url) => {
+    if (String(url).includes('/checkout/sessions/')) return Response.json(stripeSession());
+    return Response.json({ status: 'active', current_period_end: Math.floor(Date.now() / 1000) + 2592000 });
+  });
+  const response = await checkoutSuccess({
+    request: new Request('https://stripe-test-55.poolens.pages.dev/api/checkout-success?session_id=cs_live_valid123'),
+    env: {
+      STRIPE_SECRET_KEY: 'fixture', SPLASHLENS_ENTITLEMENT_SECRET: entitlementSecret,
+      SPLASHLENS_APP_ORIGIN: 'https://stripe-test-55.poolens.pages.dev/',
+    },
+  });
+  assert.equal(response.status, 200);
+  const html = await response.text();
+  const activation = new URL(html.match(/href="([^"]+)"/)[1].replace(/&amp;/g, '&'));
+  assert.equal(activation.origin, 'https://stripe-test-55.poolens.pages.dev');
+  assert.equal(activation.searchParams.has('scan_token'), true);
+});
+
 test('every web upgrade entry records checkout intent, and zero-result lookups do not count impressions', () => {
   assert.match(app, /trackCheckoutIntent\('monthly','scan_limit_reached'\)/);
   assert.match(app, /trackCheckoutIntent\('yearly','scan_limit_reached'\)/);

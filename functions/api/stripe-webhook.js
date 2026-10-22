@@ -1,4 +1,5 @@
 import { recordPaymentEvent, sessionAttribution } from '../_shared/payment-funnel.mjs';
+import { stripePeriodEnd } from '../_shared/stripe-billing.mjs';
 import { closingPassRevocationStatus, grantClosingPass, isClosingPass, revokeClosingPassPayment, verifiedClosingPassPayment } from '../_shared/closing-pass.mjs';
 import { CREW_AMOUNT_CENTS, crewSubscriptionMatches, ensureCrewBilling, isCrewCheckout, syncCrewBillingStatus } from '../_shared/crew-plan.mjs';
 
@@ -160,7 +161,7 @@ function constantTimeEqual(a, b) {
   return diff === 0;
 }
 
-async function storeEntitlement(session, eventType, env) {
+async function storeEntitlement(session, eventType, env, subscription = null) {
   const subject = cleanSubject(session);
   if (!subject) return { ok: false, error: 'No customer email or customer id on Stripe session.' };
 
@@ -256,7 +257,7 @@ async function storeEntitlement(session, eventType, env) {
          status = 'active',
          source = 'stripe_webhook',
          stripe_customer_id = excluded.stripe_customer_id,
-         current_period_end = excluded.current_period_end,
+         current_period_end = COALESCE(excluded.current_period_end, commercial_entitlements.current_period_end),
          updated_at = CURRENT_TIMESTAMP`,
     ).bind(
       `stripe:${payload.stripeSessionId || subject}`,
@@ -264,7 +265,7 @@ async function storeEntitlement(session, eventType, env) {
       payload.plan,
       payload.stripeSessionId,
       payload.stripeCustomerId,
-      record.expiresAt,
+      periodEnd(subscription || session),
     ).run();
     await env.SUBSCRIBERS_DB.prepare(
       `INSERT INTO audit_records (id, actor_email, action, target_type, target_id, payload)
@@ -397,7 +398,7 @@ function hasSplashLensLifecycleMetadata(object) {
 }
 
 function periodEnd(object) {
-  const ts = Number(object?.current_period_end || object?.lines?.data?.[0]?.period?.end || 0);
+  const ts = stripePeriodEnd(object);
   return ts > 0 ? new Date(ts * 1000).toISOString() : null;
 }
 
@@ -545,8 +546,8 @@ export async function onRequestPost({ request, env }) {
     if (!crewSubscriptionMatches(subscription, env)) {
       return json({ ok: false, error: 'Crew subscription could not be verified.' }, 503);
     }
-    const periodEnd = Number(subscription.current_period_end || 0);
-    const stored = await storeEntitlement(session, event.type, env);
+    const periodEnd = stripePeriodEnd(subscription);
+    const stored = await storeEntitlement(session, event.type, env, subscription);
     if (!stored.ok) return json({ ok: false, error: stored.error }, 422);
     const seats = await ensureCrewBilling(env.SUBSCRIBERS_DB, {
       email: leadEmail,
