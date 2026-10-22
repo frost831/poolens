@@ -1,0 +1,204 @@
+{
+  "checkedAt": "2026-10-19T15:09:43.116Z",
+  "productionClean": true,
+  "queries": {
+    "failures": [
+      {
+        "event": "partsnap_image_preflight_blocked",
+        "reason": "unknown",
+        "blocker": "",
+        "capture_source": "",
+        "count": 2,
+        "first_seen": "2026-10-09 02:06:00",
+        "last_seen": "2026-10-09 02:06:01"
+      },
+      {
+        "event": "partsnap_result_fail",
+        "reason": "camera_denied",
+        "blocker": "",
+        "capture_source": "",
+        "count": 3,
+        "first_seen": "2026-10-14 16:24:21",
+        "last_seen": "2026-10-15 17:48:41"
+      },
+      {
+        "event": "partsnap_result_fail",
+        "reason": "photo_quality",
+        "blocker": "",
+        "capture_source": "",
+        "count": 2,
+        "first_seen": "2026-10-09 02:06:00",
+        "last_seen": "2026-10-09 02:06:01"
+      }
+    ],
+    "stages": [
+      {
+        "event": "first_value_completed",
+        "count": 16,
+        "last_seen": "2026-10-15 13:57:15"
+      },
+      {
+        "event": "checkout_started",
+        "count": 16,
+        "last_seen": "2026-10-08 02:02:08"
+      },
+      {
+        "event": "partsnap_camera_explanation_shown",
+        "count": 15,
+        "last_seen": "2026-10-15 17:48:22"
+      },
+      {
+        "event": "checkout_session_created",
+        "count": 15,
+        "last_seen": "2026-10-08 02:02:09"
+      },
+      {
+        "event": "first_action_started",
+        "count": 9,
+        "last_seen": "2026-10-15 13:57:15"
+      },
+      {
+        "event": "partsnap_click",
+        "count": 8,
+        "last_seen": "2026-10-10 13:41:42"
+      },
+      {
+        "event": "partsnap_camera_fallback_shown",
+        "count": 6,
+        "last_seen": "2026-10-15 17:48:41"
+      },
+      {
+        "event": "partsnap_result_fail",
+        "count": 5,
+        "last_seen": "2026-10-15 17:48:41"
+      },
+      {
+        "event": "partsnap_camera_requested",
+        "count": 5,
+        "last_seen": "2026-10-15 17:48:40"
+      },
+      {
+        "event": "partsnap_camera_explanation_dismissed",
+        "count": 5,
+        "last_seen": "2026-10-15 15:54:49"
+      },
+      {
+        "event": "partsnap_evidence_session_started",
+        "count": 3,
+        "last_seen": "2026-10-05 19:01:45"
+      },
+      {
+        "event": "partsnap_camera_denied",
+        "count": 3,
+        "last_seen": "2026-10-15 17:48:41"
+      },
+      {
+        "event": "partsnap_image_preflight_blocked",
+        "count": 2,
+        "last_seen": "2026-10-09 02:06:01"
+      },
+      {
+        "event": "partsnap_gallery_picked",
+        "count": 2,
+        "last_seen": "2026-10-05 19:04:15"
+      },
+      {
+        "event": "partsnap_gallery_fallback_clicked",
+        "count": 2,
+        "last_seen": "2026-10-05 19:04:15"
+      },
+      {
+        "event": "partsnap_evidence_step_completed",
+        "count": 2,
+        "last_seen": "2026-10-05 19:04:18"
+      },
+      {
+        "event": "partsnap_direct_entry",
+        "count": 2,
+        "last_seen": "2026-10-10 13:41:43"
+      },
+      {
+        "event": "partsnap_camera_granted",
+        "count": 2,
+        "last_seen": "2026-10-09 02:09:38"
+      }
+    ],
+    "failureKeys": [
+      {
+        "key": "attribution_article"
+      },
+      {
+        "key": "attribution_campaign"
+      },
+      {
+        "key": "attribution_landing_path"
+      },
+      {
+        "key": "attribution_medium"
+      },
+      {
+        "key": "attribution_referrer"
+      },
+      {
+        "key": "attribution_referrer_host"
+      },
+      {
+        "key": "attribution_source"
+      },
+      {
+        "key": "client_id"
+      },
+      {
+        "key": "has_known_identity"
+      },
+      {
+        "key": "has_verified_email"
+      },
+      {
+        "key": "identity_confidence"
+      },
+      {
+        "key": "identity_source"
+      },
+      {
+        "key": "is_internal"
+      },
+      {
+        "key": "known_role"
+      },
+      {
+        "key": "locale"
+      },
+      {
+        "key": "preferred_language"
+      },
+      {
+        "key": "reason"
+      },
+      {
+        "key": "session_id"
+      },
+      {
+        "key": "source"
+      },
+      {
+        "key": "source_language"
+      },
+      {
+        "key": "splashlens_role"
+      },
+      {
+        "key": "standalone"
+      },
+      {
+        "key": "store_shell"
+      },
+      {
+        "key": "traffic_class"
+      },
+      {
+        "key": "workflow"
+      }
+    ]
+  }
+}

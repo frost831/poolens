@@ -1,0 +1,211 @@
+{
+  "checkedAt": "2026-10-19T15:11:10.470Z",
+  "scope": "Production-clean classified event records; customer identity and real-world behavior are not independently verified",
+  "queries": {
+    "scanStages": [],
+    "failureDetails": [
+      {
+        "event": "partsnap_image_preflight_blocked",
+        "created_at": "2026-10-09 02:06:00",
+        "reason": null,
+        "primary_blocker": null,
+        "brightness": 54,
+        "contrast": 11,
+        "edge_score": 1.1,
+        "width": 720,
+        "height": 1280,
+        "store_shell": "ios",
+        "verified_email": 0,
+        "traffic_class": null,
+        "platform": "iPhone"
+      },
+      {
+        "event": "partsnap_result_fail",
+        "created_at": "2026-10-09 02:06:00",
+        "reason": "photo_quality",
+        "primary_blocker": null,
+        "brightness": null,
+        "contrast": null,
+        "edge_score": null,
+        "width": null,
+        "height": null,
+        "store_shell": "ios",
+        "verified_email": 0,
+        "traffic_class": null,
+        "platform": "iPhone"
+      },
+      {
+        "event": "partsnap_image_preflight_blocked",
+        "created_at": "2026-10-09 02:06:01",
+        "reason": null,
+        "primary_blocker": null,
+        "brightness": 54,
+        "contrast": 11,
+        "edge_score": 1,
+        "width": 720,
+        "height": 1280,
+        "store_shell": "ios",
+        "verified_email": 0,
+        "traffic_class": null,
+        "platform": "iPhone"
+      },
+      {
+        "event": "partsnap_result_fail",
+        "created_at": "2026-10-09 02:06:01",
+        "reason": "photo_quality",
+        "primary_blocker": null,
+        "brightness": null,
+        "contrast": null,
+        "edge_score": null,
+        "width": null,
+        "height": null,
+        "store_shell": "ios",
+        "verified_email": 0,
+        "traffic_class": null,
+        "platform": "iPhone"
+      },
+      {
+        "event": "partsnap_camera_denied",
+        "created_at": "2026-10-14 16:24:21",
+        "reason": "NotAllowedError",
+        "primary_blocker": null,
+        "brightness": null,
+        "contrast": null,
+        "edge_score": null,
+        "width": null,
+        "height": null,
+        "store_shell": "ios",
+        "verified_email": 0,
+        "traffic_class": "real",
+        "platform": "other"
+      },
+      {
+        "event": "partsnap_result_fail",
+        "created_at": "2026-10-14 16:24:21",
+        "reason": "camera_denied",
+        "primary_blocker": null,
+        "brightness": null,
+        "contrast": null,
+        "edge_score": null,
+        "width": null,
+        "height": null,
+        "store_shell": "ios",
+        "verified_email": 0,
+        "traffic_class": "real",
+        "platform": "other"
+      },
+      {
+        "event": "partsnap_camera_denied",
+        "created_at": "2026-10-15 14:09:34",
+        "reason": "NotAllowedError",
+        "primary_blocker": null,
+        "brightness": null,
+        "contrast": null,
+        "edge_score": null,
+        "width": null,
+        "height": null,
+        "store_shell": "ios",
+        "verified_email": 0,
+        "traffic_class": "real",
+        "platform": "other"
+      },
+      {
+        "event": "partsnap_result_fail",
+        "created_at": "2026-10-15 14:09:34",
+        "reason": "camera_denied",
+        "primary_blocker": null,
+        "brightness": null,
+        "contrast": null,
+        "edge_score": null,
+        "width": null,
+        "height": null,
+        "store_shell": "ios",
+        "verified_email": 0,
+        "traffic_class": "real",
+        "platform": "other"
+      },
+      {
+        "event": "partsnap_camera_denied",
+        "created_at": "2026-10-15 17:48:41",
+        "reason": "NotAllowedError",
+        "primary_blocker": null,
+        "brightness": null,
+        "contrast": null,
+        "edge_score": null,
+        "width": null,
+        "height": null,
+        "store_shell": "android",
+        "verified_email": 0,
+        "traffic_class": "real",
+        "platform": "Android"
+      },
+      {
+        "event": "partsnap_result_fail",
+        "created_at": "2026-10-15 17:48:41",
+        "reason": "camera_denied",
+        "primary_blocker": null,
+        "brightness": null,
+        "contrast": null,
+        "edge_score": null,
+        "width": null,
+        "height": null,
+        "store_shell": "android",
+        "verified_email": 0,
+        "traffic_class": "real",
+        "platform": "Android"
+      }
+    ],
+    "checkoutStages": [
+      {
+        "event": "checkout_session_created",
+        "source": "server",
+        "plan": "monthly",
+        "mode": "server_verified",
+        "attribution_status": "unattributed_server",
+        "count": 10,
+        "last_seen": "2026-10-08 02:02:09"
+      },
+      {
+        "event": "checkout_session_created",
+        "source": "server",
+        "plan": "yearly",
+        "mode": "server_verified",
+        "attribution_status": "unattributed_server",
+        "count": 5,
+        "last_seen": "2026-10-07 16:41:00"
+      },
+      {
+        "event": "checkout_started",
+        "source": "checkout_api",
+        "plan": "monthly",
+        "mode": "stripe_checkout_session",
+        "attribution_status": null,
+        "count": 11,
+        "last_seen": "2026-10-08 02:02:08"
+      },
+      {
+        "event": "checkout_started",
+        "source": "checkout_api",
+        "plan": "yearly",
+        "mode": "stripe_checkout_session",
+        "attribution_status": null,
+        "count": 5,
+        "last_seen": "2026-10-07 16:40:59"
+      }
+    ],
+    "verificationFlow": [
+      {
+        "event": "partsnap_evidence_session_started",
+        "count": 3
+      },
+      {
+        "event": "scanner_photo_uploaded",
+        "count": 2
+      },
+      {
+        "event": "partsnap_evidence_step_completed",
+        "count": 2
+      }
+    ]
+  }
+}

@@ -1,0 +1,58 @@
+{
+  "checkedAt": "2026-10-22T17:16:07.1885537Z",
+  "branch": "codex/splashlens-grok-handoff-20261022",
+  "scope": "Fresh local verification of integrated code; no deployment or payment performed for this handoff",
+  "appCodeCommit": "eeed6dda85558884f9d28d5983c4aa9c8ede71e8",
+  "siteCodeCommit": "8873b21e4704be3e924428682a49f0343bbe7eb2",
+  "appTests": {
+    "cancelled": 0,
+    "skipped": 0,
+    "passed": 388,
+    "failed": 0,
+    "browserRuntimeEnabled": true
+  },
+  "siteTests": {
+    "cancelled": 0,
+    "skipped": 0,
+    "passed": 119,
+    "failed": 0
+  },
+  "partsnapBenchmark": {
+    "metadataOnly": 120,
+    "cases": 120,
+    "imageProven": 0,
+    "passed": true,
+    "scope": "ranking and evidence policy; not computer vision, live API, fitment or field accuracy"
+  },
+  "healthCheck": {
+    "fetch": true,
+    "registeredRepositories": 18,
+    "passed": true
+  },
+  "productionEvidenceDate": "2026-10-19",
+  "productionReverifiedOnHandoffDate": false,
+  "existingPrChecks": [
+    {
+      "number": 62,
+      "repository": "poolens",
+      "test": "SUCCESS"
+    },
+    {
+      "number": 56,
+      "repository": "poolens",
+      "test": "SUCCESS"
+    },
+    {
+      "number": 70,
+      "repository": "poolens",
+      "test": "SUCCESS",
+      "bridge": "CANCELLED"
+    },
+    {
+      "number": 23,
+      "repository": "poolens-site",
+      "test": "CANCELLED",
+      "bridge": "SUCCESS"
+    }
+  ]
+}

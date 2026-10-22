@@ -1,0 +1,26 @@
+{
+  "checkedAt": "2026-10-22T17:16:57.3527892Z",
+  "stages": [
+    {
+      "handoffExcluded": true,
+      "repository": "poolens",
+      "uploaded": false,
+      "output": "_deploy\\poolens-web",
+      "publicFiles": 35,
+      "privatePathsAbsent": true
+    },
+    {
+      "handoffExcluded": true,
+      "repository": "poolens-site",
+      "uploaded": false,
+      "output": "_deploy\\public",
+      "publicFiles": 749,
+      "privatePathsAbsent": true
+    }
+  ],
+  "appFocusedArtifactTests": {
+    "passed": 5,
+    "failed": 0,
+    "skipped": 0
+  }
+}

@@ -1,0 +1,168 @@
+{
+  "packagedAt": "2026-10-22T17:16:07.1885537Z",
+  "secretPatternScanPassed": true,
+  "rawAuthLogsExcluded": true,
+  "files": [
+    {
+      "file": "historical-2026-10-19/README.md",
+      "bytes": 835,
+      "sha256": "c30a92ecead2d798cb43c2110ac8e037e5bf2dc2e6259d638184e9485ef89d90",
+      "evidenceDate": "2026-10-19",
+      "scope": "historical snapshot; see root GROK_HANDOFF.md for current status"
+    },
+    {
+      "file": "historical-2026-10-19/splashlens-closing-live-checkout.png",
+      "bytes": 53927,
+      "sha256": "20f356263863232c737c4e225b56b9640c1f674774bfd7ebbc038bbc0f159272",
+      "evidenceDate": "2026-10-19",
+      "scope": "historical snapshot; see root GROK_HANDOFF.md for current status"
+    },
+    {
+      "file": "historical-2026-10-19/splashlens-cloudflare-final-2026-10-19.json",
+      "bytes": 3083,
+      "sha256": "a4baeb1777633bac75f04335ae73c05485eff5afcb478fd061b21af0be9f2abe",
+      "evidenceDate": "2026-10-19",
+      "scope": "historical snapshot; see root GROK_HANDOFF.md for current status"
+    },
+    {
+      "file": "historical-2026-10-19/splashlens-crew-live-checkout.png",
+      "bytes": 51245,
+      "sha256": "e66e1005baf2f43bfcecd91e866ce52a55b2a542848d363c410d3092bb594e6a",
+      "evidenceDate": "2026-10-19",
+      "scope": "historical snapshot; see root GROK_HANDOFF.md for current status"
+    },
+    {
+      "file": "historical-2026-10-19/splashlens-device-acceptance-2026-10-19.md",
+      "bytes": 2524,
+      "sha256": "75fb7e6a7f814817b73ff685ebf02df52e0dd74cee4f4ff81162427416bdae77",
+      "evidenceDate": "2026-10-19",
+      "scope": "historical snapshot; see root GROK_HANDOFF.md for current status"
+    },
+    {
+      "file": "historical-2026-10-19/splashlens-final-deployment-verification-2026-10-19.json",
+      "bytes": 1239,
+      "sha256": "cb57d0010dc6a494fb6da3691150315c0cb6a5de13e689cc7c987e440a721557",
+      "evidenceDate": "2026-10-19",
+      "scope": "historical snapshot; see root GROK_HANDOFF.md for current status"
+    },
+    {
+      "file": "historical-2026-10-19/splashlens-gallery-browser-2026-10-19.json",
+      "bytes": 235,
+      "sha256": "5bc3d6998b445347cccfcaf6f0ef01c266262d9cfed2de1b83aed725c5f0cedc",
+      "evidenceDate": "2026-10-19",
+      "scope": "historical snapshot; see root GROK_HANDOFF.md for current status"
+    },
+    {
+      "file": "historical-2026-10-19/splashlens-gallery-recovery-live.png",
+      "bytes": 86780,
+      "sha256": "36c3786cb2d62b7276df1b0e2eafdad695f31fde1bc49e68cec5ae093abb9da6",
+      "evidenceDate": "2026-10-19",
+      "scope": "historical snapshot; see root GROK_HANDOFF.md for current status"
+    },
+    {
+      "file": "historical-2026-10-19/splashlens-live-checkout-screens-2026-10-19.json",
+      "bytes": 418,
+      "sha256": "c85ece96e6eca14b6e01cba39ffe7339cc598dd9527d8a1562b5e0dd642f599f",
+      "evidenceDate": "2026-10-19",
+      "scope": "historical snapshot; see root GROK_HANDOFF.md for current status"
+    },
+    {
+      "file": "historical-2026-10-19/splashlens-live-prices-2026-10-19.json",
+      "bytes": 785,
+      "sha256": "95a0bd10b390dfdb067be402cc40a72bc5f0601370ddf102b483c3a3eff05287",
+      "evidenceDate": "2026-10-19",
+      "scope": "historical snapshot; see root GROK_HANDOFF.md for current status"
+    },
+    {
+      "file": "historical-2026-10-19/splashlens-live-stripe-products.png",
+      "bytes": 67352,
+      "sha256": "e2e536f84516da028fcc04cba781f33a505f4c73ea15733d987417c865a2bc94",
+      "evidenceDate": "2026-10-19",
+      "scope": "historical snapshot; see root GROK_HANDOFF.md for current status"
+    },
+    {
+      "file": "historical-2026-10-19/splashlens-partsnap-diagnostics-2026-10-19.json",
+      "bytes": 4450,
+      "sha256": "8d379d9a45921b78e77881260aecddcacc2fcf44f2eaeacc9592c7e7ba83cb87",
+      "evidenceDate": "2026-10-19",
+      "scope": "historical snapshot; see root GROK_HANDOFF.md for current status"
+    },
+    {
+      "file": "historical-2026-10-19/splashlens-payment-cancellation-2026-10-19.json",
+      "bytes": 6683,
+      "sha256": "b109dfc0b24620d7532daa9fd61018c3c420ecc1a1e3ea1355d2a73772123c60",
+      "evidenceDate": "2026-10-19",
+      "scope": "historical snapshot; see root GROK_HANDOFF.md for current status"
+    },
+    {
+      "file": "historical-2026-10-19/splashlens-payment-chain-2026-10-19.json",
+      "bytes": 6445,
+      "sha256": "ade424336aa0b55e2d49edabb4f1d70484ab3c1e573b078474ccd36f7882eccb",
+      "evidenceDate": "2026-10-19",
+      "scope": "historical snapshot; see root GROK_HANDOFF.md for current status"
+    },
+    {
+      "file": "historical-2026-10-19/splashlens-release-report-2026-10-19.md",
+      "bytes": 10848,
+      "sha256": "27641842bd018cf46d441a8199504d9b3d6722eaabd7a6f50869763d06ed64b6",
+      "evidenceDate": "2026-10-19",
+      "scope": "historical snapshot; see root GROK_HANDOFF.md for current status"
+    },
+    {
+      "file": "historical-2026-10-19/splashlens-release-smoke-2026-10-19.json",
+      "bytes": 6645,
+      "sha256": "1641ce449858867d1efd3609a52d1f485d1e73dd2342527cbd2437ffb21d8538",
+      "evidenceDate": "2026-10-19",
+      "scope": "historical snapshot; see root GROK_HANDOFF.md for current status"
+    },
+    {
+      "file": "historical-2026-10-19/splashlens-result-distribution-2026-10-19.json",
+      "bytes": 1148,
+      "sha256": "7b90a60ce8a6a602aba19c7f44dbac5d0592e1b719ccfac739ceb3ae060b068a",
+      "evidenceDate": "2026-10-19",
+      "scope": "historical snapshot; see root GROK_HANDOFF.md for current status"
+    },
+    {
+      "file": "historical-2026-10-19/splashlens-result-payment-browser-2026-10-19.json",
+      "bytes": 454,
+      "sha256": "286f6580443a1af528ed5753f88a3ef0cfa3d822e8ff0e2e92b57bf6e05aa10d",
+      "evidenceDate": "2026-10-19",
+      "scope": "historical snapshot; see root GROK_HANDOFF.md for current status"
+    },
+    {
+      "file": "historical-2026-10-19/splashlens-result-payment-cancellation-2026-10-19.json",
+      "bytes": 6709,
+      "sha256": "512104e9e78fd159395868544ee025d948cd8cba415bbea40a41557c263153a2",
+      "evidenceDate": "2026-10-19",
+      "scope": "historical snapshot; see root GROK_HANDOFF.md for current status"
+    },
+    {
+      "file": "historical-2026-10-19/splashlens-result-payment-chain-2026-10-19.json",
+      "bytes": 6458,
+      "sha256": "d668b383dc55f12d4c0495edd6692c18876236aca1d955f6d815137cf14c4f18",
+      "evidenceDate": "2026-10-19",
+      "scope": "historical snapshot; see root GROK_HANDOFF.md for current status"
+    },
+    {
+      "file": "historical-2026-10-19/splashlens-result-session-paid-2026-10-19.json",
+      "bytes": 373,
+      "sha256": "40656a682d5979ef3857017855e4584714b64ed558c1721c9baae5f5e749bd82",
+      "evidenceDate": "2026-10-19",
+      "scope": "historical snapshot; see root GROK_HANDOFF.md for current status"
+    },
+    {
+      "file": "historical-2026-10-19/splashlens-result-subscription-canceled-2026-10-19.json",
+      "bytes": 123,
+      "sha256": "260634d061d42e1d59b1a26376eb6cff14149ae12b4b522853380e8f16f0d29e",
+      "evidenceDate": "2026-10-19",
+      "scope": "historical snapshot; see root GROK_HANDOFF.md for current status"
+    },
+    {
+      "file": "historical-2026-10-19/splashlens-stage-audit-2026-10-19.json",
+      "bytes": 5824,
+      "sha256": "16519ae28f2537c0054d842cb404fe931c41d0d322a301939bd0ee37659a5f70",
+      "evidenceDate": "2026-10-19",
+      "scope": "historical snapshot; see root GROK_HANDOFF.md for current status"
+    }
+  ]
+}

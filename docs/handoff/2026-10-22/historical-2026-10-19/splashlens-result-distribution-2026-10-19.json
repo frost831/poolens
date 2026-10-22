@@ -1,0 +1,48 @@
+{
+  "checkedAt": "2026-10-19T15:40:19.316207+00:00",
+  "scope": "Production-clean event aggregates; classified traffic, not independently verified customers",
+  "rows": [
+    {
+      "event": "first_value_completed",
+      "mode": "",
+      "workflow": "manual_code_answer",
+      "store_shell": "ios",
+      "count": 8
+    },
+    {
+      "event": "first_value_completed",
+      "mode": "",
+      "workflow": "turnover_calculator",
+      "store_shell": "ios",
+      "count": 5
+    },
+    {
+      "event": "first_value_completed",
+      "mode": "",
+      "workflow": "volume_calculator",
+      "store_shell": "",
+      "count": 2
+    },
+    {
+      "event": "first_value_completed",
+      "mode": "",
+      "workflow": "dose_calculator",
+      "store_shell": "ios",
+      "count": 1
+    },
+    {
+      "event": "partsnap_result_fail",
+      "mode": "",
+      "workflow": "partsnap_result",
+      "store_shell": "ios",
+      "count": 4
+    },
+    {
+      "event": "partsnap_result_fail",
+      "mode": "",
+      "workflow": "partsnap_result",
+      "store_shell": "android",
+      "count": 1
+    }
+  ]
+}

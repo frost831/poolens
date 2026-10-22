@@ -1,0 +1,11 @@
+{
+  "id": "cs_test_b1Fq93YcY2VybQ1eVNbmQloZj9XIQyGDQ7caZp66EHP7nJTn5ZmkWW6ckA",
+  "livemode": false,
+  "status": "complete",
+  "payment_status": "paid",
+  "subscription": "sub_1USIe225fqLun6cVwZfLDNcT",
+  "customer": "cus_VTF8mwawTeqA8E",
+  "client_reference_id": "sl_checkout_01902247-8331-4fb9-b060-e23327a31f19",
+  "amount_total": 1900,
+  "currency": "usd"
+}

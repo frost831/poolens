@@ -1,0 +1,35 @@
+{
+  "checkedAt": "2026-10-19T15:59:02.340Z",
+  "commit": "62dc49682907e604b9c0ffd215332c769db3a9e7",
+  "deployment": "https://ffa236af.poolens.pages.dev",
+  "assets": [
+    {
+      "path": "index.html",
+      "status": 200,
+      "expectedSHA256": "778caaf62078b4ad0b1dd6737fcc61c8f30f3e5030335360146bc3a4504d508f",
+      "liveSHA256": "778caaf62078b4ad0b1dd6737fcc61c8f30f3e5030335360146bc3a4504d508f",
+      "matches": true
+    },
+    {
+      "path": "js/app.js",
+      "status": 200,
+      "expectedSHA256": "19fc0082494e22f952935198c652d725da3a1eb46c6481157e5716740cab0a26",
+      "liveSHA256": "19fc0082494e22f952935198c652d725da3a1eb46c6481157e5716740cab0a26",
+      "matches": true
+    },
+    {
+      "path": "sw.js",
+      "status": 200,
+      "expectedSHA256": "4fdbade1cad58aaefb8ccb168abd594335f58227a501fe6e596fcfa1bd886201",
+      "liveSHA256": "4fdbade1cad58aaefb8ccb168abd594335f58227a501fe6e596fcfa1bd886201",
+      "matches": true
+    },
+    {
+      "path": "js/partsnap-boss-packet.js",
+      "status": 200,
+      "expectedSHA256": "60a40193f2670075defacc9d4ed8b5df089811838fff84646bfba31809d9914f",
+      "liveSHA256": "60a40193f2670075defacc9d4ed8b5df089811838fff84646bfba31809d9914f",
+      "matches": true
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "checkedAt": "2026-10-19T15:38:46.492Z",
+  "scope": "Actual Stripe TEST-mode hosted checkout; synthetic reserved email; no live payment",
+  "heading": "Scanner activated.",
+  "activationFound": true,
+  "activationOrigin": "https://stripe-test-55.poolens.pages.dev",
+  "hasSignedToken": true,
+  "activated": {
+    "origin": "https://stripe-test-55.poolens.pages.dev",
+    "signedAccessStored": true,
+    "tokenRemovedFromUrl": true
+  }
+}

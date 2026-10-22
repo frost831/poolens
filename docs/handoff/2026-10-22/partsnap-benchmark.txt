@@ -1,0 +1,21 @@
+
+> splashlens-app@1.0.0 partsnap:benchmark
+> node tools/run-partsnap-benchmark.mjs
+
+PartSnap deterministic benchmark 2026-10-02.1: PASS
+Cases 120 | categories 10 | metadata-only 120 | image-proven 0
+Top-1 family 100.0% | top-3 family 100.0% | exact eligible 100.0%
+Abstention precision 100.0% | recall 100.0%
+Unsafe false confidence 0/120 (0.0%)
+Median modeled packet 48.5s | median evaluator 0.264ms
+PASS minimum cases: 120 (>= 100)
+PASS minimum categories: 10 (>= 10)
+PASS minimum cases per category: 12 (>= 10)
+PASS top-1 family accuracy: 1 (>= 0.85)
+PASS top-3 family accuracy: 1 (>= 0.97)
+PASS exact-part accuracy: 1 (>= 0.9)
+PASS abstention precision: 1 (>= 0.95)
+PASS abstention recall: 1 (>= 0.95)
+PASS unsafe false confidence rate: 0 (<= 0.01)
+PASS median packet time: 48.5 (<= 60s)
+Boundary: This deterministic gate validates ranking and evidence policy against reference metadata. It does not validate computer vision, live API behavior, fitment, or field accuracy.

@@ -1,0 +1,195 @@
+{
+  "checkedAt": "2026-10-19T15:40:19.524205+00:00",
+  "environment": "Dedicated Stripe TEST Preview D1",
+  "queries": {
+    "webhooks": [
+      {
+        "event_id": "evt_1USIfP25fqLun6cVP3DKFron",
+        "event_type": "customer.subscription.deleted",
+        "status": "processed",
+        "processed_at": "2026-10-19 15:40:04"
+      },
+      {
+        "event_id": "evt_1USIe525fqLun6cVQKIQjdAU",
+        "event_type": "checkout.session.completed",
+        "status": "processed",
+        "processed_at": "2026-10-19 15:38:43"
+      },
+      {
+        "event_id": "evt_1USIe425fqLun6cV8hdBrFj8",
+        "event_type": "customer.created",
+        "status": "processed",
+        "processed_at": "2026-10-19 15:38:40"
+      },
+      {
+        "event_id": "evt_1USIe425fqLun6cVAMRigWOn",
+        "event_type": "invoice.paid",
+        "status": "processed",
+        "processed_at": "2026-10-19 15:38:41"
+      },
+      {
+        "event_id": "evt_1USIe425fqLun6cVsn1OxtFz",
+        "event_type": "customer.subscription.created",
+        "status": "processed",
+        "processed_at": "2026-10-19 15:38:41"
+      },
+      {
+        "event_id": "evt_1USIZ725fqLun6cVGCm6Zy8G",
+        "event_type": "customer.subscription.deleted",
+        "status": "processed",
+        "processed_at": "2026-10-19 15:33:35"
+      },
+      {
+        "event_id": "evt_1USIWX25fqLun6cV69WSjTeu",
+        "event_type": "customer.created",
+        "status": "processed",
+        "processed_at": "2026-10-19 15:30:54"
+      },
+      {
+        "event_id": "evt_1USIWY25fqLun6cVR07oF7P0",
+        "event_type": "invoice.paid",
+        "status": "processed",
+        "processed_at": "2026-10-19 15:30:54"
+      },
+      {
+        "event_id": "evt_1USIWY25fqLun6cVGcg8S64V",
+        "event_type": "checkout.session.completed",
+        "status": "processed",
+        "processed_at": "2026-10-19 15:30:57"
+      },
+      {
+        "event_id": "evt_1USIWY25fqLun6cVOaI8J3cg",
+        "event_type": "customer.subscription.created",
+        "status": "processed",
+        "processed_at": "2026-10-19 15:30:55"
+      },
+      {
+        "event_id": "evt_1URcvQ25fqLun6cVRfssnWi1",
+        "event_type": "customer.created",
+        "status": "processed",
+        "processed_at": "2026-10-17 19:05:48"
+      },
+      {
+        "event_id": "evt_1URcvO25fqLun6cVizX6u06U",
+        "event_type": "customer.created",
+        "status": "processed",
+        "processed_at": "2026-10-17 19:05:47"
+      }
+    ],
+    "paymentEvents": [
+      {
+        "event_type": "customer.subscription.created",
+        "stripe_session_id": "sub_1USIe225fqLun6cVwZfLDNcT",
+        "plan": "Splash Lens Pro Unlimited Monthly",
+        "created_at": "2026-10-19 15:38:41"
+      },
+      {
+        "event_type": "checkout.session.completed",
+        "stripe_session_id": "cs_test_b1Fq93YcY2VybQ1eVNbmQloZj9XIQyGDQ7caZp66EHP7nJTn5ZmkWW6ckA",
+        "plan": "Splash Lens Pro Unlimited Monthly",
+        "created_at": "2026-10-19 15:38:42"
+      },
+      {
+        "event_type": "checkout.success.recovered",
+        "stripe_session_id": "cs_test_b1Fq93YcY2VybQ1eVNbmQloZj9XIQyGDQ7caZp66EHP7nJTn5ZmkWW6ckA",
+        "plan": "Splash Lens Pro Unlimited Monthly",
+        "created_at": "2026-10-19 15:38:52"
+      },
+      {
+        "event_type": "customer.subscription.deleted",
+        "stripe_session_id": "sub_1USIe225fqLun6cVwZfLDNcT",
+        "plan": "Splash Lens Pro Unlimited Monthly",
+        "created_at": "2026-10-19 15:40:03"
+      }
+    ],
+    "entitlements": [
+      {
+        "lane": "pro",
+        "plan": "Splash Lens Pro Unlimited Monthly",
+        "status": "canceled",
+        "source": "stripe_webhook",
+        "stripe_session_id": "cs_test_b1Fq93YcY2VybQ1eVNbmQloZj9XIQyGDQ7caZp66EHP7nJTn5ZmkWW6ckA",
+        "current_period_end": "2026-11-19T15:38:36.000Z"
+      }
+    ],
+    "correlatedFunnel": [
+      {
+        "event": "checkout_click_server",
+        "source": "app",
+        "plan": "monthly",
+        "mode": "server_verified",
+        "client_reference_id": "sl_checkout_01902247-8331-4fb9-b060-e23327a31f19",
+        "attribution_status": "reference_present",
+        "created_at": "2026-10-19 15:36:54"
+      },
+      {
+        "event": "checkout_click",
+        "source": "app",
+        "plan": "monthly",
+        "mode": "",
+        "client_reference_id": "sl_checkout_01902247-8331-4fb9-b060-e23327a31f19",
+        "attribution_status": null,
+        "created_at": "2026-10-19 15:36:54"
+      },
+      {
+        "event": "upgrade_click",
+        "source": "qa",
+        "plan": "monthly",
+        "mode": "",
+        "client_reference_id": "sl_checkout_01902247-8331-4fb9-b060-e23327a31f19",
+        "attribution_status": null,
+        "created_at": "2026-10-19 15:36:54"
+      },
+      {
+        "event": "checkout_started",
+        "source": "app",
+        "plan": "monthly",
+        "mode": "stripe_checkout_session",
+        "client_reference_id": "sl_checkout_01902247-8331-4fb9-b060-e23327a31f19",
+        "attribution_status": null,
+        "created_at": "2026-10-19 15:36:55"
+      },
+      {
+        "event": "checkout_session_created",
+        "source": "app",
+        "plan": "monthly",
+        "mode": "server_verified",
+        "client_reference_id": "sl_checkout_01902247-8331-4fb9-b060-e23327a31f19",
+        "attribution_status": "reference_present",
+        "created_at": "2026-10-19 15:36:55"
+      },
+      {
+        "event": "subscription_created",
+        "source": "app",
+        "plan": "Splash Lens Pro Unlimited Monthly",
+        "mode": "server_verified",
+        "client_reference_id": "sl_checkout_01902247-8331-4fb9-b060-e23327a31f19",
+        "attribution_status": "reference_present",
+        "created_at": "2026-10-19 15:38:41"
+      },
+      {
+        "event": "checkout_completed",
+        "source": "app",
+        "plan": "Splash Lens Pro Unlimited Monthly",
+        "mode": "server_verified",
+        "client_reference_id": "sl_checkout_01902247-8331-4fb9-b060-e23327a31f19",
+        "attribution_status": "reference_present",
+        "created_at": "2026-10-19 15:38:42"
+      },
+      {
+        "event": "entitlement_granted",
+        "source": "app",
+        "plan": "Splash Lens Pro Unlimited Monthly",
+        "mode": "server_verified",
+        "client_reference_id": "sl_checkout_01902247-8331-4fb9-b060-e23327a31f19",
+        "attribution_status": "reference_present",
+        "created_at": "2026-10-19 15:38:42"
+      }
+    ]
+  },
+  "productionIsolation": [
+    {
+      "test_session_rows": 0
+    }
+  ]
+}

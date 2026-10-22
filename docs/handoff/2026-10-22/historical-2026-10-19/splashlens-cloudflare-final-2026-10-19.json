@@ -1,0 +1,93 @@
+{
+  "checkedAt": "2026-10-19T15:59:03.714534+00:00",
+  "project": "poolens",
+  "production_branch": "main",
+  "environments": {
+    "preview": {
+      "variableNames": [
+        "ENVIRONMENT",
+        "SPLASHLENS_APP_ORIGIN",
+        "SPLASHLENS_ENTITLEMENT_ADMIN_SECRET",
+        "SPLASHLENS_ENTITLEMENT_SECRET",
+        "SPLASHLENS_PAID_CHECKOUT_ENABLED",
+        "SPLASHLENS_STRIPE_PRICE_CLOSING_PRO_60D",
+        "SPLASHLENS_STRIPE_PRICE_CREW_MONTHLY",
+        "SPLASHLENS_STRIPE_PRICE_MONTHLY_PRO",
+        "SPLASHLENS_STRIPE_PRICE_YEARLY_PRO",
+        "SPLASHLENS_STRIPE_WEBHOOK_SECRET",
+        "STRIPE_SECRET_KEY"
+      ],
+      "stripeKeyMode": "hidden_or_absent",
+      "d1_databases": {
+        "SUBSCRIBERS_DB": {
+          "id": "3ab2028b-3980-4dd9-953b-2249120ed547"
+        }
+      },
+      "kv_namespaces": {
+        "SCAN_USAGE_KV": {
+          "namespace_id": "306b5f0caa824923abbab3dc6e87d8e1"
+        }
+      }
+    },
+    "production": {
+      "variableNames": [
+        "AMPLITUDE_API_KEY",
+        "ANTHROPIC_API_KEY",
+        "APPLE_APP_STORE_CONNECT_ISSUER_ID",
+        "APPLE_APP_STORE_CONNECT_KEY_ID",
+        "APPLE_APP_STORE_CONNECT_PRIVATE_KEY",
+        "SENDGRID_API_KEY",
+        "SENDGRID_FROM",
+        "SPLASHLENS_AMPLITUDE_API_KEY",
+        "SPLASHLENS_CHECKOUT_MODE",
+        "SPLASHLENS_ENTITLEMENT_ADMIN_SECRET",
+        "SPLASHLENS_ENTITLEMENT_SECRET",
+        "SPLASHLENS_IOS_BUNDLE_ID",
+        "SPLASHLENS_NOTIFY_TO",
+        "SPLASHLENS_PAID_CHECKOUT_ENABLED",
+        "SPLASHLENS_PULL_SECRET",
+        "SPLASHLENS_STATS_SECRET",
+        "SPLASHLENS_STRIPE_FORWARD_SECRET",
+        "SPLASHLENS_STRIPE_PAYMENT_LINK_MONTHLY_ID",
+        "SPLASHLENS_STRIPE_PAYMENT_LINK_YEARLY_ID",
+        "SPLASHLENS_STRIPE_PRICE_CLOSING_PRO_60D",
+        "SPLASHLENS_STRIPE_PRICE_CREW_MONTHLY",
+        "STRIPE_SECRET_KEY",
+        "STRIPE_WEBHOOK_SECRET"
+      ],
+      "stripeKeyMode": "hidden_or_absent",
+      "d1_databases": {
+        "SUBSCRIBERS_DB": {
+          "id": "f474defb-4337-42ec-b143-7b37fc949761"
+        }
+      },
+      "kv_namespaces": {
+        "SCAN_USAGE_KV": {
+          "namespace_id": "05a02cae79bc40039fb7b29559b0a271"
+        }
+      }
+    }
+  },
+  "canonical_deployment": {
+    "id": "ffa236af-7f5f-41a0-8790-8d015fee8e75",
+    "url": "https://ffa236af.poolens.pages.dev",
+    "environment": "production",
+    "source": {
+      "branch": "main",
+      "commit_hash": "62dc49682907e604b9c0ffd215332c769db3a9e7",
+      "commit_message": "Verify Crew billing periods and record post-result payment proof",
+      "commit_dirty": false
+    }
+  },
+  "latest_deployment": {
+    "id": "ffa236af-7f5f-41a0-8790-8d015fee8e75",
+    "url": "https://ffa236af.poolens.pages.dev",
+    "environment": "production",
+    "source": {
+      "branch": "main",
+      "commit_hash": "62dc49682907e604b9c0ffd215332c769db3a9e7",
+      "commit_message": "Verify Crew billing periods and record post-result payment proof",
+      "commit_dirty": false
+    }
+  }
+}

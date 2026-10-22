@@ -1,0 +1,217 @@
+{
+  "checkedAt": "2026-10-19T16:12:11.111Z",
+  "commit": "62dc49682907e604b9c0ffd215332c769db3a9e7",
+  "deployment": "https://ffa236af.poolens.pages.dev",
+  "checks": [
+    {
+      "url": "https://app.splashlens.com/",
+      "status": 200,
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "url": "https://splashlens.com/",
+      "status": 200,
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "url": "https://splashlens.com/sitemap.xml",
+      "status": 200,
+      "contentType": "application/xml; charset=UTF-8"
+    },
+    {
+      "url": "https://splashlens.com/ai.txt",
+      "status": 200,
+      "contentType": "text/plain; charset=utf-8"
+    },
+    {
+      "url": "https://splashlens.com/llms.txt",
+      "status": 200,
+      "contentType": "text/plain; charset=UTF-8"
+    },
+    {
+      "url": "https://app.splashlens.com/api/checkout?catalog=1",
+      "status": 200,
+      "contentType": "application/json",
+      "catalog": {
+        "product": "splashlens",
+        "plans": [
+          {
+            "key": "partsnap_pro_monthly",
+            "label": "Splash Lens Pro Unlimited Monthly",
+            "priceLabel": "$19/month",
+            "checkoutConfigured": true
+          },
+          {
+            "key": "partsnap_pro_yearly",
+            "label": "Splash Lens Pro Unlimited Annual",
+            "priceLabel": "$149/year",
+            "checkoutConfigured": true
+          },
+          {
+            "key": "closing_pass_60d",
+            "label": "SplashLens Closing Pro 60-Day Pass",
+            "priceLabel": "$29 one time / 60 days",
+            "amountCents": 2900,
+            "accessDays": 60,
+            "renews": false,
+            "checkoutConfigured": true
+          },
+          {
+            "key": "crew_monthly",
+            "label": "SplashLens Crew",
+            "priceLabel": "$39/month",
+            "amountCents": 3900,
+            "seatLimit": 4,
+            "seatSummary": "1 lead + up to 3 techs",
+            "checkoutConfigured": true
+          },
+          {
+            "key": "team_proof_os_monthly",
+            "label": "SplashLens Teams",
+            "priceLabel": "$49-79/owner/month; techs free",
+            "checkoutConfigured": false,
+            "requestAccessConfigured": true
+          },
+          {
+            "key": "facility_cpo_pilot",
+            "label": "Facility / CPO Mode",
+            "priceLabel": "pilot access",
+            "checkoutConfigured": false,
+            "requestAccessConfigured": true
+          },
+          {
+            "key": "verified_manufacturer_cards",
+            "label": "Verified Manufacturer Cards",
+            "priceLabel": "partner pricing",
+            "checkoutConfigured": false,
+            "requestAccessConfigured": true
+          },
+          {
+            "key": "distributor_counter_mode",
+            "label": "Distributor / Counter Mode",
+            "priceLabel": "partner pricing",
+            "checkoutConfigured": false,
+            "requestAccessConfigured": true
+          },
+          {
+            "key": "field_learning_os",
+            "label": "Field Learning OS",
+            "priceLabel": "training partner pricing",
+            "checkoutConfigured": false,
+            "requestAccessConfigured": true
+          }
+        ]
+      }
+    },
+    {
+      "url": "https://stripe-test-55.poolens.pages.dev/api/checkout?catalog=1",
+      "status": 200,
+      "contentType": "application/json",
+      "catalog": {
+        "product": "splashlens",
+        "plans": [
+          {
+            "key": "partsnap_pro_monthly",
+            "label": "Splash Lens Pro Unlimited Monthly",
+            "priceLabel": "$19/month",
+            "checkoutConfigured": true
+          },
+          {
+            "key": "partsnap_pro_yearly",
+            "label": "Splash Lens Pro Unlimited Annual",
+            "priceLabel": "$149/year",
+            "checkoutConfigured": true
+          },
+          {
+            "key": "closing_pass_60d",
+            "label": "SplashLens Closing Pro 60-Day Pass",
+            "priceLabel": "$29 one time / 60 days",
+            "amountCents": 2900,
+            "accessDays": 60,
+            "renews": false,
+            "checkoutConfigured": true
+          },
+          {
+            "key": "crew_monthly",
+            "label": "SplashLens Crew",
+            "priceLabel": "$39/month",
+            "amountCents": 3900,
+            "seatLimit": 4,
+            "seatSummary": "1 lead + up to 3 techs",
+            "checkoutConfigured": true
+          },
+          {
+            "key": "team_proof_os_monthly",
+            "label": "SplashLens Teams",
+            "priceLabel": "$49-79/owner/month; techs free",
+            "checkoutConfigured": false,
+            "requestAccessConfigured": true
+          },
+          {
+            "key": "facility_cpo_pilot",
+            "label": "Facility / CPO Mode",
+            "priceLabel": "pilot access",
+            "checkoutConfigured": false,
+            "requestAccessConfigured": true
+          },
+          {
+            "key": "verified_manufacturer_cards",
+            "label": "Verified Manufacturer Cards",
+            "priceLabel": "partner pricing",
+            "checkoutConfigured": false,
+            "requestAccessConfigured": true
+          },
+          {
+            "key": "distributor_counter_mode",
+            "label": "Distributor / Counter Mode",
+            "priceLabel": "partner pricing",
+            "checkoutConfigured": false,
+            "requestAccessConfigured": true
+          },
+          {
+            "key": "field_learning_os",
+            "label": "Field Learning OS",
+            "priceLabel": "training partner pricing",
+            "checkoutConfigured": false,
+            "requestAccessConfigured": true
+          }
+        ]
+      }
+    },
+    {
+      "url": "https://app.splashlens.com/api/stats",
+      "status": 401,
+      "contentType": "application/json"
+    }
+  ],
+  "plans": [
+    {
+      "key": "partsnap_pro_monthly",
+      "expectedPrice": "$19/month",
+      "actualPrice": "$19/month",
+      "checkoutConfigured": true,
+      "pass": true
+    },
+    {
+      "key": "partsnap_pro_yearly",
+      "expectedPrice": "$149/year",
+      "actualPrice": "$149/year",
+      "checkoutConfigured": true,
+      "pass": true
+    },
+    {
+      "key": "closing_pass_60d",
+      "expectedPrice": "$29 one time / 60 days",
+      "actualPrice": "$29 one time / 60 days",
+      "checkoutConfigured": true,
+      "pass": true
+    },
+    {
+      "key": "crew_monthly",
+      "expectedPrice": "$39/month",
+      "actualPrice": "$39/month",
+      "checkoutConfigured": true,
+      "pass": true
+    }
+  ]
+}

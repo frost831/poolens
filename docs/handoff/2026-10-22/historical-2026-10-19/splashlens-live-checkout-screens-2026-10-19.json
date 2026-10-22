@@ -1,0 +1,16 @@
+{
+  "checkedAt": "2026-10-19T16:05:17.661Z",
+  "scope": "Actual production pages; no live Stripe session or payment submitted",
+  "checks": [
+    {
+      "plan": "closing_pass_60d",
+      "heading": "SplashLens Closing Pro 60-Day Pass - $29 one time / 60 days",
+      "stripeAction": true
+    },
+    {
+      "plan": "crew_monthly",
+      "heading": "SplashLens Crew - $39/month",
+      "stripeAction": true
+    }
+  ]
+}

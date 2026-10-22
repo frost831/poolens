@@ -1,0 +1,8 @@
+{
+  "nativePicks": 2,
+  "browserPicks": 0,
+  "cancel": true,
+  "captureCount": 1,
+  "store": "ios",
+  "scope": "Production web assets with simulated permission denial and native bridge; no AI request or production analytics"
+}

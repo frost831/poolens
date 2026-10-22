@@ -1,0 +1,30 @@
+{
+  "checkedAt": "2026-10-19T15:55:39.3103922Z",
+  "account": "acct_1TJ23t25fqLun6cV",
+  "prices": [
+    {
+      "plan": "closing_pass_60d",
+      "productId": "prod_VTFOpYcV5R5krj",
+      "priceId": "price_1USItu25fqLun6cVx4pWaPuy",
+      "name": "SplashLens Closing Pro 60-Day Pass",
+      "livemode": true,
+      "active": true,
+      "currency": "usd",
+      "amount": 2900,
+      "type": "one_time",
+      "interval": null
+    },
+    {
+      "plan": "crew_monthly",
+      "productId": "prod_VTFP53J0vWD4lX",
+      "priceId": "price_1USIuT25fqLun6cVLNlG88FD",
+      "name": "SplashLens Crew",
+      "livemode": true,
+      "active": true,
+      "currency": "usd",
+      "amount": 3900,
+      "type": "recurring",
+      "interval": "month"
+    }
+  ]
+}
