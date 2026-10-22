@@ -26,6 +26,10 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
+      - name: Run public artifact packaging gate
+        run: node --test tests/public-artifact-packaging.test.mjs
+      - name: Stage public app assets without deployment
+        run: powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File tools/deploy-poolens-web.ps1 -StageOnly
       - name: Run app regression suite
         run: npm test
       - name: Run PartSnap benchmark proof gate
