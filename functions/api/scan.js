@@ -854,8 +854,7 @@ export async function onRequestPost({ request, env }) {
     });
 
     if (!apiRes.ok) {
-      const err = await apiRes.text();
-      console.error('Anthropic API error:', apiRes.status, err);
+      console.error('Anthropic API error:', apiRes.status);
       await recordScanStage(request, env, body, {
         scanId,
         stage: 'ai_failed',
@@ -942,8 +941,8 @@ export async function onRequestPost({ request, env }) {
         candidateCount: parsed.corpusCandidates?.length || 0,
       },
     }, 200, headers);
-  } catch (err) {
-    console.error('Scan worker error:', err);
+  } catch {
+    console.error('Scan worker error');
     await recordScanStage(request, env, body, {
       scanId,
       stage: 'internal_failed',

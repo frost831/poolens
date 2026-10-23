@@ -1690,7 +1690,7 @@
           </div>
           <canvas id="scan-canvas" style="display:none;"></canvas>
         </div>
-        <div id="scan-camera-status" style="text-align:center;padding:10px;color:#7dd3fc;font-size:12px;font-weight:600;letter-spacing:.04em;">AIM AT ERROR CODE DISPLAY - TAP CAPTURE</div>
+        <div id="scan-camera-status" role="status" aria-live="polite" style="text-align:center;padding:10px;color:#7dd3fc;font-size:12px;font-weight:600;letter-spacing:.04em;">AIM AT ERROR CODE DISPLAY - TAP CAPTURE</div>
         <div id="scan-camera-controls" style="display:flex;gap:10px;padding:0 14px 14px;align-items:center;">
           <button id="scan-capture-btn" onclick="captureAndAnalyze()" style="flex:1;padding:16px;background:#0284c7;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;letter-spacing:.02em;">
             CAPTURE
@@ -1698,8 +1698,8 @@
           <button onclick="toggleFlashlight()" id="scan-flash-btn" style="padding:14px;background:#1e293b;color:#94a3b8;border:1px solid #334155;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer;" title="Flashlight">LIGHT</button>
           <button onclick="stopCamera()" style="padding:14px;background:#1e293b;color:#94a3b8;border:1px solid #334155;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer;">STOP</button>
         </div>
-        <div id="scan-result" style="padding:0 14px 80px;"></div>
-        <div id="scan-no-camera" style="display:none;padding:20px 14px;">
+        <div id="scan-result" role="region" aria-label="Scan results" aria-live="polite" aria-atomic="false" style="padding:0 14px 80px;"></div>
+        <div id="scan-no-camera" role="group" aria-label="Camera unavailable: recovery options" style="display:none;padding:20px 14px;">
           <div style="background:#1e293b;border:1px solid #334155;border-radius:12px;padding:20px;text-align:center;">
             <div style="font-size:2rem;margin-bottom:10px;">CAM</div>
             <p style="color:#e2e8f0;font-size:14px;font-weight:800;margin-bottom:7px;">Camera access is unavailable.</p>
