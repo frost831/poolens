@@ -11556,8 +11556,11 @@ function initCheckoutClientTracking() {
     requestAnimationFrame(() => { queued = false; scan(); });
   }
   new MutationObserver(schedule).observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['class', 'style', 'open'] });
-  window.addEventListener('scroll', schedule, true);
-  window.addEventListener('resize', schedule);
+  // IntersectionObserver handles viewport changes; keep the scan fallback for older browsers.
+  if (!observer) {
+    window.addEventListener('scroll', schedule, true);
+    window.addEventListener('resize', schedule);
+  }
   document.addEventListener('visibilitychange', schedule);
   function openRenderedCheckoutLink(link) {
     const plan = link.dataset.checkoutPlan;

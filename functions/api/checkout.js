@@ -170,7 +170,7 @@ async function createCheckoutSession(request, env, plan, attributionInput) {
   }
 
   if (!response.ok) {
-    console.error('SplashLens checkout session creation failed', response.status, await response.text());
+    console.error('SplashLens checkout session creation failed', response.status);
     return null;
   }
 
