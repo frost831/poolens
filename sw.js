@@ -1,4 +1,4 @@
-const CACHE = 'splashlens-v57-round2';
+const CACHE = 'splashlens-v58-public-cache';
 const ASSETS = [
   '/',
   '/js/errors.js?v=20261010-hayward-safety',
@@ -23,6 +23,12 @@ const ASSETS = [
   '/favicon.svg',
   '/manifest.json'
 ];
+const STATIC_ASSETS = new Set(ASSETS.filter(asset => asset !== '/'));
+
+function publicResponse(response) {
+  return response.ok && response.type === 'basic'
+    && !/\b(?:private|no-store)\b/i.test(response.headers.get('Cache-Control') || '');
+}
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)));
   self.skipWaiting();
@@ -47,25 +53,28 @@ self.addEventListener('fetch', e => {
   if (!sameOrigin || authenticated || url.pathname.startsWith('/api/')) return;
 
   if (e.request.mode === 'navigate') {
+    const appShell = url.pathname === '/' || url.pathname === '/index.html';
     e.respondWith(
       fetch(e.request).then(async response => {
-        if (response.ok && response.type === 'basic') {
-          caches.open(CACHE).then(cache => cache.put('/', response.clone()));
+        if (appShell && publicResponse(response) && /text\/html/i.test(response.headers.get('Content-Type') || '')) {
+          e.waitUntil?.(caches.open(CACHE).then(cache => cache.put('/', response.clone())));
         }
         if (response.type === 'error' || response.status === 0) {
-          return (await caches.match('/')) || response;
+          return appShell ? (await caches.match('/')) || response : response;
         }
         return response;
-      }).catch(async () => (await caches.match('/')) || Response.error())
+      }).catch(async () => appShell ? (await caches.match('/')) || Response.error() : Response.error())
     );
     return;
   }
 
+  if (!STATIC_ASSETS.has(`${url.pathname}${url.search}`)
+    && !url.pathname.startsWith('/js/') && !url.pathname.startsWith('/icons/')) return;
   e.respondWith(
     caches.match(e.request).then(cached => {
       if (cached) return cached;
       return fetch(e.request).then(res => {
-        if (res.ok && res.type === 'basic') {
+        if (publicResponse(res)) {
           const clone = res.clone();
           caches.open(CACHE).then(c => c.put(e.request, clone));
         }

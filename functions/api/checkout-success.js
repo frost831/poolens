@@ -36,7 +36,7 @@ async function stripeGet(path, env) {
     headers: { Authorization: `Bearer ${env.STRIPE_SECRET_KEY}` },
   });
   if (!response.ok) {
-    console.error('SplashLens Stripe lookup failed', response.status, await response.text());
+    console.error('SplashLens Stripe lookup failed', response.status);
     return null;
   }
   return response.json();
