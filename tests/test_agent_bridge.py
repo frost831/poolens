@@ -1,4 +1,5 @@
 import importlib.util
+import json
 import os
 from pathlib import Path
 from types import SimpleNamespace
@@ -43,16 +44,21 @@ def test_splashlens_repos_are_explicitly_scoped_by_machine():
     assert bridge.authorized_event(event, 'issues', 'pc', issue)
 
 
-def test_nonowner_public_and_changed_scope_are_rejected():
-    for field in ('sender', 'public', 'changed', 'author', 'closed', 'pull_request'):
+def test_nonowner_and_changed_scope_are_rejected():
+    for field in ('sender', 'changed', 'author', 'closed', 'pull_request'):
         event, issue = payload()
         if field == 'sender': event['sender'] = {'login': 'someone-else'}
-        if field == 'public': event['repository']['private'] = False
         if field == 'changed': issue['body'] = 'Edited while queued'
         if field == 'author': issue['user'] = {'login': 'someone-else'}
         if field == 'closed': issue['state'] = 'closed'
         if field == 'pull_request': issue['pull_request'] = {'url': 'PR'}
         assert not bridge.authorized_event(event, 'issues', 'mac', issue), field
+
+
+def test_public_repo_requires_an_explicit_policy():
+    event, issue = payload('frost831/throttleshare')
+    event['repository']['private'] = False
+    assert not bridge.authorized_event(event, 'issues', 'mac', issue)
 
 
 def test_duplicate_running_done_and_ambiguous_labels_do_not_execute():
@@ -82,10 +88,11 @@ def test_manual_dispatch_requires_exact_issue_and_target():
 
 
 def test_merge_never_skips_primary_ci_or_waiting_checks():
+    required = bridge.REQUIRED_CHECKS[bridge.REPO][0]
     assert not bridge.checks_passed([])
-    assert not bridge.checks_passed([{'name': 'verify', 'bucket': 'skipping'}])
-    assert not bridge.checks_passed([{'name': 'verify', 'bucket': 'pass'}, {'name': 'security', 'bucket': 'pending'}])
-    assert bridge.checks_passed([{'name': 'verify', 'bucket': 'pass'}])
+    assert not bridge.checks_passed([{'name': required, 'bucket': 'skipping'}])
+    assert not bridge.checks_passed([{'name': required, 'bucket': 'pass'}, {'name': 'security', 'bucket': 'pending'}])
+    assert bridge.checks_passed([{'name': required, 'bucket': 'pass'}])
 
 
 def test_workflow_trust_and_queue_boundaries():
@@ -161,8 +168,9 @@ def test_authentication_precedes_private_fetch(monkeypatch):
 def test_no_change_continuation_can_finish_existing_pr(monkeypatch):
     calls = []
     monkeypatch.setattr(bridge, 'gh', lambda args, **kwargs: calls.append(args))
+    required = bridge.REQUIRED_CHECKS[bridge.REPO][0]
     monkeypatch.setattr(bridge, 'execute', lambda args, **kwargs: SimpleNamespace(
-        stdout='abc123' if args[0] == 'git' else '[{"name":"verify","bucket":"pass"}]'))
+        stdout='abc123' if args[0] == 'git' else json.dumps([{'name': required, 'bucket': 'pass'}])))
     bridge.finish_pr('pr-url', {'complete': True, 'allow_merge': True}, {'isDraft': True}, ROOT, {})
     assert calls == [['pr', 'ready', 'pr-url'], ['pr', 'merge', 'pr-url', '--squash', '--match-head-commit', 'abc123']]
     source = (ROOT / 'ops/agent-bridge/run.py').read_text()
