@@ -34,20 +34,74 @@ ALLOWED_REPOS = {
 REPO = os.environ.get('GITHUB_REPOSITORY') or 'frost831/poolens'
 
 
+_SECRET_PATTERNS = [
+    (re.compile(r'(https?://)[^/@\s]+@'), r'\1***@'),
+    (re.compile(r'(?:gh[pousr]_|github_pat_|sk_live_|rk_live_)[A-Za-z0-9_]{10,}'), '***'),
+    (re.compile(r'SG\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}'), '***'),
+    (re.compile(r'(?i)(authorization:\s*(?:bearer|token|basic)\s+)\S+'), r'\1***'),
+    (re.compile(r'(?i)((?:token|password|secret|api[_-]?key)\s*[=:]\s*)\S+'), r'\1***'),
+]
+
+
+def redact(text):
+    text = str(text or '')
+    for token in {os.environ.get('GH_TOKEN'), os.environ.get('GITHUB_TOKEN'), _REDACT.get('token')}:
+        if token and len(token) >= 8:
+            text = text.replace(token, '***')
+    for pattern, repl in _SECRET_PATTERNS:
+        text = pattern.sub(repl, text)
+    return text
+
+
+_REDACT = {}
+_BODY_FLAGS = {'--body', '-b', '--input', '-m', '--message', '--title'}
+
+
+def describe_command(args):
+    shown, hide = [], False
+    for arg in map(str, args):
+        shown.append('<text>' if hide else redact(arg))
+        hide = arg in _BODY_FLAGS
+    if shown:
+        shown[0] = Path(shown[0]).name
+    return ' '.join(shown)[:400]
+
+
+def tail(text, lines=40):
+    return '\n'.join(redact(text).splitlines()[-lines:])
+
+
+class CommandError(RuntimeError):
+    def __init__(self, message, *, returncode, stderr='', stdout=''):
+        super().__init__(message)
+        self.returncode, self.stderr, self.stdout = returncode, stderr or '', stdout or ''
+
+
 def execute(args, *, cwd=None, env=None, check=True, **kwargs):
     result = subprocess.run(args, cwd=cwd, env=env, text=True, encoding='utf-8',
                             errors='replace', capture_output=True, **kwargs)
     if check and result.returncode:
-        # Never relay command lines, environment, provider tokens or private process output.
         category = 'command_error'
         detail = (result.stderr or '').lower()
         for text, label in [('http 401', 'authentication'), ('http 403', 'access_denied'),
                             ('rate limit', 'rate_limit'), ('timed out', 'network_timeout'),
-                            ('unknown flag', 'cli_version'), ('unexpected argument', 'cli_version')]:
+                            ('unknown flag', 'cli_version'), ('unexpected argument', 'cli_version'),
+                            ('non-fast-forward', 'non_fast_forward'), ('[rejected]', 'push_rejected'),
+                            ('index.lock', 'index_lock'), ('already exists', 'already_exists'),
+                            ('not a git repository', 'not_a_repository'), ('filename too long', 'path_too_long'),
+                            ('dubious ownership', 'safe_directory'), ('nothing to commit', 'nothing_to_commit')]:
             if text in detail:
                 category = label
                 break
-        raise RuntimeError(f'{Path(args[0]).name} failed (exit {result.returncode}, {category})')
+        # Log a redacted command and output tail to the runner log only (never to issue comments).
+        print(f'::group::Command failed (exit {result.returncode}): {describe_command(args)}', file=sys.stderr)
+        if result.stderr:
+            print('--- stderr (tail) ---\n' + tail(result.stderr), file=sys.stderr)
+        if result.stdout and Path(str(args[0])).name.startswith('git'):
+            print('--- stdout (tail) ---\n' + tail(result.stdout), file=sys.stderr)
+        print('::endgroup::', file=sys.stderr, flush=True)
+        raise CommandError(f'{Path(args[0]).name} failed (exit {result.returncode}, {category})',
+                           returncode=result.returncode, stderr=result.stderr, stdout=result.stdout)
     return result
 
 
@@ -137,7 +191,12 @@ def configure_git_auth(root, env):
 
 def create_isolated_checkout(root, destination, base, branch, env, *, remote=None, expected_sha=None):
     """Copy Git objects, then fetch into an independent repository, never a linked worktree."""
-    execute(['git', 'clone', '--no-hardlinks', '--no-checkout', str(root), str(destination)], env=env)
+    try:
+        execute(['git', '-c', 'core.longpaths=true', 'clone', '--no-hardlinks', '--no-checkout', str(root), str(destination)], env=env)
+    except CommandError:
+        shutil.rmtree(destination, ignore_errors=True)
+        execute(['git', 'init', '-q', str(destination)], env=env)
+        execute(['git', 'remote', 'add', 'origin', remote or f'https://github.com/{REPO}.git'], cwd=destination, env=env)
     execute(['git', 'remote', 'set-url', 'origin', remote or f'https://github.com/{REPO}.git'], cwd=destination, env=env)
     configure_git_auth(destination, env)
     execute(['git', 'fetch', 'origin', f'+refs/heads/{base}:refs/remotes/origin/{base}'], cwd=destination, env=env)
@@ -145,6 +204,115 @@ def create_isolated_checkout(root, destination, base, branch, env, *, remote=Non
     if expected_sha and sha != expected_sha:
         raise RuntimeError('Existing task PR changed during pickup; retry after reviewing it')
     execute(['git', 'switch', '-c', branch, f'origin/{base}'], cwd=destination, env=env)
+
+
+def git_process_running():
+    try:
+        if os.name == 'nt':
+            out = subprocess.run(['tasklist', '/FI', 'IMAGENAME eq git.exe'], capture_output=True, text=True).stdout
+            return 'git.exe' in out.lower()
+        return subprocess.run(['pgrep', '-x', 'git'], capture_output=True).returncode == 0
+    except OSError:
+        return True  # Unknown: be safe and keep the lock.
+
+
+def recover_git_state(worktree, env, branch):
+    """Remove a stale index.lock only when no git process runs; reattach a detached HEAD."""
+    lock = Path(worktree) / '.git' / 'index.lock'
+    if lock.exists():
+        if git_process_running():
+            raise RuntimeError('git index.lock is held by a running git process; retry later')
+        lock.unlink()
+        print('Removed stale .git/index.lock', file=sys.stderr)
+    head = execute(['git', 'symbolic-ref', '-q', 'HEAD'], cwd=worktree, env=env, check=False)
+    if head.returncode:
+        local = branch
+        while execute(['git', 'rev-parse', '-q', '--verify', f'refs/heads/{local}'], cwd=worktree, env=env,
+                      check=False).returncode == 0:
+            local += '-detached'
+        execute(['git', 'switch', '-c', local], cwd=worktree, env=env)
+        print(f'Reattached detached HEAD to {local}', file=sys.stderr)
+
+
+def remote_branch_exists(worktree, env, name):
+    out = execute(['git', 'ls-remote', '--heads', 'origin', f'refs/heads/{name}'], cwd=worktree, env=env)
+    return bool(out.stdout.strip())
+
+
+def push_branch(worktree, env, name, *, allow_existing=False, attempts=5):
+    """Push without force. Rejected/existing branches go to a new suffixed branch. Returns branch used."""
+    candidate = name
+    for index in range(attempts):
+        if index:
+            candidate = f'{name}-r{index}'
+        if not (allow_existing and index == 0) and remote_branch_exists(worktree, env, candidate):
+            execute(['git', 'fetch', 'origin', f'+refs/heads/{candidate}:refs/remotes/origin/{candidate}'],
+                    cwd=worktree, env=env, check=False)
+            continue
+        try:
+            execute(['git', 'push', '--set-upstream', 'origin', f'HEAD:refs/heads/{candidate}'], cwd=worktree, env=env)
+            return candidate
+        except CommandError as error:
+            text = error.stderr.lower()
+            if not any(k in text for k in ('non-fast-forward', 'rejected', 'already exists', 'fetch first', 'stale info')):
+                raise
+            print(f'Push to {candidate} rejected; trying a suffixed branch', file=sys.stderr)
+    raise RuntimeError(f'Could not push work to any branch derived from {name}')
+
+
+def open_pr_for(env, head, repo=None):
+    out = execute(['gh', 'pr', 'list', '--repo', repo or REPO, '--head', head, '--state', 'open', '--json', 'url'],
+                  env=env, check=False)
+    try:
+        rows = json.loads(out.stdout or '[]')
+    except ValueError:
+        rows = []
+    return rows[0]['url'] if rows else None
+
+
+def publish(worktree, env, *, number, title, base, remote_branch, previous, body, complete, warnings, repo=None):
+    """Commit, push and open/update the PR. Returns PR url (or None when nothing to commit)."""
+    recover_git_state(worktree, env, remote_branch if not previous else f'agent/{number}-recovered')
+    if not execute(['git', 'status', '--porcelain'], cwd=worktree, env=env).stdout.strip():
+        return previous['url'] if previous else None
+    execute(['git', 'diff', '--check'], cwd=worktree, env=env)
+    execute(['git', 'add', '--all'], cwd=worktree, env=env)
+    assert_no_staged_secrets(worktree, env)
+    if execute(['git', 'diff', '--cached', '--quiet'], cwd=worktree, env=env, check=False).returncode == 0:
+        return previous['url'] if previous else None
+    execute(['git', 'commit', '-m', f'Agent #{number}: {title[:120]}'], cwd=worktree, env=env)
+    pushed = push_branch(worktree, env, remote_branch, allow_existing=bool(previous))
+    if previous and pushed == remote_branch:
+        gh(['pr', 'comment', previous['url'], '--body', body], env=env)
+        return previous['url']
+    if previous:
+        warnings.append(f'Existing PR branch moved; work saved to `{pushed}`')
+    existing = open_pr_for(env, pushed, repo)
+    if existing:
+        gh(['pr', 'comment', existing, '--body', body], env=env)
+        return existing
+    args = ['pr', 'create', '--repo', repo or REPO, '--head', pushed, '--base', base,
+            '--title', title[:180], '--body', body]
+    if not complete:
+        args.append('--draft')
+    try:
+        return gh(args, env=env)
+    except CommandError as error:
+        existing = open_pr_for(env, pushed, repo)
+        if existing and 'already exists' in error.stderr.lower():
+            gh(['pr', 'comment', existing, '--body', body], env=env)
+            return existing
+        raise
+
+
+def safe_gh(args, *, env, warnings=None):
+    try:
+        return gh(args, env=env)
+    except Exception as error:  # Reporting must not mask the task result.
+        print(f'Warning: reporting step failed: {error}', file=sys.stderr)
+        if warnings is not None:
+            warnings.append(f'Reporting step failed: {error}')
+        return None
 
 
 def finish_pr(pr_url, result, previous, worktree, env):
@@ -228,6 +396,7 @@ def main():
     env.pop('GITHUB_TOKEN', None)
     token = gh(['auth', 'token', '--user', OWNER], env=env)
     env['GH_TOKEN'] = token
+    _REDACT['token'] = token
     if json.loads(gh(['api', 'user'], env=env))['login'] != OWNER:
         raise RuntimeError('Runner gh identity must be frost831')
     repo_meta = json.loads(gh(['api', f'repos/{repo}'], env=env))
@@ -250,7 +419,7 @@ def main():
     gh(['issue', 'edit', number, '--repo', repo, '--add-label', 'agent:running',
         '--remove-label', 'agent:done', '--remove-label', 'agent:failed'], env=env)
     try:
-        gh(['issue', 'comment', number, '--repo', repo, '--body',
+        safe_gh(['issue', 'comment', number, '--repo', repo, '--body',
             f'{marker}\nPicked up automatically by **{machine}** runner `{os.environ.get("RUNNER_NAME", "unknown")}`. [Run]({run_url})'], env=env)
         root = Path(os.environ['GITHUB_WORKSPACE']).resolve()
         temp = Path(os.environ['RUNNER_TEMP']).resolve() / f'ts-agent-{run_id}-{os.environ.get("GITHUB_RUN_ATTEMPT", "1")}'
@@ -300,37 +469,38 @@ OWNER FOLLOW-UP:
         if set(result) != set(result_schema()['required']) or any(
             type(result[k]) is not bool for k in ('complete', 'allow_merge')):
             raise RuntimeError('Agent returned an invalid completion record')
-        changes = execute(['git', 'status', '--porcelain'], cwd=worktree, env=env).stdout
+        warnings = []
+        body = (f'{result["summary"]}\n\n## Tests\n{result["tests"]}\n\n'
+                f'## Blocked\n{result["blocked"] or "None reported"}\n\n'
+                f'{"Closes" if result["complete"] else "Refs"} #{number}\n\n[Agent run]({run_url})')
         pr_url = previous['url'] if previous else None
-        if changes:
-            execute(['git', 'diff', '--check'], cwd=worktree, env=env)
-            execute(['git', 'add', '--all'], cwd=worktree, env=env)
-            assert_no_staged_secrets(worktree, env)
-            assert_repo_policy(worktree, env, repo, machine)
-            execute(['git', 'commit', '-m', f'Agent #{number}: {issue["title"][:120]}'], cwd=worktree, env=env)
-            execute(['git', 'push', '--set-upstream', 'origin', f'HEAD:refs/heads/{remote_branch}'], cwd=worktree, env=env)
-            body = (f'{result["summary"]}\n\n## Tests\n{result["tests"]}\n\n'
-                    f'## Blocked\n{result["blocked"] or "None reported"}\n\n'
-                    f'{"Closes" if result["complete"] else "Refs"} #{number}\n\n[Agent run]({run_url})')
-            if previous:
-                gh(['pr', 'comment', pr_url, '--body', body], env=env)
-            else:
-                args = ['pr', 'create', '--repo', repo, '--head', branch, '--base', policy['default_branch'],
-                        '--title', issue['title'][:180], '--body', body]
-                if not result['complete']:
-                    args.append('--draft')
-                pr_url = gh(args, env=env)
-        finish_pr(pr_url, result, previous, worktree, env)
+        try:
+            pr_url = publish(worktree, env, number=number, title=issue['title'],
+                             base=policy['default_branch'], remote_branch=remote_branch,
+                             previous=previous, body=body, complete=result['complete'], warnings=warnings, repo=repo)
+            finish_pr(pr_url, result, previous, worktree, env)
+        except Exception as error:
+            # Post-task push/PR problems are warnings: the task result stands. Try to save work.
+            warnings.append(f'Publish stage: {error}')
+            try:
+                saved = push_branch(worktree, env, f'{branch}-saved')
+                warnings.append(f'Work saved to branch `{saved}`')
+            except Exception as save_error:
+                warnings.append(f'Could not save work remotely: {save_error}; it remains in {worktree}')
         final = (f'{marker}\n{result["summary"]}\n\nTests: {result["tests"]}\n\n'
                  f'PR: {pr_url or "No code changes required"}\n\n'
-                 f'Blocked: {result["blocked"] or "None reported"}\n\n[Run]({run_url})')
-        gh(['issue', 'comment', number, '--repo', repo, '--body', final[:20000]], env=env)
-        gh(['issue', 'edit', number, '--repo', repo, '--remove-label', 'agent:running',
+                 f'Blocked: {result["blocked"] or "None reported"}\n\n'
+                 + (''.join(f'Warning: {w}\n' for w in warnings) + '\n' if warnings else '')
+                 + f'[Run]({run_url})')
+        safe_gh(['issue', 'comment', number, '--repo', repo, '--body', final[:20000]], env=env)
+        safe_gh(['issue', 'edit', number, '--repo', repo, '--remove-label', 'agent:running',
             '--add-label', 'agent:done' if result['complete'] else 'agent:failed'], env=env)
+        for warning in warnings:
+            print(f'::warning::{redact(warning)}', file=sys.stderr)
     except Exception as exc:
-        gh(['issue', 'comment', number, '--repo', repo, '--body',
+        safe_gh(['issue', 'comment', number, '--repo', repo, '--body',
             f'{marker}\nBridge stopped: {exc}\n\n[Run]({run_url}). No completion is claimed.'], env=env)
-        gh(['issue', 'edit', number, '--repo', repo, '--remove-label', 'agent:running',
+        safe_gh(['issue', 'edit', number, '--repo', repo, '--remove-label', 'agent:running',
             '--add-label', 'agent:failed'], env=env)
         raise
 
