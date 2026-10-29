@@ -7,12 +7,14 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		A4C3029C68D94B8FBFD5039E /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = E4FD672B477D41E9B5F68209 /* LaunchScreen.storyboard */; };
 		29B9C82C714E1113A4B84960 /* SplashLensApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 963CE621AC96A7DDF970F9A8 /* SplashLensApp.swift */; };
 		62E70562313F6E2C9E806611 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 0FE108BCC6E27707D3B8C05A /* Assets.xcassets */; };
 		63361558056424635950E368 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD21C411B127DD8FFDD63297 /* ContentView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		E4FD672B477D41E9B5F68209 /* LaunchScreen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		0FE108BCC6E27707D3B8C05A /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		300DCC78343D79A4D0955011 /* Base.lproj */ = {isa = PBXFileReference; path = Base.lproj; sourceTree = "<group>"; };
 		963CE621AC96A7DDF970F9A8 /* SplashLensApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplashLensApp.swift; sourceTree = "<group>"; };
@@ -47,6 +49,7 @@
 			children = (
 				0FE108BCC6E27707D3B8C05A /* Assets.xcassets */,
 				300DCC78343D79A4D0955011 /* Base.lproj */,
+				E4FD672B477D41E9B5F68209 /* LaunchScreen.storyboard */,
 			);
 			path = ios;
 			sourceTree = "<group>";
@@ -120,6 +123,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				62E70562313F6E2C9E806611 /* Assets.xcassets in Resources */,
+				A4C3029C68D94B8FBFD5039E /* LaunchScreen.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -211,7 +215,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 18;
+				CURRENT_PROJECT_VERSION = 19;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = 2XSLXV9H74;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -278,7 +282,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 18;
+				CURRENT_PROJECT_VERSION = 19;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = 2XSLXV9H74;
 				ENABLE_NS_ASSERTIONS = NO;
