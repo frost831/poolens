@@ -2,23 +2,26 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import test from 'node:test';
 import vm from 'node:vm';
+import { i18nText } from '../js/i18n.js';
 
 const app = readFileSync(new URL('../js/app.js', import.meta.url), 'utf8');
 const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
 const closingCode = app.slice(app.indexOf('const CLOSING_PHOTO_PROOFS = ['), app.indexOf('function renderChecklist()'));
+const checklistCode = app.slice(app.indexOf('function renderChecklist()'), app.indexOf('async function resetChecklist()'));
 
-function harness({ storeShell = false, plans = [] } = {}) {
+function harness({ storeShell = false, plans = [], shortFlag = false, realChecklist = false, clientId = 'scan-test-client' } = {}) {
   const events = [];
   const shared = [];
   const checkoutCalls = [];
   const storage = new Map();
-  const elements = new Map([['closing-proof-content', { hidden: true, innerHTML: '' }], ['closing-pass-offer', { innerHTML: '' }]]);
-  const state = { clType: 'closing', checklists: { closing: {} } };
+  const elements = new Map([['closing-proof-content', { hidden: true, innerHTML: '' }], ['closing-pass-offer', { innerHTML: '' }], ['checklist-content', { innerHTML: '' }], ['progress-text', { textContent: '', style: {} }]]);
+  const state = { clType: 'closing', checklists: { closing: {}, closingShort: {} } };
   const context = vm.createContext({
     S: state,
     CL_MAP: { closing: { data: () => [{ steps: ['First', 'Second'] }], key: 'closing-test', label: 'Closing', freq: 'Season Progress' } },
     document: { getElementById: id => elements.get(id) || null },
-    localStorage: { setItem: (key, value) => storage.set(key, value) },
+    localStorage: { getItem: key => storage.get(key) || null, setItem: (key, value) => storage.set(key, value), removeItem: key => storage.delete(key) },
+    getScanClientId: () => clientId,
     escAttr: value => String(value).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;'),
     escHtml: value => String(value).replace(/&/g, '&amp;').replace(/</g, '&lt;'),
     isStoreShellMode: () => storeShell,
@@ -26,17 +29,21 @@ function harness({ storeShell = false, plans = [] } = {}) {
     trackSplashLensEvent: (name, props) => events.push({ name, props }),
     shareFieldPacket: async packet => { shared.push(packet); return { channel: 'share_sheet' }; },
     renderChecklist: () => {},
-    setEl: () => {},
+    setEl: (id, value) => { if (elements.has(id)) elements.get(id).innerHTML = value; },
+    a3ClosingText: value => value,
     a3Text: key => ({
       'closing.coverInstalled': 'Cover installed',
       'closing.winterPlugs': 'Winter and drain plugs',
       'closing.equipment': 'Equipment drained',
       'closing.chemistryRecord': 'Closing chemistry record',
+      'closing.shortNotice': i18nText('en', 'closing.shortNotice'),
+      'closing.openFullChecklist': i18nText('en', 'closing.openFullChecklist'),
     })[key] || key,
     updateProgress: () => {},
     startWebCheckout: (...args) => checkoutCalls.push(args),
   });
-  vm.runInContext(closingCode, context);
+  vm.runInContext(shortFlag ? closingCode.replace('enabled: false, rolloutPercent: 50', `enabled: true, rolloutPercent: ${shortFlag === 'ab' ? 50 : 100}`) : closingCode, context);
+  if (realChecklist) vm.runInContext(checklistCode, context);
   return { context, state, events, shared, elements, storage, checkoutCalls };
 }
 
@@ -74,6 +81,54 @@ test('closing checklist links land in the guide while field60 remains a checklis
     assert.deepEqual(tabs, ['guide'], query);
     assert.deepEqual(types, ['closing'], query);
   }
+});
+
+test('step events identify the full-flow drop position without sending user-entered proof', () => {
+  const h = harness({ realChecklist: true });
+  h.context.switchClType('closing');
+  h.context.toggleItem(0, 0);
+  h.context.toggleItem(0, 1);
+  h.context.toggleItem(0, 1);
+  const steps = h.events.filter(event => event.name === 'closing_checklist_step_changed');
+  assert.deepEqual(steps.map(event => event.props.step_index), [1, 2, 2]);
+  assert.deepEqual(steps.map(event => event.props.checked), [true, true, false]);
+  assert.equal(steps[0].props.step_name, 'First');
+  assert.equal(steps[0].props.variant, 'full');
+  assert.equal(h.events.find(event => event.name === 'closing_checklist_started').props.variant, 'full');
+});
+
+test('flag-off keeps the full flow; flagged short flow has separate state and cannot unlock proof', async () => {
+  const off = harness({ realChecklist: true });
+  off.context.switchClType('closing');
+  assert.doesNotMatch(off.elements.get('checklist-content').innerHTML, /Quick closing guide/);
+
+  const h = harness({ shortFlag: true, realChecklist: true });
+  h.context.switchClType('closing');
+  assert.match(h.elements.get('checklist-content').innerHTML, /Quick closing guide/);
+  assert.equal(h.elements.get('closing-proof-content').hidden, true);
+  for (let phase = 0; phase < 6; phase++) h.context.toggleItem(phase, 0);
+  assert.equal(h.events.filter(event => event.name === 'closing_checklist_short_completed').length, 1);
+  assert.equal(h.events.filter(event => event.name === 'closing_checklist_completed').length, 0);
+  assert.equal(h.storage.has('closing-test'), false);
+  assert.equal(h.storage.has('poolens-cl-closing-short-v1'), true);
+  await h.context.textClosingProofPacket();
+  assert.equal(h.shared.length, 0);
+  h.context.showFullClosingChecklist();
+  assert.doesNotMatch(h.elements.get('checklist-content').innerHTML, /Quick closing guide/);
+  assert.equal(h.elements.get('closing-proof-content').hidden, false);
+  assert.equal(h.state.checklists.closing['0-0'], undefined);
+  assert.match(i18nText('es', 'closing.shortNotice'), /no acredita la preparación invernal/);
+});
+
+test('enabled A/B assignment is stable and splits client IDs between variants', () => {
+  const assignments = new Set();
+  for (let i = 0; i < 30; i++) {
+    const h = harness({ shortFlag: 'ab', clientId: `scan-client-${i}` });
+    const first = h.context.closingChecklistAssignment();
+    assert.equal(h.context.closingChecklistAssignment(), first);
+    assignments.add(first);
+  }
+  assert.deepEqual([...assignments].sort(), ['full', 'short']);
 });
 
 test('field60 closing route opens the checklist rather than the report intro', () => {
