@@ -2980,6 +2980,7 @@ async function openSplashLensAccount() {
               <span style="color:#64748b;font-size:11px;white-space:nowrap;">${escHtml(String(event.createdAt || '').slice(0, 10))}</span>
             </div>`).join('')}
         ` : `<p style="color:#64748b;font-size:12px;line-height:1.45;">No recent account activity yet. Run one lookup, PartSnap scan, proof packet, or feedback action and it will start shaping the account trail.</p>`}
+        <p style="margin-top:16px;"><a href="/data-deletion.html" style="color:#b91c1c;font-size:13px;font-weight:800;">Delete account or data</a></p>
       </section>`;
     wireSplashLensTeamActions(wrap);
     trackSplashLensEvent('account_dashboard_opened', {

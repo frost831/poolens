@@ -1,10 +1,10 @@
-const CACHE = 'splashlens-v54-gallery-recovery';
+const CACHE = 'splashlens-v55-privacy-deletion';
 const ASSETS = [
   '/',
   '/js/errors.js?v=20261010-hayward-safety',
   '/js/data.js?v=20261013-crew',
   '/js/i18n.js?v=20261013-crew',
-  '/js/app.js?v=20261019-gallery-recovery',
+  '/js/app.js?v=20261030-privacy-deletion',
   '/js/stop-flow.js?v=20261012-stop-flow',
   '/js/day-recap.js?v=20261012-day-recap',
   '/js/morning-route.js?v=20261012-morning-route',
@@ -47,16 +47,17 @@ self.addEventListener('fetch', e => {
   if (!sameOrigin || authenticated || url.pathname.startsWith('/api/')) return;
 
   if (e.request.mode === 'navigate') {
+    const appShell = url.pathname === '/' || url.pathname === '/index.html';
     e.respondWith(
       fetch(e.request).then(async response => {
-        if (response.ok && response.type === 'basic') {
+        if (appShell && response.ok && response.type === 'basic') {
           caches.open(CACHE).then(cache => cache.put('/', response.clone()));
         }
         if (response.type === 'error' || response.status === 0) {
-          return (await caches.match('/')) || response;
+          return appShell ? (await caches.match('/')) || response : response;
         }
         return response;
-      }).catch(async () => (await caches.match('/')) || Response.error())
+      }).catch(async () => appShell ? (await caches.match('/')) || Response.error() : Response.error())
     );
     return;
   }

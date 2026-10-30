@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Data Deletion - SplashLens</title>
-  <meta name="description" content="How to delete SplashLens local data or request deletion of support and waitlist records.">
+  <title>Delete Your Account or Data - SplashLens</title>
+  <meta name="description" content="Verify your SplashLens email and request deletion of your account or saved server data without contacting support.">
   <link rel="canonical" href="https://app.splashlens.com/data-deletion.html">
   <style>
     body { margin:0; font-family:system-ui,-apple-system,Segoe UI,sans-serif; color:#0f172a; background:#f8fafc; line-height:1.65; }
@@ -14,13 +14,20 @@
     h2 { color:#075985; margin-top:28px; }
     a { color:#0369a1; }
     .card { background:white; border:1px solid #e2e8f0; border-radius:8px; padding:20px; margin-top:18px; }
+    label { display:block; font-weight:650; margin:16px 0 6px; }
+    input, select, button { box-sizing:border-box; width:100%; padding:12px; font:inherit; border:1px solid #94a3b8; border-radius:6px; }
+    button { background:#0369a1; color:white; border:0; margin-top:12px; cursor:pointer; }
+    button:disabled { opacity:.55; cursor:default; }
+    [hidden] { display:none !important; }
+    #status { padding:14px; border-left:4px solid #0369a1; background:#e0f2fe; }
+    #status[data-error="true"] { border-color:#b91c1c; background:#fee2e2; }
   </style>
 </head>
 <body>
   <header>
     <div class="wrap">
-      <h1>Data Deletion</h1>
-      <p>SplashLens keeps most field data on your device. Here is how to remove it.</p>
+      <h1>Delete Your SplashLens Account or Data</h1>
+      <p>Submit a verified request here. You do not need to call, send an email, or install the app.</p>
     </div>
   </header>
   <main class="wrap">
@@ -28,14 +35,41 @@
       <h2>Delete Local App Data</h2>
       <p>Pool profiles, chemistry logs, route notes, checklists, and service report drafts are stored locally on your device. To delete them, clear SplashLens site/app storage in your browser or uninstall the app/PWA and remove its data.</p>
     </div>
-    <div class="card">
-      <h2>Request Server-Side Deletion</h2>
-      <p>If you sent us an email, joined a waitlist, requested support, or activated an entitlement, email <a href="mailto:hello@splashlens.com">hello@splashlens.com</a> with the subject "SplashLens data deletion request". Include the email address you used so we can locate the record.</p>
-    </div>
+    <section class="card" aria-labelledby="request-heading">
+      <h2 id="request-heading">Request Account or Server Data Deletion</h2>
+      <p>Verify the email used for your SplashLens account, choose a scope, and type DELETE. Requests are processed manually within 30 days, with completion confirmed to your verified email. Submitting a request does not mean deletion has already happened.</p>
+      <form id="deletion-form">
+        <label for="email">SplashLens account email</label>
+        <input id="email" name="email" type="email" autocomplete="email" maxlength="180" required>
+        <button type="button" id="send-code">Send verification code</button>
+        <div id="verify-section" hidden>
+          <label for="code">Email verification code</label>
+          <input id="code" type="text" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" required>
+          <button type="button" id="verify-code">Verify email</button>
+        </div>
+        <label for="scope">What should we delete?</label>
+        <select id="scope" name="scope">
+          <option value="account">My account and associated personal data</option>
+          <option value="data">My saved content and identifiable activity; keep my account</option>
+        </select>
+        <label for="confirmation">Type DELETE to confirm your request</label>
+        <input id="confirmation" name="confirmation" pattern="DELETE" autocomplete="off" required>
+        <button id="submit-request" type="submit" disabled>Submit deletion request</button>
+      </form>
+      <p id="status" role="status" aria-live="polite">A fresh email verification protects your account. No deletion occurs when you send a code.</p>
+      <noscript><p>This verified request form needs JavaScript. Enable JavaScript to submit a request online.</p></noscript>
+    </section>
+    <section class="card">
+      <h2>What Is Deleted or Kept</h2>
+      <p>Account deletion covers your account/profile contact information, user-owned saved proof and content, and identifiable activity associated with the account. A data-only request removes saved content and identifiable activity while retaining the account/profile needed to sign in. Shared user-owned content is included in the review; other team members' accounts are not deleted.</p>
+      <p>Limited transaction, security, or audit records may need to be retained where legally required. The completion response identifies any retained data, the reason, and the applicable retention period. The request record is kept while processing and its personal data is removed after completion and confirmation. Provider processing and legally required retention may have separate limits described in our privacy policy.</p>
+      <p>Deleting an account does not automatically cancel a subscription billed by Apple, Google, or another payment provider. You can request deletion now and manage any subscription separately in the provider's subscription settings.</p>
+    </section>
     <div class="card">
       <h2>Privacy Policy</h2>
       <p>Read the full policy at <a href="/privacy.html">https://app.splashlens.com/privacy.html</a>.</p>
     </div>
   </main>
+  <script src="/js/privacy-deletion.js" defer></script>
 </body>
 </html>
