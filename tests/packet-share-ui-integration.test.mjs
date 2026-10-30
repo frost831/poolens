@@ -98,7 +98,7 @@ test('saved PartSnap stops have a short Spanish text handoff without a fitment c
   assert.match(shared[0], /Pieza posible: Hayward pump lid/);
   assert.match(shared[0], /Aún se necesita: Model plate/);
   assert.equal(events[1][1].surface, 'partsnap_stop');
-  assert.match(app, /onclick="textPartSnapProofStop\('\$\{escAttr\(stop.id\)\}'\)"/);
+  assert.match(app, /data-app-action="textPartSnapProofStop" data-arg0="\$\{escAttr\(stop.id\)\}"/);
 });
 
 test('live Text it is completion-gated and no new send or commerce UI is introduced', () => {
