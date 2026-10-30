@@ -10,12 +10,20 @@ export async function onRequest({ request, env }) {
   assetUrl.pathname = '/data-deletion';
   assetUrl.search = '';
 
-  const assetResponse = await env.ASSETS.fetch(new Request(assetUrl, request));
+  const assetResponse = await env.ASSETS.fetch(new Request(assetUrl));
+  const html = await assetResponse.text();
+  if (!assetResponse.ok || !html.includes('id="deletion-form"')) {
+    return new Response('The deletion request page is temporarily unavailable.', {
+      status: 503, headers: { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'no-store' },
+    });
+  }
   const headers = new Headers(assetResponse.headers);
+  headers.delete('Content-Length');
+  headers.delete('Content-Encoding');
   headers.set('Cache-Control', 'public, max-age=0, must-revalidate');
   headers.set('Content-Type', 'text/html; charset=utf-8');
 
-  return new Response(request.method === 'HEAD' ? null : assetResponse.body, {
+  return new Response(request.method === 'HEAD' ? null : html, {
     status: 200,
     headers,
   });

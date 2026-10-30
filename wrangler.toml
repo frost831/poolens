@@ -10,3 +10,13 @@ id = "05a02cae79bc40039fb7b29559b0a271"
 binding = "SUBSCRIBERS_DB"
 database_name = "splashlens-subscribers"
 database_id = "f474defb-4337-42ec-b143-7b37fc949761"
+
+# Preserve the project's existing isolated preview stores during CLI deployments.
+[[env.preview.kv_namespaces]]
+binding = "SCAN_USAGE_KV"
+id = "306b5f0caa824923abbab3dc6e87d8e1"
+
+[[env.preview.d1_databases]]
+binding = "SUBSCRIBERS_DB"
+database_name = "splashlens-subscribers-preview"
+database_id = "3ab2028b-3980-4dd9-953b-2249120ed547"
