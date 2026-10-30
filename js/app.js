@@ -4853,7 +4853,7 @@ const SHORT_CLOSING_CHECKLIST = [
   { phase: 'Closing record and follow-up', steps: ['Record completed and declined work, missing proof, callback risks, and spring follow-up in the job record.'] },
 ];
 const SHORT_CLOSING_KEY = 'poolens-cl-closing-short-v1';
-let closingChecklistStarted = false;
+const closingChecklistStartedVariants = new Set();
 let closingChecklistView = '';
 let closingPassOfferShown = false;
 let closingOfferRequest = 0;
@@ -4890,6 +4890,7 @@ function showFullClosingChecklist() {
   if (!closingChecklistIsShort()) return;
   closingChecklistView = 'full';
   trackSplashLensEvent('closing_checklist_full_opened', { assignment: closingChecklistAssignment() });
+  trackClosingChecklistStart();
   renderChecklist();
 }
 
@@ -4903,16 +4904,18 @@ function closingChecklistStatus() {
 }
 
 function trackClosingChecklistStart() {
-  if (closingChecklistStarted) return;
-  closingChecklistStarted = true;
+  const variant = closingChecklistIsShort() ? 'short' : 'full';
+  if (closingChecklistStartedVariants.has(variant)) return;
+  closingChecklistStartedVariants.add(variant);
   if (typeof trackFirstActionStarted === 'function') {
     trackFirstActionStarted(typeof getSplashLensRole === 'function' ? getSplashLensRole() : '', 'closing_checklist');
   }
   const { checked, photos } = closingChecklistStatus();
   trackSplashLensEvent('closing_checklist_started', {
-    steps: closingChecklistIsShort() ? Object.values(S.checklists.closingShort || {}).filter(Boolean).length : checked,
-    photos: closingChecklistIsShort() ? 0 : photos,
-    variant: closingChecklistIsShort() ? 'short' : 'full',
+    steps: variant === 'short' ? Object.values(S.checklists.closingShort || {}).filter(Boolean).length : checked,
+    photos: variant === 'short' ? 0 : photos,
+    variant,
+    assignment: closingChecklistAssignment(),
   });
 }
 
@@ -4920,7 +4923,7 @@ function closingChecklistChanged(wasComplete) {
   renderClosingProof();
   const status = closingChecklistStatus();
   if (!wasComplete && status.complete) {
-    trackSplashLensEvent('closing_checklist_completed', { steps: status.checked, photos: status.photos, variant: 'full' });
+    trackSplashLensEvent('closing_checklist_completed', { steps: status.checked, photos: status.photos, variant: 'full', assignment: closingChecklistAssignment() });
   }
 }
 
@@ -5207,9 +5210,10 @@ function toggleItem(pi, si) {
   localStorage.setItem(activeChecklistKey(), JSON.stringify(cl));
   if (closing) {
     // Observed drop step: unavailable until post-release step events exist; the historical 63 starts/1 completion cannot identify it.
-    // Group by variant and count unique fresh starts plus checked=true steps in index order, then comment on the first material fall.
+    // For each assigned cohort, count unique sessions with a start and checked=true at each step_index, in order. The first material fall identifies the drop step.
     trackSplashLensEvent('closing_checklist_step_changed', {
       variant: short ? 'short' : 'full',
+      assignment: closingChecklistAssignment(),
       step_index: phases.slice(0, pi).reduce((count, phase) => count + phase.steps.length, 0) + si + 1,
       step_name: step,
       phase_index: pi + 1,
@@ -5223,7 +5227,7 @@ function toggleItem(pi, si) {
   updateProgress();
   if (short) {
     const nowComplete = shortClosingComplete(cl);
-    if (!wasShortComplete && nowComplete) trackSplashLensEvent('closing_checklist_short_completed', { variant: 'short', steps: total });
+    if (!wasShortComplete && nowComplete) trackSplashLensEvent('closing_checklist_short_completed', { variant: 'short', assignment: closingChecklistAssignment(), steps: total });
   } else if (closing) closingChecklistChanged(wasComplete);
 }
 

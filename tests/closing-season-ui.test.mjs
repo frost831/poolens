@@ -94,6 +94,8 @@ test('step events identify the full-flow drop position without sending user-ente
   assert.deepEqual(steps.map(event => event.props.checked), [true, true, false]);
   assert.equal(steps[0].props.step_name, 'First');
   assert.equal(steps[0].props.variant, 'full');
+  assert.equal(steps[0].props.assignment, 'full');
+  assert.equal(Object.values(steps[0].props).some(value => String(value).includes('cover.jpg')), false);
   assert.equal(h.events.find(event => event.name === 'closing_checklist_started').props.variant, 'full');
 });
 
@@ -117,6 +119,12 @@ test('flag-off keeps the full flow; flagged short flow has separate state and ca
   assert.doesNotMatch(h.elements.get('checklist-content').innerHTML, /Quick closing guide/);
   assert.equal(h.elements.get('closing-proof-content').hidden, false);
   assert.equal(h.state.checklists.closing['0-0'], undefined);
+  h.context.toggleItem(0, 0);
+  const starts = h.events.filter(event => event.name === 'closing_checklist_started');
+  assert.deepEqual(starts.map(event => event.props.variant), ['short', 'full']);
+  assert.deepEqual(starts.map(event => event.props.assignment), ['short', 'short']);
+  const fullStep = h.events.find(event => event.name === 'closing_checklist_step_changed' && event.props.variant === 'full');
+  assert.equal(fullStep.props.assignment, 'short');
   assert.match(i18nText('es', 'closing.shortNotice'), /no acredita la preparación invernal/);
 });
 
