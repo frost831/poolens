@@ -351,6 +351,12 @@ async function verifyCode({ request, env, headers, body, email, props }) {
   const signedProfile = await signProfileToken(secret, email);
   const signedAccount = await signAccountToken(secret, email);
 
+  // Privacy verification proves email ownership without creating/updating a scanner account.
+  if (found.source_feature === 'privacy_deletion') {
+    await env.SUBSCRIBERS_DB.prepare('DELETE FROM free_profile_verifications WHERE email = ?').bind(email).run();
+    return json({ ok: true, email, accountToken: signedAccount.token, accountTokenExpiresAt: signedAccount.expiresAt }, 200, headers);
+  }
+
   await env.SUBSCRIBERS_DB.prepare(
     `INSERT INTO free_profiles (
       email, name, company, role, source_feature, first_client_id, last_client_id, first_path, last_path, user_agent, referrer, country, verified_at, profile_token_last_issued_at
