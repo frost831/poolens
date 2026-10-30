@@ -80,7 +80,7 @@ test('saving job history requires a free save profile signal', () => {
 test('service worker cache version ships the newest account bundle', () => {
   const shellAppUrl = shell.match(/<script src="(\/js\/app\.js\?v=[^"]+)"/ )?.[1];
   const precacheAppUrl = sw.match(/'(\/js\/app\.js\?v=[^']+)'/)?.[1];
-  assert.equal(shellAppUrl, '/js/app.js?v=20261030-closing-steps');
+  assert.equal(shellAppUrl, '/js/app.js?v=20261030-closing-cohorts');
   assert.equal(precacheAppUrl, shellAppUrl);
   assert.match(shell, /\/js\/i18n\.js\?v=20261030-closing-short/);
   assert.match(sw, /\/js\/i18n\.js\?v=20261030-closing-short/);
@@ -90,7 +90,7 @@ test('service worker cache version ships the newest account bundle', () => {
   assert.match(app, /import\('\.\/packet-share\.js\?v=20261009-restart-a4'\)/);
   assert.match(sw, /\/js\/packet-share\.js\?v=20261009-restart-a4/);
   assert.match(shell, /errors\.js\?v=20261010-hayward-safety/);
-  assert.match(sw, /const CACHE = 'splashlens-v59-public-cache'/);
+  assert.match(sw, /const CACHE = 'splashlens-v60-public-cache'/);
   assert.match(sw, /\/js\/crm-proof-export\.js\?v=20261009-pc20/);
   assert.match(sw, /errors\.js\?v=20261010-hayward-safety/);
   assert.match(sw, /keys\.filter\(k => k !== CACHE\)/);
