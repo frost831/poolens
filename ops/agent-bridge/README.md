@@ -64,10 +64,25 @@ An owner `/codex` comment restarts a completed/failed task with explicit follow-
 - The bridge reports pickup, summary, tests, PR and blockers on the issue. It marks `agent:done` only when Codex reports completion and the requested PR operation succeeds.
 - Completed changes can merge only after the primary `verify` check passes and every other reported check is passing/skipped. The merge matches the exact tested head SHA. PR-only instructions disable merge. Empty/pending checks never count as green.
 - No task authorizes email, production mutations, payment movement or store submission merely by being labeled. Exact task instructions and repository gates still apply.
-- SplashLens Mac tasks in `frost831/poolens` may change only `ios/` and `android-twa/`. App Store Connect uploads, Play uploads, Android signing automation and new secrets stop for Josh approval.
+- SplashLens Mac tasks in `frost831/poolens` may change only `ios/` and `android-twa/`. App Store Connect uploads, Play uploads and Android signing require explicit current owner authorization and all release gates. Existing signing assets must be reused without exposing or moving them; new secrets, certificates or profiles still require separate owner authorization.
 - A queued job is not runner pickup. Verify `runner_name` in the Actions job and the automatic pickup comment. An absent/offline runner requires setup/connectivity; do not pretend the other machine ran.
 - For a timed-out/cancelled run, inspect its worktree and issue before removing a stale `agent:running` label and explicitly retrying. Never duplicate an uncertain external action.
 
 ## Smoke Test
 
 Create an owner-authored issue for the target machine asking it to add one timestamped line to `ops/agent-bridge/TEST.md`, run a content check, and open a PR without merging. Verify the assigned runner, pickup comment, PR, test report and `agent:done`. These tests need no deployment, customer email, production database or payment access.
+
+
+## Failure and owner-scope hardening (2026-10-30)
+
+The bridge reads every page of owner comments at pickup and rechecks task scope
+before execution and publication. Chronological owner corrections and stop/defer
+instructions must be honored. Bridge-generated receipts are evidence, not new
+authorization. Cross-repository or outside-checkout work still stops for review.
+Publication, required-check and final reporting failures cannot mark a task done.
+An incomplete task exits unsuccessfully while preserving its workspace. No fallback
+push is attempted after a rejected publication. Credential rejection and outbound
+redaction share supported token formats; private key/config files are blocked.
+Failed process queries preserve Git locks. Store work remains Mac-owned where
+required and needs explicit current owner authorization plus all existing gates.
+This update does not dispatch or replay tasks or authorize any release.
