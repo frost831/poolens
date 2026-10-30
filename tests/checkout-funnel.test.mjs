@@ -253,8 +253,8 @@ test('a paid Preview checkout keeps its activation link on the configured Previe
 });
 
 test('every web upgrade entry records checkout intent, and zero-result lookups do not count impressions', () => {
-  assert.match(app, /trackCheckoutIntent\('monthly','scan_limit_reached'\)/);
-  assert.match(app, /trackCheckoutIntent\('yearly','scan_limit_reached'\)/);
+  assert.match(app, /data-checkout-plan="monthly"[^>]*data-checkout-placement="scan_limit_reached"/);
+  assert.match(app, /data-checkout-plan="yearly"[^>]*data-checkout-placement="scan_limit_reached"/);
   assert.match(app, /startWebCheckout\(safePlan, 'paid_lane'\)/);
   const intent = app.slice(app.indexOf('function trackCheckoutIntent('), app.indexOf('function trackPostValueUpgrade('));
   assert.match(intent, /trackSplashLensEvent\('checkout_click', props\)/);

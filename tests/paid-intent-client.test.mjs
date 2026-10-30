@@ -139,21 +139,22 @@ test('zero-result lookup generates neither an offer nor an impression', () => {
   assert.equal(events.length, 0);
 });
 
-test('all rendered web upgrade links replace their href with the attributed intent URL', () => {
-  for (const [renderer, args, linkCount, clickHandler] of [
-    ['renderPostValueUpgradeOffer', [], 2, 'trackPostValueUpgrade'],
-    ['renderPartSnapResultUpgradeOffer', [], 2, 'trackPostValueUpgrade'],
-    ['renderManualLookupUpgradeOffer', [1, 'E05'], 2, 'trackPostValueUpgrade'],
-    ['renderManualCodeAnswerUpgradeOffer', [], 1, 'trackCheckoutIntent'],
+test('all rendered web upgrade links declare their attributed checkout intent without executable data', () => {
+  for (const [renderer, args, linkCount, intent] of [
+    ['renderPostValueUpgradeOffer', [], 2, 'post-value'],
+    ['renderPartSnapResultUpgradeOffer', [], 2, 'post-value'],
+    ['renderManualLookupUpgradeOffer', [1, 'E05'], 2, 'post-value'],
+    ['renderManualCodeAnswerUpgradeOffer', [], 1, 'standard'],
   ]) {
     const { context } = harness([...checkoutFunctions, renderer], { isPartSnapPro: () => false });
     const html = context[renderer](...args);
     assert.equal((html.match(/data-checkout-plan=/g) || []).length, linkCount, renderer);
-    assert.equal((html.match(new RegExp(`this.href=${clickHandler}`, 'g')) || []).length, linkCount, renderer);
+    assert.equal((html.match(new RegExp(`data-checkout-intent="${intent}"`, 'g')) || []).length, linkCount, renderer);
+    assert.doesNotMatch(html, /onclick=/);
     assert.doesNotMatch(html, /sl_checkout_/);
   }
-  assert.match(functionSource('showScanLimitModal'), /this.href=trackCheckoutIntent/);
-  assert.match(source, /this.href=trackCheckoutIntent\('monthly','account_dashboard'\)/);
+  assert.match(functionSource('showScanLimitModal'), /data-checkout-intent="standard"/);
+  assert.match(source, /data-checkout-intent="account"[^>]*data-checkout-placement="account_dashboard"/);
 });
 
 test('web post-value surfaces share one offer per session', () => {
@@ -274,7 +275,7 @@ test('third free scan gate follows result, can be dismissed, and uses A1 placeme
   context.showThirdScanSoftGate(result, 'parts_snap');
   assert.ok(html.indexOf('Complete scan result') < html.indexOf('third-scan-soft-gate'));
   assert.match(html, /data-checkout-placement="soft_gate_scan3"/);
-  assert.match(html, /trackPostValueUpgrade\('monthly','soft_gate_scan3'\)/);
+  assert.match(html, /data-checkout-intent="post-value"[^>]*data-checkout-placement="soft_gate_scan3"/);
   assert.match(html, /upgrade.softGateManual/);
   assert.equal(events[0].name, 'soft_gate_shown');
   assert.equal(events[0].props.remaining_scans, 0);
@@ -449,13 +450,11 @@ test('captured upgrade clicks still record post-value and account checkout event
   });
   context.initCheckoutClientTracking();
   current = {
-    dataset: { checkoutPlan: 'monthly', checkoutPlacement: 'field_stop_saved' },
-    getAttribute: () => "this.href=trackPostValueUpgrade('monthly','field_stop_saved')",
+    dataset: { checkoutPlan: 'monthly', checkoutPlacement: 'field_stop_saved', checkoutIntent: 'post-value' },
   };
   callbacks.click({ target: { closest: () => current }, preventDefault() {}, stopImmediatePropagation() {} });
   current = {
-    dataset: { checkoutPlan: 'monthly', checkoutPlacement: 'account_dashboard' },
-    getAttribute: () => "trackSplashLensEvent('account_pro_checkout_clicked',{plan:'monthly',source:'account_dashboard'})",
+    dataset: { checkoutPlan: 'monthly', checkoutPlacement: 'account_dashboard', checkoutIntent: 'account' },
   };
   callbacks.click({ target: { closest: () => current }, preventDefault() {}, stopImmediatePropagation() {} });
   assert.deepEqual(calls, [['monthly', 'field_stop_saved'], ['monthly', 'account_dashboard']]);
@@ -475,7 +474,7 @@ test('Sept-Nov upgrade offer shows Closing Pro beside monthly and yearly', () =>
   assert.match(html, /data-checkout-plan="closing_pass_60d"/);
   assert.match(html, /upgrade=closing_pass_60d/);
   assert.match(html, /upgrade\.closingProPrice/);
-  assert.match(html, /trackPostValueUpgrade\('closing_pass_60d'/);
+  assert.match(html, /data-checkout-intent="post-value"[^>]*data-checkout-plan="closing_pass_60d"/);
   const january = harness(functions, { isPartSnapPro: () => false });
   january.context.closingProSeasonActive.month = 0;
   assert.doesNotMatch(january.context.renderPartSnapResultUpgradeOffer('first_value_volume_calculator'), /closing_pass_60d/);
