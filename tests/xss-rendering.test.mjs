@@ -96,6 +96,15 @@ test('saved pool IDs and numeric form fields cannot create attributes or code', 
   assert.doesNotMatch(result.innerHTML, /onclick="[^"]*(?:onerror|__xss)/);
 });
 
+test('stored SLAM tracker targets and readings cannot render markup', () => {
+  const result = { innerHTML: '', style: {} };
+  const c = harness({ document: { getElementById: () => result }, getSlamState: () => ({ active:true, startDate:'2026-10-29', targetFC:payload, checks:[{fc:payload,time:'2026-10-29',pass:false}], oclt:{dusk:payload,dawn:null} }) });
+  vm.runInContext(fn('renderSlamBanner'), c);
+  c.renderSlamBanner();
+  assert.ok(!result.innerHTML.includes(payload));
+  assert.doesNotMatch(result.innerHTML, /<img|>NaN<|>Infinity</);
+});
+
 test('template data is never interpolated into inline event handler source', () => {
   // Lines may include generated labels/attributes after a constant handler; inspect the handler itself.
   for (const match of source.matchAll(/\bon(?:click|change|input|blur)="([^\n]*?)"/g)) {

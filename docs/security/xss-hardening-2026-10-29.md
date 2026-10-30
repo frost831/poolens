@@ -29,6 +29,7 @@ The referenced `RUFLO_XSS_AUDIT.md` was not present in the supplied attachments,
 - Equipment form, equipment decision, reminder form and chemistry form IDs, labels and actions.
 - Pool edit volume and filter-diameter input values.
 - Stored history dates, summaries and chemistry readings.
+- Stored SLAM tracker targets, last/recent FC values and dusk readings (finite numeric conversion; malformed values display as missing).
 - Service-passport history IDs and attributes.
 - Route job pool IDs and numeric job actions.
 - Saved PartSnap stop IDs/actions and saved-pool options.
@@ -40,7 +41,7 @@ The full-app test additionally reproduced stored XSS in pool type/sanitizer summ
 ## Verification
 
 - Initial targeted regressions reproduced the unsafe paths before the fixes. The stored-pool summary/date browser regression also failed before its text-encoding repair.
-- `npm test` with the existing Playwright runtime enabled: **403 passed, 0 failed, 0 skipped**. This includes 13 XSS regression tests, three of which use Chromium (desktop fragment, phone fragment, full app).
+- `npm test` with the existing Playwright runtime enabled: **404 passed, 0 failed, 0 skipped**. This includes 14 XSS regression tests, three of which use Chromium (desktop fragment, phone fragment, full app).
 - `npm run partsnap:benchmark`: **120/120 metadata cases pass**, zero image-proven cases; this is unrelated to real-photo recognition accuracy.
 - `node --check js/app.js` and `git diff --check`: pass.
 - `tools/deploy-poolens-web.ps1 -StageOnly`: **35 public files**, no upload. App and worker query versions are synchronized at `20261029-xss-hardening`; offline cache is `splashlens-v59-xss-hardening`.

@@ -4353,9 +4353,10 @@ function renderSlamBanner() {
   if (!s?.active) { el.style.display = 'none'; return; }
   el.style.display = 'block';
 
+  const reading = value => ['number', 'string'].includes(typeof value) && String(value).trim() !== '' && Number.isFinite(Number(value)) ? Number(value) : '—';
   const dayNum    = Math.floor((Date.now() - new Date(s.startDate)) / 86400000) + 1;
   const lastCheck = s.checks.length ? s.checks[s.checks.length - 1] : null;
-  const lastFC    = lastCheck ? `${lastCheck.fc} ppm` : '—';
+  const lastFC    = lastCheck ? `${reading(lastCheck.fc)} ppm` : '—';
   const lastTime  = lastCheck ? new Date(lastCheck.time).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) : '—';
   const passCount = s.checks.filter(c => c.pass).length;
   const checkCount = s.checks.length;
@@ -4368,7 +4369,7 @@ function renderSlamBanner() {
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
         <div>
           <span style="background:#fbbf24;color:#78350f;padding:2px 8px;border-radius:100px;font-size:10px;font-weight:800;">SLAM DAY ${dayNum}</span>
-          <p style="font-size:16px;font-weight:900;margin-top:4px;">Target FC: ${s.targetFC} ppm</p>
+          <p style="font-size:16px;font-weight:900;margin-top:4px;">Target FC: ${reading(s.targetFC)} ppm</p>
         </div>
         <button onclick="endSlamTracker()" style="background:rgba(255,255,255,0.15);color:#fff;border:1px solid rgba(255,255,255,0.3);border-radius:8px;padding:6px 12px;font-size:11px;cursor:pointer;">End SLAM</button>
       </div>
@@ -4402,7 +4403,7 @@ function renderSlamBanner() {
           ${[...s.checks].reverse().slice(0,5).map(c => `
             <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.08);">
               <span style="font-size:12px;opacity:.7;">${new Date(c.time).toLocaleString([],{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})}</span>
-              <span style="font-size:14px;font-weight:700;color:${c.pass?'#86efac':'#fca5a5'};">${c.fc} ppm ${c.pass?'✓':'✗'}</span>
+              <span style="font-size:14px;font-weight:700;color:${c.pass?'#86efac':'#fca5a5'};">${reading(c.fc)} ppm ${c.pass?'✓':'✗'}</span>
             </div>`).join('')}
         </div>` : ''}
       ${ocltReady && !s.oclt.dusk ? `
@@ -4417,7 +4418,7 @@ function renderSlamBanner() {
       ${s.oclt.dusk && !s.oclt.dawn ? `
         <div style="margin-top:10px;background:rgba(30,64,175,0.3);border:1px solid rgba(147,197,253,0.3);border-radius:8px;padding:12px;">
           <p style="font-size:12px;font-weight:700;margin-bottom:4px;">🌄 Log Dawn FC (next morning)</p>
-          <p style="font-size:11px;opacity:.7;margin-bottom:8px;">Dusk reading: ${s.oclt.dusk} ppm · Pass = loss &lt; 1 ppm</p>
+          <p style="font-size:11px;opacity:.7;margin-bottom:8px;">Dusk reading: ${reading(s.oclt.dusk)} ppm · Pass = loss &lt; 1 ppm</p>
           <div style="display:flex;gap:8px;align-items:center;">
             <input id="slam-dawn-fc" type="number" placeholder="Dawn FC" inputmode="decimal" min="0" max="50"
               style="flex:1;padding:10px;background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.2);border-radius:8px;color:#fff;font-size:16px;font-weight:700;outline:none;">
