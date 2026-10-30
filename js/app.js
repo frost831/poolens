@@ -4831,6 +4831,8 @@ function initGuide() {
     try { S.checklists[type] = JSON.parse(localStorage.getItem(CL_MAP[type].key) || '{}'); }
     catch(e) { S.checklists[type] = {}; }
   });
+  try { S.checklists.closingShort = JSON.parse(localStorage.getItem(SHORT_CLOSING_KEY) || '{}'); }
+  catch(e) { S.checklists.closingShort = {}; }
   renderChecklist();
 }
 
@@ -4840,9 +4842,56 @@ const CLOSING_PHOTO_PROOFS = [
   { key: 'equipment', labelKey: 'closing.equipment' },
   { key: 'chemistry', labelKey: 'closing.chemistryRecord' },
 ];
+// Flip enabled for a 50/50, stable client-ID A/B. Off is the release default.
+const CLOSING_SHORT_FLAG = Object.freeze({ enabled: false, rolloutPercent: 50 });
+const SHORT_CLOSING_CHECKLIST = [
+  { phase: 'Pre-close proof and chemistry', steps: ['Record site conditions, water test results, treatment decisions, and pre-existing damage before closing.'] },
+  { phase: 'Equipment shutdown and drain proof', steps: ['Follow the exact equipment manuals and company method; document drained components and where removed plugs are stored.'] },
+  { phase: 'Lines, skimmers, returns, and antifreeze', steps: ['Document the water level, every winterized line and plug, any approved antifreeze, and lines needing senior review.'] },
+  { phase: 'Heaters, salt, robots, and controls', steps: ['Check each installed system against its manual; record storage and freeze-protection settings and escalate unresolved risks.'] },
+  { phase: 'Cover and site closeout', steps: ['Verify the cover and site access, photograph relevant conditions, and leave customer-safe winter instructions.'] },
+  { phase: 'Closing record and follow-up', steps: ['Record completed and declined work, missing proof, callback risks, and spring follow-up in the job record.'] },
+];
+const SHORT_CLOSING_KEY = 'poolens-cl-closing-short-v1';
 let closingChecklistStarted = false;
+let closingChecklistView = '';
 let closingPassOfferShown = false;
 let closingOfferRequest = 0;
+
+function closingChecklistAssignment() {
+  if (!CLOSING_SHORT_FLAG.enabled) return 'full';
+  const id = getScanClientId();
+  let hash = 0;
+  for (const char of id) hash = (Math.imul(hash, 31) + char.charCodeAt(0)) >>> 0;
+  return hash % 100 < CLOSING_SHORT_FLAG.rolloutPercent ? 'short' : 'full';
+}
+
+function closingChecklistIsShort() {
+  return S.clType === 'closing' && closingChecklistView === 'short';
+}
+
+function activeChecklistPhases() {
+  return closingChecklistIsShort() ? SHORT_CLOSING_CHECKLIST : CL_MAP[S.clType].data();
+}
+
+function activeChecklistState() {
+  return closingChecklistIsShort() ? S.checklists.closingShort : S.checklists[S.clType];
+}
+
+function activeChecklistKey() {
+  return closingChecklistIsShort() ? SHORT_CLOSING_KEY : CL_MAP[S.clType].key;
+}
+
+function shortClosingComplete(cl) {
+  return SHORT_CLOSING_CHECKLIST.every((phase, pi) => phase.steps.every((_, si) => !!cl[`${pi}-${si}`]));
+}
+
+function showFullClosingChecklist() {
+  if (!closingChecklistIsShort()) return;
+  closingChecklistView = 'full';
+  trackSplashLensEvent('closing_checklist_full_opened', { assignment: closingChecklistAssignment() });
+  renderChecklist();
+}
 
 function closingChecklistStatus() {
   const cl = S.checklists.closing || {};
@@ -4860,14 +4909,18 @@ function trackClosingChecklistStart() {
     trackFirstActionStarted(typeof getSplashLensRole === 'function' ? getSplashLensRole() : '', 'closing_checklist');
   }
   const { checked, photos } = closingChecklistStatus();
-  trackSplashLensEvent('closing_checklist_started', { steps: checked, photos });
+  trackSplashLensEvent('closing_checklist_started', {
+    steps: closingChecklistIsShort() ? Object.values(S.checklists.closingShort || {}).filter(Boolean).length : checked,
+    photos: closingChecklistIsShort() ? 0 : photos,
+    variant: closingChecklistIsShort() ? 'short' : 'full',
+  });
 }
 
 function closingChecklistChanged(wasComplete) {
   renderClosingProof();
   const status = closingChecklistStatus();
   if (!wasComplete && status.complete) {
-    trackSplashLensEvent('closing_checklist_completed', { steps: status.checked, photos: status.photos });
+    trackSplashLensEvent('closing_checklist_completed', { steps: status.checked, photos: status.photos, variant: 'full' });
   }
 }
 
@@ -4885,7 +4938,7 @@ function setClosingPhotoReference(key, value) {
 function renderClosingProof() {
   const el = document.getElementById('closing-proof-content');
   if (!el) return;
-  el.hidden = S.clType !== 'closing';
+  el.hidden = S.clType !== 'closing' || closingChecklistIsShort();
   if (el.hidden) { closingOfferRequest++; return; }
   const cl = S.checklists.closing || {};
   const status = closingChecklistStatus();
@@ -4967,8 +5020,11 @@ async function mountClosingPassOffers() {
 globalThis.mountClosingPassOffers = mountClosingPassOffers;
 
 function switchClType(type) {
-  if (type === 'closing') trackClosingChecklistStart();
   S.clType = type;
+  if (type === 'closing') {
+    if (!closingChecklistView) closingChecklistView = closingChecklistAssignment();
+    trackClosingChecklistStart();
+  }
   const freezeSettings = document.getElementById('freeze-settings');
   if (freezeSettings) freezeSettings.hidden = type !== 'closing';
   ['opening','closing','weekly','monthly'].forEach(t => {
@@ -5113,20 +5169,21 @@ function initFreezeAlerts() {
 }
 
 function renderChecklist() {
-  const phases = CL_MAP[S.clType].data();
-  const cl = S.checklists[S.clType];
+  const phases = activeChecklistPhases();
+  const cl = activeChecklistState();
   setEl('checklist-content',
+    (closingChecklistIsShort() ? `<div class="info-box" style="margin-bottom:14px;">${a3Text('closing.shortNotice')} <button type="button" onclick="showFullClosingChecklist()">${a3Text('closing.openFullChecklist')}</button></div>` : '') +
     phases.map((phase, pi) => `
       <div style="margin-bottom:16px;">
         <div style="border-left:3px solid #0284c7;padding:9px 12px;background:#eff6ff;border-radius:0 8px 8px 0;margin-bottom:8px;">
-          <p style="color:#0369a1;font-weight:800;font-size:13px;">${S.clType === 'closing' ? a3Text(`closing.phase${pi + 1}`) : phase.phase}</p>
+          <p style="color:#0369a1;font-weight:800;font-size:13px;">${closingChecklistIsShort() ? a3Text(`closing.shortPhase${pi + 1}`) : S.clType === 'closing' ? a3Text(`closing.phase${pi + 1}`) : phase.phase}</p>
         </div>
         ${phase.steps.map((step, si) => {
           const k = `${pi}-${si}`;
           const done = !!cl[k];
           return `<div id="cli-${k}" class="cl-item${done ? ' done' : ''}" onclick="toggleItem(${pi},${si})">
             <input type="checkbox" id="chk-${k}" ${done ? 'checked' : ''} onclick="event.stopPropagation();toggleItem(${pi},${si})">
-            <span class="cl-text code-data">${S.clType === 'closing' ? a3ClosingText(step) : step}</span>
+            <span class="cl-text code-data">${closingChecklistIsShort() ? a3Text(`closing.shortStep${pi + 1}`) : S.clType === 'closing' ? a3ClosingText(step) : step}</span>
           </div>`;
         }).join('')}
       </div>`).join(''));
@@ -5136,23 +5193,43 @@ function renderChecklist() {
 
 function toggleItem(pi, si) {
   const closing = S.clType === 'closing';
-  const wasComplete = closing && closingChecklistStatus().complete;
+  const short = closingChecklistIsShort();
+  const phases = activeChecklistPhases();
+  const step = phases[pi]?.steps?.[si];
+  if (!step) return;
+  const cl = activeChecklistState();
+  const total = phases.reduce((count, phase) => count + phase.steps.length, 0);
+  const wasShortComplete = short && shortClosingComplete(cl);
+  const wasComplete = closing && !short && closingChecklistStatus().complete;
   if (closing) trackClosingChecklistStart();
   const k = `${pi}-${si}`;
-  const cl = S.checklists[S.clType];
   cl[k] = !cl[k];
-  localStorage.setItem(CL_MAP[S.clType].key, JSON.stringify(cl));
+  localStorage.setItem(activeChecklistKey(), JSON.stringify(cl));
+  if (closing) {
+    // Observed drop step: unavailable until post-release step events exist; the historical 63 starts/1 completion cannot identify it.
+    // Group by variant and count unique fresh starts plus checked=true steps in index order, then comment on the first material fall.
+    trackSplashLensEvent('closing_checklist_step_changed', {
+      variant: short ? 'short' : 'full',
+      step_index: phases.slice(0, pi).reduce((count, phase) => count + phase.steps.length, 0) + si + 1,
+      step_name: step,
+      phase_index: pi + 1,
+      checked: !!cl[k],
+    });
+  }
   const row = document.getElementById(`cli-${k}`);
   const chk = document.getElementById(`chk-${k}`);
   if (row) row.classList.toggle('done', !!cl[k]);
   if (chk) chk.checked = !!cl[k];
   updateProgress();
-  if (closing) closingChecklistChanged(wasComplete);
+  if (short) {
+    const nowComplete = shortClosingComplete(cl);
+    if (!wasShortComplete && nowComplete) trackSplashLensEvent('closing_checklist_short_completed', { variant: 'short', steps: total });
+  } else if (closing) closingChecklistChanged(wasComplete);
 }
 
 function updateProgress() {
-  const phases = CL_MAP[S.clType].data();
-  const cl = S.checklists[S.clType];
+  const phases = activeChecklistPhases();
+  const cl = activeChecklistState();
   let total = 0, done = 0;
   phases.forEach((phase, pi) =>
     phase.steps.forEach((_, si) => { total++; if (cl[`${pi}-${si}`]) done++; }));
@@ -5172,8 +5249,9 @@ async function resetChecklist() {
     primaryLabel: 'Reset checklist',
   });
   if (!confirmed) return;
-  S.checklists[S.clType] = {};
-  localStorage.removeItem(CL_MAP[S.clType].key);
+  if (closingChecklistIsShort()) S.checklists.closingShort = {};
+  else S.checklists[S.clType] = {};
+  localStorage.removeItem(activeChecklistKey());
   renderChecklist();
 }
 
