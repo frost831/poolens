@@ -1123,10 +1123,10 @@ const ROLE_NEXT_ACTIONS = {
     body: 'Pick code lookup or PartSnap first, then turn the result into proof you can send or save.',
     payoff: 'Goal: verified next step in under a minute.',
     actions: [
-      ['Look up a code', 'primary', "focusErrorSearch()"],
-      ['Identify a part', '', "openLivePartSnap()"],
-      ['Save service proof', '', "showTab('report')"],
-      ['Calculate dose', '', "showTab('dosing')"],
+      ['Look up a code', 'primary', 'focusErrorSearch', ''],
+      ['Identify a part', '', 'openLivePartSnap', ''],
+      ['Save service proof', '', 'showTab', 'report'],
+      ['Calculate dose', '', 'showTab', 'dosing'],
     ],
   },
   counter: {
@@ -1135,10 +1135,10 @@ const ROLE_NEXT_ACTIONS = {
     body: 'Preview the vendor packet, collect missing proof, then hand off cleaner questions to the tech or vendor.',
     payoff: 'Goal: fewer callbacks from incomplete proof.',
     actions: [
-      ['Preview packet', 'primary', "showTab('scan');setTimeout(()=>{setScanMode('parts');renderCounterSamplePacket();},80)"],
-      ['Identify walk-in part', '', "openLivePartSnap()"],
-      ['Copy vendor text', '', "renderCounterSamplePacket()"],
-      ['Search family', '', "focusErrorSearch('pump lid')"],
+      ['Preview packet', 'primary', 'preview-counter', ''],
+      ['Identify walk-in part', '', 'openLivePartSnap', ''],
+      ['Copy vendor text', '', 'renderCounterSamplePacket', ''],
+      ['Search family', '', 'focusErrorSearch', 'pump lid'],
     ],
   },
   trainer: {
@@ -1147,10 +1147,10 @@ const ROLE_NEXT_ACTIONS = {
     body: 'Use PartSnap misses, proof packets, facility incidents, and support questions to teach what to observe, prove, decide, and explain.',
     payoff: 'Goal: coach from the field without pretending to certify or diagnose.',
     actions: [
-      ['PartSnap lesson', 'primary', "renderFieldLearningOS('partsnap')"],
-      ['Use real part', '', "openLivePartSnap()"],
-      ['Facility scenario', '', "renderFieldLearningOS('facility')"],
-      ['Proof review', '', "renderFieldLearningOS('proof')"],
+      ['PartSnap lesson', 'primary', 'renderFieldLearningOS', 'partsnap'],
+      ['Use real part', '', 'openLivePartSnap', ''],
+      ['Facility scenario', '', 'renderFieldLearningOS', 'facility'],
+      ['Proof review', '', 'renderFieldLearningOS', 'proof'],
     ],
   },
 };
@@ -1172,7 +1172,7 @@ function renderRoleNextAction(role = getSplashLensRole()) {
         <h2>${escHtml(cfg.title)}</h2>
         <p>${escHtml(cfg.body)}</p>
         <div class="role-next-actions">
-          ${cfg.actions.map(([label, variant, action]) => `<button type="button" class="${variant}" onclick="${action}">${escHtml(label)}</button>`).join('')}
+          ${cfg.actions.map(([label, variant, action, arg]) => `<button type="button" class="${variant}" data-app-action="${escAttr(action)}" data-arg0="${escAttr(arg || '')}">${escHtml(label)}</button>`).join('')}
         </div>
       </div>
       <div class="role-next-payoff">
@@ -1356,10 +1356,10 @@ function startFacilityLane(laneId) {
       <input id="facility-photo-refs" type="text" placeholder="Photo refs: label, equipment face, water, reading screenshot" aria-label="Facility photo references" style="font-size:13px;padding:10px;">
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;">
-      <button type="button" class="facility-action-btn secondary" onclick="completeFacilityLane('${laneId}', 'resolved')">${escHtml(lane.resolve)}</button>
-      <button type="button" class="facility-action-btn" onclick="completeFacilityLane('${laneId}', 'escalate')">${escHtml(lane.escalate)}</button>
+      <button type="button" class="facility-action-btn secondary" data-app-action="completeFacilityLane" data-arg0="${escAttr(laneId)}" data-arg1="${escAttr('resolved')}">${escHtml(lane.resolve)}</button>
+      <button type="button" class="facility-action-btn" data-app-action="completeFacilityLane" data-arg0="${escAttr(laneId)}" data-arg1="${escAttr('escalate')}">${escHtml(lane.escalate)}</button>
     </div>
-    <button type="button" class="facility-action-btn secondary" style="width:100%;margin-top:8px;" onclick="showTab('${lane.nextTab}');showFacilityTools();${lane.nextTab === 'scan' ? "setTimeout(()=>setScanMode('parts'),80);" : ''}">Use related SplashLens tool</button>
+    <button type="button" class="facility-action-btn secondary" style="width:100%;margin-top:8px;" data-app-action="facility-tool" data-arg0="${escAttr(lane.nextTab)}">Use related SplashLens tool</button>
   `;
   trackFacilityEvent('lane_start', { lane: laneId, title: lane.title });
 }
@@ -1524,7 +1524,7 @@ function renderFacilityPacket(packet) {
   const result = document.getElementById('facility-result');
   if (!result) return;
   const text = formatFacilityPacket(packet);
-  const call = packet.support.phone ? `<button type="button" class="facility-action-btn" onclick="callFacilitySupport('${escAttr(packet.support.phone)}','${escAttr(packet.id)}')">Call support</button>` : '';
+  const call = packet.support.phone ? `<button type="button" class="facility-action-btn" data-app-action="callFacilitySupport" data-arg0="${escAttr(packet.support.phone)}" data-arg1="${escAttr(packet.id)}">Call support</button>` : '';
   const columns = call ? 4 : 3;
   result.style.display = 'block';
   result.innerHTML = `
@@ -1535,7 +1535,7 @@ function renderFacilityPacket(packet) {
       <div style="display:grid;grid-template-columns:repeat(${columns},1fr);gap:8px;">
         <button type="button" class="facility-action-btn secondary" onclick="copyFacilityPacket()">Copy</button>
         <button type="button" class="facility-action-btn secondary" onclick="shareFacilityPacket()">Share</button>
-        <button type="button" class="facility-action-btn secondary" onclick="seedReportFromFacilityPacket('${escAttr(packet.id)}')">Save Passport</button>
+        <button type="button" class="facility-action-btn secondary" data-app-action="seedReportFromFacilityPacket" data-arg0="${escAttr(packet.id)}">Save Passport</button>
         ${call}
       </div>
     </div>`;
@@ -1665,10 +1665,10 @@ function showQuickFeedbackPrompt(trigger = 'usage') {
     <div style="width:min(520px,100%);background:#ffffff;border:1px solid #bae6fd;border-radius:14px;box-shadow:0 18px 46px rgba(15,23,42,.24);padding:12px;pointer-events:auto;">
       <p style="color:#0f172a;font-size:15px;font-weight:950;margin-bottom:9px;">${label}</p>
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:8px;">
-        <button type="button" onclick="answerQuickFeedback('helped','${escAttr(trigger)}')" style="background:#0f766e;color:#fff;border:0;border-radius:10px;padding:11px 8px;font-size:13px;font-weight:950;cursor:pointer;">Yes</button>
-        <button type="button" onclick="answerQuickFeedback('wrong','${escAttr(trigger)}')" style="background:#fee2e2;color:#991b1b;border:1px solid #fecaca;border-radius:10px;padding:11px 8px;font-size:13px;font-weight:950;cursor:pointer;">Wrong</button>
-        <button type="button" onclick="answerQuickFeedback('missing','${escAttr(trigger)}')" style="background:#fef3c7;color:#92400e;border:1px solid #fde68a;border-radius:10px;padding:11px 8px;font-size:13px;font-weight:950;cursor:pointer;">Missing info</button>
-        <button type="button" onclick="answerQuickFeedback('close','${escAttr(trigger)}')" aria-label="Close feedback" style="background:#f8fafc;color:#64748b;border:1px solid #cbd5e1;border-radius:10px;padding:0 12px;font-size:16px;font-weight:950;cursor:pointer;">x</button>
+        <button type="button" data-app-action="answerQuickFeedback" data-arg0="${escAttr('helped')}" data-arg1="${escAttr(trigger)}" style="background:#0f766e;color:#fff;border:0;border-radius:10px;padding:11px 8px;font-size:13px;font-weight:950;cursor:pointer;">Yes</button>
+        <button type="button" data-app-action="answerQuickFeedback" data-arg0="${escAttr('wrong')}" data-arg1="${escAttr(trigger)}" style="background:#fee2e2;color:#991b1b;border:1px solid #fecaca;border-radius:10px;padding:11px 8px;font-size:13px;font-weight:950;cursor:pointer;">Wrong</button>
+        <button type="button" data-app-action="answerQuickFeedback" data-arg0="${escAttr('missing')}" data-arg1="${escAttr(trigger)}" style="background:#fef3c7;color:#92400e;border:1px solid #fde68a;border-radius:10px;padding:11px 8px;font-size:13px;font-weight:950;cursor:pointer;">Missing info</button>
+        <button type="button" data-app-action="answerQuickFeedback" data-arg0="${escAttr('close')}" data-arg1="${escAttr(trigger)}" aria-label="Close feedback" style="background:#f8fafc;color:#64748b;border:1px solid #cbd5e1;border-radius:10px;padding:0 12px;font-size:16px;font-weight:950;cursor:pointer;">x</button>
       </div>
     </div>`;
   document.body.appendChild(toast);
@@ -1952,7 +1952,7 @@ function showStoreReviewPrompt(trigger = 'success', options = {}) {
       <h2 style="color:#0f172a;font-size:21px;line-height:1.08;font-weight:950;margin:0 0 8px;">Did SplashLens save you time?</h2>
       <p style="color:#64748b;font-size:13px;line-height:1.45;margin-bottom:14px;">If it helped, a store review helps other pool techs find it. If it missed, tell us what to fix instead.</p>
       <div style="display:grid;grid-template-columns:${links.length === 1 ? '1fr' : '1fr 1fr'};gap:8px;margin-bottom:8px;">
-        ${links.map(link => `<a href="${link.url}" target="_blank" rel="noopener" onclick="markStoreReviewClicked('${escAttr(link.label)}')" style="background:#0369a1;color:#fff;text-align:center;text-decoration:none;border-radius:10px;padding:12px 8px;font-size:13px;font-weight:950;">${escHtml(link.label)}</a>`).join('')}
+        ${links.map(link => `<a href="${escAttr(safeUrl(link.url))}" target="_blank" rel="noopener" data-app-action="markStoreReviewClicked" data-arg0="${escAttr(link.label)}" style="background:#0369a1;color:#fff;text-align:center;text-decoration:none;border-radius:10px;padding:12px 8px;font-size:13px;font-weight:950;">${escHtml(link.label)}</a>`).join('')}
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
         <button type="button" onclick="storeReviewNeedsWork()" style="background:#fef3c7;color:#92400e;border:1px solid #fde68a;border-radius:10px;padding:11px 8px;font-size:13px;font-weight:900;cursor:pointer;">Needs Work</button>
@@ -2296,7 +2296,7 @@ function renderVerifiedProofNetwork() {
         ${plan.planKey === 'free_save_profile'
           ? `<button type="button" class="brain-action green" style="width:100%;margin-top:8px;" onclick="ensureFieldSaveAccount('pricing_catalog')">Create free save profile</button>`
           : plan.planKey && plan.planKey !== 'free_core'
-            ? `<button type="button" ${plan.availability === 'self_serve' && !isStoreShellMode() ? `data-checkout-plan="${escAttr(plan.planKey)}" data-checkout-placement="paid_lane"` : ''} class="brain-action green" style="width:100%;margin-top:8px;" onclick="openSplashLensPaidLane('${escHtml(plan.planKey)}','${escHtml(plan.name)}')">${plan.availability === 'self_serve' ? (plan.planKey === 'crew_monthly' ? a3Text('upgrade.crew') : plan.planKey === 'closing_pass_60d' ? a3Text('upgrade.closingPass') : 'Start paid plan') : 'Request Teams access'}</button>${plan.planKey === 'crew_monthly' ? `<p style="color:#475569;font-size:11px;line-height:1.45;margin-top:8px;">${a3Text('upgrade.crewBody')}</p>` : ''}`
+            ? `<button type="button" ${plan.availability === 'self_serve' && !isStoreShellMode() ? `data-checkout-plan="${escAttr(plan.planKey)}" data-checkout-placement="paid_lane"` : ''} class="brain-action green" style="width:100%;margin-top:8px;" data-app-action="openSplashLensPaidLane" data-arg0="${escAttr(plan.planKey)}" data-arg1="${escAttr(plan.name)}">${plan.availability === 'self_serve' ? (plan.planKey === 'crew_monthly' ? a3Text('upgrade.crew') : plan.planKey === 'closing_pass_60d' ? a3Text('upgrade.closingPass') : 'Start paid plan') : 'Request Teams access'}</button>${plan.planKey === 'crew_monthly' ? `<p style="color:#475569;font-size:11px;line-height:1.45;margin-top:8px;">${a3Text('upgrade.crewBody')}</p>` : ''}`
             : ''}
       </div>
     </details>
@@ -2751,12 +2751,12 @@ function renderSplashLensCommercialSection(commercialPayload = {}) {
         </div>
       </div>
       <div style="display:grid;grid-template-columns:${storeShell ? '1fr' : '1fr 1fr'};gap:7px;margin-bottom:10px;">
-        ${storeShell ? '' : `<a data-checkout-plan="monthly" data-checkout-placement="account_dashboard" href="${getCheckoutUrl('monthly', 'account_dashboard')}" onclick="this.href=trackCheckoutIntent('monthly','account_dashboard');trackSplashLensEvent('account_pro_checkout_clicked',{plan:'monthly',source:'account_dashboard'})" style="display:block;text-align:center;text-decoration:none;border-radius:9px;background:#0f766e;color:#fff;font-size:12px;font-weight:950;padding:11px 8px;">Get Pro</a>`}
+        ${storeShell ? '' : `<a data-checkout-intent="account" data-app-action="checkout-link" data-checkout-plan="monthly" data-checkout-placement="account_dashboard" href="${escAttr(getCheckoutUrl('monthly', 'account_dashboard'))}" style="display:block;text-align:center;text-decoration:none;border-radius:9px;background:#0f766e;color:#fff;font-size:12px;font-weight:950;padding:11px 8px;">Get Pro</a>`}
         <button type="button" onclick="requestSplashLensCommercialAccess('teams')" style="border:1px solid #0369a1;border-radius:9px;background:#fff;color:#0369a1;font-size:12px;font-weight:950;padding:11px 8px;cursor:pointer;">Request team</button>
       </div>
       <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin-bottom:10px;">
         ${pilotPlans.map((plan) => `
-          <button type="button" onclick="requestSplashLensCommercialAccess('${escAttr(plan.lane)}')" style="text-align:left;border:1px solid #e2e8f0;border-radius:9px;background:#f8fafc;color:#0f172a;padding:10px;cursor:pointer;">
+          <button type="button" data-app-action="requestSplashLensCommercialAccess" data-arg0="${escAttr(plan.lane)}" style="text-align:left;border:1px solid #e2e8f0;border-radius:9px;background:#f8fafc;color:#0f172a;padding:10px;cursor:pointer;">
             <strong style="display:block;font-size:12px;line-height:1.2;margin-bottom:4px;">${escHtml(plan.label || commercialLaneLabel(plan.lane))}</strong>
             <span style="display:block;color:#64748b;font-size:10px;line-height:1.35;">${escHtml((plan.included || []).slice(0, 2).join(' + ') || 'request access')}</span>
           </button>
@@ -2935,12 +2935,12 @@ function renderSplashLensReviewSection(reviewPayload = {}, teamId = '') {
               <strong style="display:block;color:#0f172a;font-size:12px;line-height:1.25;">${escHtml(review.title || 'Field proof packet')}</strong>
               <span style="display:block;color:#64748b;font-size:10px;margin-top:3px;">${escHtml(status.replace(/_/g, ' '))}${review.assigneeEmail ? ` - ${escHtml(review.assigneeEmail)}` : ''}</span>
             </div>
-            ${open && status !== 'submitted' ? `<button type="button" onclick="changeSplashLensTeamReview('${escAttr(review.id)}','submit','${escAttr(teamId)}')" style="border:1px solid #0369a1;border-radius:7px;background:#fff;color:#0369a1;padding:7px 8px;font-size:9px;font-weight:950;cursor:pointer;">Submit</button>` : ''}
+            ${open && status !== 'submitted' ? `<button type="button" data-app-action="changeSplashLensTeamReview" data-arg0="${escAttr(review.id)}" data-arg1="${escAttr('submit')}" data-arg2="${escAttr(teamId)}" style="border:1px solid #0369a1;border-radius:7px;background:#fff;color:#0369a1;padding:7px 8px;font-size:9px;font-weight:950;cursor:pointer;">Submit</button>` : ''}
           </div>
           ${reviewer && status === 'submitted' ? `<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin-top:8px;">
-            <button type="button" onclick="changeSplashLensTeamReview('${escAttr(review.id)}','approve','${escAttr(teamId)}')" style="border:0;border-radius:7px;background:#047857;color:#fff;padding:8px 5px;font-size:9px;font-weight:950;cursor:pointer;">Approve</button>
-            <button type="button" onclick="changeSplashLensTeamReview('${escAttr(review.id)}','request_evidence','${escAttr(teamId)}')" style="border:0;border-radius:7px;background:#d97706;color:#fff;padding:8px 5px;font-size:9px;font-weight:950;cursor:pointer;">Need proof</button>
-            <button type="button" onclick="changeSplashLensTeamReview('${escAttr(review.id)}','reject','${escAttr(teamId)}')" style="border:0;border-radius:7px;background:#b91c1c;color:#fff;padding:8px 5px;font-size:9px;font-weight:950;cursor:pointer;">Reject</button>
+            <button type="button" data-app-action="changeSplashLensTeamReview" data-arg0="${escAttr(review.id)}" data-arg1="${escAttr('approve')}" data-arg2="${escAttr(teamId)}" style="border:0;border-radius:7px;background:#047857;color:#fff;padding:8px 5px;font-size:9px;font-weight:950;cursor:pointer;">Approve</button>
+            <button type="button" data-app-action="changeSplashLensTeamReview" data-arg0="${escAttr(review.id)}" data-arg1="${escAttr('request_evidence')}" data-arg2="${escAttr(teamId)}" style="border:0;border-radius:7px;background:#d97706;color:#fff;padding:8px 5px;font-size:9px;font-weight:950;cursor:pointer;">Need proof</button>
+            <button type="button" data-app-action="changeSplashLensTeamReview" data-arg0="${escAttr(review.id)}" data-arg1="${escAttr('reject')}" data-arg2="${escAttr(teamId)}" style="border:0;border-radius:7px;background:#b91c1c;color:#fff;padding:8px 5px;font-size:9px;font-weight:950;cursor:pointer;">Reject</button>
           </div>` : ''}
         </div>`;
       }).join('') : '<p style="color:#64748b;font-size:12px;line-height:1.45;">No team proof is waiting. Create a server-backed proof packet and send it to this workspace for review.</p>'}
@@ -3280,7 +3280,7 @@ async function ensureFreeScanProfile(mode = 'ai_scan', result = null, status = n
           <p style="color:#ccfbf1;font-size:10px;font-weight:950;letter-spacing:.1em;text-transform:uppercase;margin-bottom:6px;">Free to start</p>
           <p style="color:#f8fafc;font-size:18px;font-weight:950;line-height:1.15;margin-bottom:8px;">Verify a free profile before AI scanning.</p>
           <p style="color:#94a3b8;font-size:13px;line-height:1.5;margin-bottom:14px;">Manual lookup, calculators, guides, and checklists stay open. PartSnap, Error Scan, and Strip Scan include ${SCAN_LIMIT_FREE} free AI scans each month after email verification so SplashLens can follow up on real misses.</p>
-          <button type="button" onclick="ensureFreeScanProfile('${escAttr(mode)}').then(updateAIStatusBar)" style="width:100%;background:#14b8a6;color:#042f2e;border:0;border-radius:10px;padding:12px 10px;font-size:13px;font-weight:950;cursor:pointer;">Verify free profile</button>
+          <button type="button" data-app-action="verify-free-profile" data-arg0="${escAttr(mode)}" style="width:100%;background:#14b8a6;color:#042f2e;border:0;border-radius:10px;padding:12px 10px;font-size:13px;font-weight:950;cursor:pointer;">Verify free profile</button>
         </div>`;
     }
     trackSplashLensEvent('free_scan_profile_required', { mode, feature });
@@ -3338,7 +3338,7 @@ async function ensureFreeScanProfile(mode = 'ai_scan', result = null, status = n
         result.innerHTML = `<div style="background:#451a03;border:1px solid #f59e0b;border-radius:12px;padding:16px;text-align:center;">
           <p style="color:#fed7aa;font-size:16px;font-weight:900;margin-bottom:6px;">SplashLens could not verify that profile yet.</p>
           <p style="color:#ffedd5;font-size:12px;line-height:1.5;margin-bottom:12px;">${escHtml(error.message || 'Request a fresh code and try again.')}</p>
-          <button type="button" onclick="ensureFreeScanProfile('${escAttr(mode)}').then(updateAIStatusBar)" style="width:100%;background:#f59e0b;color:#451a03;border:0;border-radius:10px;padding:11px 8px;font-size:12px;font-weight:900;cursor:pointer;">Try verification again</button>
+          <button type="button" data-app-action="verify-free-profile" data-arg0="${escAttr(mode)}" style="width:100%;background:#f59e0b;color:#451a03;border:0;border-radius:10px;padding:11px 8px;font-size:12px;font-weight:900;cursor:pointer;">Try verification again</button>
         </div>`;
       }
       return false;
@@ -3396,7 +3396,7 @@ function setMicButtonState(btn, listening) {
 
 function voiceNoteButton(targetId) {
   const safeTarget = escAttr(targetId);
-  return `<button type="button" class="mic-btn" data-mic-target="${safeTarget}" onclick="toggleVoiceNote('${safeTarget}', this)">${micSvg()} Dictate</button>`;
+  return `<button type="button" class="mic-btn" data-mic-target="${safeTarget}" data-app-action="voice-note">${micSvg()} Dictate</button>`;
 }
 
 function toggleVoiceNote(targetId, btn) {
@@ -3582,7 +3582,7 @@ function selectFacilityWorkflowAction(intent, action, target) {
 function renderBrandGrid() {
   const el = document.getElementById('brand-grid');
   el.innerHTML = Object.entries(window.ERROR_DB).map(([id, b]) =>
-    `<button class="brand-btn" id="brand-${id}" onclick="selectBrand('${id}')">${b.label}</button>`
+    `<button class="brand-btn" id="brand-${escAttr(id)}" data-app-action="selectBrand" data-arg0="${escAttr(id)}">${b.label}</button>`
   ).join('');
 }
 
@@ -3631,7 +3631,7 @@ function renderCategoryStrip(brandId) {
   strip.style.display = '';
   strip.innerHTML = `<div style="display:flex;gap:7px;padding:2px 0;">
     <button class="cat-pill active" id="cat-all" onclick="selectCategory(null)">All</button>
-    ${cats.map(c => `<button class="cat-pill" id="cat-${slug(c)}" onclick="selectCategory('${esc(c)}')">${c}</button>`).join('')}
+    ${cats.map(c => `<button class="cat-pill" id="cat-${escAttr(slug(c))}" data-app-action="selectCategory" data-arg0="${escAttr(c)}">${c}</button>`).join('')}
   </div>`;
 }
 
@@ -3671,7 +3671,7 @@ function codeCard(code, uid, brandColor) {
   const fixes = (code.fix || []).slice(0, 6);
   return `
     <div class="error-card" data-code="${escAttr(code.code)}" data-answer-name="${escAttr(code.name)}" data-answer-proof="${escAttr([causes[0], fixes[0]].filter(Boolean).join(' / '))}" data-unverified="${code.unverified === true}" style="border-left:3px solid ${brandColor};">
-      <button class="error-toggle" onclick="toggleCode('${uid}')">
+      <button class="error-toggle" data-app-action="toggleCode" data-arg0="${escAttr(uid)}">
         <div style="flex:1;">
           <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:5px;align-items:center;">
             <span class="badge code-data ${isLED ? 'badge-led' : ''}" style="${!isLED ? `background:#f1f5f9;color:#374151;border:1px solid #e2e8f0;font-size:11px;` : ''}">${code.code}</span>
@@ -3680,9 +3680,9 @@ function codeCard(code, uid, brandColor) {
           </div>
           <span class="code-data" style="color:#1e293b;font-size:14px;font-weight:600;">${code.name}</span>
         </div>
-        <svg id="chev-${uid}" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="2.5" stroke-linecap="round" style="flex-shrink:0;margin-top:3px;transition:transform 0.2s;"><polyline points="6 9 12 15 18 9"/></svg>
+        <svg id="chev-${escAttr(uid)}" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="2.5" stroke-linecap="round" style="flex-shrink:0;margin-top:3px;transition:transform 0.2s;"><polyline points="6 9 12 15 18 9"/></svg>
       </button>
-      <div id="det-${uid}" class="error-detail">
+      <div id="det-${escAttr(uid)}" class="error-detail">
         <div style="padding-top:12px;">
           <p style="color:#64748b;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;margin-bottom:7px;">${a3Text('code.checkFirst')}</p>
           <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));gap:7px;">
@@ -3849,30 +3849,30 @@ function onParamChange() {
   let html = '';
   const fld = (label, id, ph, extra = '') =>
     `<div class="field-group"><label class="field-label">${label}</label>
-     <input type="number" id="${id}" placeholder="${ph}" min="0" inputmode="decimal" ${extra}></div>`;
+     <input type="number" id="${escAttr(id)}" placeholder="${ph}" min="0" inputmode="decimal" ${extra}></div>`;
   const sel = (label, id, opts) =>
     `<div class="field-group"><label class="field-label">${label}</label>
-     <select id="${id}" onchange="renderProductLineHelper()">${opts}</select></div>`;
+     <select id="${escAttr(id)}" onchange="renderProductLineHelper()">${opts}</select></div>`;
 
   switch (p) {
     case 'fc':
       html += fld('Current FC (ppm)', 'dose-cur', 'e.g. 1');
       html += fld('Target FC (ppm)', 'dose-tgt', 'e.g. 5');
       html += sel('Chlorine Product', 'dose-prod',
-        window.CHEM_DATA.dosing.fc.products.map(x => `<option value="${x.id}">${x.label} (${x.unit})</option>`).join(''));
+        window.CHEM_DATA.dosing.fc.products.map(x => `<option value="${escAttr(x.id)}">${x.label} (${x.unit})</option>`).join(''));
       break;
     case 'ph_lower':
       html += fld('Current pH', 'dose-cur', 'e.g. 7.8', 'step="0.1"');
       html += fld('Target pH', 'dose-tgt', 'e.g. 7.4', 'step="0.1"');
       html += fld('TA Level (ppm)', 'dose-ta', 'e.g. 100');
       html += sel('Product', 'dose-prod',
-        window.CHEM_DATA.dosing.ph.lower.map(x => `<option value="${x.id}">${x.label}</option>`).join(''));
+        window.CHEM_DATA.dosing.ph.lower.map(x => `<option value="${escAttr(x.id)}">${x.label}</option>`).join(''));
       break;
     case 'ph_raise':
       html += fld('Current pH', 'dose-cur', 'e.g. 7.2', 'step="0.1"');
       html += fld('Target pH', 'dose-tgt', 'e.g. 7.4', 'step="0.1"');
       html += sel('Product', 'dose-prod',
-        window.CHEM_DATA.dosing.ph.raise.map(x => `<option value="${x.id}">${x.label}</option>`).join(''));
+        window.CHEM_DATA.dosing.ph.raise.map(x => `<option value="${escAttr(x.id)}">${x.label}</option>`).join(''));
       break;
     case 'ta':
       html += fld('Current TA (ppm)', 'dose-cur', 'e.g. 60');
@@ -4063,7 +4063,7 @@ function resultCard(amount, unit, product, note, basis) {
     <div class="result-wrap">
       <div style="display:flex;align-items:flex-start;justify-content:space-between;">
         <p style="color:#64748b;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;">Dose Required</p>
-        <button class="copy-btn" onclick="copyText('${raw.replace(/'/g, "\\'")}', this)">Copy</button>
+        <button class="copy-btn" data-app-action="copy-text" data-arg0="${escAttr(raw)}">Copy</button>
       </div>
       <p class="result-amount">${main}</p>
       ${alt ? `<p class="result-alt">${alt}</p>` : ''}
@@ -4212,14 +4212,14 @@ function calculateLsiPreview(opts = {}) {
 function renderSlamTypeBtns() {
   document.getElementById('slam-type-btns').innerHTML =
     Object.entries(window.CHEM_DATA.slam).map(([id, t]) =>
-      `<button class="slam-btn" id="slam-${id}" onclick="selectSlamType('${id}')">${t.label}</button>`
+      `<button class="slam-btn" id="slam-${escAttr(id)}" data-app-action="selectSlamType" data-arg0="${escAttr(id)}">${t.label}</button>`
     ).join('');
 }
 
 function renderSlamProducts() {
   const opts = window.CHEM_DATA.dosing.fc.products
     .filter(p => p.unit === 'fl oz')
-    .map(p => `<option value="${p.id}">${p.label}</option>`).join('');
+    .map(p => `<option value="${escAttr(p.id)}">${p.label}</option>`).join('');
   document.getElementById('slam-product').innerHTML = opts;
 }
 
@@ -4254,7 +4254,7 @@ function calculateSlam() {
       <div class="result-wrap" style="margin-top:12px;">
         <div style="display:flex;align-items:flex-start;justify-content:space-between;">
           <p style="color:#64748b;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;">Add Now</p>
-          <button class="copy-btn" onclick="copyText('${main.replace(/'/g, "\\'")}', this)">Copy</button>
+          <button class="copy-btn" data-app-action="copy-text" data-arg0="${escAttr(main)}">Copy</button>
         </div>
         <p class="result-amount">${main}</p>
         ${alt ? `<p class="result-alt">${alt}</p>` : ''}
@@ -4280,7 +4280,7 @@ function calculateSlam() {
       ${addHtml}
       <div class="info-box" style="margin-top:10px;font-size:11px;">${def.note}</div>
       <p style="color:#94a3b8;font-size:10px;margin-top:8px;">OCLT: After SLAM, test FC at dusk and dawn. Pass = loss &lt; 1 ppm overnight.</p>
-      <button onclick="startSlamTracker(${targetFC},'${S.slamType}',${vol},${cya})"
+      <button data-app-action="startSlamTracker" data-arg0="${escAttr(Number(targetFC))}" data-arg1="${escAttr(S.slamType)}" data-arg2="${escAttr(Number(vol))}" data-arg3="${escAttr(Number(cya))}"
         style="width:100%;margin-top:12px;padding:14px;background:#92400e;color:#fef3c7;border:none;border-radius:10px;font-size:14px;font-weight:800;cursor:pointer;letter-spacing:.02em;">
         ▶ Start SLAM Tracker (Multi-Day)
       </button>
@@ -4520,7 +4520,7 @@ function initVolume() {
 function renderShapeGrid() {
   setEl('shape-grid',
     window.POOL_VOLUME_DATA.shapes.map(s => `
-      <button class="shape-btn" id="shape-${s.id}" onclick="selectShape('${s.id}')">
+      <button class="shape-btn" id="shape-${escAttr(s.id)}" data-app-action="selectShape" data-arg0="${escAttr(s.id)}">
         <div style="font-size:22px;margin-bottom:5px;">${SHAPE_ICONS[s.id] || '⬛'}</div>
         ${s.label}
       </button>`).join(''));
@@ -4534,7 +4534,7 @@ function selectShape(id) {
   const fields = shape.fields.map(f => `
     <div class="field-group">
       <label class="field-label">${FIELD_LABELS[f] || f}</label>
-      <input type="number" id="vol-${f}" placeholder="feet" min="0" step="0.5" inputmode="decimal" oninput="autoCalcVol()">
+      <input type="number" id="vol-${escAttr(f)}" placeholder="feet" min="0" step="0.5" inputmode="decimal" oninput="autoCalcVol()">
     </div>`).join('');
   setEl('shape-fields', `
     <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:10px;padding:14px;margin-bottom:12px;box-shadow:0 1px 3px rgba(0,0,0,0.06);">
@@ -4568,7 +4568,7 @@ function calcVolume() {
       <p style="color:#94a3b8;font-size:12px;margin-top:6px;">${cubicFt} cubic feet</p>
       <div class="result-note" style="text-align:left;margin-top:14px;">
         Use this number in the Dosing tab for accurate chemical calculations.
-        <button onclick="useVolumeInDosing(${Math.round(gallons)})" style="display:block;margin-top:8px;background:#eff6ff;border:1px solid #93c5fd;border-radius:6px;color:#0369a1;font-size:11px;font-weight:800;padding:5px 12px;cursor:pointer;width:100%;">
+        <button data-app-action="useVolumeInDosing" data-arg0="${escAttr(Number(Math.round(gallons)))}" style="display:block;margin-top:8px;background:#eff6ff;border:1px solid #93c5fd;border-radius:6px;color:#0369a1;font-size:11px;font-weight:800;padding:5px 12px;cursor:pointer;width:100%;">
           → Use in Dosing Calculator
         </button>
       </div>
@@ -4599,7 +4599,7 @@ function initSandFilter() {
 function renderSandTable() {
   const data = window.SAND_FILTER_DATA.sandByDiameter;
   const rows = data.map((r, i) => `
-    <tr class="sand-row" onclick="tapSandRow(${r.dia})" style="background:${i % 2 ? '#f8fafc' : '#ffffff'};">
+    <tr class="sand-row" data-app-action="tapSandRow" data-arg0="${escAttr(Number(r.dia))}" style="background:${i % 2 ? '#f8fafc' : '#ffffff'};">
       <td style="padding:8px 12px;color:#0f172a;font-weight:800;">${r.dia}"</td>
       <td style="padding:8px 12px;color:#0369a1;font-weight:700;">${r.sand} lbs</td>
       <td style="padding:8px 12px;color:#374151;">${r.flow}</td>
@@ -4693,7 +4693,7 @@ function switchFilterType(type) {
 function renderDeSection() {
   const data = window.DE_FILTER_DATA;
   const tableRows = data.filters.map((f, i) =>
-    `<tr class="sand-row" onclick="tapDeRow(${f.sqft || 0})" style="background:${i % 2 ? '#f8fafc' : '#ffffff'};">
+    `<tr class="sand-row" data-app-action="tapDeRow" data-arg0="${escAttr(Number(f.sqft || 0))}" style="background:${i % 2 ? '#f8fafc' : '#ffffff'};">
       <td style="padding:7px 10px;color:#0f172a;font-weight:700;font-size:12px;">${f.brand}</td>
       <td style="padding:7px 10px;color:#0369a1;font-size:12px;font-weight:700;">${f.model}</td>
       <td style="padding:7px 10px;color:#374151;font-size:12px;">${f.sqft ? f.sqft + ' ft²' : '—'}</td>
@@ -4893,7 +4893,7 @@ function renderClosingProof() {
     <h3 style="font-size:14px;color:#0f172a;margin:0 0 5px;">${a3Text('closing.photoReferences')}</h3>
     <p style="font-size:12px;color:#475569;margin:0 0 12px;">${a3Text('closing.photoReferencesHelp')}</p>
     ${CLOSING_PHOTO_PROOFS.map(({ key, labelKey }) => `<label style="display:block;font-size:12px;font-weight:700;color:#334155;margin:0 0 10px;">${a3Text(labelKey)}
-      <input type="text" maxlength="120" value="${escAttr(cl._photos?.[key] || '')}" placeholder="${escAttr(a3Text('closing.photoReferencePlaceholder'))}" onchange="setClosingPhotoReference('${key}',this.value)" style="display:block;width:100%;box-sizing:border-box;padding:10px;margin-top:4px;border:1px solid #cbd5e1;border-radius:6px;font:inherit;">
+      <input type="text" maxlength="120" value="${escAttr(cl._photos?.[key] || '')}" placeholder="${escAttr(a3Text('closing.photoReferencePlaceholder'))}" data-app-change="closing-photo" data-arg0="${escAttr(key)}" style="display:block;width:100%;box-sizing:border-box;padding:10px;margin-top:4px;border:1px solid #cbd5e1;border-radius:6px;font:inherit;">
     </label>`).join('')}
     <p style="font-size:12px;color:#475569;margin:0 0 10px;">${status.photos} / ${CLOSING_PHOTO_PROOFS.length} ${a3Text('closing.photoReferencesCount')}</p>
     ${status.complete ? `<button type="button" class="brain-action green" onclick="textClosingProofPacket()">${a3Text('closing.textPacket')}</button><div id="closing-pass-offer"></div>` : `<p style="font-size:12px;color:#475569;margin:0;">${a3Text('closing.completeToText')}</p>`}
@@ -4958,7 +4958,7 @@ async function mountClosingPassOffers() {
         <p style="font-size:13px;font-weight:800;color:#0f172a;margin:0 0 5px;">${a3Text('upgrade.closingPass')}</p>
         <p style="font-size:12px;color:#475569;margin:0 0 6px;">${escHtml(item.priceLabel)}</p>
         <p style="font-size:12px;color:#475569;margin:0 0 10px;">${a3Text('upgrade.closingPassBody')}</p>
-        <button type="button" class="brain-action green" data-checkout-plan="closing_pass_60d" data-checkout-placement="${placement}" onclick="startWebCheckout('closing_pass_60d','${placement}')">${a3Text('closing.reviewPassCheckout')}</button>
+        <button type="button" class="brain-action green" data-checkout-plan="closing_pass_60d" data-checkout-placement="${escAttr(placement)}" data-app-action="startWebCheckout" data-arg0="${escAttr('closing_pass_60d')}" data-arg1="${escAttr(placement)}">${a3Text('closing.reviewPassCheckout')}</button>
       </div>`;
       trackSplashLensEvent('closing_pass_offer_shown', { placement, plan: 'closing_pass_60d' });
     }
@@ -5124,8 +5124,8 @@ function renderChecklist() {
         ${phase.steps.map((step, si) => {
           const k = `${pi}-${si}`;
           const done = !!cl[k];
-          return `<div id="cli-${k}" class="cl-item${done ? ' done' : ''}" onclick="toggleItem(${pi},${si})">
-            <input type="checkbox" id="chk-${k}" ${done ? 'checked' : ''} onclick="event.stopPropagation();toggleItem(${pi},${si})">
+          return `<div id="cli-${escAttr(k)}" class="cl-item${done ? ' done' : ''}" data-app-action="toggleItem" data-arg0="${escAttr(Number(pi))}" data-arg1="${escAttr(Number(si))}">
+            <input type="checkbox" id="chk-${escAttr(k)}" ${done ? 'checked' : ''} data-app-action="toggleItem" data-arg0="${escAttr(Number(pi))}" data-arg1="${escAttr(Number(si))}">
             <span class="cl-text code-data">${S.clType === 'closing' ? a3ClosingText(step) : step}</span>
           </div>`;
         }).join('')}
@@ -5214,15 +5214,15 @@ function addChemRow() {
   div.id = `chem-row-${id}`;
   div.style.cssText = 'display:grid;grid-template-columns:minmax(92px,1fr) 60px 54px 64px 36px;gap:4px;margin-bottom:8px;align-items:center;';
   div.innerHTML = `
-    <input type="text" id="cr-name-${id}" placeholder="Chemical..." oninput="updateReportCostSummary()" style="background:#ffffff;border:1px solid #cbd5e1;color:#0f172a;border-radius:9px;padding:10px 10px;font-size:13px;font-family:inherit;width:100%;min-width:0;">
-    <input type="text" id="cr-amt-${id}"  placeholder="Amt" inputmode="decimal" oninput="updateReportCostSummary()" style="background:#ffffff;border:1px solid #cbd5e1;color:#0f172a;border-radius:9px;padding:10px 8px;font-size:13px;font-family:inherit;width:100%;min-width:0;">
-    <input type="number" id="cr-cost-${id}" placeholder="$" inputmode="decimal" step="0.01" min="0" oninput="updateReportCostSummary()" style="background:#ffffff;border:1px solid #cbd5e1;color:#0f172a;border-radius:9px;padding:10px 8px;font-size:13px;font-family:inherit;width:100%;min-width:0;">
-    <select id="cr-stock-${id}" onchange="updateReportCostSummary()" style="background:#ffffff;border:1px solid #cbd5e1;color:#0f172a;border-radius:9px;padding:10px 6px;font-size:12px;font-family:inherit;width:100%;min-width:0;">
+    <input type="text" id="cr-name-${escAttr(id)}" placeholder="Chemical..." oninput="updateReportCostSummary()" style="background:#ffffff;border:1px solid #cbd5e1;color:#0f172a;border-radius:9px;padding:10px 10px;font-size:13px;font-family:inherit;width:100%;min-width:0;">
+    <input type="text" id="cr-amt-${escAttr(id)}"  placeholder="Amt" inputmode="decimal" oninput="updateReportCostSummary()" style="background:#ffffff;border:1px solid #cbd5e1;color:#0f172a;border-radius:9px;padding:10px 8px;font-size:13px;font-family:inherit;width:100%;min-width:0;">
+    <input type="number" id="cr-cost-${escAttr(id)}" placeholder="$" inputmode="decimal" step="0.01" min="0" oninput="updateReportCostSummary()" style="background:#ffffff;border:1px solid #cbd5e1;color:#0f172a;border-radius:9px;padding:10px 8px;font-size:13px;font-family:inherit;width:100%;min-width:0;">
+    <select id="cr-stock-${escAttr(id)}" onchange="updateReportCostSummary()" style="background:#ffffff;border:1px solid #cbd5e1;color:#0f172a;border-radius:9px;padding:10px 6px;font-size:12px;font-family:inherit;width:100%;min-width:0;">
       <option>Truck</option>
       <option>Restock</option>
       <option>Customer</option>
     </select>
-    <button type="button" onclick="removeChemRow(${id})" style="background:#fee2e2;border:1px solid #fca5a5;color:#991b1b;border-radius:8px;padding:0;height:36px;width:36px;cursor:pointer;font-size:18px;line-height:1;">×</button>`;
+    <button type="button" data-app-action="removeChemRow" data-arg0="${escAttr(Number(id))}" style="background:#fee2e2;border:1px solid #fca5a5;color:#991b1b;border-radius:8px;padding:0;height:36px;width:36px;cursor:pointer;font-size:18px;line-height:1;">×</button>`;
   container.appendChild(div);
   updateReportCostSummary();
 }
@@ -5622,7 +5622,7 @@ async function createServiceProofShareLink() {
         <input type="text" readonly value="${escAttr(url)}" onclick="this.select()" style="width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:10px;font-size:12px;margin-bottom:10px;">
         <div class="brain-grid">
           <button type="button" id="rpt-proof-copy-link" class="brain-action green">${a3Text('packet.copyLink')}</button>
-          <a class="brain-action secondary" href="${escAttr(url)}" target="_blank" rel="noopener" style="text-align:center;text-decoration:none;">${a3Text('packet.open')}</a>
+          <a class="brain-action secondary" href="${escAttr(safeUrl(url))}" target="_blank" rel="noopener" style="text-align:center;text-decoration:none;">${a3Text('packet.open')}</a>
         </div>
         ${teamId ? `<button type="button" class="brain-action secondary" style="width:100%;margin-top:8px;" onclick="submitLastProofPacketForTeamReview().catch((error)=>window.alert(error.message))">Send to team review</button>` : ''}
       </section>`;
@@ -5795,7 +5795,7 @@ function renderServiceProofAssistant() {
         <button type="button" class="brain-action" onclick="answerServiceProofAssistant()" style="padding:10px 12px;">Ask</button>
       </div>
       <div style="display:flex;gap:6px;overflow-x:auto;margin-bottom:10px;">
-        ${['CRM fit','Customer summary','Proof photos','AI chat','Repeat issues','Facility workflow'].map(q => `<button type="button" class="brain-chip primary" onclick="askServiceProofAssistant('${escAttr(q)}')">${escHtml(q)}</button>`).join('')}
+        ${['CRM fit','Customer summary','Proof photos','AI chat','Repeat issues','Facility workflow'].map(q => `<button type="button" class="brain-chip primary" data-app-action="askServiceProofAssistant" data-arg0="${escAttr(q)}">${escHtml(q)}</button>`).join('')}
       </div>
       <div id="proof-assistant-answer" class="info-box">Pick a chip or ask a question.</div>
     </section>`;
@@ -6541,7 +6541,7 @@ function toggleReportPoolPicker() {
   picker.innerHTML = `
     <p style="color:#64748b;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px;">Select Pool to Auto-Fill</p>
     ${pools.map(p => `
-      <div onclick="loadReportFromPool('${p.id}')"
+      <div data-app-action="loadReportFromPool" data-arg0="${escAttr(p.id)}"
            style="padding:10px;border-radius:7px;border:1px solid #e2e8f0;background:#ffffff;cursor:pointer;margin-bottom:6px;-webkit-tap-highlight-color:transparent;">
         <p style="color:#0f172a;font-size:14px;font-weight:700;">${escHtml(p.name)}</p>
         ${p.address ? `<p style="color:#64748b;font-size:12px;">${escHtml(p.address)}</p>` : ''}
@@ -6808,17 +6808,17 @@ function renderPoolList() {
       : 'No service history yet';
     const gallonsDisplay = p.gallons ? Number(p.gallons).toLocaleString() + ' gal' : '';
     return `
-      <div class="pool-card" onclick="renderPoolDetail('${p.id}')">
+      <div class="pool-card" data-app-action="renderPoolDetail" data-arg0="${escAttr(p.id)}">
         <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">
           <div style="flex:1;min-width:0;">
             <div class="pool-card-name">${escHtml(p.name)}</div>
             ${p.address ? `<div class="pool-card-meta" style="margin-bottom:3px;">${escHtml(p.address)}</div>` : ''}
-            <div class="pool-card-meta">${[p.type, p.sanitizer, gallonsDisplay].filter(Boolean).join(' · ')}</div>
+            <div class="pool-card-meta">${escHtml([p.type, p.sanitizer, gallonsDisplay].filter(Boolean).join(' · '))}</div>
           </div>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="2.5" stroke-linecap="round" style="flex-shrink:0;margin-top:4px;"><polyline points="9 18 15 12 9 6"/></svg>
         </div>
         <div style="margin-top:8px;padding-top:8px;border-top:1px solid #f1f5f9;">
-          <span style="color:#64748b;font-size:11px;">${lastDate}</span>
+          <span style="color:#64748b;font-size:11px;">${escHtml(lastDate)}</span>
           ${passportCount || historyCount ? `<span style="color:#0369a1;font-size:11px;font-weight:700;float:right;">${passportCount} report${passportCount !== 1 ? 's' : ''} / ${historyCount} reading${historyCount !== 1 ? 's' : ''}</span>` : ''}
         </div>
       </div>`;
@@ -6855,16 +6855,16 @@ function renderPoolDetail(id) {
         r.cya != null ? `CYA ${r.cya}` : '',
       ].filter(Boolean).join('  ');
       return `
-        <div class="pool-reading-row" onclick="toggleReadingDetail('${uid}')">
+        <div class="pool-reading-row" data-app-action="toggleReadingDetail" data-arg0="${escAttr(uid)}">
           <div style="display:flex;align-items:center;justify-content:space-between;">
             <div>
-              <span style="color:#0f172a;font-size:13px;font-weight:700;">${dateStr}</span>
+              <span style="color:#0f172a;font-size:13px;font-weight:700;">${escHtml(dateStr)}</span>
               ${r.note ? `<span style="color:#64748b;font-size:11px;margin-left:8px;">· ${escHtml(r.note)}</span>` : ''}
             </div>
-            <svg id="rchev-${uid}" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="2.5" stroke-linecap="round" style="flex-shrink:0;transition:transform 0.2s;"><polyline points="6 9 12 15 18 9"/></svg>
+            <svg id="rchev-${escAttr(uid)}" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="2.5" stroke-linecap="round" style="flex-shrink:0;transition:transform 0.2s;"><polyline points="6 9 12 15 18 9"/></svg>
           </div>
-          <p style="color:#64748b;font-size:12px;margin-top:4px;">${summary}</p>
-          <div id="${uid}" class="pool-reading-detail">
+          <p style="color:#64748b;font-size:12px;margin-top:4px;">${escHtml(summary)}</p>
+          <div id="${escAttr(uid)}" class="pool-reading-detail">
             ${poolReadingDetailGrid(r)}
           </div>
         </div>`;
@@ -6885,7 +6885,7 @@ function renderPoolDetail(id) {
         Back
       </button>
       <p style="color:#0369a1;font-weight:900;font-size:16px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(p.name)}</p>
-      <button onclick="renderPoolForm('${id}')" style="background:#f1f5f9;border:none;border-radius:8px;padding:7px 12px;cursor:pointer;color:#374151;font-size:12px;font-weight:700;">Edit</button>
+      <button data-app-action="renderPoolForm" data-arg0="${escAttr(id)}" style="background:#f1f5f9;border:none;border-radius:8px;padding:7px 12px;cursor:pointer;color:#374151;font-size:12px;font-weight:700;">Edit</button>
     </div>
 
     <!-- Info pills -->
@@ -6912,38 +6912,38 @@ function renderPoolDetail(id) {
         <p class="field-label">Notes</p>
         ${voiceNoteButton('pool-notes-ta')}
       </div>
-      <textarea id="pool-notes-ta" class="pool-textarea" rows="3" placeholder="Gate code, special instructions…" onblur="savePoolNotes('${id}')">${escHtml(p.notes || '')}</textarea>
+      <textarea id="pool-notes-ta" class="pool-textarea" rows="3" placeholder="Gate code, special instructions…" data-app-blur="savePoolNotes" data-arg0="${escAttr(id)}">${escHtml(p.notes || '')}</textarea>
     </div>
 
     <!-- Use in Dosing -->
     ${p.gallons ? `
-    <button class="btn-outline-blue" style="margin-bottom:14px;" onclick="usePoolInDosing(${Number(p.gallons)})">
+    <button class="btn-outline-blue" style="margin-bottom:14px;" data-app-action="usePoolInDosing" data-arg0="${escAttr(Number(Number(p.gallons)))}">
       → Use ${Number(p.gallons).toLocaleString()} gal in Dosing Calculator
     </button>` : ''}
 
     <!-- Chemistry History -->
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
       <p style="color:#0369a1;font-weight:900;font-size:15px;">Chemistry History</p>
-      <button onclick="showChemForm('${id}')" style="background:#eff6ff;border:1px solid #93c5fd;color:#0369a1;font-size:12px;font-weight:700;padding:6px 12px;border-radius:6px;cursor:pointer;">+ Save Today</button>
+      <button data-app-action="showChemForm" data-arg0="${escAttr(id)}" style="background:#eff6ff;border:1px solid #93c5fd;color:#0369a1;font-size:12px;font-weight:700;padding:6px 12px;border-radius:6px;cursor:pointer;">+ Save Today</button>
     </div>
 
-    <div id="chem-form-wrap-${id}"></div>
+    <div id="chem-form-wrap-${escAttr(id)}"></div>
 
-    <div id="history-list-${id}">
+    <div id="history-list-${escAttr(id)}">
       ${historyHtml}
     </div>
 
     <hr class="section-div">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
       <p style="color:#0369a1;font-weight:900;font-size:15px;">Saved Job Notes</p>
-      <button onclick="loadReportFromPool('${id}');showTab('report')" style="background:#ecfeff;border:1px solid #67e8f9;color:#0e7490;font-size:12px;font-weight:800;padding:6px 12px;border-radius:6px;cursor:pointer;">+ New Report</button>
+      <button data-app-action="pool-new-report" data-arg0="${escAttr(id)}" style="background:#ecfeff;border:1px solid #67e8f9;color:#0e7490;font-size:12px;font-weight:800;padding:6px 12px;border-radius:6px;cursor:pointer;">+ New Report</button>
     </div>
-    <div id="service-passports-${id}">
+    <div id="service-passports-${escAttr(id)}">
       ${serviceHistoryHtml}
     </div>
 
     <hr class="section-div">
-    <button class="btn-delete" onclick="deletePool('${id}')">Delete Pool</button>
+    <button class="btn-delete" data-app-action="deletePool" data-arg0="${escAttr(id)}">Delete Pool</button>
     <div style="height:8px;"></div>`;
   window.SplashLensFieldSignals?.onPoolViewed(p);
 }
@@ -6983,14 +6983,14 @@ function renderPoolFieldIntelligence(pool) {
         ${trendFlags.length ? `<ul style="margin:0 0 0 16px;color:#7c2d12;font-size:11px;line-height:1.45;font-weight:750;">${trendFlags.map(flag => `<li>${escHtml(flag)}</li>`).join('')}</ul>` : '<p style="color:#9a3412;font-size:11px;line-height:1.45;font-weight:750;">No repeat pattern yet. Save a few visits, PartSnap packets, or Route Brain checks to build signal.</p>'}
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-        <button onclick="copyPoolCRMPacket('${pool.id}')" style="background:#0369a1;color:#fff;border:0;border-radius:9px;padding:10px;font-size:12px;font-weight:900;cursor:pointer;">Copy CRM Packet</button>
-        <button onclick="sharePoolCRMPacket('${pool.id}')" style="background:#0f766e;color:#fff;border:0;border-radius:9px;padding:10px;font-size:12px;font-weight:900;cursor:pointer;">Share / Export</button>
-        <button onclick="showNextVisitReminderForm('${pool.id}')" style="background:#f1f5f9;color:#334155;border:1px solid #cbd5e1;border-radius:9px;padding:10px;font-size:12px;font-weight:900;cursor:pointer;">Set Reminder</button>
-        <button onclick="loadReportFromPool('${pool.id}');showTab('report')" style="background:#f1f5f9;color:#334155;border:1px solid #cbd5e1;border-radius:9px;padding:10px;font-size:12px;font-weight:900;cursor:pointer;">New Visit</button>
-        <button onclick="downloadPoolCSV('${pool.id}')" style="background:#f8fafc;color:#0369a1;border:1px solid #bae6fd;border-radius:9px;padding:10px;font-size:12px;font-weight:900;cursor:pointer;">Download CSV</button>
-        <button onclick="printPoolPacket('${pool.id}')" style="background:#f8fafc;color:#0369a1;border:1px solid #bae6fd;border-radius:9px;padding:10px;font-size:12px;font-weight:900;cursor:pointer;">Print / PDF</button>
+        <button data-app-action="copyPoolCRMPacket" data-arg0="${escAttr(pool.id)}" style="background:#0369a1;color:#fff;border:0;border-radius:9px;padding:10px;font-size:12px;font-weight:900;cursor:pointer;">Copy CRM Packet</button>
+        <button data-app-action="sharePoolCRMPacket" data-arg0="${escAttr(pool.id)}" style="background:#0f766e;color:#fff;border:0;border-radius:9px;padding:10px;font-size:12px;font-weight:900;cursor:pointer;">Share / Export</button>
+        <button data-app-action="showNextVisitReminderForm" data-arg0="${escAttr(pool.id)}" style="background:#f1f5f9;color:#334155;border:1px solid #cbd5e1;border-radius:9px;padding:10px;font-size:12px;font-weight:900;cursor:pointer;">Set Reminder</button>
+        <button data-app-action="pool-new-report" data-arg0="${escAttr(pool.id)}" style="background:#f1f5f9;color:#334155;border:1px solid #cbd5e1;border-radius:9px;padding:10px;font-size:12px;font-weight:900;cursor:pointer;">New Visit</button>
+        <button data-app-action="downloadPoolCSV" data-arg0="${escAttr(pool.id)}" style="background:#f8fafc;color:#0369a1;border:1px solid #bae6fd;border-radius:9px;padding:10px;font-size:12px;font-weight:900;cursor:pointer;">Download CSV</button>
+        <button data-app-action="printPoolPacket" data-arg0="${escAttr(pool.id)}" style="background:#f8fafc;color:#0369a1;border:1px solid #bae6fd;border-radius:9px;padding:10px;font-size:12px;font-weight:900;cursor:pointer;">Print / PDF</button>
       </div>
-      <div id="next-visit-form-${pool.id}"></div>
+      <div id="next-visit-form-${escAttr(pool.id)}"></div>
       <p style="color:#94a3b8;font-size:10px;line-height:1.35;margin-top:8px;">This is not a CRM replacement. Use this packet to feed your service CRM, accounting notes, a dispatcher, or a senior tech.</p>
     </section>`;
 }
@@ -7055,15 +7055,15 @@ function renderPoolEquipmentTree(pool) {
           <p style="color:#0f172a;font-size:13px;font-weight:900;">${escHtml([item.manufacturer, item.hardware, item.model].filter(Boolean).join(' / ') || 'Unknown equipment')}</p>
           <p style="color:#64748b;font-size:11px;line-height:1.4;">${escHtml(item.symptom || 'No symptom saved')} ${item.confidence ? ' - ' + escHtml(item.confidence) : ''}</p>
           ${[item.speedType, item.thp ? `${item.thp} THP` : '', item.voltage ? `${item.voltage} V` : '', item.installedYear ? `Installed ${item.installedYear}` : ''].filter(Boolean).length ? `<p style="color:#64748b;font-size:10px;line-height:1.4;margin-top:4px;">${escHtml([item.speedType, item.thp ? `${item.thp} THP` : '', item.voltage ? `${item.voltage} V` : '', item.installedYear ? `Installed ${item.installedYear}` : ''].filter(Boolean).join(' / '))}</p>` : ''}
-          ${/pump|motor/i.test([item.hardware, item.model, item.symptom].filter(Boolean).join(' ')) ? `<button type="button" onclick="event.stopPropagation();SplashLensFieldSignals.openPumpDecisionFromEquipment('${escAttr(pool.id)}','${escAttr(item.id)}')" style="margin-top:7px;background:#fff;color:#075985;border:1px solid #7dd3fc;border-radius:7px;padding:7px 9px;font-size:10px;font-weight:900;cursor:pointer;">Compare repair or upgrade</button>` : ''}
+          ${/pump|motor/i.test([item.hardware, item.model, item.symptom].filter(Boolean).join(' ')) ? `<button type="button" data-app-action="pump-decision" data-arg0="${escAttr(pool.id)}" data-arg1="${escAttr(item.id)}" style="margin-top:7px;background:#fff;color:#075985;border:1px solid #7dd3fc;border-radius:7px;padding:7px 9px;font-size:10px;font-weight:900;cursor:pointer;">Compare repair or upgrade</button>` : ''}
         </div>`).join('') : `<p style="color:#94a3b8;font-size:12px;text-align:center;padding:10px 0;">No equipment saved yet. Add the first pump, heater, robot, light, cover, salt cell, or controller.</p>`;
   return `
     <div class="pool-form-panel" style="padding:12px;margin-bottom:10px;">
       <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px;">
         <p style="color:#64748b;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;">Equipment Tree</p>
-        <button onclick="showEquipmentForm('${pool.id}')" style="background:#e0f2fe;color:#075985;border:1px solid #7dd3fc;border-radius:999px;padding:4px 8px;font-size:10px;font-weight:900;cursor:pointer;">+ Add</button>
+        <button data-app-action="showEquipmentForm" data-arg0="${escAttr(pool.id)}" style="background:#e0f2fe;color:#075985;border:1px solid #7dd3fc;border-radius:999px;padding:4px 8px;font-size:10px;font-weight:900;cursor:pointer;">+ Add</button>
       </div>
-      <div id="equipment-form-${pool.id}"></div>
+      <div id="equipment-form-${escAttr(pool.id)}"></div>
       ${treeList}
     </div>`;
 }
@@ -7088,33 +7088,33 @@ function showEquipmentForm(poolId) {
   wrap.innerHTML = `
     <div style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:10px;padding:10px;margin-bottom:10px;">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
-        <input id="eq-mfg-${poolId}" type="text" placeholder="Manufacturer" style="min-width:0;border:1px solid #cbd5e1;border-radius:8px;padding:10px;font-size:13px;">
-        <input id="eq-hardware-${poolId}" type="text" placeholder="Hardware" style="min-width:0;border:1px solid #cbd5e1;border-radius:8px;padding:10px;font-size:13px;">
-        <input id="eq-model-${poolId}" type="text" placeholder="Model / family" style="min-width:0;border:1px solid #cbd5e1;border-radius:8px;padding:10px;font-size:13px;">
-        <select id="eq-confidence-${poolId}" style="min-width:0;border:1px solid #cbd5e1;border-radius:8px;padding:10px;font-size:13px;background:#fff;">
+        <input id="eq-mfg-${escAttr(poolId)}" type="text" placeholder="Manufacturer" style="min-width:0;border:1px solid #cbd5e1;border-radius:8px;padding:10px;font-size:13px;">
+        <input id="eq-hardware-${escAttr(poolId)}" type="text" placeholder="Hardware" style="min-width:0;border:1px solid #cbd5e1;border-radius:8px;padding:10px;font-size:13px;">
+        <input id="eq-model-${escAttr(poolId)}" type="text" placeholder="Model / family" style="min-width:0;border:1px solid #cbd5e1;border-radius:8px;padding:10px;font-size:13px;">
+        <select id="eq-confidence-${escAttr(poolId)}" style="min-width:0;border:1px solid #cbd5e1;border-radius:8px;padding:10px;font-size:13px;background:#fff;">
           <option value="visible label">Visible label</option>
           <option value="tech verified">Tech verified</option>
           <option value="possible match">Possible match</option>
           <option value="needs manual verification">Needs manual verification</option>
         </select>
       </div>
-      <input id="eq-symptom-${poolId}" type="text" placeholder="Symptom, part clue, or next check" style="width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:10px;font-size:13px;margin-bottom:8px;">
+      <input id="eq-symptom-${escAttr(poolId)}" type="text" placeholder="Symptom, part clue, or next check" style="width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:10px;font-size:13px;margin-bottom:8px;">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
-        <select id="eq-speed-${poolId}" style="min-width:0;border:1px solid #cbd5e1;border-radius:8px;padding:10px;font-size:13px;background:#fff;">
+        <select id="eq-speed-${escAttr(poolId)}" style="min-width:0;border:1px solid #cbd5e1;border-radius:8px;padding:10px;font-size:13px;background:#fff;">
           <option value="">Pump speed type</option>
           <option value="Single-speed">Single-speed</option>
           <option value="Two-speed">Two-speed</option>
           <option value="Variable-speed">Variable-speed</option>
           <option value="Unknown speed">Unknown</option>
         </select>
-        <input id="eq-thp-${poolId}" type="number" min="0" step="0.01" inputmode="decimal" placeholder="Total HP (THP)" style="min-width:0;border:1px solid #cbd5e1;border-radius:8px;padding:10px;font-size:13px;">
-        <input id="eq-voltage-${poolId}" type="number" min="0" step="1" inputmode="numeric" placeholder="Voltage" style="min-width:0;border:1px solid #cbd5e1;border-radius:8px;padding:10px;font-size:13px;">
-        <input id="eq-year-${poolId}" type="number" min="1950" max="2100" step="1" inputmode="numeric" placeholder="Installed year" style="min-width:0;border:1px solid #cbd5e1;border-radius:8px;padding:10px;font-size:13px;">
+        <input id="eq-thp-${escAttr(poolId)}" type="number" min="0" step="0.01" inputmode="decimal" placeholder="Total HP (THP)" style="min-width:0;border:1px solid #cbd5e1;border-radius:8px;padding:10px;font-size:13px;">
+        <input id="eq-voltage-${escAttr(poolId)}" type="number" min="0" step="1" inputmode="numeric" placeholder="Voltage" style="min-width:0;border:1px solid #cbd5e1;border-radius:8px;padding:10px;font-size:13px;">
+        <input id="eq-year-${escAttr(poolId)}" type="number" min="1950" max="2100" step="1" inputmode="numeric" placeholder="Installed year" style="min-width:0;border:1px solid #cbd5e1;border-radius:8px;padding:10px;font-size:13px;">
       </div>
-      <textarea id="eq-note-${poolId}" rows="2" placeholder="Proof note, label text, serial clue, vendor pointer..." style="width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:10px;font-size:13px;resize:vertical;margin-bottom:8px;"></textarea>
+      <textarea id="eq-note-${escAttr(poolId)}" rows="2" placeholder="Proof note, label text, serial clue, vendor pointer..." style="width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:10px;font-size:13px;resize:vertical;margin-bottom:8px;"></textarea>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-        <button onclick="saveManualEquipment('${poolId}')" style="background:#0369a1;color:#fff;border:0;border-radius:9px;padding:10px;font-size:12px;font-weight:900;cursor:pointer;">Save Equipment</button>
-        <button onclick="cancelEquipmentForm('${poolId}')" style="background:#f8fafc;color:#64748b;border:1px solid #cbd5e1;border-radius:9px;padding:10px;font-size:12px;font-weight:900;cursor:pointer;">Cancel</button>
+        <button data-app-action="saveManualEquipment" data-arg0="${escAttr(poolId)}" style="background:#0369a1;color:#fff;border:0;border-radius:9px;padding:10px;font-size:12px;font-weight:900;cursor:pointer;">Save Equipment</button>
+        <button data-app-action="cancelEquipmentForm" data-arg0="${escAttr(poolId)}" style="background:#f8fafc;color:#64748b;border:1px solid #cbd5e1;border-radius:9px;padding:10px;font-size:12px;font-weight:900;cursor:pointer;">Cancel</button>
       </div>
     </div>`;
 }
@@ -7165,17 +7165,17 @@ function showNextVisitReminderForm(poolId) {
   const next = pool.nextVisitReminder || {};
   wrap.innerHTML = `
     <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:10px;margin-top:10px;">
-      <label class="field-label" for="next-date-${poolId}">Next Visit Date</label>
-      <input id="next-date-${poolId}" type="date" value="${escAttr(next.date || '')}" style="width:100%;border:1px solid #d6d3d1;border-radius:8px;padding:10px;font-size:13px;margin-bottom:8px;">
+      <label class="field-label" for="next-date-${escAttr(poolId)}">Next Visit Date</label>
+      <input id="next-date-${escAttr(poolId)}" type="date" value="${escAttr(next.date || '')}" style="width:100%;border:1px solid #d6d3d1;border-radius:8px;padding:10px;font-size:13px;margin-bottom:8px;">
       <div class="note-tools">
-        <label class="field-label" for="next-note-${poolId}">Callback Preventer</label>
+        <label class="field-label" for="next-note-${escAttr(poolId)}">Callback Preventer</label>
         ${voiceNoteButton(`next-note-${poolId}`)}
       </div>
-      <textarea id="next-note-${poolId}" rows="3" placeholder="What should the next tech check first?" style="width:100%;border:1px solid #d6d3d1;border-radius:8px;padding:10px;font-size:13px;resize:vertical;margin-bottom:8px;">${escHtml(next.note || '')}</textarea>
+      <textarea id="next-note-${escAttr(poolId)}" rows="3" placeholder="What should the next tech check first?" style="width:100%;border:1px solid #d6d3d1;border-radius:8px;padding:10px;font-size:13px;resize:vertical;margin-bottom:8px;">${escHtml(next.note || '')}</textarea>
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
-        <button onclick="saveNextVisitReminder('${poolId}')" style="background:#d97706;color:#fff;border:0;border-radius:9px;padding:10px;font-size:12px;font-weight:900;cursor:pointer;">Save</button>
-        <button onclick="clearNextVisitReminder('${poolId}')" style="background:#fff7ed;color:#9a3412;border:1px solid #fed7aa;border-radius:9px;padding:10px;font-size:12px;font-weight:900;cursor:pointer;">Clear</button>
-        <button onclick="document.getElementById('next-visit-form-${poolId}').innerHTML=''" style="background:#f8fafc;color:#64748b;border:1px solid #cbd5e1;border-radius:9px;padding:10px;font-size:12px;font-weight:900;cursor:pointer;">Cancel</button>
+        <button data-app-action="saveNextVisitReminder" data-arg0="${escAttr(poolId)}" style="background:#d97706;color:#fff;border:0;border-radius:9px;padding:10px;font-size:12px;font-weight:900;cursor:pointer;">Save</button>
+        <button data-app-action="clearNextVisitReminder" data-arg0="${escAttr(poolId)}" style="background:#fff7ed;color:#9a3412;border:1px solid #fed7aa;border-radius:9px;padding:10px;font-size:12px;font-weight:900;cursor:pointer;">Clear</button>
+        <button data-app-action="cancel-next-visit" data-arg0="${escAttr(poolId)}" style="background:#f8fafc;color:#64748b;border:1px solid #cbd5e1;border-radius:9px;padding:10px;font-size:12px;font-weight:900;cursor:pointer;">Cancel</button>
       </div>
     </div>`;
 }
@@ -7348,7 +7348,7 @@ function poolReadingDetailGrid(r) {
   return fields.filter(([,v]) => v != null && v !== '').map(([label, val]) =>
     `<div style="background:#f8fafc;border-radius:6px;padding:8px;text-align:center;">
        <p style="color:#64748b;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;">${label}</p>
-       <p style="color:#0f172a;font-size:16px;font-weight:900;margin-top:2px;">${val}</p>
+       <p style="color:#0f172a;font-size:16px;font-weight:900;margin-top:2px;">${Number(val)}</p>
      </div>`
   ).join('') +
   (r.source ? `<div style="grid-column:1/-1;background:#f0f9ff;border:1px solid #bae6fd;border-radius:6px;padding:8px;font-size:11px;color:#0369a1;font-weight:800;">Source: ${escHtml(readingSourceLabel(r.source))}</div>` : '') +
@@ -7373,7 +7373,7 @@ function renderServicePassportHistory(pool) {
       readings.cya ? `CYA ${readings.cya}` : '',
     ].filter(Boolean).join('  ');
     return `
-      <div class="pool-reading-row" onclick="toggleReadingDetail('${uid}')">
+      <div class="pool-reading-row" data-app-action="toggleReadingDetail" data-arg0="${escAttr(uid)}">
         <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">
           <div style="min-width:0;">
             <span style="color:#0f172a;font-size:13px;font-weight:800;">${escHtml(r.date || '')}</span>
@@ -7381,13 +7381,13 @@ function renderServicePassportHistory(pool) {
             <p style="color:#64748b;font-size:12px;margin-top:4px;line-height:1.35;">${escHtml(summary)}</p>
             ${readingSummary ? `<p style="color:#0369a1;font-size:11px;font-weight:800;margin-top:4px;">${escHtml(readingSummary)}</p>` : ''}
           </div>
-          <svg id="rchev-${uid}" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="2.5" stroke-linecap="round" style="flex-shrink:0;transition:transform 0.2s;margin-top:3px;"><polyline points="6 9 12 15 18 9"/></svg>
+          <svg id="rchev-${escAttr(uid)}" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="2.5" stroke-linecap="round" style="flex-shrink:0;transition:transform 0.2s;margin-top:3px;"><polyline points="6 9 12 15 18 9"/></svg>
         </div>
-        <div id="${uid}" class="pool-reading-detail">
+        <div id="${escAttr(uid)}" class="pool-reading-detail">
           ${servicePassportDetail(r)}
-          ${r.proof?.complete ? `<button type="button" class="brain-action secondary" data-pool-id="${escAttr(pool.id)}" data-passport-index="${passports.length - 1 - i}" onclick="event.stopPropagation();textSavedProofStop(this)">Text it</button>` : ''}
+          ${r.proof?.complete ? `<button type="button" class="brain-action secondary" data-pool-id="${escAttr(pool.id)}" data-passport-index="${escAttr(passports.length - 1 - i)}" onclick="event.stopPropagation();textSavedProofStop(this)">Text it</button>` : ''}
           <div class="brain-grid" style="margin-top:8px;">
-            ${[['skimmer', 'Skimmer'], ['poolBrain', 'Pool Brain'], ['jobber', 'Jobber'], ['ptp', 'PTP']].map(([destination, label]) => `<button type="button" class="brain-action secondary" data-pool-id="${escAttr(pool.id)}" data-passport-index="${passports.length - 1 - i}" data-destination="${destination}" onclick="event.stopPropagation();copySavedCrmProofPacket(this)">Copy for ${label}</button>`).join('')}
+            ${[['skimmer', 'Skimmer'], ['poolBrain', 'Pool Brain'], ['jobber', 'Jobber'], ['ptp', 'PTP']].map(([destination, label]) => `<button type="button" class="brain-action secondary" data-pool-id="${escAttr(pool.id)}" data-passport-index="${escAttr(passports.length - 1 - i)}" data-destination="${destination}" onclick="event.stopPropagation();copySavedCrmProofPacket(this)">Copy for ${label}</button>`).join('')}
           </div>
         </div>
       </div>`;
@@ -7455,15 +7455,15 @@ function showChemForm(poolId) {
   if (!wrap) return;
   const today = new Date().toISOString().split('T')[0];
   wrap.innerHTML = `
-    <div class="inline-chem-form" id="chem-form-inner-${poolId}">
+    <div class="inline-chem-form" id="chem-form-inner-${escAttr(poolId)}">
       <p style="color:#0369a1;font-weight:800;font-size:13px;margin-bottom:12px;">Save Reading</p>
       <div class="field-group">
         <label class="field-label">Date</label>
-        <input type="date" id="cf-date-${poolId}" value="${today}" style="color-scheme:light;">
+        <input type="date" id="cf-date-${escAttr(poolId)}" value="${escAttr(today)}" style="color-scheme:light;">
       </div>
       <div class="field-group">
         <label class="field-label">Reading Source</label>
-        <select id="cf-source-${poolId}">
+        <select id="cf-source-${escAttr(poolId)}">
           <option value="manual">Manual entry</option>
           <option value="spintouch">LaMotte SpinTouch - device reading</option>
           <option value="spintouch-edited">LaMotte SpinTouch - edited after import</option>
@@ -7471,23 +7471,23 @@ function showChemForm(poolId) {
         </select>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px;">
-        <div><label class="field-label">FC</label><input type="number" id="cf-fc-${poolId}" placeholder="—" inputmode="decimal" step="0.1" min="0"></div>
-        <div><label class="field-label">CC</label><input type="number" id="cf-cc-${poolId}" placeholder="—" inputmode="decimal" step="0.1" min="0"></div>
-        <div><label class="field-label">pH</label><input type="number" id="cf-ph-${poolId}" placeholder="—" inputmode="decimal" step="0.1" min="0"></div>
-        <div><label class="field-label">TA</label><input type="number" id="cf-ta-${poolId}" placeholder="—" inputmode="decimal" min="0"></div>
-        <div><label class="field-label">CH</label><input type="number" id="cf-ch-${poolId}" placeholder="—" inputmode="decimal" min="0"></div>
-        <div><label class="field-label">CYA</label><input type="number" id="cf-cya-${poolId}" placeholder="—" inputmode="decimal" min="0"></div>
+        <div><label class="field-label">FC</label><input type="number" id="cf-fc-${escAttr(poolId)}" placeholder="—" inputmode="decimal" step="0.1" min="0"></div>
+        <div><label class="field-label">CC</label><input type="number" id="cf-cc-${escAttr(poolId)}" placeholder="—" inputmode="decimal" step="0.1" min="0"></div>
+        <div><label class="field-label">pH</label><input type="number" id="cf-ph-${escAttr(poolId)}" placeholder="—" inputmode="decimal" step="0.1" min="0"></div>
+        <div><label class="field-label">TA</label><input type="number" id="cf-ta-${escAttr(poolId)}" placeholder="—" inputmode="decimal" min="0"></div>
+        <div><label class="field-label">CH</label><input type="number" id="cf-ch-${escAttr(poolId)}" placeholder="—" inputmode="decimal" min="0"></div>
+        <div><label class="field-label">CYA</label><input type="number" id="cf-cya-${escAttr(poolId)}" placeholder="—" inputmode="decimal" min="0"></div>
       </div>
       <div class="field-group">
         <div class="note-tools">
           <label class="field-label">Note (optional)</label>
           ${voiceNoteButton(`cf-note-${poolId}`)}
         </div>
-        <textarea id="cf-note-${poolId}" class="pool-textarea" rows="2" placeholder="Backwashed filter, added shock…"></textarea>
+        <textarea id="cf-note-${escAttr(poolId)}" class="pool-textarea" rows="2" placeholder="Backwashed filter, added shock…"></textarea>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-        <button onclick="saveChemReading('${poolId}')" style="background:linear-gradient(135deg,#0284c7,#0369a1);color:white;border:none;border-radius:9px;padding:12px;font-weight:800;font-size:14px;cursor:pointer;">Save</button>
-        <button onclick="cancelChemForm('${poolId}')" style="background:#f1f5f9;border:1px solid #e2e8f0;color:#64748b;border-radius:9px;padding:12px;font-weight:700;font-size:14px;cursor:pointer;">Cancel</button>
+        <button data-app-action="saveChemReading" data-arg0="${escAttr(poolId)}" style="background:linear-gradient(135deg,#0284c7,#0369a1);color:white;border:none;border-radius:9px;padding:12px;font-weight:800;font-size:14px;cursor:pointer;">Save</button>
+        <button data-app-action="cancelChemForm" data-arg0="${escAttr(poolId)}" style="background:#f1f5f9;border:1px solid #e2e8f0;color:#64748b;border-radius:9px;padding:12px;font-weight:700;font-size:14px;cursor:pointer;">Cancel</button>
       </div>
     </div>`;
 }
@@ -7551,7 +7551,7 @@ function renderPoolForm(id) {
 
   container.innerHTML = `
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
-      <button onclick="${id ? `renderPoolDetail('${id}')` : 'renderPoolList()'}" style="background:#f1f5f9;border:none;border-radius:8px;padding:7px 12px;cursor:pointer;display:flex;align-items:center;gap:5px;color:#374151;font-size:13px;font-weight:700;">
+      <button data-app-action="pool-form-back" data-arg0="${escAttr(id || '')}" style="background:#f1f5f9;border:none;border-radius:8px;padding:7px 12px;cursor:pointer;display:flex;align-items:center;gap:5px;color:#374151;font-size:13px;font-weight:700;">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
         Back
       </button>
@@ -7569,7 +7569,7 @@ function renderPoolForm(id) {
       </div>
       <div class="field-group">
         <label class="field-label">Pool Volume (gallons) <span style="color:#dc2626;">*</span></label>
-        <input type="number" id="pf-gallons" placeholder="e.g. 15000" min="100" inputmode="decimal" value="${v('gallons')}">
+        <input type="number" id="pf-gallons" placeholder="e.g. 15000" min="100" inputmode="decimal" value="${escAttr(v('gallons'))}">
       </div>
       <div class="field-group">
         <label class="field-label">Pool Type</label>
@@ -7601,7 +7601,7 @@ function renderPoolForm(id) {
       </div>
       <div class="field-group" id="pf-dia-wrap" style="${['Sand','DE'].includes(v('filter')) ? '' : 'display:none;'}">
         <label class="field-label">Filter Tank Diameter (inches)</label>
-        <input type="number" id="pf-filterDia" placeholder="e.g. 24" min="10" max="48" inputmode="decimal" value="${v('filterDia')}">
+        <input type="number" id="pf-filterDia" placeholder="e.g. 24" min="10" max="48" inputmode="decimal" value="${escAttr(v('filterDia'))}">
       </div>
       <div class="field-group">
         <label class="field-label">Heater / Equipment</label>
@@ -7616,8 +7616,8 @@ function renderPoolForm(id) {
       </div>
 
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px;">
-        <button onclick="savePool('${id || ''}')" style="background:linear-gradient(135deg,#0284c7,#0369a1);color:white;border:none;border-radius:10px;padding:13px;font-weight:800;font-size:14px;cursor:pointer;">Save Pool</button>
-        <button onclick="${id ? `renderPoolDetail('${id}')` : 'renderPoolList()'}" style="background:#f1f5f9;border:1px solid #e2e8f0;color:#64748b;border-radius:10px;padding:13px;font-weight:700;font-size:14px;cursor:pointer;">Cancel</button>
+        <button data-app-action="savePool" data-arg0="${escAttr(id || '')}" style="background:linear-gradient(135deg,#0284c7,#0369a1);color:white;border:none;border-radius:10px;padding:13px;font-weight:800;font-size:14px;cursor:pointer;">Save Pool</button>
+        <button data-app-action="pool-form-back" data-arg0="${escAttr(id || '')}" style="background:#f1f5f9;border:1px solid #e2e8f0;color:#64748b;border-radius:10px;padding:13px;font-weight:700;font-size:14px;cursor:pointer;">Cancel</button>
       </div>
     </div>`;
 }
@@ -7695,13 +7695,128 @@ function usePoolInDosing(gallons) {
 // ─── POOL HTML HELPERS ────────────────────
 function escHtml(s) {
   if (s == null) return '';
-  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }
 
 function escAttr(s) {
-  if (s == null) return '';
-  return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+  // Attribute encoding is not JavaScript encoding. Put data in attributes, never handler source.
+  return escHtml(s).replace(/\\/g, '&#92;');
 }
+
+function safeUrl(value) {
+  if (typeof value !== 'string' || /[\u0000-\u001f\u007f\\]/.test(value)) return '';
+  const candidate = value.trim();
+  if (!/^https:\/\//i.test(candidate)) return '';
+  try {
+    const url = new URL(candidate);
+    return url.protocol === 'https:' && url.hostname ? url.href : '';
+  } catch {
+    return '';
+  }
+}
+
+
+// Delegate to fixed code paths: HTML entities are decoded by the browser before
+// a handler runs, so escaped strings must never be interpolated into JavaScript.
+function handleAppDataEvent(event) {
+  const attribute = { click: 'data-app-action', change: 'data-app-change', focusout: 'data-app-blur' }[event.type];
+  if (!attribute) return;
+  const control = event.target?.closest?.(`[${attribute}]`);
+  if (!control || control.disabled) return;
+  const data = control.dataset;
+  const action = control.getAttribute(attribute);
+  switch (action) {
+    case 'addPoolToRoute': if (event.type === 'click') addPoolToRoute(data.arg0); break;
+    case 'answerQuickFeedback': if (event.type === 'click') answerQuickFeedback(data.arg0, data.arg1); break;
+    case 'askServiceProofAssistant': if (event.type === 'click') askServiceProofAssistant(data.arg0); break;
+    case 'assignPartSnapFieldStop': if (event.type === 'click') assignPartSnapFieldStop(data.arg0); break;
+    case 'callFacilitySupport': if (event.type === 'click') callFacilitySupport(data.arg0, data.arg1); break;
+    case 'cancelChemForm': if (event.type === 'click') cancelChemForm(data.arg0); break;
+    case 'cancelEquipmentForm': if (event.type === 'click') cancelEquipmentForm(data.arg0); break;
+    case 'changeSplashLensTeamReview': if (event.type === 'click') changeSplashLensTeamReview(data.arg0, data.arg1, data.arg2); break;
+    case 'clearNextVisitReminder': if (event.type === 'click') clearNextVisitReminder(data.arg0); break;
+    case 'completeFacilityLane': if (event.type === 'click') completeFacilityLane(data.arg0, data.arg1); break;
+    case 'copyPoolCRMPacket': if (event.type === 'click') copyPoolCRMPacket(data.arg0); break;
+    case 'deletePartSnapFieldStop': if (event.type === 'click') deletePartSnapFieldStop(data.arg0); break;
+    case 'deletePool': if (event.type === 'click') deletePool(data.arg0); break;
+    case 'deleteRouteJob': if (event.type === 'click') deleteRouteJob(Number(data.arg0)); break;
+    case 'dismissValueIdentityPrompt': if (event.type === 'click') dismissValueIdentityPrompt(data.arg0); break;
+    case 'downloadPoolCSV': if (event.type === 'click') downloadPoolCSV(data.arg0); break;
+    case 'loadReportFromPool': if (event.type === 'click') loadReportFromPool(data.arg0); break;
+    case 'markStoreReviewClicked': if (event.type === 'click') markStoreReviewClicked(data.arg0); break;
+    case 'openPartSnapFieldStop': if (event.type === 'click') openPartSnapFieldStop(data.arg0); break;
+    case 'openPartSnapPartnerCard': if (event.type === 'click') openPartSnapPartnerCard(data.arg0); break;
+    case 'openPoolFromRoute': if (event.type === 'click') openPoolFromRoute(data.arg0); break;
+    case 'openRouteBrainLearning': if (event.type === 'click') openRouteBrainLearning(data.arg0); break;
+    case 'openSplashLensPaidLane': if (event.type === 'click') openSplashLensPaidLane(data.arg0, data.arg1); break;
+    case 'openTrainingModule': if (event.type === 'click') openTrainingModule(data.arg0); break;
+    case 'printPoolPacket': if (event.type === 'click') printPoolPacket(data.arg0); break;
+    case 'removeChemRow': if (event.type === 'click') removeChemRow(Number(data.arg0)); break;
+    case 'renderPoolDetail': if (event.type === 'click') renderPoolDetail(data.arg0); break;
+    case 'renderPoolForm': if (event.type === 'click') renderPoolForm(data.arg0); break;
+    case 'requestSplashLensCommercialAccess': if (event.type === 'click') requestSplashLensCommercialAccess(data.arg0); break;
+    case 'saveChemReading': if (event.type === 'click') saveChemReading(data.arg0); break;
+    case 'saveManualEquipment': if (event.type === 'click') saveManualEquipment(data.arg0); break;
+    case 'saveNextVisitReminder': if (event.type === 'click') saveNextVisitReminder(data.arg0); break;
+    case 'savePool': if (event.type === 'click') savePool(data.arg0); break;
+    case 'savePoolNotes': if (event.type === 'focusout') savePoolNotes(data.arg0); break;
+    case 'seedReportFromFacilityPacket': if (event.type === 'click') seedReportFromFacilityPacket(data.arg0); break;
+    case 'selectBrand': if (event.type === 'click') selectBrand(data.arg0); break;
+    case 'selectCategory': if (event.type === 'click') selectCategory(data.arg0); break;
+    case 'selectShape': if (event.type === 'click') selectShape(data.arg0); break;
+    case 'selectSlamType': if (event.type === 'click') selectSlamType(data.arg0); break;
+    case 'setRouteBrainSymptom': if (event.type === 'click') setRouteBrainSymptom(data.arg0); break;
+    case 'setScanBrand': if (event.type === 'click') setScanBrand(data.arg0); break;
+    case 'sharePoolCRMPacket': if (event.type === 'click') sharePoolCRMPacket(data.arg0); break;
+    case 'showChemForm': if (event.type === 'click') showChemForm(data.arg0); break;
+    case 'showEquipmentForm': if (event.type === 'click') showEquipmentForm(data.arg0); break;
+    case 'showNextVisitReminderForm': if (event.type === 'click') showNextVisitReminderForm(data.arg0); break;
+    case 'startSlamTracker': if (event.type === 'click') startSlamTracker(Number(data.arg0), data.arg1, Number(data.arg2), Number(data.arg3)); break;
+    case 'startWebCheckout': if (event.type === 'click') startWebCheckout(data.arg0, data.arg1); break;
+    case 'submitValueIdentityPrompt': if (event.type === 'click') submitValueIdentityPrompt(data.arg0); break;
+    case 'tapDeRow': if (event.type === 'click') tapDeRow(Number(data.arg0)); break;
+    case 'tapSandRow': if (event.type === 'click') tapSandRow(Number(data.arg0)); break;
+    case 'textPartSnapProofStop': if (event.type === 'click') textPartSnapProofStop(data.arg0); break;
+    case 'toggleCode': if (event.type === 'click') toggleCode(data.arg0); break;
+    case 'toggleItem': if (event.type === 'click') toggleItem(Number(data.arg0), Number(data.arg1)); break;
+    case 'toggleReadingDetail': if (event.type === 'click') toggleReadingDetail(data.arg0); break;
+    case 'toggleRouteJobDone': if (event.type === 'click') toggleRouteJobDone(Number(data.arg0)); break;
+    case 'usePoolInDosing': if (event.type === 'click') usePoolInDosing(Number(data.arg0)); break;
+    case 'useVolumeInDosing': if (event.type === 'click') useVolumeInDosing(Number(data.arg0)); break;
+    case 'focusErrorSearch': focusErrorSearch(data.arg0); break;
+    case 'openLivePartSnap': openLivePartSnap(); break;
+    case 'showTab': showTab(data.arg0); break;
+    case 'renderCounterSamplePacket': renderCounterSamplePacket(); break;
+    case 'renderFieldLearningOS': renderFieldLearningOS(data.arg0); break;
+    case 'preview-counter': showTab('scan'); setTimeout(() => { setScanMode('parts'); renderCounterSamplePacket(); }, 80); break;
+    case 'facility-tool': showTab(data.arg0); showFacilityTools(); if (data.arg0 === 'scan') setTimeout(() => setScanMode('parts'), 80); break;
+    case 'voice-note': toggleVoiceNote(data.micTarget, control); break;
+    case 'copy-text': copyText(data.arg0, control); break;
+    case 'verify-free-profile': ensureFreeScanProfile(data.arg0).then(updateAIStatusBar); break;
+    case 'pool-new-report': loadReportFromPool(data.arg0); showTab('report'); break;
+    case 'pool-form-back': if (data.arg0) renderPoolDetail(data.arg0); else renderPoolList(); break;
+    case 'pump-decision': event.stopPropagation(); window.SplashLensFieldSignals?.openPumpDecisionFromEquipment(data.arg0, data.arg1); break;
+    case 'cancel-next-visit': { const form = document.getElementById(`next-visit-form-${data.arg0}`); if (form) form.innerHTML = ''; break; }
+    case 'post-value-checkout': control.href = trackPostValueUpgrade(data.arg0, data.arg1); break;
+    case 'checkout-link': startWebCheckout(data.checkoutPlan, data.checkoutPlacement); break;
+    case 'copy-partner-card': { const text = partSnapPartnerCardText(data.arg0); navigator.clipboard.writeText(text).then(() => alert('Card copied.')).catch(() => alert(text)); break; }
+    case 'savePartSnapToPool': savePartSnapToPool(); break;
+    case 'startPartSnapApprenticeMode': startPartSnapApprenticeMode(); break;
+    case 'sharePartSnapPacket': sharePartSnapPacket(); break;
+    case 'requestGalleryPhotoFallback': requestGalleryPhotoFallback(); break;
+    case 'captureAndAnalyze': captureAndAnalyze(); break;
+    case 'closing-photo': if (event.type === 'change') setClosingPhotoReference(data.arg0, control.value); break;
+    case 'edit-scan-code': showCaptureWithManualEntry(document.getElementById('scan-canvas'), data.code, document.getElementById('scan-result'), document.getElementById('scan-camera-status')); break;
+    case 'corpus-source':
+      if (!safeUrl(control.getAttribute('href'))) { event.preventDefault(); break; }
+      trackSplashLensEvent('partsnap_corpus_source_clicked', { candidate_id: data.candidateId, source_tier: data.sourceTier });
+      break;
+  }
+}
+
+document.addEventListener('click', handleAppDataEvent);
+document.addEventListener('change', handleAppDataEvent);
+document.addEventListener('focusout', handleAppDataEvent);
 
 function copyText(text, btn) {
   navigator.clipboard.writeText(text).then(() => {
@@ -7816,7 +7931,7 @@ function routeBrainPanel() {
   const poolOptions = pools.map((p) =>
     `<option value="${escAttr(p.id)}" ${state.poolId === p.id ? 'selected' : ''}>${escHtml(p.name || 'Pool')}</option>`).join('');
   const quickChips = ROUTE_BRAIN_QUICK_SYMPTOMS.map((s) =>
-    `<button type="button" class="brain-chip primary" onclick="setRouteBrainSymptom('${escAttr(s)}')">${escHtml(s)}</button>`).join('');
+    `<button type="button" class="brain-chip primary" data-app-action="setRouteBrainSymptom" data-arg0="${escAttr(s)}">${escHtml(s)}</button>`).join('');
 
   return `
     <section class="brain-card dark" aria-label="Route Brain">
@@ -7889,7 +8004,7 @@ function routeBrainPanel() {
         <div class="field-group">
           <label class="field-label">Part Confidence</label>
           <select id="brain-confidence" onchange="collectRouteBrainState()">
-            ${['visible marking','likely family','possible','unknown'].map(v => `<option value="${v}" ${state.confidence === v ? 'selected' : ''}>${v}</option>`).join('')}
+            ${['visible marking','likely family','possible','unknown'].map(v => `<option value="${escAttr(v)}" ${state.confidence === v ? 'selected' : ''}>${v}</option>`).join('')}
           </select>
         </div>
       </div>
@@ -7917,7 +8032,7 @@ function routeBrainPanel() {
 function routeBrainLearningShelf() {
   const groups = routeBrainManufacturers().slice(0, 10).map(({ key, label }) => {
     const cats = Object.keys(window.ERROR_DB?.[key]?.categories || {});
-    return `<button type="button" class="brain-chip" onclick="openRouteBrainLearning('${escAttr(key)}')"><strong>${escHtml(label)}</strong><br><span style="font-weight:700;color:#64748b;">${cats.slice(0, 2).map(escHtml).join(' / ')}${cats.length > 2 ? ' +' + (cats.length - 2) : ''}</span></button>`;
+    return `<button type="button" class="brain-chip" data-app-action="openRouteBrainLearning" data-arg0="${escAttr(key)}"><strong>${escHtml(label)}</strong><br><span style="font-weight:700;color:#64748b;">${cats.slice(0, 2).map(escHtml).join(' / ')}${cats.length > 2 ? ' +' + (cats.length - 2) : ''}</span></button>`;
   }).join('');
   return `
     <section class="brain-card">
@@ -8223,7 +8338,7 @@ function makeRouteBrainTraining() {
       <p><strong>Scenario:</strong> A tech arrives to investigate ${escHtml(state.hardware || 'equipment')} with symptom "${escHtml(state.symptom || 'unknown symptom')}".</p>
       <div class="brain-grid" style="margin:10px 0;">
         ${modules.map(([key, title, body], index) => `
-          <button class="brain-action secondary" onclick="openTrainingModule('${key}')" style="text-align:left;height:auto;min-height:76px;">
+          <button class="brain-action secondary" data-app-action="openTrainingModule" data-arg0="${escAttr(key)}" style="text-align:left;height:auto;min-height:76px;">
             <span style="display:block;font-size:11px;color:#0369a1;font-weight:950;">${index + 1}. ${title}</span>
             <span style="display:block;font-size:11px;color:#475569;line-height:1.35;margin-top:3px;">${body}</span>
           </button>`).join('')}
@@ -8363,16 +8478,16 @@ function routeJobCard(job, idx) {
   return `
     <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:10px;padding:12px 14px;margin-bottom:8px;box-shadow:0 1px 2px rgba(0,0,0,0.04);${op}">
       <div style="display:flex;align-items:flex-start;gap:10px;">
-        <input type="checkbox" ${job.done ? 'checked' : ''} onclick="toggleRouteJobDone(${idx})"
+        <input type="checkbox" ${job.done ? 'checked' : ''} data-app-action="toggleRouteJobDone" data-arg0="${escAttr(Number(idx))}"
                style="width:22px;height:22px;min-width:22px;flex-shrink:0;margin-top:2px;accent-color:#0284c7;cursor:pointer;">
         <div style="flex:1;min-width:0;">
           <p style="font-size:14px;font-weight:800;${tx}">${escHtml(job.name)}</p>
           ${job.address ? `<p style="color:#64748b;font-size:12px;margin-top:2px;">${escHtml(job.address)}</p>` : ''}
           ${job.type === 'pool' && job.poolId
-            ? `<button onclick="openPoolFromRoute('${job.poolId}')" style="background:none;border:none;color:#0284c7;font-size:11px;font-weight:700;cursor:pointer;padding:0;margin-top:4px;">View Profile →</button>`
+            ? `<button data-app-action="openPoolFromRoute" data-arg0="${escAttr(job.poolId)}" style="background:none;border:none;color:#0284c7;font-size:11px;font-weight:700;cursor:pointer;padding:0;margin-top:4px;">View Profile →</button>`
             : ''}
         </div>
-        <button onclick="deleteRouteJob(${idx})"
+        <button data-app-action="deleteRouteJob" data-arg0="${escAttr(Number(idx))}"
                 style="background:none;border:none;color:#cbd5e1;cursor:pointer;padding:4px;flex-shrink:0;font-size:20px;line-height:1;">×</button>
       </div>
     </div>`;
@@ -8429,7 +8544,7 @@ function toggleRoutePoolPicker() {
     <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:10px;margin-top:8px;">
       <p style="color:#64748b;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px;">Select Pool to Add</p>
       ${pools.map(p => `
-        <div onclick="addPoolToRoute('${p.id}')"
+        <div data-app-action="addPoolToRoute" data-arg0="${escAttr(p.id)}"
              style="padding:10px;border-radius:7px;cursor:pointer;margin-bottom:4px;border:1px solid #e2e8f0;background:#ffffff;-webkit-tap-highlight-color:transparent;">
           <p style="color:#0f172a;font-size:14px;font-weight:700;">${escHtml(p.name)}</p>
           ${p.address ? `<p style="color:#64748b;font-size:12px;">${escHtml(p.address)}</p>` : ''}
@@ -8603,7 +8718,7 @@ function renderPartSnapEvidenceGuide() {
   const currentIndex = getPartSnapEvidenceStepIndex();
   const summary = getPartSnapEvidenceSummary();
   const current = currentIndex >= 0 ? PARTSNAP_EVIDENCE_STEPS[currentIndex] : null;
-  const dimensionValue = escAttr(_partSnapEvidenceSession.dimensions || '');
+  const dimensionValue = _partSnapEvidenceSession.dimensions || '';
   guide.innerHTML = `
     <div class="partsnap-evidence-head">
       <div>
@@ -8623,7 +8738,7 @@ function renderPartSnapEvidenceGuide() {
       }).join('')}
     </div>
     <div class="partsnap-dimension-row">
-      <input id="partsnap-dimensions" type="text" value="${dimensionValue}" placeholder="Dimensions or fit notes, e.g. lid OD 8 1/2 in" maxlength="160" oninput="updatePartSnapDimensions(this.value)">
+      <input id="partsnap-dimensions" type="text" value="${escAttr(dimensionValue)}" placeholder="Dimensions or fit notes, e.g. lid OD 8 1/2 in" maxlength="160" oninput="updatePartSnapDimensions(this.value)">
       <button type="button" onclick="markPartSnapDimensionsUnavailable()">${_partSnapEvidenceSession.dimensionsUnavailable ? 'Dimensions unavailable' : 'No dimension available'}</button>
     </div>
     <div class="partsnap-order-hold"><strong>ORDER HOLD:</strong> ${summary.complete ? 'Evidence set captured. Analysis must still match a model/source and current manufacturer diagram.' : `Capture all four views before analysis. ${current ? escHtml(current.hint) : ''}`}</div>`;
@@ -8943,10 +9058,10 @@ function renderPartSnapFieldStops() {
             <span style="background:${stop.risk === 'high' ? '#dc2626' : stop.risk === 'medium' ? '#d97706' : '#16a34a'};color:#fff;border-radius:999px;padding:3px 7px;font-size:9px;font-weight:950;white-space:nowrap;">${escHtml((stop.risk || 'unknown').toUpperCase())}</span>
           </div>
           <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin-top:9px;">
-            <button onclick="openPartSnapFieldStop('${escAttr(stop.id)}')" style="background:#0369a1;color:#fff;border:0;border-radius:8px;padding:9px;font-size:10px;font-weight:900;cursor:pointer;">Open stop</button>
-            <button onclick="textPartSnapProofStop('${escAttr(stop.id)}')" style="background:#fff;color:#0f766e;border:1px solid #0f766e;border-radius:8px;padding:9px;font-size:10px;font-weight:900;cursor:pointer;">Text it</button>
-            <button onclick="assignPartSnapFieldStop('${escAttr(stop.id)}')" style="background:#0f766e;color:#fff;border:0;border-radius:8px;padding:9px;font-size:10px;font-weight:900;cursor:pointer;">Assign</button>
-            <button onclick="deletePartSnapFieldStop('${escAttr(stop.id)}')" aria-label="Delete saved stop" title="Delete saved stop" style="background:#fff;color:#991b1b;border:1px solid #fecaca;border-radius:8px;padding:9px 11px;font-size:11px;font-weight:900;cursor:pointer;">X</button>
+            <button data-app-action="openPartSnapFieldStop" data-arg0="${escAttr(stop.id)}" style="background:#0369a1;color:#fff;border:0;border-radius:8px;padding:9px;font-size:10px;font-weight:900;cursor:pointer;">Open stop</button>
+            <button data-app-action="textPartSnapProofStop" data-arg0="${escAttr(stop.id)}" style="background:#fff;color:#0f766e;border:1px solid #0f766e;border-radius:8px;padding:9px;font-size:10px;font-weight:900;cursor:pointer;">Text it</button>
+            <button data-app-action="assignPartSnapFieldStop" data-arg0="${escAttr(stop.id)}" style="background:#0f766e;color:#fff;border:0;border-radius:8px;padding:9px;font-size:10px;font-weight:900;cursor:pointer;">Assign</button>
+            <button data-app-action="deletePartSnapFieldStop" data-arg0="${escAttr(stop.id)}" aria-label="Delete saved stop" title="Delete saved stop" style="background:#fff;color:#991b1b;border:1px solid #fecaca;border-radius:8px;padding:9px 11px;font-size:11px;font-weight:900;cursor:pointer;">X</button>
           </div>
         </div>`).join('') : '<p style="color:#64748b;font-size:12px;">No saved field stops yet.</p>'}
       <button onclick="document.getElementById('scan-result').innerHTML='';renderPartSnapPrimer()" style="width:100%;background:#0f172a;color:#fff;border:0;border-radius:9px;padding:10px;font-size:11px;font-weight:900;cursor:pointer;">Back to PartSnap</button>
@@ -8968,7 +9083,7 @@ function openPartSnapFieldStop(id) {
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;">
         <button onclick="savePartSnapToPool()" style="background:#0f766e;color:#fff;border:0;border-radius:9px;padding:11px;font-size:11px;font-weight:900;cursor:pointer;">Assign customer</button>
         <button onclick="sharePartSnapPacket()" style="background:#0369a1;color:#fff;border:0;border-radius:9px;padding:11px;font-size:11px;font-weight:900;cursor:pointer;">Share packet</button>
-        <button onclick="textPartSnapProofStop('${escAttr(stop.id)}')" style="background:#fff;color:#0f766e;border:1px solid #0f766e;border-radius:9px;padding:11px;font-size:11px;font-weight:900;cursor:pointer;">Text it</button>
+        <button data-app-action="textPartSnapProofStop" data-arg0="${escAttr(stop.id)}" style="background:#fff;color:#0f766e;border:1px solid #0f766e;border-radius:9px;padding:11px;font-size:11px;font-weight:900;cursor:pointer;">Text it</button>
         <button onclick="requestPartSnapSecondProof()" style="background:#fff;color:#075985;border:1px solid #bae6fd;border-radius:9px;padding:10px;font-size:11px;font-weight:900;cursor:pointer;">Add proof photo</button>
         <button onclick="renderPartSnapFieldStops()" style="background:#fff;color:#334155;border:1px solid #cbd5e1;border-radius:9px;padding:10px;font-size:11px;font-weight:900;cursor:pointer;">All saved stops</button>
       </div>
@@ -9560,7 +9675,7 @@ function showPartSnapImagePreflight(preflight, result, status, usingUploadedPhot
         </div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-        <button type="button" onclick="${usingUploadedPhoto ? 'requestGalleryPhotoFallback()' : 'captureAndAnalyze()'}" style="background:#ea580c;color:#fff;border:0;border-radius:9px;padding:12px 9px;font-size:12px;font-weight:950;cursor:pointer;">${usingUploadedPhoto ? 'Choose another photo' : 'Retake now'}</button>
+        <button type="button" data-app-action="${usingUploadedPhoto ? 'requestGalleryPhotoFallback' : 'captureAndAnalyze'}" style="background:#ea580c;color:#fff;border:0;border-radius:9px;padding:12px 9px;font-size:12px;font-weight:950;cursor:pointer;">${usingUploadedPhoto ? 'Choose another photo' : 'Retake now'}</button>
         <button type="button" onclick="openPartSnapPreflightManualFallback()" style="background:#0f172a;color:#fed7aa;border:1px solid #92400e;border-radius:9px;padding:12px 9px;font-size:12px;font-weight:950;cursor:pointer;">Document manually</button>
       </div>
     </div>`;
@@ -10010,7 +10125,7 @@ function showValueIdentityPrompt(trigger = 'value_completed') {
           <strong style="display:block;color:#0f172a;font-size:15px;line-height:1.2;">Want Joshua to see this field test worked?</strong>
           <span style="display:block;color:#64748b;font-size:12px;line-height:1.4;margin-top:3px;">Tag this session with a company or email. Free use still stays free.</span>
         </div>
-        <button type="button" onclick="dismissValueIdentityPrompt('${escAttr(trigger)}')" aria-label="Close" style="border:0;background:transparent;color:#64748b;font-size:20px;font-weight:900;cursor:pointer;">x</button>
+        <button type="button" data-app-action="dismissValueIdentityPrompt" data-arg0="${escAttr(trigger)}" aria-label="Close" style="border:0;background:transparent;color:#64748b;font-size:20px;font-weight:900;cursor:pointer;">x</button>
       </div>
       <div style="display:grid;grid-template-columns:1.2fr 1fr .9fr;gap:8px;">
         <input id="field-identity-email" type="email" inputmode="email" placeholder="email" style="min-width:0;border:1px solid #cbd5e1;border-radius:10px;padding:10px;font-size:13px;">
@@ -10021,8 +10136,8 @@ function showValueIdentityPrompt(trigger = 'value_completed') {
       </div>
       <div id="field-identity-error" style="display:none;background:#fef2f2;border:1px solid #fecaca;color:#991b1b;border-radius:8px;padding:7px;font-size:12px;font-weight:800;margin-top:8px;"></div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:9px;">
-        <button type="button" onclick="submitValueIdentityPrompt('${escAttr(trigger)}')" style="background:#0369a1;color:#fff;border:0;border-radius:10px;padding:11px 8px;font-size:13px;font-weight:950;cursor:pointer;">Tag This Test</button>
-        <button type="button" onclick="dismissValueIdentityPrompt('${escAttr(trigger)}')" style="background:#f8fafc;color:#334155;border:1px solid #cbd5e1;border-radius:10px;padding:11px 8px;font-size:13px;font-weight:900;cursor:pointer;">Keep Anonymous</button>
+        <button type="button" data-app-action="submitValueIdentityPrompt" data-arg0="${escAttr(trigger)}" style="background:#0369a1;color:#fff;border:0;border-radius:10px;padding:11px 8px;font-size:13px;font-weight:950;cursor:pointer;">Tag This Test</button>
+        <button type="button" data-app-action="dismissValueIdentityPrompt" data-arg0="${escAttr(trigger)}" style="background:#f8fafc;color:#334155;border:1px solid #cbd5e1;border-radius:10px;padding:11px 8px;font-size:13px;font-weight:900;cursor:pointer;">Keep Anonymous</button>
       </div>
     </div>`;
   document.body.appendChild(wrap);
@@ -10245,8 +10360,8 @@ function showScanLimitModal(result, status) {
         <p style="color:#f1f5f9;font-size:19px;font-weight:900;margin-bottom:6px;">You've used ${usage.count} of ${SCAN_LIMIT_FREE} free AI scans this month.</p>
         <p style="color:#94a3b8;font-size:13px;line-height:1.5;margin-bottom:14px;">Manual code lookup, dosing, reports, filters, and checklists stay free. Your free profile keeps scanner usage tied to you. Upgrade Splash Lens Pro Unlimited for unlimited scanner access and saved job memory where paid access is available.</p>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
-          <a data-checkout-plan="monthly" data-checkout-placement="scan_limit_reached" href="${getCheckoutUrl('monthly', 'scan_limit_reached')}" target="_blank" rel="noopener" onclick="this.href=trackCheckoutIntent('monthly','scan_limit_reached')" style="background:#0284c7;color:#fff;text-decoration:none;border-radius:10px;padding:12px 8px;font-size:13px;font-weight:900;">$19 / mo</a>
-          <a data-checkout-plan="yearly" data-checkout-placement="scan_limit_reached" href="${getCheckoutUrl('yearly', 'scan_limit_reached')}" target="_blank" rel="noopener" onclick="this.href=trackCheckoutIntent('yearly','scan_limit_reached')" style="background:#16a34a;color:#fff;text-decoration:none;border-radius:10px;padding:12px 8px;font-size:13px;font-weight:900;">$149 / yr</a>
+          <a data-checkout-intent="standard" data-app-action="checkout-link" data-checkout-plan="monthly" data-checkout-placement="scan_limit_reached" href="${escAttr(getCheckoutUrl('monthly', 'scan_limit_reached'))}" target="_blank" rel="noopener" style="background:#0284c7;color:#fff;text-decoration:none;border-radius:10px;padding:12px 8px;font-size:13px;font-weight:900;">$19 / mo</a>
+          <a data-checkout-intent="standard" data-app-action="checkout-link" data-checkout-plan="yearly" data-checkout-placement="scan_limit_reached" href="${escAttr(getCheckoutUrl('yearly', 'scan_limit_reached'))}" target="_blank" rel="noopener" style="background:#16a34a;color:#fff;text-decoration:none;border-radius:10px;padding:12px 8px;font-size:13px;font-weight:900;">$149 / yr</a>
         </div>
         ${typeof renderClosingProUpgradeLink === 'function' ? renderClosingProUpgradeLink('scan_limit_reached') : ''}
         <button onclick="restorePartSnapPro()" style="width:100%;background:#334155;color:#e2e8f0;border:0;border-radius:10px;padding:10px 8px;font-size:12px;font-weight:900;cursor:pointer;">Restore Pro from checkout email</button>
@@ -10649,22 +10764,7 @@ async function callAIScan(canvas, mode, result, status) {
     // error_code mode
     const { codes = [], brand, model, context, confidence } = aiResult;
     if (codes.length && confidence !== 'low') {
-      if (status) status.textContent = `AI READ - VERIFY: ${codes.join(', ')}`;
-      const hits = searchErrorDB(codes[0], null);
-      if (result) result.innerHTML = `
-        <div style="background:#1e293b;border:1px solid #334155;border-radius:10px;padding:12px;margin-bottom:10px;">
-          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px;">
-            <span style="background:#7c3aed;color:#fff;padding:2px 10px;border-radius:100px;font-size:10px;font-weight:700;">AI READ - VERIFY</span>
-            ${brand ? `<span style="color:#94a3b8;font-size:11px;">${brand}${model ? ' · '+model : ''}</span>` : ''}
-          </div>
-          <p style="color:#f1f5f9;font-size:18px;font-weight:900;letter-spacing:.08em;margin-bottom:4px;">${codes.join('  ')}</p>
-          ${context ? `<p style="color:#7dd3fc;font-size:12px;">${context}</p>` : ''}
-          <p style="color:#94a3b8;font-size:11px;line-height:1.45;margin-top:8px;">Reference only. Confirm the code, model, and procedure against the current manufacturer manual before repair or parts ordering.</p>
-        </div>
-        ${renderScanHits(hits, codes[0], true)}
-        ${!hits.length ? `<div style="text-align:center;padding:16px 0;"><button onclick="showCaptureWithManualEntry(document.getElementById('scan-canvas'),'${codes[0]}',document.getElementById('scan-result'),document.getElementById('scan-camera-status'))" style="background:#334155;color:#94a3b8;border:none;border-radius:8px;padding:10px 20px;font-size:13px;cursor:pointer;">Edit Code Manually</button></div>` : ''}
-      `;
-      const verifiedCount = countVerifiedCodeHits(hits);
+      const verifiedCount = renderAIErrorCodeResult({ codes, brand, model, context }, result, status);
       if (verifiedCount) trackFirstUsefulResult('scan_detected_code_answer', result, {
         result_count: verifiedCount, role: getSplashLensRole(),
       });
@@ -11299,8 +11399,8 @@ function renderClosingProUpgradeLink(placement) {
   if (!closingProSeasonActive()) return '';
   if (typeof isStoreShellMode === 'function' && isStoreShellMode()) return '';
   if (typeof isPartSnapPro === 'function' && isPartSnapPro()) return '';
-  const safePlacement = escAttr(placement);
-  return `<a data-checkout-plan="closing_pass_60d" data-checkout-placement="${safePlacement}" href="/?upgrade=closing_pass_60d&placement=${safePlacement}" target="_blank" rel="noopener" onclick="this.href=trackPostValueUpgrade('closing_pass_60d','${safePlacement}')" style="display:block;margin-top:7px;background:#f59e0b;color:#1c1917;text-decoration:none;text-align:center;border-radius:8px;padding:10px 7px;font-size:11px;font-weight:950;">${a3Text('upgrade.closingProPrice')}</a>`;
+  const safePlacement = String(placement || '');
+  return `<a data-checkout-intent="post-value" data-checkout-plan="closing_pass_60d" data-checkout-placement="${escAttr(safePlacement)}" href="/?upgrade=closing_pass_60d&placement=${escAttr(encodeURIComponent(safePlacement))}" target="_blank" rel="noopener" data-app-action="post-value-checkout" data-arg0="${escAttr('closing_pass_60d')}" data-arg1="${escAttr(safePlacement)}" style="display:block;margin-top:7px;background:#f59e0b;color:#1c1917;text-decoration:none;text-align:center;border-radius:8px;padding:10px 7px;font-size:11px;font-weight:950;">${a3Text('upgrade.closingProPrice')}</a>`;
 }
 
 function renderPostValueUpgradeOffer() {
@@ -11313,8 +11413,8 @@ function renderPostValueUpgradeOffer() {
       <p style="color:#f8fafc;font-size:13px;font-weight:950;margin-bottom:4px;">${a3Text('upgrade.needRoute')}</p>
       <p style="color:#94a3b8;font-size:11px;line-height:1.4;margin-bottom:9px;">${a3Text('upgrade.freeProfile')}</p>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;">
-        <a data-checkout-plan="monthly" data-checkout-placement="field_stop_saved" href="${getCheckoutUrl('monthly', 'field_stop_saved')}" target="_blank" rel="noopener" onclick="this.href=trackPostValueUpgrade('monthly','field_stop_saved')" style="background:#0284c7;color:#fff;text-decoration:none;text-align:center;border-radius:8px;padding:10px 7px;font-size:11px;font-weight:950;">${a3Text('upgrade.monthlyPrice')}</a>
-        <a data-checkout-plan="yearly" data-checkout-placement="field_stop_saved" href="${getCheckoutUrl('yearly', 'field_stop_saved')}" target="_blank" rel="noopener" onclick="this.href=trackPostValueUpgrade('yearly','field_stop_saved')" style="background:#16a34a;color:#fff;text-decoration:none;text-align:center;border-radius:8px;padding:10px 7px;font-size:11px;font-weight:950;">${a3Text('upgrade.yearlyPrice')}</a>
+        <a data-checkout-intent="post-value" data-app-action="post-value-checkout" data-arg0="${escAttr('monthly')}" data-arg1="${escAttr('field_stop_saved')}" data-checkout-plan="monthly" data-checkout-placement="field_stop_saved" href="${escAttr(getCheckoutUrl('monthly', 'field_stop_saved'))}" target="_blank" rel="noopener" style="background:#0284c7;color:#fff;text-decoration:none;text-align:center;border-radius:8px;padding:10px 7px;font-size:11px;font-weight:950;">${a3Text('upgrade.monthlyPrice')}</a>
+        <a data-checkout-intent="post-value" data-app-action="post-value-checkout" data-arg0="${escAttr('yearly')}" data-arg1="${escAttr('field_stop_saved')}" data-checkout-plan="yearly" data-checkout-placement="field_stop_saved" href="${escAttr(getCheckoutUrl('yearly', 'field_stop_saved'))}" target="_blank" rel="noopener" style="background:#16a34a;color:#fff;text-decoration:none;text-align:center;border-radius:8px;padding:10px 7px;font-size:11px;font-weight:950;">${a3Text('upgrade.yearlyPrice')}</a>
       </div>
       ${typeof renderClosingProUpgradeLink === 'function' ? renderClosingProUpgradeLink('field_stop_saved') : ''}
     </div>`;
@@ -11329,8 +11429,8 @@ function renderPartSnapResultUpgradeOffer(placement = 'partsnap_result') {
       <p style="color:#7dd3fc;font-size:10px;font-weight:950;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;">${a3Text('upgrade.keepResult')}</p>
       <p style="color:#f8fafc;font-size:13px;font-weight:950;margin-bottom:9px;">${a3Text('upgrade.saveJob')}</p>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;">
-        <a data-checkout-plan="monthly" data-checkout-placement="${escAttr(placement)}" href="${getCheckoutUrl('monthly', placement)}" target="_blank" rel="noopener" onclick="this.href=trackPostValueUpgrade('monthly','${escAttr(placement)}')" style="background:#0ea5e9;color:#082f49;text-decoration:none;text-align:center;border-radius:8px;padding:10px 7px;font-size:11px;font-weight:950;">${a3Text('upgrade.goProPrice')}</a>
-        <a data-checkout-plan="yearly" data-checkout-placement="${escAttr(placement)}" href="${getCheckoutUrl('yearly', placement)}" target="_blank" rel="noopener" onclick="this.href=trackPostValueUpgrade('yearly','${escAttr(placement)}')" style="background:#22c55e;color:#052e16;text-decoration:none;text-align:center;border-radius:8px;padding:10px 7px;font-size:11px;font-weight:950;">${a3Text('upgrade.saveYearly')}</a>
+        <a data-checkout-intent="post-value" data-checkout-plan="monthly" data-checkout-placement="${escAttr(placement)}" href="${escAttr(getCheckoutUrl('monthly', placement))}" target="_blank" rel="noopener" data-app-action="post-value-checkout" data-arg0="${escAttr('monthly')}" data-arg1="${escAttr(placement)}" style="background:#0ea5e9;color:#082f49;text-decoration:none;text-align:center;border-radius:8px;padding:10px 7px;font-size:11px;font-weight:950;">${a3Text('upgrade.goProPrice')}</a>
+        <a data-checkout-intent="post-value" data-checkout-plan="yearly" data-checkout-placement="${escAttr(placement)}" href="${escAttr(getCheckoutUrl('yearly', placement))}" target="_blank" rel="noopener" data-app-action="post-value-checkout" data-arg0="${escAttr('yearly')}" data-arg1="${escAttr(placement)}" style="background:#22c55e;color:#052e16;text-decoration:none;text-align:center;border-radius:8px;padding:10px 7px;font-size:11px;font-weight:950;">${a3Text('upgrade.saveYearly')}</a>
       </div>
       ${typeof renderClosingProUpgradeLink === 'function' ? renderClosingProUpgradeLink(placement) : ''}
     </div>`;
@@ -11373,8 +11473,8 @@ function showThirdScanSoftGate(result, mode) {
         <button type="button" aria-label="${escAttr(a3Text('upgrade.softGateDismiss'))}" title="${escAttr(a3Text('upgrade.softGateDismiss'))}" onclick="dismissThirdScanSoftGate()" style="background:transparent;border:0;color:#cbd5e1;font-size:22px;line-height:1;cursor:pointer;">&times;</button>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-        <a data-checkout-plan="monthly" data-checkout-placement="${placement}" href="${getCheckoutUrl('monthly', placement)}" target="_blank" rel="noopener" onclick="this.href=trackPostValueUpgrade('monthly','soft_gate_scan3')" style="background:#0ea5e9;color:#082f49;text-decoration:none;text-align:center;border-radius:8px;padding:10px 7px;font-size:12px;font-weight:900;">${a3Text('upgrade.monthly')}</a>
-        <a data-checkout-plan="yearly" data-checkout-placement="${placement}" href="${getCheckoutUrl('yearly', placement)}" target="_blank" rel="noopener" onclick="this.href=trackPostValueUpgrade('yearly','soft_gate_scan3')" style="background:#22c55e;color:#052e16;text-decoration:none;text-align:center;border-radius:8px;padding:10px 7px;font-size:12px;font-weight:900;">${a3Text('upgrade.yearly')}</a>
+        <a data-checkout-intent="post-value" data-app-action="post-value-checkout" data-arg0="${escAttr('monthly')}" data-arg1="${escAttr('${escAttr(placement)}')}" data-checkout-plan="monthly" data-checkout-placement="${escAttr(placement)}" href="${escAttr(getCheckoutUrl('monthly', placement))}" target="_blank" rel="noopener" style="background:#0ea5e9;color:#082f49;text-decoration:none;text-align:center;border-radius:8px;padding:10px 7px;font-size:12px;font-weight:900;">${a3Text('upgrade.monthly')}</a>
+        <a data-checkout-intent="post-value" data-app-action="post-value-checkout" data-arg0="${escAttr('yearly')}" data-arg1="${escAttr('${escAttr(placement)}')}" data-checkout-plan="yearly" data-checkout-placement="${escAttr(placement)}" href="${escAttr(getCheckoutUrl('yearly', placement))}" target="_blank" rel="noopener" style="background:#22c55e;color:#052e16;text-decoration:none;text-align:center;border-radius:8px;padding:10px 7px;font-size:12px;font-weight:900;">${a3Text('upgrade.yearly')}</a>
       </div>
       ${typeof renderClosingProUpgradeLink === 'function' ? renderClosingProUpgradeLink(placement) : ''}
       <button type="button" onclick="dismissThirdScanSoftGate();setScanMode('lookup')" style="background:transparent;border:0;color:#cbd5e1;padding:10px 0 0;font-size:12px;font-weight:800;cursor:pointer;">${a3Text('upgrade.softGateManual')}</button>
@@ -11565,16 +11665,15 @@ function initCheckoutClientTracking() {
   function openRenderedCheckoutLink(link) {
     const plan = link.dataset.checkoutPlan;
     const placement = link.dataset.checkoutPlacement;
-    const onclick = String(link.getAttribute?.('onclick') || '');
     startWebCheckout(plan, placement);
-    if (onclick.includes('trackPostValueUpgrade')) {
+    if (link.dataset.checkoutIntent === 'post-value') {
       trackSplashLensEvent('post_value_upgrade_clicked', {
         plan,
         feature: plan === 'closing_pass_60d' ? 'closing_pass' : 'unlimited_partsnap',
         placement,
       });
     }
-    if (onclick.includes('account_pro_checkout_clicked')) {
+    if (link.dataset.checkoutIntent === 'account') {
       trackSplashLensEvent('account_pro_checkout_clicked', { plan: plan || 'monthly', source: 'account_dashboard' });
     }
   }
@@ -11718,9 +11817,10 @@ function renderPartSnapCorpusPanel(candidates = [], status = {}) {
     .map((item) => `<span style="display:inline-flex;align-items:center;background:${bg};border:1px solid ${border};color:${color};border-radius:999px;padding:5px 8px;font-size:10px;font-weight:900;line-height:1.2;">${escHtml(item)}</span>`)
     .join('');
   const sourceLinks = (candidate) => (Array.isArray(candidate.sourceUrls) ? candidate.sourceUrls : [])
+    .map(safeUrl)
     .filter(Boolean)
     .slice(0, 2)
-    .map((url, index) => `<a href="${escAttr(url)}" target="_blank" rel="noopener" onclick="trackSplashLensEvent('partsnap_corpus_source_clicked',{candidate_id:'${escAttr(candidate.id)}',source_tier:'${escAttr(candidate.sourceTier)}'})" style="color:#7dd3fc;font-size:10px;font-weight:900;text-decoration:none;">Source ${index + 1}</a>`)
+    .map((url, index) => `<a href="${escAttr(safeUrl(url))}" target="_blank" rel="noopener" data-app-action="corpus-source" data-candidate-id="${escAttr(candidate.id)}" data-source-tier="${escAttr(candidate.sourceTier)}" style="color:#7dd3fc;font-size:10px;font-weight:900;text-decoration:none;">Source ${index + 1}</a>`)
     .join(' ');
 
   return `
@@ -11905,7 +12005,7 @@ function renderPartSnapPartnerCards(ai = {}) {
       <p style="color:#94a3b8;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;">PartSnap field network</p>
       <div style="display:grid;gap:7px;">
         ${cards.map(([key, title, state, body]) => `
-          <button onclick="openPartSnapPartnerCard('${key}')" style="text-align:left;background:#111827;border:1px solid #334155;border-radius:8px;padding:9px;cursor:pointer;">
+          <button data-app-action="openPartSnapPartnerCard" data-arg0="${escAttr(key)}" style="text-align:left;background:#111827;border:1px solid #334155;border-radius:8px;padding:9px;cursor:pointer;">
             <span style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
               <strong style="color:#e2e8f0;font-size:12px;">${title}</strong>
               <span style="background:${state === 'Ready' ? '#0f766e' : '#334155'};color:#fff;border-radius:999px;padding:2px 7px;font-size:9px;font-weight:900;">${state}</span>
@@ -11934,8 +12034,8 @@ function openPartSnapPartnerCard(type) {
       <p style="color:#64748b;font-size:12px;line-height:1.45;margin-bottom:10px;">${type === 'verified' ? 'Use this when a partner wants to tell SplashLens exactly what evidence, language, or official doc link should appear on a verified field card.' : 'Use this to move the field result into the next workflow without overstating certainty.'}</p>
       <pre style="white-space:pre-wrap;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px;color:#334155;font-size:11px;line-height:1.4;">${escHtml(body)}</pre>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;">
-        <button onclick="navigator.clipboard.writeText(partSnapPartnerCardText('${type}')).then(()=>alert('Card copied.')).catch(()=>alert(partSnapPartnerCardText('${type}')))" style="background:#0369a1;color:#fff;border:0;border-radius:8px;padding:10px;font-size:12px;font-weight:900;cursor:pointer;">Copy Card</button>
-        <button onclick="${type === 'passport' ? 'savePartSnapToPool()' : type === 'training' ? 'startPartSnapApprenticeMode()' : 'sharePartSnapPacket()'}" style="background:#0f766e;color:#fff;border:0;border-radius:8px;padding:10px;font-size:12px;font-weight:900;cursor:pointer;">Use Now</button>
+        <button data-app-action="copy-partner-card" data-arg0="${escAttr(type)}" style="background:#0369a1;color:#fff;border:0;border-radius:8px;padding:10px;font-size:12px;font-weight:900;cursor:pointer;">Copy Card</button>
+        <button data-app-action="${type === 'passport' ? 'savePartSnapToPool' : type === 'training' ? 'startPartSnapApprenticeMode' : 'sharePartSnapPacket'}" style="background:#0f766e;color:#fff;border:0;border-radius:8px;padding:10px;font-size:12px;font-weight:900;cursor:pointer;">Use Now</button>
       </div>
     </div>`;
 }
@@ -12061,7 +12161,7 @@ function savePartSnapToPool() {
       <p style="color:#64748b;font-size:12px;line-height:1.4;margin-bottom:10px;">Attach this result to a customer record with the proof, repeat-issue watch, and supplier note.</p>
       <label class="field-label" for="partsnap-save-pool">Saved pool</label>
       <select id="partsnap-save-pool" style="width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:8px;margin-bottom:10px;">
-        ${pools.map(p => `<option value="${escHtml(p.id)}">${escHtml([p.name, p.address].filter(Boolean).join(' - ') || 'Saved pool')}</option>`).join('')}
+        ${pools.map(p => `<option value="${escAttr(p.id)}">${escHtml([p.name, p.address].filter(Boolean).join(' - ') || 'Saved pool')}</option>`).join('')}
       </select>
       <button onclick="confirmPartSnapSaveToPool()" style="width:100%;background:#0284c7;color:#fff;border:none;border-radius:10px;padding:11px;font-size:13px;font-weight:900;cursor:pointer;">Save Job Note</button>
       <p id="partsnap-save-status" style="color:#64748b;font-size:11px;text-align:center;margin-top:8px;"></p>
@@ -12318,11 +12418,11 @@ function renderPartBuyLinks(searchTerms, partNumber, manufacturer, component) {
       <p style="color:#64748b;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">VERIFY FIT / PRICE CHECK</p>
       <p style="color:#94a3b8;font-size:10px;line-height:1.4;margin-bottom:8px;">Best path: use the proof packet with your normal local distributor or SCP-style counter first, then compare online availability if needed.</p>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-        <a href="${outbound('distributor')}" target="_blank" rel="noopener" onclick="trackSplashLensEvent('part_search_click',{store:'local_distributor'})" style="background:#0f766e;color:#fff;text-decoration:none;text-align:center;border-radius:8px;padding:9px 6px;font-size:12px;font-weight:900;">Local Distributor</a>
-        <a href="${outbound('leslies')}" target="_blank" rel="noopener" onclick="trackSplashLensEvent('affiliate_click',{store:'leslies'})" style="background:#0284c7;color:#fff;text-decoration:none;text-align:center;border-radius:8px;padding:9px 6px;font-size:12px;font-weight:900;">Leslie's</a>
-        <a href="${outbound('intheswim')}" target="_blank" rel="noopener" onclick="trackSplashLensEvent('affiliate_click',{store:'intheswim'})" style="background:#0ea5e9;color:#fff;text-decoration:none;text-align:center;border-radius:8px;padding:9px 6px;font-size:12px;font-weight:900;">In The Swim</a>
-        <a href="${outbound('poolsupplyworld')}" target="_blank" rel="noopener" onclick="trackSplashLensEvent('affiliate_click',{store:'poolsupplyworld'})" style="background:#334155;color:#e2e8f0;text-decoration:none;text-align:center;border-radius:8px;padding:9px 6px;font-size:12px;font-weight:900;">Pool Supply World</a>
-        <a href="${outbound('web')}" target="_blank" rel="noopener" onclick="trackSplashLensEvent('part_search_click',{store:'web'})" style="background:#0f172a;color:#7dd3fc;text-decoration:none;text-align:center;border-radius:8px;padding:9px 6px;font-size:12px;font-weight:900;border:1px solid #334155;">Search Web</a>
+        <a href="${escAttr(outbound('distributor'))}" target="_blank" rel="noopener" onclick="trackSplashLensEvent('part_search_click',{store:'local_distributor'})" style="background:#0f766e;color:#fff;text-decoration:none;text-align:center;border-radius:8px;padding:9px 6px;font-size:12px;font-weight:900;">Local Distributor</a>
+        <a href="${escAttr(outbound('leslies'))}" target="_blank" rel="noopener" onclick="trackSplashLensEvent('affiliate_click',{store:'leslies'})" style="background:#0284c7;color:#fff;text-decoration:none;text-align:center;border-radius:8px;padding:9px 6px;font-size:12px;font-weight:900;">Leslie's</a>
+        <a href="${escAttr(outbound('intheswim'))}" target="_blank" rel="noopener" onclick="trackSplashLensEvent('affiliate_click',{store:'intheswim'})" style="background:#0ea5e9;color:#fff;text-decoration:none;text-align:center;border-radius:8px;padding:9px 6px;font-size:12px;font-weight:900;">In The Swim</a>
+        <a href="${escAttr(outbound('poolsupplyworld'))}" target="_blank" rel="noopener" onclick="trackSplashLensEvent('affiliate_click',{store:'poolsupplyworld'})" style="background:#334155;color:#e2e8f0;text-decoration:none;text-align:center;border-radius:8px;padding:9px 6px;font-size:12px;font-weight:900;">Pool Supply World</a>
+        <a href="${escAttr(outbound('web'))}" target="_blank" rel="noopener" onclick="trackSplashLensEvent('part_search_click',{store:'web'})" style="background:#0f172a;color:#7dd3fc;text-decoration:none;text-align:center;border-radius:8px;padding:9px 6px;font-size:12px;font-weight:900;border:1px solid #334155;">Search Web</a>
       </div>
       <p style="color:#64748b;font-size:10px;line-height:1.4;margin-top:8px;">Search links are for convenience only. SplashLens has no live inventory, seller guarantee, SCP affiliation, or fitment guarantee. Verify fit before ordering. If an affiliate tag is configured, SplashLens may earn a commission.</p>
     </div>`;
@@ -12348,6 +12448,25 @@ function extractErrorCodes(text) {
   return rich.length ? rich : [...found];
 }
 
+function renderAIErrorCodeResult({ codes = [], brand, model, context }, result, status) {
+  if (status) status.textContent = `AI READ - VERIFY: ${codes.join(', ')}`;
+  const hits = searchErrorDB(codes[0], null);
+  if (result) result.innerHTML = `
+    <div style="background:#1e293b;border:1px solid #334155;border-radius:10px;padding:12px;margin-bottom:10px;">
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px;">
+        <span style="background:#7c3aed;color:#fff;padding:2px 10px;border-radius:100px;font-size:10px;font-weight:700;">AI READ - VERIFY</span>
+        ${brand ? `<span style="color:#94a3b8;font-size:11px;">${escHtml(brand)}${model ? ' · ' + escHtml(model) : ''}</span>` : ''}
+      </div>
+      <p style="color:#f1f5f9;font-size:18px;font-weight:900;letter-spacing:.08em;margin-bottom:4px;">${escHtml(codes.join('  '))}</p>
+      ${context ? `<p style="color:#7dd3fc;font-size:12px;">${escHtml(context)}</p>` : ''}
+      <p style="color:#94a3b8;font-size:11px;line-height:1.45;margin-top:8px;">Reference only. Confirm the code, model, and procedure against the current manufacturer manual before repair or parts ordering.</p>
+    </div>
+    ${renderScanHits(hits, codes[0], true)}
+    ${!hits.length ? `<div style="text-align:center;padding:16px 0;"><button data-app-action="edit-scan-code" data-code="${escAttr(codes[0])}" style="background:#334155;color:#94a3b8;border:none;border-radius:8px;padding:10px 20px;font-size:13px;cursor:pointer;">Edit Code Manually</button></div>` : ''}
+  `;
+  return countVerifiedCodeHits(hits);
+}
+
 function showCaptureWithManualEntry(canvas, detectedText, result, status) {
   if (status) status.textContent = 'ENTER CODE SHOWN ON DISPLAY';
   const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
@@ -12355,9 +12474,9 @@ function showCaptureWithManualEntry(canvas, detectedText, result, status) {
     <div style="margin-bottom:12px;">
       <img src="${dataUrl}" style="width:100%;border-radius:8px;border:2px solid #334155;max-height:200px;object-fit:cover;">
     </div>
-    ${detectedText ? `<p style="color:#7dd3fc;font-size:12px;margin-bottom:10px;font-weight:600;">Detected text: ${detectedText}</p>` : ''}
+    ${detectedText ? `<p style="color:#7dd3fc;font-size:12px;margin-bottom:10px;font-weight:600;">Detected text: ${escHtml(detectedText)}</p>` : ''}
     <div style="display:flex;gap:8px;margin-bottom:8px;">
-      <input id="scan-manual-code" type="text" value="${detectedText}" placeholder="Type error code (e.g. E05)"
+      <input id="scan-manual-code" type="text" value="${escAttr(detectedText)}" placeholder="Type error code (e.g. E05)"
         style="flex:1;padding:12px;background:#1e293b;border:1px solid #334155;border-radius:8px;color:#f1f5f9;font-size:16px;outline:none;letter-spacing:.06em;"
         oninput="scanManualSearch(this.value)">
     </div>
@@ -12385,7 +12504,7 @@ function runCodeSearch(code, result, status, suppressOffer = false) {
     result.innerHTML = `
       <div style="background:#1e293b;border:1px solid #334155;border-radius:10px;padding:12px;margin-bottom:10px;">
         <p style="color:#7dd3fc;font-size:11px;font-weight:700;letter-spacing:.06em;margin-bottom:4px;">DETECTED CODE</p>
-        <p style="color:#f1f5f9;font-size:18px;font-weight:800;letter-spacing:.08em;">${code}</p>
+        <p style="color:#f1f5f9;font-size:18px;font-weight:800;letter-spacing:.08em;">${escHtml(code)}</p>
       </div>
       ${renderScanHits(hits, code, true)}
     `;
@@ -12406,7 +12525,7 @@ function renderScanBrandFilter() {
   const brands = Object.entries(window.ERROR_DB);
   el.innerHTML = `
     <button onclick="setScanBrand(null)" style="${scanBrandPillStyle(_scanBrand === null)}">All Brands</button>
-    ${brands.map(([k,b]) => `<button onclick="setScanBrand('${k}')" style="${scanBrandPillStyle(_scanBrand === k)}">${b.label}</button>`).join('')}
+    ${brands.map(([k,b]) => `<button data-app-action="setScanBrand" data-arg0="${escAttr(k)}" style="${scanBrandPillStyle(_scanBrand === k)}">${b.label}</button>`).join('')}
   `;
 }
 
@@ -12573,8 +12692,8 @@ function renderManualLookupUpgradeOffer(resultCount, query) {
       <p style="color:#7dd3fc;font-size:10px;font-weight:950;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;">${a3Text('upgrade.keepResult')}</p>
       <p style="color:#f8fafc;font-size:13px;font-weight:950;margin-bottom:9px;">${a3Text('upgrade.saveJob')}</p>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;">
-        <a data-checkout-plan="monthly" data-checkout-placement="scan_lookup_search" href="${getCheckoutUrl('monthly', 'scan_lookup_search')}" target="_blank" rel="noopener" onclick="this.href=trackPostValueUpgrade('monthly','scan_lookup_search')" style="background:#0ea5e9;color:#082f49;text-decoration:none;text-align:center;border-radius:8px;padding:10px 7px;font-size:11px;font-weight:950;">${a3Text('upgrade.goProPrice')}</a>
-        <a data-checkout-plan="yearly" data-checkout-placement="scan_lookup_search" href="${getCheckoutUrl('yearly', 'scan_lookup_search')}" target="_blank" rel="noopener" onclick="this.href=trackPostValueUpgrade('yearly','scan_lookup_search')" style="background:#22c55e;color:#052e16;text-decoration:none;text-align:center;border-radius:8px;padding:10px 7px;font-size:11px;font-weight:950;">${a3Text('upgrade.saveYearly')}</a>
+        <a data-checkout-intent="post-value" data-app-action="post-value-checkout" data-arg0="${escAttr('monthly')}" data-arg1="${escAttr('scan_lookup_search')}" data-checkout-plan="monthly" data-checkout-placement="scan_lookup_search" href="${escAttr(getCheckoutUrl('monthly', 'scan_lookup_search'))}" target="_blank" rel="noopener" style="background:#0ea5e9;color:#082f49;text-decoration:none;text-align:center;border-radius:8px;padding:10px 7px;font-size:11px;font-weight:950;">${a3Text('upgrade.goProPrice')}</a>
+        <a data-checkout-intent="post-value" data-app-action="post-value-checkout" data-arg0="${escAttr('yearly')}" data-arg1="${escAttr('scan_lookup_search')}" data-checkout-plan="yearly" data-checkout-placement="scan_lookup_search" href="${escAttr(getCheckoutUrl('yearly', 'scan_lookup_search'))}" target="_blank" rel="noopener" style="background:#22c55e;color:#052e16;text-decoration:none;text-align:center;border-radius:8px;padding:10px 7px;font-size:11px;font-weight:950;">${a3Text('upgrade.saveYearly')}</a>
       </div>
       ${typeof renderClosingProUpgradeLink === 'function' ? renderClosingProUpgradeLink('scan_lookup_search') : ''}
     </div>`;
@@ -12587,7 +12706,7 @@ function renderManualCodeAnswerUpgradeOffer() {
   return `
     <div class="manual-code-pro-offer" style="background:#082f49;border:1px solid #0ea5e9;border-radius:8px;padding:12px;margin-top:12px;">
       <p style="color:#f8fafc;font-size:13px;font-weight:800;line-height:1.4;margin-bottom:10px;">${a3Text('upgrade.saveJob')}</p>
-      <a data-checkout-plan="monthly" data-checkout-placement="${placement}" href="${getCheckoutUrl('monthly', placement)}" target="_blank" rel="noopener" onclick="this.href=trackCheckoutIntent('monthly','manual_code_answer')" style="display:inline-flex;align-items:center;justify-content:center;min-height:44px;background:#0ea5e9;color:#082f49;text-decoration:none;border-radius:8px;padding:10px 14px;font-size:13px;font-weight:900;">${a3Text('upgrade.goProPrice')}</a>
+      <a data-checkout-intent="standard" data-app-action="checkout-link" data-checkout-plan="monthly" data-checkout-placement="${escAttr(placement)}" href="${escAttr(getCheckoutUrl('monthly', placement))}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;justify-content:center;min-height:44px;background:#0ea5e9;color:#082f49;text-decoration:none;border-radius:8px;padding:10px 14px;font-size:13px;font-weight:900;">${a3Text('upgrade.goProPrice')}</a>
     </div>`;
 }
 
@@ -12597,25 +12716,26 @@ function renderStripResult(ai, result, status) {
 
   if (status) status.textContent = 'TEST STRIP READING COMPLETE';
 
-  const val  = (v, unit='ppm') => v !== null && v !== undefined ? `<span style="font-size:22px;font-weight:900;color:#f1f5f9;">${v}</span> <span style="font-size:12px;color:#64748b;">${unit}</span>` : '<span style="color:#334155;font-size:18px;">—</span>';
+  const reading = value => !['string', 'number'].includes(typeof value) || String(value).trim() === '' || !Number.isFinite(Number(value)) ? null : Number(value);
+  const val  = (v, unit='ppm') => v !== null && v !== undefined ? `<span style="font-size:22px;font-weight:900;color:#f1f5f9;">${Number(v)}</span> <span style="font-size:12px;color:#64748b;">${unit}</span>` : '<span style="color:#334155;font-size:18px;">—</span>';
   const flag = (v, lo, hi) => {
     if (v === null || v === undefined) return '#334155';
     return v < lo || v > hi ? '#d97706' : '#16a34a';
   };
 
   const rows = [
-    { label: 'Free Chlorine', key: 'fc', v: fc, lo: 1, hi: 5 },
-    { label: 'pH', key: 'ph', v: ph, lo: 7.2, hi: 7.8, unit: '' },
-    { label: 'Total Alkalinity', key: 'ta', v: ta, lo: 80, hi: 120 },
-    { label: 'Calcium Hardness', key: 'ch', v: ch, lo: 150, hi: 400 },
-    { label: 'Cyanuric Acid', key: 'cya', v: cya, lo: 30, hi: 80 },
+    { label: 'Free Chlorine', key: 'fc', v: reading(fc), lo: 1, hi: 5 },
+    { label: 'pH', key: 'ph', v: reading(ph), lo: 7.2, hi: 7.8, unit: '' },
+    { label: 'Total Alkalinity', key: 'ta', v: reading(ta), lo: 80, hi: 120 },
+    { label: 'Calcium Hardness', key: 'ch', v: reading(ch), lo: 150, hi: 400 },
+    { label: 'Cyanuric Acid', key: 'cya', v: reading(cya), lo: 30, hi: 80 },
   ];
 
   result.innerHTML = `
     <div style="background:#1e293b;border:1px solid #334155;border-radius:12px;padding:16px;margin-bottom:10px;">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
         <span style="background:#0284c7;color:#fff;padding:2px 10px;border-radius:100px;font-size:10px;font-weight:700;">🧪 TEST STRIP AI READ</span>
-        <span style="margin-left:auto;background:#334155;color:#94a3b8;padding:2px 8px;border-radius:100px;font-size:10px;font-weight:700;">${(confidence||'medium').toUpperCase()}</span>
+        <span style="margin-left:auto;background:#334155;color:#94a3b8;padding:2px 8px;border-radius:100px;font-size:10px;font-weight:700;">${escHtml(String(confidence || 'medium').toUpperCase())}</span>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">
         ${rows.map(r => `
@@ -12625,8 +12745,8 @@ function renderStripResult(ai, result, status) {
             ${r.v !== null && r.v !== undefined ? (r.v < r.lo || r.v > r.hi ? '<p style="color:#fbbf24;font-size:9px;margin-top:3px;">⚠ Out of range</p>' : '<p style="color:#4ade80;font-size:9px;margin-top:3px;">✓ In range</p>') : ''}
           </div>`).join('')}
       </div>
-      ${notes ? `<p style="color:#7dd3fc;font-size:13px;line-height:1.5;margin-bottom:10px;">${notes}</p>` : ''}
-      <p style="color:#475569;font-size:10px;line-height:1.4;font-style:italic;">${disclaimer || 'AI strip readings are rough field triage. Confirm with a calibrated kit before dosing.'}</p>
+      ${notes ? `<p style="color:#7dd3fc;font-size:13px;line-height:1.5;margin-bottom:10px;">${escHtml(notes)}</p>` : ''}
+      <p style="color:#475569;font-size:10px;line-height:1.4;font-style:italic;">${escHtml(disclaimer || 'AI strip readings are rough field triage. Confirm with a calibrated kit before dosing.')}</p>
       <p style="color:#fbbf24;font-size:10px;line-height:1.4;margin-top:6px;">Confirm readings with a calibrated kit before using the dosing calculator.</p>
     </div>
     <div style="text-align:center;padding:0 0 16px;">
@@ -12680,7 +12800,7 @@ function scanChemSearch(val) {
     }
   }
   if (!hits.length) {
-    el.innerHTML = `<p style="color:#475569;font-size:13px;text-align:center;padding:24px 0;">No results for "${val}"</p>`;
+    el.innerHTML = `<p style="color:#475569;font-size:13px;text-align:center;padding:24px 0;">No results for "${escHtml(val)}"</p>`;
     return;
   }
   el.innerHTML = hits.map(p => `

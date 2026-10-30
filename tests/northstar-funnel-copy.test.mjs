@@ -80,7 +80,7 @@ test('saving job history requires a free save profile signal', () => {
 test('service worker cache version ships the newest account bundle', () => {
   const shellAppUrl = shell.match(/<script src="(\/js\/app\.js\?v=[^"]+)"/ )?.[1];
   const precacheAppUrl = sw.match(/'(\/js\/app\.js\?v=[^']+)'/)?.[1];
-  assert.equal(shellAppUrl, '/js/app.js?v=20261021-round2');
+  assert.equal(shellAppUrl, '/js/app.js?v=20261029-xss-hardening');
   assert.equal(precacheAppUrl, shellAppUrl);
   assert.match(shell, /\/js\/i18n\.js\?v=20261021-closing-pro/);
   assert.match(sw, /\/js\/i18n\.js\?v=20261021-closing-pro/);
@@ -90,7 +90,7 @@ test('service worker cache version ships the newest account bundle', () => {
   assert.match(app, /import\('\.\/packet-share\.js\?v=20261009-restart-a4'\)/);
   assert.match(sw, /\/js\/packet-share\.js\?v=20261009-restart-a4/);
   assert.match(shell, /errors\.js\?v=20261010-hayward-safety/);
-  assert.match(sw, /const CACHE = 'splashlens-v58-public-cache'/);
+  assert.match(sw, /const CACHE = 'splashlens-v59-xss-hardening'/);
   assert.match(sw, /\/js\/crm-proof-export\.js\?v=20261009-pc20/);
   assert.match(sw, /errors\.js\?v=20261010-hayward-safety/);
   assert.match(sw, /keys\.filter\(k => k !== CACHE\)/);
@@ -135,8 +135,8 @@ test('checkout reporting separates intent from offers and server payment stages'
 test('post-value lookup results expose a paid path without charging for manual lookup', () => {
   assert.match(app, /function renderManualLookupUpgradeOffer/);
   assert.match(app, /Manual lookup stays free/);
-  assert.match(app, /trackPostValueUpgrade\('monthly','scan_lookup_search'\)/);
-  assert.match(app, /trackPostValueUpgrade\('yearly','scan_lookup_search'\)/);
+  assert.match(app, /data-checkout-intent="post-value"[^>]*data-checkout-plan="monthly"[^>]*data-checkout-placement="scan_lookup_search"/);
+  assert.match(app, /data-checkout-intent="post-value"[^>]*data-checkout-plan="yearly"[^>]*data-checkout-placement="scan_lookup_search"/);
   assert.match(app, /trackSplashLensEvent\('checkout_click', props\)/);
   assert.match(app, /client_reference_id = `sl_checkout_/);
 });

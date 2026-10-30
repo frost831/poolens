@@ -72,8 +72,8 @@ test('a blocked gallery photo offers another gallery pick and records a scalar b
   vm.runInContext(functionSource('showPartSnapImagePreflight'), context);
   context.showPartSnapImagePreflight(preflight, result, status, true);
   assert.match(result.innerHTML, /Choose another photo/);
-  assert.match(result.innerHTML, /onclick="requestGalleryPhotoFallback\(\)"/);
-  assert.doesNotMatch(result.innerHTML, /onclick="captureAndAnalyze\(\)"/);
+  assert.match(result.innerHTML, /data-app-action="requestGalleryPhotoFallback"/);
+  assert.doesNotMatch(result.innerHTML, /data-app-action="captureAndAnalyze"/);
   assert.equal(events[0].reason, 'photo_quality');
   assert.equal(events[0].props.blocker, 'flat_or_blank');
   assert.equal(events[0].props.capture_source, 'gallery');
