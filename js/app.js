@@ -4827,13 +4827,16 @@ function renderCartridgeSection() {
 function initGuide() {
   // Migrate old single-key format to per-type keys
   const old = localStorage.getItem('poolens-cl');
-  if (old) { localStorage.setItem('poolens-cl-opening', old); localStorage.removeItem('poolens-cl'); }
+  if (old) {
+    const legacy = decodeChecklistRecord(old);
+    if (legacy.state === 'ok') persistChecklist('poolens-cl-opening', legacy.value);
+    localStorage.removeItem('poolens-cl');
+    localStorage.removeItem('poolens-cl.pending');
+  }
   Object.keys(CL_MAP).forEach(type => {
-    try { S.checklists[type] = JSON.parse(localStorage.getItem(CL_MAP[type].key) || '{}'); }
-    catch(e) { S.checklists[type] = {}; }
+    S.checklists[type] = loadChecklist(CL_MAP[type].key);
   });
-  try { S.checklists.closingShort = JSON.parse(localStorage.getItem(SHORT_CLOSING_KEY) || '{}'); }
-  catch(e) { S.checklists.closingShort = {}; }
+  S.checklists.closingShort = loadChecklist(SHORT_CLOSING_KEY);
   renderChecklist();
 }
 
@@ -4928,14 +4931,84 @@ function closingChecklistChanged(wasComplete) {
   }
 }
 
+function checklistPendingKey(key) {
+  return `${key}.pending`;
+}
+
+function checklistChecksum(text) {
+  let hash = 2166136261;
+  for (let i = 0; i < text.length; i++) {
+    hash ^= text.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+  return (hash >>> 0).toString(16);
+}
+
+function encodeChecklistRecord(state) {
+  const json = JSON.stringify(state && typeof state === 'object' && !Array.isArray(state) ? state : {});
+  return `SL1\n${json.length}\n${checklistChecksum(json)}\n${json}`;
+}
+
+function decodeChecklistRecord(raw) {
+  if (raw == null || raw === '') return { state: 'missing' };
+  const framed = /^SL1\n(\d+)\n([0-9a-f]+)\n([\s\S]*)$/.exec(raw);
+  if (framed) {
+    const json = framed[3];
+    if (json.length !== Number(framed[1]) || checklistChecksum(json) !== framed[2]) return { state: 'corrupt' };
+    try {
+      const value = JSON.parse(json);
+      if (!value || typeof value !== 'object' || Array.isArray(value)) return { state: 'corrupt' };
+      return { state: 'ok', value };
+    } catch {
+      return { state: 'corrupt' };
+    }
+  }
+  if (raw.startsWith('SL1')) return { state: 'corrupt' };
+  try {
+    const value = JSON.parse(raw);
+    if (!value || typeof value !== 'object' || Array.isArray(value)) return { state: 'corrupt' };
+    return { state: 'ok', value };
+  } catch {
+    return { state: 'corrupt' };
+  }
+}
+
+function loadChecklist(key) {
+  const pendingKey = checklistPendingKey(key);
+  const primary = decodeChecklistRecord(localStorage.getItem(key));
+  const pending = decodeChecklistRecord(localStorage.getItem(pendingKey));
+  if (pending.state === 'ok') {
+    const same = primary.state === 'ok' && JSON.stringify(primary.value) === JSON.stringify(pending.value);
+    if (!same) localStorage.setItem(key, encodeChecklistRecord(pending.value));
+    localStorage.removeItem(pendingKey);
+    return pending.value;
+  }
+  if (pending.state === 'corrupt' || (pending.state === 'missing' && localStorage.getItem(pendingKey) != null)) {
+    localStorage.removeItem(pendingKey);
+  }
+  if (primary.state === 'ok') return primary.value;
+  if (primary.state === 'corrupt') localStorage.setItem(key, encodeChecklistRecord({}));
+  return {};
+}
+
+function persistChecklist(key, state) {
+  const payload = encodeChecklistRecord(state);
+  localStorage.setItem(checklistPendingKey(key), payload);
+  localStorage.setItem(key, payload);
+  localStorage.removeItem(checklistPendingKey(key));
+}
+
 function setClosingPhotoReference(key, value) {
   if (!CLOSING_PHOTO_PROOFS.some(item => item.key === key)) return;
   const wasComplete = closingChecklistStatus().complete;
   trackClosingChecklistStart();
-  const cl = S.checklists.closing;
-  cl._photos = cl._photos || {};
-  cl._photos[key] = String(value || '').trim().slice(0, 120);
-  localStorage.setItem(CL_MAP.closing.key, JSON.stringify(cl));
+  const cl = S.checklists.closing || {};
+  const next = {
+    ...cl,
+    _photos: { ...(cl._photos || {}), [key]: String(value || '').trim().slice(0, 120) },
+  };
+  persistChecklist(CL_MAP.closing.key, next);
+  S.checklists.closing = next;
   closingChecklistChanged(wasComplete);
 }
 
@@ -5207,8 +5280,10 @@ function toggleItem(pi, si) {
   const wasComplete = closing && !short && closingChecklistStatus().complete;
   if (closing) trackClosingChecklistStart();
   const k = `${pi}-${si}`;
-  cl[k] = !cl[k];
-  localStorage.setItem(activeChecklistKey(), JSON.stringify(cl));
+  const next = { ...cl, [k]: !cl[k] };
+  persistChecklist(activeChecklistKey(), next);
+  if (short) S.checklists.closingShort = next;
+  else S.checklists[S.clType] = next;
   if (closing) {
     // Observed drop step: unavailable until post-release step events exist; the historical 63 starts/1 completion cannot identify it.
     // For each assigned cohort, count unique sessions with a start and checked=true at each step_index, in order. The first material fall identifies the drop step.
@@ -5218,16 +5293,16 @@ function toggleItem(pi, si) {
       step_index: phases.slice(0, pi).reduce((count, phase) => count + phase.steps.length, 0) + si + 1,
       step_name: step,
       phase_index: pi + 1,
-      checked: !!cl[k],
+      checked: !!next[k],
     });
   }
   const row = document.getElementById(`cli-${k}`);
   const chk = document.getElementById(`chk-${k}`);
-  if (row) row.classList.toggle('done', !!cl[k]);
-  if (chk) chk.checked = !!cl[k];
+  if (row) row.classList.toggle('done', !!next[k]);
+  if (chk) chk.checked = !!next[k];
   updateProgress();
   if (short) {
-    const nowComplete = shortClosingComplete(cl);
+    const nowComplete = shortClosingComplete(next);
     if (!wasShortComplete && nowComplete) trackSplashLensEvent('closing_checklist_short_completed', { variant: 'short', assignment: closingChecklistAssignment(), steps: total });
   } else if (closing) closingChecklistChanged(wasComplete);
 }
@@ -5257,6 +5332,7 @@ async function resetChecklist() {
   if (closingChecklistIsShort()) S.checklists.closingShort = {};
   else S.checklists[S.clType] = {};
   localStorage.removeItem(activeChecklistKey());
+  localStorage.removeItem(checklistPendingKey(activeChecklistKey()));
   renderChecklist();
 }
 
