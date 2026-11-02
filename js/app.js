@@ -4568,7 +4568,7 @@ function calcVolume() {
       <p style="color:#0284c7;font-size:17px;font-weight:600;margin-top:4px;">gallons</p>
       <p style="color:#94a3b8;font-size:12px;margin-top:6px;">${cubicFt} cubic feet</p>
       <div class="result-note" style="text-align:left;margin-top:14px;">
-        Use this number in the Dosing tab for accurate chemical calculations.
+        Use this number in the Dosing tab. Dosing math is based on standard pool chemistry formulas; verify with your test kit.
         <button onclick="useVolumeInDosing(${Math.round(gallons)})" style="display:block;margin-top:8px;background:#eff6ff;border:1px solid #93c5fd;border-radius:6px;color:#0369a1;font-size:11px;font-weight:800;padding:5px 12px;cursor:pointer;width:100%;">
           → Use in Dosing Calculator
         </button>

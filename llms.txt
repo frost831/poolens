@@ -1,6 +1,6 @@
 ﻿# SplashLens App
 
-> Free-core, offline-first PWA field reference tool for pool service technicians. 230+ pool and spa field entries, chemical dosing calculators, online AI scanner support (error codes, parts ID, test-strip triage), SLAM multi-day tracker, filter guides, checklists, route tracking, passwordless email accounts, lightweight team workspaces, account-backed proof metadata, Pro scan entitlements, and pilot request paths for Facility/CPO Mode, Verified Manufacturer Cards, Distributor/Counter Mode, and Field Learning OS. Manual field tools work without sign-in after first load; online AI scanner workflows require internet and a verified SplashLens email session.
+> Free-core, offline-first PWA field reference tool for pool service technicians. 246 pool and spa error-code entries in the shipped reference database, chemical dosing calculators based on standard pool chemistry formulas, online AI scanner support (error codes, parts ID, test-strip triage), SLAM multi-day tracker, filter guides, checklists, route tracking, passwordless email accounts, lightweight team workspaces, account-backed proof metadata, Pro scan entitlements, and pilot request paths for Facility/CPO Mode, Verified Manufacturer Cards, Distributor/Counter Mode, and Field Learning OS. Manual field tools work without sign-in after first load; online AI scanner workflows require internet and a verified SplashLens email session. Verify doses with your test kit.
 
 ## App URL
 
@@ -33,7 +33,7 @@ Backend: Cloudflare Pages Function to Anthropic Claude Haiku vision plus a sourc
 
 ## Marketing Site
 
-Full feature overview, competitor comparison, blog (300+ articles): https://splashlens.com
+Full feature overview, competitor comparison, and blog: https://splashlens.com
 
 ## Contact
 
