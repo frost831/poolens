@@ -107,9 +107,11 @@ test('public app metadata keeps field-entry claims conservative', () => {
   assert.doesNotMatch(manifest, /500\+ pool equipment error codes/i);
   assert.doesNotMatch(androidWebManifest, /500\+ pool equipment error codes/i);
   assert.doesNotMatch(llms, /500\+ error codes/i);
-  assert.match(manifest, /230\+ pool and spa field reference entries/);
-  assert.match(androidWebManifest, /230\+ pool and spa field reference entries/);
-  assert.match(llms, /230\+ pool and spa field entries/);
+  assert.doesNotMatch(`${manifest}\n${androidWebManifest}\n${llms}`, /230\+/);
+  // 246 is the count of code records in js/errors.js, including entries flagged unverified.
+  assert.match(manifest, /246 pool and spa error-code entries/);
+  assert.match(androidWebManifest, /246 pool and spa error-code entries/);
+  assert.match(llms, /246 pool and spa error-code entries/);
 });
 
 test('deploy package includes public disclosure and AI crawler files', () => {
