@@ -251,10 +251,14 @@ test('signed webhook and checkout-success share an immutable 60-day guest entitl
   stripeFetch(t);
   for (const order of ['webhook-first', 'success-first']) {
     const configuration = env();
+    configuration.SPLASHLENS_APP_ORIGIN = 'https://stripe-test-55.poolens.pages.dev';
     const success = () => checkoutSuccess({ request: new Request(`https://app.splashlens.com/api/checkout-success?session_id=${sessionId}`), env: configuration });
     const hook = () => webhook({ request: signedWebhook(passSession()), env: configuration });
     const responses = order === 'webhook-first' ? [await hook(), await success()] : [await success(), await hook()];
     assert.deepEqual(responses.map(response => response.status), [200, 200]);
+    const successResponse = responses.find(response => response.headers.get('Content-Type')?.includes('text/html'));
+    const activation = new URL((await successResponse.text()).match(/href="([^"]+)"/)[1].replace(/&amp;/g, '&'));
+    assert.equal(activation.origin, configuration.SPLASHLENS_APP_ORIGIN);
     const row = configuration.SUBSCRIBERS_DB.sqlite.prepare('SELECT * FROM commercial_entitlements WHERE id = ?').get(`stripe:${sessionId}`);
     const expectedExpiry = new Date((paidAt + 60 * 24 * 60 * 60) * 1000).toISOString();
     assert.equal(row.current_period_end, expectedExpiry);

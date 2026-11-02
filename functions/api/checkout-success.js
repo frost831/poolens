@@ -1,4 +1,5 @@
 import { recordPaymentEvent, sessionAttribution } from '../_shared/payment-funnel.mjs';
+import { stripePeriodEnd } from '../_shared/stripe-billing.mjs';
 import { grantClosingPass, isClosingPass, verifiedClosingPassPayment } from '../_shared/closing-pass.mjs';
 import { crewSubscriptionMatches, ensureCrewBilling, isCrewCheckout } from '../_shared/crew-plan.mjs';
 
@@ -28,6 +29,11 @@ function escapeHtml(value) {
 function tokenSecret(env) {
   const secret = String(env.SPLASHLENS_ENTITLEMENT_SECRET || env.SCAN_ENTITLEMENT_SECRET || '').trim();
   return secret.length >= 32 ? secret : '';
+}
+
+function scannerActivationUrl(env, token) {
+  const origin = String(env.SPLASHLENS_APP_ORIGIN || 'https://app.splashlens.com').replace(/\/+$/, '');
+  return `${origin}/?tab=scan&scan_token=${encodeURIComponent(token)}`;
 }
 
 async function stripeGet(path, env) {
@@ -142,7 +148,7 @@ async function persistActivation(session, subject, plan, env, subscription) {
   const sessionId = String(session.id || '');
   const customerId = String(session.customer || '');
   const fallbackDays = /year|annual/i.test(plan) ? 370 : 35;
-  const periodEnd = Number(subscription.current_period_end || subscription.items?.data?.[0]?.current_period_end || 0);
+  const periodEnd = stripePeriodEnd(subscription);
   const expiresAt = periodEnd > 0
     ? new Date(periodEnd * 1000).toISOString()
     : new Date(Date.now() + fallbackDays * 24 * 60 * 60 * 1000).toISOString();
@@ -162,7 +168,7 @@ async function persistActivation(session, subject, plan, env, subscription) {
        status = 'active',
        source = CASE WHEN commercial_entitlements.source = 'stripe_webhook' THEN commercial_entitlements.source ELSE excluded.source END,
        stripe_customer_id = excluded.stripe_customer_id,
-       current_period_end = COALESCE(commercial_entitlements.current_period_end, excluded.current_period_end),
+       current_period_end = COALESCE(excluded.current_period_end, commercial_entitlements.current_period_end),
        updated_at = CURRENT_TIMESTAMP`,
   ).bind(
     `stripe:${sessionId || subject}`,
@@ -228,7 +234,7 @@ async function issueActivation(session, env, subscription) {
     exp: now + 365 * 24 * 60 * 60,
   };
   const token = await signToken(secret, payload);
-  const activateUrl = `https://app.splashlens.com/?tab=scan&scan_token=${encodeURIComponent(token)}`;
+  const activateUrl = scannerActivationUrl(env, token);
 
   await persistActivation(session, subject, payload.plan, env, subscription);
 
@@ -285,7 +291,7 @@ export async function onRequestGet({ request, env }) {
     const proof = { plan: 'closing_pass_60d', path: '/api/checkout-success', props: { ...sessionAttribution(session), payment_status: session.payment_status } };
     await recordPaymentEvent(env, 'checkout_completed', session.id, proof);
     await recordPaymentEvent(env, 'entitlement_granted', session.id, proof);
-    const activateUrl = `https://app.splashlens.com/?tab=scan&scan_token=${encodeURIComponent(activation.token)}`;
+    const activateUrl = scannerActivationUrl(env, activation.token);
     return html(`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Closing Pro activated</title></head><body><main><h1>Closing Pro activated.</h1><p>Pro access for ${escapeHtml(activation.subject)} is active until ${escapeHtml(activation.expiresAt)}.</p><a href="${escapeHtml(activateUrl)}">Open SplashLens scanner</a></main></body></html>`);
   }
   if (isCrewCheckout(session)) {
@@ -303,7 +309,7 @@ export async function onRequestGet({ request, env }) {
       return html('<h1>SplashLens checkout</h1><p>Crew payment could not be verified.</p>', 503);
     }
     const lead = String(session.customer_details?.email || session.customer_email || '').trim().toLowerCase();
-    const periodEnd = Number(subscriptionState.subscription.current_period_end || 0);
+    const periodEnd = stripePeriodEnd(subscriptionState.subscription);
     const seats = await ensureCrewBilling(env.SUBSCRIBERS_DB, {
       email: lead,
       customerId: String(session.customer || ''),
