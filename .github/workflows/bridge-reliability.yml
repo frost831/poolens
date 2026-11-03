@@ -20,4 +20,4 @@ jobs:
           ref: ${{ github.sha }}
           persist-credentials: false
       - name: Verify checkout isolation, gates, and task authorization
-        run: python -m unittest discover -s ops/agent-bridge -p test_reliability.py -v
+        run: python -m unittest discover -s ops/agent-bridge -p "test_*.py" -v
