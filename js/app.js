@@ -729,8 +729,7 @@ function openFirstStart(path) {
     showTab('guide');
     switchClType('closing');
   } else if (path === 'partsnap') {
-    showTab('scan');
-    setScanMode('parts');
+    showTab('scan', 'parts');
   } else {
     showTab('dosing');
     const target = document.getElementById(path === 'salt' ? 'salt-calculator' : 'dose-param');
@@ -752,14 +751,13 @@ function openCounterTool(button) {
     input?.focus();
     input?.scrollIntoView({ block: 'center' });
   } else if (button === 'part') {
-    showTab('scan');
-    setScanMode('parts');
+    showTab('scan', 'parts');
   } else {
     showTab('dosing');
   }
 }
 
-function showTab(name) {
+function showTab(name, scanMode) {
   const panel = document.getElementById(`tab-${name}`);
   if (!FIELD_TABS.has(name) || !panel) return;
   trackProductTabChange(name);
@@ -782,7 +780,7 @@ function showTab(name) {
   }
   if (name === 'route')  renderRoute();
   if (name === 'errors') renderCodePoolSelector();
-  if (name === 'scan')   initScanTab();
+  if (name === 'scan')   initScanTab(scanMode);
   if (name === 'dosing') renderSlamBanner();
   refreshFieldSurfaces(name);
   window.SplashLensFieldSignals?.onTabShown(name);
@@ -817,10 +815,7 @@ function enterSplashLensApp(tab = 'errors', mode) {
     setSplashLensRole('facility', { persist: false, forced: true });
     return;
   }
-  showTab(tab);
-  if (tab === 'scan' && mode) {
-    setTimeout(() => setScanMode(mode), 80);
-  }
+  showTab(tab, tab === 'scan' ? mode : undefined);
   if (tab === 'errors' && mode === 'search') {
     setTimeout(() => {
       const el = document.getElementById('error-search');
@@ -991,9 +986,8 @@ function initSplashLensPersonaMode() {
 
   if (params.get('tab') === 'scan' && (params.get('mode') === 'parts' || params.get('activate_scan') === 'parts')) {
     revealSplashLensApp();
-    showTab('scan');
+    showTab('scan', 'parts');
     setTimeout(() => {
-      setScanMode('parts');
       if (hasCompletedFirstUsageSession()) showRoleNudge('partsnap_direct');
     }, 120);
     trackSplashLensEvent('partsnap_direct_entry', { role: '', nonblocking_role_prompt: true });
@@ -1097,9 +1091,8 @@ function setSplashLensRole(role, options = {}) {
       }, 120);
       trackSplashLensEvent('partsnap_apprentice_started', { source: 'role_picker', role: cleanRole });
     } else if (cleanRole === 'counter') {
-      showTab('scan');
+      showTab('scan', 'parts');
       setTimeout(() => {
-        setScanMode('parts');
         renderCounterSamplePacket();
       }, 120);
     } else {
@@ -1609,6 +1602,7 @@ function hasCompletedFirstUsageSession() {
 
 function shouldShowFieldFeedback(state) {
   const now = Date.now();
+  if (document.getElementById('splashlens-sheet')) return false;
   if (document.getElementById('field-feedback-overlay')) return false;
   if (state.snoozedUntil && now < Number(state.snoozedUntil)) return false;
   if (state.submittedAt && now - Number(state.submittedAt) < FIELD_FEEDBACK_AFTER_SUBMIT_MS) return false;
@@ -1635,6 +1629,7 @@ function recordFieldFeedbackSignal(eventName) {
 
 function shouldShowQuickFeedback(state, eventName = '') {
   const now = Date.now();
+  if (document.getElementById('splashlens-sheet')) return false;
   if (!['partsnap_result', 'ai_scan_completed', 'manual_code_search', 'service_report_saved', 'proof_ready_report_saved'].includes(eventName)) return false;
   if (document.getElementById('field-feedback-overlay') || document.getElementById('field-quick-feedback')) return false;
   if (state.quickSnoozedUntil && now < Number(state.quickSnoozedUntil)) return false;
@@ -1728,6 +1723,7 @@ function getFieldFeedbackContext(trigger = '') {
 }
 
 function showFieldFeedbackPrompt(trigger = 'usage', prefill = {}) {
+  if (document.getElementById('splashlens-sheet')) return;
   const state = readFieldFeedbackState();
   if (!prefill.force && !shouldShowFieldFeedback(state)) return;
   const context = getFieldFeedbackContext(trigger);
@@ -2120,7 +2116,7 @@ function startServiceProofWorkflow(kind = 'visit') {
     renderProofWorkflowOutput(
       'PartSnap to saved job note',
       'Start with the part or code, then save the proof into a customer record before ordering. The note should show what is known, what is missing, and who needs to verify it.',
-      `<div class="brain-grid"><button type="button" class="brain-action green" onclick="showTab('scan');setTimeout(()=>setScanMode('parts'),80)">Open PartSnap</button><button type="button" class="brain-action secondary" onclick="createServiceProofShareLink()">Build packet</button></div>`
+      `<div class="brain-grid"><button type="button" class="brain-action green" onclick="openLivePartSnap()">Open PartSnap</button><button type="button" class="brain-action secondary" onclick="createServiceProofShareLink()">Build packet</button></div>`
     );
     focusReportField('rpt-photo-proof');
   } else if (kind === 'closing') {
@@ -2268,7 +2264,7 @@ function renderVerifiedProofNetwork() {
       `<div class="brain-grid" style="margin-top:10px;">
         <button type="button" class="brain-action green" onclick="startServiceProofWorkflow('visit')">Build proof</button>
         <button type="button" class="brain-action secondary" onclick="renderFieldLearningOS('proof')">Proof Review</button>
-        <button type="button" class="brain-action secondary" onclick="showTab('scan');setTimeout(()=>setScanMode('lookup'),80)">Manual Lookup</button>
+        <button type="button" class="brain-action secondary" onclick="openFieldCodeLookup()">Manual Lookup</button>
         <button type="button" class="brain-action secondary" onclick="openStoreProLinkCapture()">Email me my Pro link</button>
       </div>
       <p style="color:#64748b;font-size:11px;line-height:1.45;margin-top:10px;">Core tools stay free. We can follow up by email about Pro. No purchase opens in the store app.</p>`
@@ -3573,8 +3569,7 @@ function selectFacilityWorkflowAction(intent, action, target) {
     target: target || 'report',
   });
   if (target === 'partsnap') {
-    showTab('scan');
-    setTimeout(() => setScanMode('parts'), 80);
+    showTab('scan', 'parts');
     return;
   }
   showTab(target || 'report');
@@ -7949,8 +7944,8 @@ function handleAppDataEvent(event) {
     case 'showTab': showTab(data.arg0); break;
     case 'renderCounterSamplePacket': renderCounterSamplePacket(); break;
     case 'renderFieldLearningOS': renderFieldLearningOS(data.arg0); break;
-    case 'preview-counter': showTab('scan'); setTimeout(() => { setScanMode('parts'); renderCounterSamplePacket(); }, 80); break;
-    case 'facility-tool': showTab(data.arg0); showFacilityTools(); if (data.arg0 === 'scan') setTimeout(() => setScanMode('parts'), 80); break;
+    case 'preview-counter': showTab('scan', 'parts'); setTimeout(() => { renderCounterSamplePacket(); }, 80); break;
+    case 'facility-tool': showTab(data.arg0, data.arg0 === 'scan' ? 'parts' : undefined); showFacilityTools(); break;
     case 'voice-note': toggleVoiceNote(data.micTarget, control); break;
     case 'copy-text': copyText(data.arg0, control); break;
     case 'verify-free-profile': ensureFreeScanProfile(data.arg0).then(updateAIStatusBar); break;
@@ -8782,7 +8777,7 @@ function infoBox(main, sub) {
 
 let _scanStream    = null;
 let _scanUploadedFrameReady = false;
-let _scanMode      = 'camera';
+let _scanMode      = 'parts';
 let _scanBrand     = null;   // null = all brands
 let _flashOn       = false;
 let _flashTrack    = null;
@@ -8989,9 +8984,9 @@ async function composePartSnapEvidenceSheet(targetCanvas) {
   });
 }
 
-function initScanTab() {
+function initScanTab(mode = _scanMode || 'parts') {
   updateAIStatusBar();
-  setScanMode(_scanMode || 'parts');
+  setScanMode(mode);
   renderScanBrandFilter();
 }
 
@@ -9077,12 +9072,11 @@ function setScanMode(mode) {
 }
 
 function openLivePartSnap() {
-  showTab('scan');
+  startPartSnapEvidenceSession('primary_identify_part');
+  showTab('scan', 'parts');
   setTimeout(() => {
     const result = document.getElementById('scan-result');
     if (result) result.innerHTML = '';
-    startPartSnapEvidenceSession('primary_identify_part');
-    setScanMode('parts');
     requestAnimationFrame(() => {
       document.documentElement.scrollTop = 0;
       document.body.scrollTop = 0;
@@ -9093,9 +9087,8 @@ function openLivePartSnap() {
 }
 
 function openFieldCodeLookup() {
-  showTab('scan');
+  showTab('scan', 'lookup');
   setTimeout(() => {
-    setScanMode('lookup');
     document.getElementById('scan-code-input')?.focus();
   }, 80);
 }
