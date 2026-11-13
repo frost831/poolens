@@ -815,10 +815,7 @@ function enterSplashLensApp(tab = 'errors', mode) {
     setSplashLensRole('facility', { persist: false, forced: true });
     return;
   }
-  showTab(tab);
-  if (tab === 'scan' && mode) {
-    setTimeout(() => setScanMode(mode), 80);
-  }
+  showTab(tab, tab === 'scan' ? mode : undefined);
   if (tab === 'errors' && mode === 'search') {
     setTimeout(() => {
       const el = document.getElementById('error-search');
@@ -1605,6 +1602,7 @@ function hasCompletedFirstUsageSession() {
 
 function shouldShowFieldFeedback(state) {
   const now = Date.now();
+  if (document.getElementById('splashlens-sheet')) return false;
   if (document.getElementById('field-feedback-overlay')) return false;
   if (state.snoozedUntil && now < Number(state.snoozedUntil)) return false;
   if (state.submittedAt && now - Number(state.submittedAt) < FIELD_FEEDBACK_AFTER_SUBMIT_MS) return false;
@@ -1631,6 +1629,7 @@ function recordFieldFeedbackSignal(eventName) {
 
 function shouldShowQuickFeedback(state, eventName = '') {
   const now = Date.now();
+  if (document.getElementById('splashlens-sheet')) return false;
   if (!['partsnap_result', 'ai_scan_completed', 'manual_code_search', 'service_report_saved', 'proof_ready_report_saved'].includes(eventName)) return false;
   if (document.getElementById('field-feedback-overlay') || document.getElementById('field-quick-feedback')) return false;
   if (state.quickSnoozedUntil && now < Number(state.quickSnoozedUntil)) return false;
@@ -1724,6 +1723,7 @@ function getFieldFeedbackContext(trigger = '') {
 }
 
 function showFieldFeedbackPrompt(trigger = 'usage', prefill = {}) {
+  if (document.getElementById('splashlens-sheet')) return;
   const state = readFieldFeedbackState();
   if (!prefill.force && !shouldShowFieldFeedback(state)) return;
   const context = getFieldFeedbackContext(trigger);

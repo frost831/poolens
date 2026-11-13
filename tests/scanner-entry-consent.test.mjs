@@ -23,20 +23,20 @@ function scanner(previousMode){
     openSplashLensSheet:()=>{calls.sheets++;return new Promise(resolve=>{resolveSheet=resolve;});},
     getSplashLensRole:()=> 'tech',getStoreShellMode:()=> 'android',
     trackSplashLensEvent(){},trackProductTabChange(){},trackPartSnapResultFailure(){},trackFirstActionStarted(){},
-    refreshFieldSurfaces(){},renderScanBrandFilter(){},renderChemCatalogHome(){},updateAIStatusBar(){},renderPartSnapEvidenceGuide(){},renderPartSnapPrimer(){},startPartSnapEvidenceSession(){},
+    refreshFieldSurfaces(){},revealSplashLensApp(){},renderScanBrandFilter(){},renderChemCatalogHome(){},updateAIStatusBar(){},renderPartSnapEvidenceGuide(){},renderPartSnapPrimer(){},startPartSnapEvidenceSession(){},
     cameraFallbackCopy:(_key,fallback)=>fallback,
     setTimeout(){},requestAnimationFrame:callback=>callback(),
   });
   vm.runInContext('let partSnapCameraExplained=false;let cameraRequestPending=false;let cameraRequestGeneration=0;'+[
     'showTab','initScanTab','setScanMode','startCamera','stopCamera','revealNoCameraFallback',
-    'openCounterTool','openFirstStart','openLivePartSnap','openFieldCodeLookup',
+    'openCounterTool','openFirstStart','openLivePartSnap','openFieldCodeLookup','enterSplashLensApp',
   ].map(functionSource).join('\n'),context);
   return {context,calls,elements,decline:()=>resolveSheet(null)};
 }
 
 test('PartSnap entry explains the camera before requesting it, from every prior scanner mode',async()=>{
   for(const previous of ['camera','strip','lookup','parts']){
-    for(const enter of [c=>c.openCounterTool('part'),c=>c.openFirstStart('partsnap'),c=>c.openLivePartSnap()]){
+    for(const enter of [c=>c.openCounterTool('part'),c=>c.openFirstStart('partsnap'),c=>c.openLivePartSnap(),c=>c.enterSplashLensApp('scan','parts')]){
       const {context,calls,elements,decline}=scanner(previous);
       enter(context);
       assert.equal(context._scanMode,'parts');
@@ -52,11 +52,13 @@ test('PartSnap entry explains the camera before requesting it, from every prior 
 
 test('manual lookup entry never requests camera permission or opens a camera sheet',()=>{
   for(const previous of ['camera','strip','parts','lookup']){
-    const {context,calls,elements}=scanner(previous);
-    context.openFieldCodeLookup();
-    assert.equal(context._scanMode,'lookup');
-    assert.deepEqual(calls,{camera:0,sheets:0});
-    assert.equal(elements.get('scan-lookup-panel').style.display,'block');
+    for(const enter of [c=>c.openFieldCodeLookup(),c=>c.enterSplashLensApp('scan','lookup')]){
+      const {context,calls,elements}=scanner(previous);
+      enter(context);
+      assert.equal(context._scanMode,'lookup');
+      assert.deepEqual(calls,{camera:0,sheets:0});
+      assert.equal(elements.get('scan-lookup-panel').style.display,'block');
+    }
   }
 });
 
@@ -66,4 +68,21 @@ test('restoring the Scan tab starts in PartSnap with the camera explanation',()=
   context.showTab('scan');
   assert.equal(context._scanMode,'parts');
   assert.deepEqual(calls,{camera:0,sheets:1});
+});
+
+test('automatic feedback cannot cover checkout, camera consent, or verification sheets',()=>{
+  let sheet=true;
+  const context=vm.createContext({
+    document:{getElementById:id=>sheet&&id==='splashlens-sheet'?{}:null},
+    FIELD_FEEDBACK_AFTER_SUBMIT_MS:1000,FIELD_FEEDBACK_COOLDOWN_MS:1000,
+  });
+  vm.runInContext(['shouldShowFieldFeedback','shouldShowQuickFeedback','showFieldFeedbackPrompt'].map(functionSource).join('\n'),context);
+  const active={opens:3,meaningfulActions:3};
+  assert.equal(context.shouldShowFieldFeedback(active),false);
+  assert.equal(context.shouldShowQuickFeedback(active,'partsnap_result'),false);
+  // Forced requests also leave the active task's dialog in control.
+  context.showFieldFeedbackPrompt('partsnap_result',{force:true});
+  sheet=false;
+  assert.equal(context.shouldShowFieldFeedback(active),true);
+  assert.equal(context.shouldShowQuickFeedback(active,'partsnap_result'),true);
 });
