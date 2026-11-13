@@ -57,7 +57,7 @@ test('first-open task choices route to checklist, chlorine/salt math and PartSna
     document: { getElementById: id => elements[id] },
     trackSplashLensEvent: (name, props) => routes.push([name, props.path]),
     trackFirstActionStarted: () => {}, getSplashLensRole: () => 'tech',
-    showTab: tab => routes.push(tab), switchClType: type => routes.push(type),
+    showTab: (tab, mode) => { routes.push(tab); if (mode) routes.push(mode); }, switchClType: type => routes.push(type),
     setScanMode: mode => routes.push(mode), onParamChange: () => routes.push('param'),
   });
   vm.runInContext(sourceFunction('openFirstStart'), context);
