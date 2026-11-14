@@ -24,7 +24,7 @@ An actual Stripe sandbox Closing Pro checkout was exercised through a declined t
 
 ## Release surfaces and evidence
 
-The JavaScript CI job uses a standard ephemeral Windows runner, Node 24, and pinned Playwright 1.55.1 with Chromium. It enables the browser regression suite rather than skipping it, uses read-only repository permission, does not retain checkout credentials, and no longer depends on the removed temporary PC runner. Native Android/iOS build and agent workflows are unchanged.
+The JavaScript CI job uses a standard ephemeral Windows runner, Node 24, and pinned Playwright 1.55.1 with Chromium. It enables the browser regression suite rather than skipping it. The eight bridge reliability tests use an ephemeral Windows runner with Python 3.12. Both test jobs use read-only repository permission, do not retain checkout credentials, and no longer depend on the removed temporary PC runner. Native Android/iOS build and actual agent-execution workflows are unchanged.
 
 - Candidate alias: https://scan-recovery-20261114.poolens.pages.dev
 - Production app target: https://app.splashlens.com
