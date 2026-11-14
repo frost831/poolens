@@ -3314,11 +3314,13 @@ async function createFieldSaveProfile(feature = 'saved_job') {
 }
 
 async function ensureFreeScanProfile(mode = 'ai_scan', result = null, status = null) {
+  const generation = captureAndAnalyze.generation || 0;
   if (isPartSnapPro()) return true;
   let profile = getFieldSaveAccount();
   const feature = `scan_gate_${mode}`;
 
   if (!profile) profile = await createFieldSaveProfile(feature);
+  if (generation !== (captureAndAnalyze.generation || 0)) return false;
   if (!profile) {
     if (status) status.textContent = 'FREE PROFILE REQUIRED FOR AI SCAN';
     if (result) {
@@ -3352,6 +3354,7 @@ async function ensureFreeScanProfile(mode = 'ai_scan', result = null, status = n
     try {
       if (status) status.textContent = 'EMAILING YOUR CODE…';
       await requestFreeProfileCode(profile, feature);
+      if (generation !== (captureAndAnalyze.generation || 0)) return false;
       if (status) status.textContent = 'ENTER THE CODE FROM YOUR EMAIL';
       const pendingProfile = profile;
       let lastCodeSentAt = Date.now();
@@ -3384,13 +3387,23 @@ async function ensureFreeScanProfile(mode = 'ai_scan', result = null, status = n
         submit: (input) => verifyFreeProfileCode(pendingProfile, input.code, feature),
       });
       if (!verified) {
+        if (generation !== (captureAndAnalyze.generation || 0)) return false;
         trackSplashLensEvent('free_scan_profile_verification_dismissed', { mode, feature });
         if (status) status.textContent = 'EMAIL VERIFICATION REQUIRED';
+        if (result) {
+          result.innerHTML = `<div style="background:#0f172a;border:1px solid #334155;border-left:4px solid #14b8a6;border-radius:14px;padding:18px;text-align:center;">
+            <p style="color:#f8fafc;font-size:17px;font-weight:900;margin:0 0 8px;">Verification paused. Your photo is ready.</p>
+            <p style="color:#cbd5e1;font-size:13px;line-height:1.5;margin:0 0 14px;">Keep this session open. Verify your email to finish the captured scan without taking the photos again. Manual tools remain free.</p>
+            <button type="button" data-app-action="verify-free-profile" data-arg0="${escAttr(mode)}" style="width:100%;background:#14b8a6;color:#042f2e;border:0;border-radius:10px;padding:13px;font-size:14px;font-weight:900;cursor:pointer;">Verify and resume scan</button>
+          </div>`;
+          result.scrollIntoView?.({ block: 'center' });
+        }
         return false;
       }
       profile = verified;
       trackSplashLensEvent('free_scan_profile_verification_completed', { mode, feature });
     } catch (error) {
+      if (generation !== (captureAndAnalyze.generation || 0)) return false;
       if (status) status.textContent = 'EMAIL VERIFICATION NEEDED';
       if (result) {
         result.innerHTML = `<div style="background:#451a03;border:1px solid #f59e0b;border-radius:12px;padding:16px;text-align:center;">

@@ -126,6 +126,7 @@ for(const width of [1365,390]) test(`full app verification and saved-frame recov
   const browser=await chromium.launch({headless:true});
   const errors=[];const requests=[];let codeRequests=0;
   const page=await browser.newPage({viewport:{width,height:900},serviceWorkers:'block'});
+  page.setDefaultTimeout(8000);
   page.on('pageerror',e=>errors.push(e.message));
   try{
     await page.route('**/*',async route=>{
@@ -143,6 +144,10 @@ for(const width of [1365,390]) test(`full app verification and saved-frame recov
       try{return route.fulfill({contentType:/\.m?js$/.test(file)?'text/javascript':/\.html$/.test(file)?'text/html':/\.json$/.test(file)?'application/json':'image/png',body:readFileSync(file)});}catch{return route.abort();}
     });
     await page.goto('https://splashlens-app.test/?utm_source=qa&utm_medium=playwright');
+    await page.evaluate(()=>{setSplashLensRole('tech');hideRolePicker();enterSplashLensApp('scan','lookup');});
+    await page.locator('#scan-lookup-panel').waitFor({state:'visible'});
+    await page.evaluate(()=>{setScanMode('parts');closeSplashLensSheet();});
+    await page.locator('#scan-no-camera').waitFor({state:'visible'});
     await page.evaluate(()=>{
       localStorage.setItem(FIELD_SAVE_ACCOUNT_KEY,JSON.stringify({email:'fixture@example.test',role:'tech'}));
       window.__proofFrame={marker:'the same evidence'};window.__scanFrames=[];
@@ -151,26 +156,31 @@ for(const width of [1365,390]) test(`full app verification and saved-frame recov
       window.syncFieldSaveProfile=async profile=>profile;
       window.__verification=resumePendingAIScan('parts_snap');
     });
+    await page.getByRole('button',{name:'Not now',exact:true}).click();
+    await page.getByRole('button',{name:'Verify and resume scan',exact:true}).waitFor();
+    await page.waitForFunction(()=>!captureAndAnalyze.pending);
+    assert.deepEqual(await page.evaluate(()=>__scanFrames),[]);
+    await page.getByRole('button',{name:'Verify and resume scan',exact:true}).click();
     await page.getByRole('button',{name:'Resend code',exact:true}).click();
     await page.getByRole('alert').filter({hasText:/Please wait/}).waitFor();
-    assert.equal(codeRequests,1,'cooldown does not send another email');
+    assert.equal(codeRequests,2,'cooldown does not send another email');
     await page.getByLabel('6-digit code',{exact:true}).fill('111111');
     await page.getByRole('button',{name:'Verify and scan',exact:true}).click();
     await page.locator('[data-sheet-error]').filter({hasText:/could not verify/}).waitFor();
     await page.evaluate(()=>{window.__originalNow=Date.now;Date.now=()=>__originalNow()+61000;});
     await page.getByRole('button',{name:'Resend code',exact:true}).click();
     await page.locator('[data-sheet-status]').filter({hasText:/new code was sent/}).waitFor();
-    assert.equal(codeRequests,2);
+    assert.equal(codeRequests,3);
     await page.getByLabel('6-digit code',{exact:true}).fill('123456');
     await page.getByLabel('6-digit code',{exact:true}).press('Tab');
     assert.equal(await page.evaluate(()=>document.activeElement.textContent),'Verify and scan');
     const out=process.env.SPLASHLENS_QA_ARTIFACT_DIR;
     if(out){mkdirSync(out,{recursive:true});await page.screenshot({path:resolve(out,`verification-${width}.png`)});}
     await page.getByRole('button',{name:'Verify and scan',exact:true}).click();
-    await page.evaluate(()=>__verification);
+    await page.waitForFunction(()=>__scanFrames.length===1&&!captureAndAnalyze.pending);
     assert.deepEqual(await page.evaluate(()=>__scanFrames),[true]);
     assert.equal(await page.locator('#splashlens-sheet').count(),0);
-    assert.equal(codeRequests,2);assert.deepEqual(requests,['request_code','verify_code','request_code','verify_code']);
+    assert.equal(codeRequests,3);assert.deepEqual(requests,['request_code','request_code','verify_code','request_code','verify_code']);
     assert.deepEqual(errors,[]);
     // A slow, dismissed submission cannot close a replacement sheet.
     await page.evaluate(()=>{window.__old=openSplashLensSheet({title:'Old task',submit:()=>new Promise(r=>window.__finishOld=r)});});
@@ -189,5 +199,8 @@ for(const width of [1365,390]) test(`full app verification and saved-frame recov
     await page.locator('#recoveryFailures').scrollIntoViewIfNeeded();
     if(out)await page.screenshot({path:resolve(out,`owner-recovery-${width}.png`)});
     assert.deepEqual(errors,[]);
+  }catch(error){
+    console.error({width,sheet:await page.locator('#splashlens-sheet').innerText().catch(()=>''),result:await page.locator('#scan-result').innerText().catch(()=>''),state:await page.evaluate(()=>({tab:S.tab,generation:captureAndAnalyze.generation,pending:captureAndAnalyze.pending}))});
+    throw error;
   }finally{await browser.close();}
 });

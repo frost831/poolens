@@ -10,7 +10,7 @@
 - Local OCR can convert an ordinary HTML canvas using `toBlob`; it no longer assumes the OffscreenCanvas-only `convertToBlob` method exists.
 - Checkout handoff failures emit a structured, non-personal failure reason. QA classification survives checkout creation, Stripe metadata, and server payment-funnel recording.
 - The protected owner dashboard shows failures by step, reason, and platform, excluding QA. Counts represent attempts, not distinct people. Historical records with no platform remain unknown.
-- The app bundle is `20261114-scan-recovery-1`; its service-worker cache is `splashlens-v66-scan-recovery`.
+- The app bundle is `20261114-scan-recovery-2`; its service-worker cache is `splashlens-v67-scan-recovery`.
 
 ## Validation
 
