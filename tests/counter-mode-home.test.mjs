@@ -71,7 +71,7 @@ test('Counter buttons route to local code, PartSnap, and dosing with events', ()
   const input = { focused: false, focus() { this.focused = true; }, scrollIntoView() {} };
   const context = {
     document: { getElementById: () => input },
-    showTab: (tab) => shown.push(tab),
+    showTab: (tab, mode) => { shown.push(tab); if (mode) shown.push(mode); },
     setScanMode: (mode) => shown.push(mode),
     trackSplashLensEvent: (name, props) => events.push([name, props.button]),
   };

@@ -27,6 +27,8 @@ function harness(names, overrides = {}) {
   const events = [];
   const context = vm.createContext({
     crypto: webcrypto, URLSearchParams, URL, Uint8Array, Uint32Array,
+    setTimeout, clearTimeout, AbortController,
+    captureAndAnalyze: () => {},
     localStorage: storage({ 'splashlens-scan-client-id': uuid }),
     sessionStorage: storage({ 'splashlens-session-id': 'session-abc123-01234567' }),
     getSplashLensRole: () => 'tech', getWorkflowStyle: () => 'steps',
@@ -40,7 +42,7 @@ function harness(names, overrides = {}) {
     ...overrides,
   });
   if (names.includes('startWebCheckout')) vm.runInContext('let checkoutPending = false;', context);
-  vm.runInContext(names.map(functionSource).join('\n'), context);
+  vm.runInContext(['fetchSplashLensWithTimeout', ...names].map(functionSource).join('\n'), context);
   return { context, events };
 }
 
@@ -214,14 +216,12 @@ test('a failed upgrade handoff stays open for a deliberate checkout retry', asyn
 
 test('checkout timeout releases its lock so the next deliberate click can retry', async () => {
   const notices=[];
-  const signal={};
   let attempt=0;
   const {context}=harness([...checkoutFunctions,'startWebCheckout'],{
     window:{location:{origin:'https://app.test',assign:()=>{}}},
-    AbortSignal:{timeout:ms=>{assert.ok(ms>0 && ms<=45000);return signal;}},
     showSplashLensNotice:message=>notices.push(message),
     fetch:async (_url,options)=>{
-      assert.equal(options.signal,signal);
+      assert.ok(options.signal instanceof AbortSignal);
       if(++attempt===1) throw Object.assign(Error('expired'),{name:'TimeoutError'});
       return {ok:true,json:async()=>({url:'https://checkout.stripe.com/c/pay/fixture'})};
     },
