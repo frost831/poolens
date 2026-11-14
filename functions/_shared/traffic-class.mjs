@@ -7,6 +7,7 @@ export function classifyTraffic({ source = '', utmSource = '', userAgent = '', p
   const eventPath = String(path || '').toLowerCase();
   if (QA_SOURCES.has(namedSource) || QA_SOURCES.has(campaignSource)
       || props.demo === true || props.test === true || props.synthetic === true
+      || props.traffic_class === 'qa'
       || eventPath.startsWith('/test/') || eventPath.includes('verify=')) return 'qa';
   if (webdriver || BOT_UA.test(String(userAgent || ''))) return 'bot';
   if (serverOrigin && !props.client_id && !props.clientId) return 'server';

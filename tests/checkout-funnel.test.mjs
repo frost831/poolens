@@ -119,6 +119,22 @@ test('GET checkout and link previews cannot create Stripe sessions or starts', a
   assert.equal((await catalog.json()).product, 'splashlens');
 });
 
+test('QA checkout classification survives Stripe metadata and every server funnel record', async (t) => {
+  let params;const rows=[];
+  t.mock.method(globalThis,'fetch',async(_url,options)=>{
+    params=new URLSearchParams(options.body);
+    return Response.json({id:'cs_test_qa',url:'https://checkout.stripe.com/c/pay/cs_test_qa'});
+  });
+  const db={prepare(sql){let values=[];return {bind(...v){values=v;return this;},async run(){rows.push({sql,values});return {meta:{changes:1}};}};}};
+  const response=await checkout({request:checkoutRequest('monthly',{traffic_class:'qa'}),env:{STRIPE_SECRET_KEY:'sk_test_fixture',SUBSCRIBERS_DB:db}});
+  assert.equal(response.status,200);
+  assert.equal(params.get('metadata[traffic_class]'),'qa');
+  assert.equal(params.get('subscription_data[metadata][traffic_class]'),'qa');
+  const serialized=rows.flatMap(r=>r.values).filter(v=>typeof v==='string'&&v.startsWith('{')).map(v=>JSON.parse(v));
+  assert.ok(serialized.length>=3);
+  assert.ok(serialized.every(p=>p.traffic_class==='qa'));
+});
+
 test('failed checkout does not report a start', async (t) => {
   const recorded = [];
   t.mock.method(console, 'error', () => {});

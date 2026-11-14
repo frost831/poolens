@@ -90,6 +90,8 @@
       <span class="tiny">Top queries, last 7 days</span>
     </section>
     <section class="card"><div id="libraryMisses"></div></section>
+    <section class="section-title"><h2>Scan and checkout recovery</h2><span class="tiny">Last 30 days · QA excluded · attempts, not unique people</span></section>
+    <section class="card"><div id="recoveryFailures"></div></section>
     <section class="section-title"><h2>Follow-up requests</h2><span class="tiny">Store Pro interest and PartSnap miss notifications</span></section>
     <section class="card"><div id="followups"></div></section>
     <section class="section-title">
@@ -251,6 +253,12 @@
         document.getElementById('generated').textContent = `Generated ${stats.generatedAt || admin.generatedAt || ''}`;
         document.getElementById('funnel7').innerHTML = funnel(stats.funnel7d);
         document.getElementById('funnel30').innerHTML = funnel(stats.funnel30d);
+        document.getElementById('recoveryFailures').innerHTML = table(stats.recoveryFailures30d, [
+          { label:'Step', key:'stage' },
+          { label:'Reason', key:'reason' },
+          { label:'Platform', key:'platform' },
+          { label:'Attempts', key:'count' },
+        ], 'No recorded recovery failures in the last 30 days. This does not prove every attempt succeeded.');
         libraryMissRows = admin.libraryMisses || [];
         document.getElementById('libraryMisses').innerHTML = table(libraryMissRows.map((row, index) => ({ ...row, index })), [
           { label:'Query', render:(r) => esc(r.query || r.model || r.brand) },

@@ -2438,9 +2438,29 @@ function hasAccountSession(profile = getFieldSaveAccount()) {
   return !Number.isFinite(expiresAt) || expiresAt > Date.now() + 60000;
 }
 
+async function fetchSplashLensWithTimeout(url, options = {}, timeoutMs = 35000) {
+  const controller = typeof AbortController === 'function' ? new AbortController() : null;
+  let timer;
+  try {
+    return await Promise.race([
+      fetch(url, { ...options, ...(controller ? { signal: controller.signal } : {}) }),
+      new Promise((_, reject) => {
+        timer = setTimeout(() => {
+          const error = new Error('The request took too long. Please try again.');
+          error.name = 'TimeoutError';
+          reject(error);
+          controller?.abort();
+        }, timeoutMs);
+      }),
+    ]);
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 async function requestFreeProfileCode(profile, feature = 'scan_gate') {
   try {
-    const response = await fetch(SPLASHLENS_FREE_PROFILE_ENDPOINT, {
+    const response = await fetchSplashLensWithTimeout(SPLASHLENS_FREE_PROFILE_ENDPOINT, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...getLanguageHeaders() },
       body: JSON.stringify(withLanguageMetadata({
@@ -2471,7 +2491,7 @@ async function requestFreeProfileCode(profile, feature = 'scan_gate') {
 
 async function verifyFreeProfileCode(profile, code, feature = 'scan_gate') {
   try {
-    const response = await fetch(SPLASHLENS_FREE_PROFILE_ENDPOINT, {
+    const response = await fetchSplashLensWithTimeout(SPLASHLENS_FREE_PROFILE_ENDPOINT, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...getLanguageHeaders() },
       body: JSON.stringify(withLanguageMetadata({
@@ -3150,9 +3170,11 @@ function openSplashLensSheet(config) {
             value="${escAttr(field.value || '')}" autocapitalize="off" autocorrect="off" spellcheck="false"
             style="width:100%;box-sizing:border-box;background:#020617;color:#f8fafc;border:1px solid #475569;border-radius:10px;padding:13px 12px;font-size:16px;margin:0 0 12px;">`).join('')}
         <p data-sheet-error role="alert" style="color:#fca5a5;font-size:12px;font-weight:800;line-height:1.4;min-height:0;margin:0 0 10px;"></p>
+        <p data-sheet-status role="status" style="color:#5eead4;font-size:12px;line-height:1.4;margin:0 0 10px;"></p>
         <button type="submit" style="width:100%;background:#14b8a6;color:#042f2e;border:0;border-radius:10px;padding:14px 10px;font-size:14px;font-weight:950;cursor:pointer;">${escHtml(config.primaryLabel || 'Continue')}</button>
         <button type="button" data-sheet-cancel style="width:100%;background:transparent;color:#94a3b8;border:0;padding:12px 10px 4px;font-size:13px;font-weight:800;cursor:pointer;">${escHtml(config.secondaryLabel || 'Not now')}</button>
         ${config.tertiaryLabel ? `<button type="button" data-sheet-tertiary style="width:100%;background:transparent;color:#64748b;border:0;padding:8px 10px 0;font-size:12px;font-weight:800;text-decoration:underline;cursor:pointer;">${escHtml(config.tertiaryLabel)}</button>` : ''}
+        ${config.actionLabel ? `<button type="button" data-sheet-action style="width:100%;background:transparent;color:#5eead4;border:0;padding:12px 10px 0;font-size:13px;font-weight:800;text-decoration:underline;cursor:pointer;">${escHtml(config.actionLabel)}</button>` : ''}
         ${config.footnote ? `<p style="color:#64748b;font-size:11px;line-height:1.45;margin:10px 0 0;text-align:center;">${escHtml(config.footnote)}</p>` : ''}
       </form>`;
 
@@ -3160,16 +3182,37 @@ function openSplashLensSheet(config) {
     const form = wrap.querySelector('form');
     const errorEl = wrap.querySelector('[data-sheet-error]');
     const submitBtn = wrap.querySelector('button[type="submit"]');
-    wrap.addEventListener('click', (event) => {
-      if (event.target === wrap) closeSplashLensSheet(null);
+    const actionBtn = wrap.querySelector('[data-sheet-action]');
+    let busy = false;
+    actionBtn?.addEventListener('click', async () => {
+      if (busy) return;
+      busy = true;
+      submitBtn.disabled = true;
+      actionBtn.disabled = true;
+      errorEl.textContent = '';
+      try {
+        const message = await config.onAction?.();
+        if (wrap.isConnected) wrap.querySelector('[data-sheet-status]').textContent = message || '';
+      } catch (error) {
+        if (wrap.isConnected) errorEl.textContent = error.message || 'Please try again.';
+      } finally {
+        busy = false;
+        submitBtn.disabled = false;
+        actionBtn.disabled = false;
+      }
     });
-    wrap.querySelector('[data-sheet-cancel]').addEventListener('click', () => closeSplashLensSheet(null));
+    wrap.addEventListener('click', (event) => {
+      if (!busy && event.target === wrap) closeSplashLensSheet(null);
+    });
+    wrap.querySelector('[data-sheet-cancel]').addEventListener('click', () => { if (!busy) closeSplashLensSheet(null); });
     wrap.querySelector('[data-sheet-tertiary]')?.addEventListener('click', () => {
+      if (busy) return;
       if (config.onTertiary) config.onTertiary();
       closeSplashLensSheet(null);
     });
     form.addEventListener('submit', async (event) => {
       event.preventDefault();
+      if (busy) return;
       const values = {};
       form.querySelectorAll('input[name]').forEach((input) => { values[input.name] = String(input.value || '').trim(); });
       const problem = config.validate ? config.validate(values) : '';
@@ -3178,16 +3221,23 @@ function openSplashLensSheet(config) {
         return;
       }
       const idleLabel = submitBtn.textContent;
+      busy = true;
       errorEl.textContent = '';
       submitBtn.disabled = true;
+      if (actionBtn) actionBtn.disabled = true;
       submitBtn.textContent = config.busyLabel || 'Working...';
       try {
         const outcome = config.submit ? await config.submit(values) : values;
-        closeSplashLensSheet(outcome);
+        // A dismissed request must never close a newer task sheet.
+        if (wrap.isConnected) closeSplashLensSheet(outcome);
       } catch (error) {
+        if (!wrap.isConnected) return;
         errorEl.textContent = error.message || 'That did not work. Try again.';
         submitBtn.disabled = false;
         submitBtn.textContent = idleLabel;
+      } finally {
+        busy = false;
+        if (actionBtn) actionBtn.disabled = false;
       }
     });
     document.body.appendChild(wrap);
@@ -3304,6 +3354,7 @@ async function ensureFreeScanProfile(mode = 'ai_scan', result = null, status = n
       await requestFreeProfileCode(profile, feature);
       if (status) status.textContent = 'ENTER THE CODE FROM YOUR EMAIL';
       const pendingProfile = profile;
+      let lastCodeSentAt = Date.now();
       const verified = await openSplashLensSheet({
         eyebrow: 'Check your email',
         title: 'Enter your 6-digit code.',
@@ -3315,6 +3366,16 @@ async function ensureFreeScanProfile(mode = 'ai_scan', result = null, status = n
         busyLabel: 'Verifying...',
         secondaryLabel: 'Not now',
         tertiaryLabel: 'Wrong email? Start over',
+        actionLabel: 'Resend code',
+        onAction: async () => {
+          const seconds = Math.ceil((60000 - (Date.now() - lastCodeSentAt)) / 1000);
+          if (seconds > 0) throw new Error(`Please wait ${seconds} seconds before requesting another code.`);
+          await requestFreeProfileCode(pendingProfile, feature);
+          lastCodeSentAt = Date.now();
+          trackSplashLensEvent('free_scan_profile_code_resent', { feature });
+          return 'A new code was sent. Use the newest email; your captured evidence is still here.';
+        },
+        footnote: 'Keep this screen open while you check your email. Captured evidence is held in this session. Codes expire after 10 minutes.',
         onTertiary: () => {
           localStorage.removeItem(FIELD_SAVE_ACCOUNT_KEY);
           trackSplashLensEvent('free_scan_profile_email_reset', { mode, feature });
@@ -7948,7 +8009,7 @@ function handleAppDataEvent(event) {
     case 'facility-tool': showTab(data.arg0, data.arg0 === 'scan' ? 'parts' : undefined); showFacilityTools(); break;
     case 'voice-note': toggleVoiceNote(data.micTarget, control); break;
     case 'copy-text': copyText(data.arg0, control); break;
-    case 'verify-free-profile': ensureFreeScanProfile(data.arg0).then(updateAIStatusBar); break;
+    case 'verify-free-profile': resumePendingAIScan(data.arg0); break;
     case 'pool-new-report': loadReportFromPool(data.arg0); showTab('report'); break;
     case 'pool-form-back': if (data.arg0) renderPoolDetail(data.arg0); else renderPoolList(); break;
     case 'pump-decision': event.stopPropagation(); window.SplashLensFieldSignals?.openPumpDecisionFromEquipment(data.arg0, data.arg1); break;
@@ -8841,6 +8902,8 @@ function getPartSnapEvidenceSummary() {
 }
 
 function startPartSnapEvidenceSession(source = 'partsnap_open') {
+  captureAndAnalyze.generation = (captureAndAnalyze.generation || 0) + 1;
+  captureAndAnalyze.pendingCapture = null;
   _partSnapEvidenceSession = createPartSnapEvidenceSession(source);
   _partSnapEvidenceSession.startedAt = new Date().toISOString();
   renderPartSnapEvidenceGuide();
@@ -9012,6 +9075,10 @@ function updateAIStatusBar() {
 }
 
 function setScanMode(mode) {
+  if (mode !== _scanMode && typeof captureAndAnalyze === 'function') {
+    captureAndAnalyze.generation = (captureAndAnalyze.generation || 0) + 1;
+    captureAndAnalyze.pendingCapture = null;
+  }
   if (mode !== _scanMode) stopCamera();
   _scanMode = mode;
   if (getSplashLensRole() === 'facility') {
@@ -9408,6 +9475,10 @@ async function analyzeNativeGalleryPhoto(picked = {}) {
 
 async function analyzeScanImageFile(file, source = 'file_picker') {
   if (!file) return;
+  if (captureAndAnalyze.pending || analyzeScanImageFile.pending) {
+    showSplashLensNotice('Your scan is still running. Wait for the result before choosing another photo.');
+    return;
+  }
   if (!String(file.type || '').startsWith('image/') || file.size > 10 * 1024 * 1024) {
     showSplashLensNotice('Choose a JPG, PNG, HEIC, or WebP photo under 10 MB.');
     trackSplashLensEvent('scanner_photo_upload_rejected', { mode: _scanMode, source, size: Number(file.size || 0), type: String(file.type || '').slice(0, 60) });
@@ -9417,6 +9488,8 @@ async function analyzeScanImageFile(file, source = 'file_picker') {
   const status = document.getElementById('scan-camera-status');
   if (!canvas) return;
   const objectUrl = URL.createObjectURL(file);
+  const generation = captureAndAnalyze.generation || 0;
+  analyzeScanImageFile.pending = true;
   try {
     const image = new Image();
     await new Promise((resolve, reject) => {
@@ -9424,6 +9497,7 @@ async function analyzeScanImageFile(file, source = 'file_picker') {
       image.onerror = reject;
       image.src = objectUrl;
     });
+    if (generation !== (captureAndAnalyze.generation || 0)) return;
     const maxDimension = 1600;
     const scale = Math.min(1, maxDimension / Math.max(image.naturalWidth || 1, image.naturalHeight || 1));
     canvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
@@ -9441,6 +9515,7 @@ async function analyzeScanImageFile(file, source = 'file_picker') {
     showSplashLensNotice('SplashLens could not read that photo. Try a JPG, PNG, HEIC, or WebP image.');
     trackSplashLensEvent('scanner_photo_upload_failed', { mode: _scanMode, source, type: String(file.type || '').slice(0, 60) });
   } finally {
+    analyzeScanImageFile.pending = false;
     URL.revokeObjectURL(objectUrl);
   }
 }
@@ -9611,6 +9686,13 @@ function stopCamera() {
 }
 
 async function captureAndAnalyze() {
+  if (captureAndAnalyze.pending) {
+    showSplashLensNotice('Your scan is still running. Wait for the result or retry message before capturing another photo.');
+    return;
+  }
+  captureAndAnalyze.pending = true;
+  const generation = captureAndAnalyze.generation || 0;
+  try {
   const video  = document.getElementById('scan-video');
   const canvas = document.getElementById('scan-canvas');
   const status = document.getElementById('scan-camera-status');
@@ -9663,6 +9745,7 @@ async function captureAndAnalyze() {
     }
     try {
       await composePartSnapEvidenceSheet(canvas);
+      if (generation !== (captureAndAnalyze.generation || 0)) return;
     } catch {
       trackSplashLensEvent('partsnap_evidence_compose_failed', { capture_count: getPartSnapEvidenceSummary().captureCount });
       trackPartSnapResultFailure('evidence_compose_failed');
@@ -9676,12 +9759,14 @@ async function captureAndAnalyze() {
   // AI-first path: call CF Worker when online
   if (navigator.onLine) {
     const aiMode = isPartsScan ? 'parts_snap' : isStripScan ? 'test_strip' : 'error_code';
+    captureAndAnalyze.pendingCapture = { canvas, mode: aiMode };
     if (!(await ensureFreeScanProfile(aiMode, result, status))) return;
+    if (generation !== (captureAndAnalyze.generation || 0)) return;
     if (!canUseAIScan()) {
       showScanLimitModal(result, status);
       return;
     }
-    callAIScan(canvas, aiMode, result, status);
+    await callAIScan(canvas, aiMode, result, status);
     return;
   }
 
@@ -9698,7 +9783,7 @@ async function captureAndAnalyze() {
 
   // Offline error code: try native TextDetector
   if ('TextDetector' in window) {
-    canvas.convertToBlob({ type: 'image/jpeg' }).then(blob =>
+    scanCanvasBlob(canvas).then(blob =>
       createImageBitmap(blob).then(bmp => {
         new TextDetector().detect(bmp).then(texts => {
           const raw   = texts.map(t => t.rawValue).join(' ');
@@ -9713,6 +9798,42 @@ async function captureAndAnalyze() {
 
   // Final fallback: manual entry
   showCaptureWithManualEntry(canvas, '', result, status);
+  } finally {
+    captureAndAnalyze.pending = false;
+  }
+}
+
+async function resumePendingAIScan(mode) {
+  if (captureAndAnalyze.pending) return;
+  const pending = captureAndAnalyze.pendingCapture;
+  const generation = captureAndAnalyze.generation || 0;
+  const result = document.getElementById('scan-result');
+  const status = document.getElementById('scan-camera-status');
+  captureAndAnalyze.pending = true;
+  try {
+    if (!(await ensureFreeScanProfile(mode, result, status))) return;
+    if (generation !== (captureAndAnalyze.generation || 0)) return;
+    updateAIStatusBar();
+    if (!pending || pending.mode !== mode) {
+      if (status) status.textContent = 'EMAIL VERIFIED - CAPTURE OR CHOOSE YOUR PHOTO';
+      return;
+    }
+    if (!canUseAIScan()) {
+      showScanLimitModal(result, status);
+      return;
+    }
+    trackSplashLensEvent('ai_scan_resumed_after_verification', { mode });
+    await callAIScan(pending.canvas, mode, result, status);
+  } finally {
+    captureAndAnalyze.pending = false;
+  }
+}
+
+function scanCanvasBlob(canvas) {
+  if (typeof canvas.convertToBlob === 'function') return canvas.convertToBlob({ type: 'image/jpeg' });
+  return new Promise((resolve, reject) => {
+    canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error('The captured photo could not be read.')), 'image/jpeg', 0.85);
+  });
 }
 
 function inspectPartSnapImage(canvas) {
@@ -10791,7 +10912,8 @@ function trackStoreShellOpen() {
   trackSplashLensEvent('native_shell_open', { tab: S.tab, store, first_native_open: firstStoreOpen });
 }
 
-async function callAIScan(canvas, mode, result, status) {
+async function callAIScan(canvas, mode, result, status, authRetried = false) {
+  const generation = captureAndAnalyze.generation || 0;
   trackSplashLensEvent('ai_scan_attempted', { mode });
   let requestFailure = {};
   try {
@@ -10809,7 +10931,7 @@ async function callAIScan(canvas, mode, result, status) {
     const knownEmail = identity.known_email || fieldProfile.email || '';
     const knownCompany = identity.known_company || fieldProfile.company || '';
     const knownRole = identity.known_role || fieldProfile.role || getSplashLensRole() || '';
-    const res = await fetch('/api/scan', {
+    const res = await fetchSplashLensWithTimeout('/api/scan', {
       method:  'POST',
       headers,
       body:    JSON.stringify(withLanguageMetadata({
@@ -10834,8 +10956,9 @@ async function callAIScan(canvas, mode, result, status) {
         partSnapRecovery,
         partSnapEvidence: mode === 'parts_snap' ? getPartSnapEvidenceSummary() : null,
       })),
-    });
+    }, 60000);
     const payload = await res.json().catch(() => ({}));
+    if (generation !== (captureAndAnalyze.generation || 0)) return;
     if (!res.ok) {
       requestFailure = { http_status: res.status };
       if (/^(ai_response_truncated|invalid_model_json|anthropic_http_[1-5][0-9]{2})$/.test(payload.errorCode || '')) requestFailure.error_code = payload.errorCode;
@@ -10857,7 +10980,11 @@ async function callAIScan(canvas, mode, result, status) {
           localStorage.removeItem(FIELD_SAVE_ACCOUNT_KEY);
         }
         trackSplashLensEvent('scan_profile_required_server', { mode, limit: payload.limit || SCAN_LIMIT_FREE });
-        await ensureFreeScanProfile(mode, result, status);
+        if (!authRetried && await ensureFreeScanProfile(mode, result, status)) {
+          if (generation !== (captureAndAnalyze.generation || 0)) return;
+          return await callAIScan(canvas, mode, result, status, true);
+        }
+        if (authRetried) throw new Error('Your verification could not be restored. Please verify again and retry your saved evidence.');
         return;
       }
       if (res.status === 429 && /free scan limit/i.test(payload.error || '')) {
@@ -10889,6 +11016,7 @@ async function callAIScan(canvas, mode, result, status) {
       throw new Error(payload.error || `HTTP ${res.status}`);
     }
     const { result: aiResult, usage: serverUsage } = payload;
+    if (captureAndAnalyze.pendingCapture?.canvas === canvas) captureAndAnalyze.pendingCapture = null;
     const priorFreeScanCount = getScanUsage().count;
     recordAIScan(mode, serverUsage);
     const thirdFreeScan = !isPartSnapPro() && !isStoreShellMode() &&
@@ -10929,7 +11057,7 @@ async function callAIScan(canvas, mode, result, status) {
     } else {
       // AI not confident — try TextDetector then manual
       if ('TextDetector' in window) {
-        canvas.convertToBlob({ type: 'image/jpeg' }).then(blob =>
+        scanCanvasBlob(canvas).then(blob =>
           createImageBitmap(blob).then(bmp =>
             new TextDetector().detect(bmp).then(texts => {
               const raw   = texts.map(t => t.rawValue).join(' ');
@@ -10946,7 +11074,8 @@ async function callAIScan(canvas, mode, result, status) {
       }
     }
   } catch (err) {
-    const failureReason = requestFailure.error_code || (err?.name === 'TypeError' ? 'network_or_worker_unavailable' : 'scan_request_failed');
+    if (generation !== (captureAndAnalyze.generation || 0)) return;
+    const failureReason = requestFailure.error_code || (['TimeoutError', 'AbortError'].includes(err?.name) ? 'request_timeout' : err?.name === 'TypeError' ? 'network_or_worker_unavailable' : 'scan_request_failed');
     trackSplashLensEvent('ai_scan_failed', {
       mode,
       reason: failureReason,
@@ -10968,7 +11097,7 @@ async function callAIScan(canvas, mode, result, status) {
     }
     if (status) status.textContent = 'AI UNAVAILABLE — USING LOCAL SCAN';
     if ('TextDetector' in window) {
-      canvas.convertToBlob({ type: 'image/jpeg' }).then(blob =>
+      scanCanvasBlob(canvas).then(blob =>
         createImageBitmap(blob).then(bmp =>
           new TextDetector().detect(bmp).then(texts => {
             const raw   = texts.map(t => t.rawValue).join(' ');
@@ -11669,14 +11798,16 @@ async function startWebCheckout(plan, placement) {
   if (isStoreShellMode() || checkoutPending) return false;
   const url = trackCheckoutIntent(plan, placement);
   const body = Object.fromEntries(new URL(url, window.location.origin).searchParams);
+  if (['qa', 'codex', 'codex_smoke', 'launch-gate-test'].includes(new URLSearchParams(window.location.search || '').get('utm_source'))) {
+    body.traffic_class = 'qa';
+  }
   checkoutPending = true;
   try {
-    const response = await fetch('/api/checkout', {
+    const response = await fetchSplashLensWithTimeout('/api/checkout', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
       credentials: 'same-origin',
-      signal: typeof AbortSignal !== 'undefined' && typeof AbortSignal.timeout === 'function' ? AbortSignal.timeout(35000) : undefined,
     });
     const result = await response.json();
     const target = new URL(result.url || '', window.location.origin);
@@ -11686,6 +11817,11 @@ async function startWebCheckout(plan, placement) {
     window.location.assign(target.href);
     return true;
   } catch (error) {
+    trackSplashLensEvent('checkout_handoff_failed', {
+      plan: body.plan, placement: body.placement, store: body.store,
+      reason: ['TimeoutError', 'AbortError'].includes(error.name) ? 'request_timeout' : 'checkout_unavailable',
+      client_reference_id: body.client_reference_id,
+    });
     showSplashLensNotice(['TimeoutError', 'AbortError'].includes(error.name)
       ? 'Secure checkout took too long. Please try again.'
       : error.message || 'Secure checkout is unavailable. Please try again.');
