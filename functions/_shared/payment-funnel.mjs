@@ -19,6 +19,7 @@ export function checkoutAttribution(input = {}) {
     session_id: opaque(input.session_id, /^session-[a-z0-9]+-[a-z0-9-]{1,8}$/i),
     placement: opaque(input.placement, /^[a-z0-9_-]{1,80}$/i),
     store: ['ios', 'android', 'web'].includes(input.store) ? input.store : 'web',
+    traffic_class: classifyTraffic({ source: input.source, props: input }),
   };
 }
 

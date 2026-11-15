@@ -201,7 +201,8 @@ test('store metrics API rejects invalid rows before any import', async () => {
 });
 
 test('PartSnap is the default scanner path and has an immediate post-result upgrade nudge', () => {
-  assert.match(appSource, /setScanMode\(_scanMode \|\| 'parts'\)/);
+  assert.match(appSource, /let _scanMode\s*= 'parts'/);
+  assert.match(appSource, /function initScanTab\(mode = _scanMode \|\| 'parts'\)/);
   assert.match(appSource, /renderPartSnapResultUpgradeOffer\('partsnap_result'\)/);
   assert.match(appSource, /post_value_upgrade_shown/);
   assert.match(appSource, /post_value_upgrade_clicked/);

@@ -73,7 +73,9 @@ test('stage-only packaging rejects private files and preserves public native ass
   await fs.mkdir(path.dirname(script), { recursive: true });
   await fs.copyFile(scriptPath, script);
   const result = stage(script);
-  assert.equal(result.output, path.join(fixture, '_deploy/poolens-web'));
+  // Hosted Windows can expose TEMP through an 8.3 username alias while
+  // PowerShell resolves the same directory to its long, canonical path.
+  assert.equal(result.output, path.join(await fs.realpath(fixture), '_deploy/poolens-web'));
   assert.deepEqual(await inventory(result.output), keep.sort());
   assert.equal(result.count, keep.length);
   assert.equal(await fs.readFile(path.join(fixture, '_deploy/other/keep.txt'), 'utf8'), 'packaging fixture');

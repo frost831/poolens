@@ -14,17 +14,25 @@ concurrency:
 
 jobs:
   test:
-    runs-on: [self-hosted, pc, ci]
-    timeout-minutes: 10
+    # Public-repository standard runner; no dependency on a registered owner PC.
+    runs-on: windows-latest
+    timeout-minutes: 15
+    env:
+      SPLASHLENS_PLAYWRIGHT_PATH: ${{ github.workspace }}/node_modules/playwright/index.mjs
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           ref: ${{ github.sha }}
+          persist-credentials: false
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
         with:
-          node-version: 22
+          node-version: 24
+      - name: Install the browser regression runtime
+        run: npm install --no-save --package-lock=false playwright@1.55.1
+      - name: Install Chromium
+        run: npx playwright install chromium
       - name: Run public artifact packaging gate
         run: node --test tests/public-artifact-packaging.test.mjs
       - name: Stage public app assets without deployment

@@ -34,6 +34,30 @@ const EXTERNAL_EVENT_FILTER = `
  AND COALESCE(path, '') NOT LIKE '%verify=%'
 `;
 
+export async function recoveryFailureStats(db) {
+  return all(db, `SELECT
+        CASE event
+          WHEN 'partsnap_result_fail' THEN 'PartSnap'
+          WHEN 'free_scan_profile_code_request_failed' THEN 'Send verification code'
+          WHEN 'free_scan_profile_verification_failed' THEN 'Verify email'
+          WHEN 'checkout_handoff_failed' THEN 'Checkout handoff'
+        END AS stage,
+        CASE WHEN json_valid(props) AND json_extract(props, '$.reason') IN
+          ('camera_denied','camera_unavailable','photo_quality','offline','request_timeout',
+           'ai_response_truncated','network_or_worker_unavailable','free_limit_reached',
+           'entitlement_rejected','scan_request_failed','evidence_compose_failed',
+           'no_camera_frame','checkout_unavailable','low_confidence','no_match','library_miss')
+          THEN json_extract(props, '$.reason') ELSE 'other' END AS reason,
+        CASE WHEN json_valid(props) THEN CASE COALESCE(NULLIF(json_extract(props, '$.store'), ''), json_extract(props, '$.store_shell'))
+          WHEN 'web' THEN 'web' WHEN 'android' THEN 'android' WHEN 'ios' THEN 'ios' WHEN '' THEN 'web'
+          ELSE 'unknown' END ELSE 'unknown' END AS platform,
+        COUNT(*) AS count
+        FROM events WHERE event IN ('partsnap_result_fail','free_scan_profile_code_request_failed',
+          'free_scan_profile_verification_failed','checkout_handoff_failed')
+          AND created_at >= datetime('now', '-30 days') ${EXTERNAL_EVENT_FILTER}
+        GROUP BY stage, reason, platform ORDER BY count DESC LIMIT 40`);
+}
+
 const FUNNEL_STAGES = [
   {
     key: 'traffic',
@@ -320,6 +344,7 @@ export async function onRequestGet({ request, env }) {
       },
       funnel7d,
       funnel30d,
+      recoveryFailures30d: await recoveryFailureStats(db),
       topEvents30d,
       topPages30d,
       paymentsByPlan: payments.byPlan,
