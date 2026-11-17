@@ -90,7 +90,7 @@ from saved attribution even though Stripe's return URL has no campaign query.
 
 ## Validation
 
-The complete app suite passed **460 tests, zero failures/skips**, with the real
+The PR95 app suite passed **468 tests, zero failures/skips**, with the real
 desktop/mobile browser fixtures enabled. The paired site's focused regression
 suite passed **29 tests**. The120-case metadata benchmark passed. The staged
 Cloudflare Worker compiled successfully. These checks were run on Nov17.
@@ -114,57 +114,105 @@ physical-camera test or an image-identification accuracy result. The historical
 120-case PartSnap benchmark is metadata-only. Current execution receipts and
 screenshots are retained in the task's local `outputs/play-billing-20261117`.
 
-## Activation and release gate
+## Current release and provider setup (Nov17)
 
-PR94 was merged as `7ef189562cb5e0c29991783032abacfd2430909b`. Post-merge CI
-passed and the merged release was deployed at `https://bb8ec7f6.poolens.pages.dev`
-and verified on `https://app.splashlens.com`.
+[PR95](https://github.com/frost831/poolens/pull/95) merged as
+`f3a3a90e9186b43791eced1f90b180e0c6bc6021`. Its tree matches the tested head
+`6effd542098605b9b46a408aa3e09c450c7b1344`.
+[Post-merge CI passed](https://github.com/frost831/poolens/actions/runs/44169839954).
+After installing the approved encrypted secrets, the exact merged source was
+redeployed to [production](https://app.splashlens.com) with immutable deployment
+[b1f0b610](https://b1f0b610.poolens.pages.dev).
+The deployed assets and offline cache match the checkout-return versions above.
 
-On Nov17 the Cloudflare Pages secret-name inventory contained no
-`SPLASHLENS_PLAY_SERVICE_ACCOUNT` or `SPLASHLENS_PLAY_LEDGER_SECRET`. Local process
-environment contained no Google Play credentials. Pages deploy access is valid;
-D1 access was restored through owner-approved device OAuth with `d1:write`.
-The additive migration was applied and read back in the isolated preview D1
-binding, then repeated successfully to verify idempotence. Production D1 has not
-been migrated, and billing remains disabled.
+The live desktop/mobile smoke passed for manual lookup, PartSnap recovery, XSS,
+stored pool actions, offline updates, protected API boundaries and source hashes.
+Six deployed-client checkout tests passed at1365px/390px using production assets
+and a fixture Stripe handoff. Separately, the verified BZM QA account completed
+one actual production AI request followed by the real USD19/month Stripe page
+and cancellation return. Its answer and four repeated brochure fixture images
+were restored without another camera prompt, scan charge or result event. The
+account endpoint confirmed one free scan remaining. A read-only D1 query found
+one each of scan completion, PartSnap result, checkout click/client-server,
+checkout start and Stripe session creation, all classified QA. No payment was
+submitted. This proves the web round trip; it does not prove native purchase,
+physical-camera behavior or equipment fitment accuracy.
 
-The live Play subscriptions page is blocked by the requirement to create a
-Google Payments merchant profile. The owner must complete that financial setup
-at [Play payments settings](https://play.google.com/console/u/1/developers/7017771963942604688/paymentssettings).
-The prepared service identity is `splashlens-play-billing@below-zero-media.iam.gserviceaccount.com`;
-creation, API enablement, credential generation and app-only Play permissions
-await explicit owner security approval. No identity, credential or grant has
-been created. Do not reuse other products' service accounts.
+The owner-approved dedicated service account is active:
+`splashlens-play-billing@below-zero-media.iam.gserviceaccount.com`, in the
+existing `below-zero-media` project. Google Play Android Developer API is enabled.
+Its saved Play permissions apply only to SplashLens: View app information
+(read-only), dependent View app quality (read-only), View financial data, and
+Manage orders and subscriptions. It has no account-wide or publishing grants
+and no project-wide IAM role.
+
+The replacement credential was generated locally; only its public certificate
+was uploaded. The unused first key was revoked after explicit owner confirmation.
+The active certificate expires **2027-11-17T20:35:58Z**; arrange rotation before
+that date. A probe matching the backend JWT shape verified Google OAuth and
+read the exact package's subscriptions endpoint successfully (HTTP204, no
+product data returned). This verifies credential access, not real product or
+purchase acceptance.
+
+Both `SPLASHLENS_PLAY_SERVICE_ACCOUNT` and
+`SPLASHLENS_PLAY_LEDGER_SECRET` are installed as encrypted production Pages
+secrets. The local recovery copies are current-user Windows DPAPI encrypted,
+owner/SYSTEM restricted and Git ignored. No private keys, tokens or ledger secret
+belong in Git, support cases or chat. Preserve the ledger secret: replacement
+requires encrypted-token and account-HMAC migration.
+
+D1 access is restored. The additive billing migration was applied, read back,
+and repeated idempotently in isolated preview only. Production D1 is not
+migrated; `SPLASHLENS_PLAY_BILLING_ENABLED` remains off. No monthly/yearly product
+or base-plan IDs were configured and no store track was changed.
+
+## Merchant linking blocker
+
+The owner reported completing the merchant profile. Read-only inspection found
+an existing verified organization payments profile and a public merchant profile
+on the correct owner login. Its shared public contact points to another app;
+do not change that shared profile as a SplashLens-specific workaround.
+
+Nevertheless, Play payments settings still says "Create a payments profile to
+get started", SplashLens Monetize with Play still requires a merchant account,
+and the setup flow repeatedly returns **OR-IDGRA-01** ("An unexpected error has
+occurred. Please try again later."). Merchant linkage is therefore **not verified**.
+No official cause for that exact error was established. Do not delete/recreate
+profiles, migrate ownership, invent product IDs or weaken browser security.
+
+The smallest external action is for the account owner
+`hello@throttleshare.com` to resolve/link the Google Play merchant account using
+[Play payments settings](https://play.google.com/console/u/1/developers/7017771963942604688/paymentssettings)
+or [official developer support](https://support.google.com/googleplay/android-developer/gethelp).
+The owner must handle legal seller, bank/tax details and final financial setup
+directly in Google. Use `frost@belowzeromedia.com` for new SplashLens contact and
+support. Existing shared profiles and account ownership must be reviewed before
+any profile-wide change. Google's [payments verification guide](https://support.google.com/googleplay/android-developer/answer/13628312?hl=en)
+distinguishes developer-identity profiles from monetization setup.
 
 Use `frost@belowzeromedia.com` for SplashLens QA and new setup. This is a Google
-Workspace mailbox; the connected Gmail account received the verification mail.
-Its connector masks one-time codes, so the owner must enter the current code
-directly in the isolated app. Do not extract codes through another representation.
-Existing hosting/store ownership and public support addresses were not migrated.
+Workspace mailbox. The owner entered the verification code directly in the
+isolated app. The mail connector masks one-time codes; do not extract them
+through another representation.
 
-1. In the existing developer account owning `com.splashlens.fieldtools`, provide
-   the existing approved service-account credential with scoped subscription
-   catalog and purchase verification/acknowledgement access. Store it only as
-   the encrypted Pages secret `SPLASHLENS_PLAY_SERVICE_ACCOUNT`; never in Git/chat.
-2. Provision the dedicated encrypted `SPLASHLENS_PLAY_LEDGER_SECRET` (random32+
-   bytes). Preserve it across deployments. Rotation needs explicit encrypted-token
-   and account-HMAC migration, not simply replacing a secret.
-3. Confirm the actual approved monthly/yearly product and base-plan IDs and set
-   the four corresponding environment names in `.env.example`. No product IDs
-   are invented or created by this patch. Confirm Play merchant eligibility and
-   product availability in the intended country/account.
-4. With authorized D1 access apply
-   `migrations/2026-11-17-google-play-purchases.sql` to the isolated preview store.
-   The migration is additive; public requests never auto-create billing tables.
-5. Sign code14 with the existing upload key and upload to the existing internal
-   Play track after release approval. Test a licensed, zero-real-money purchase,
-   pending/cancel/retry, restore on another isolated device/account, entitlement
-   and revocation. Enable `SPLASHLENS_PLAY_ALLOW_TEST_PURCHASES=true` only in that
-   isolated acceptance environment; never charge a real card for QA.
-6. Review the exact test/build evidence and privacy operations, apply the same
-   additive schema to production, then enable `SPLASHLENS_PLAY_BILLING_ENABLED`
-   only after explicit store/release approval. Keep production test purchases
-   disabled. Rollback turns the flag off and preserves purchase records/keys.
+## Remaining activation gates
+
+1. Verify Play merchant linkage and actual approved monthly/yearly products and
+   base plans. Configure the four corresponding environment names in
+   `.env.example` only from provider readback. Confirm intended-country pricing
+   and availability. Do not overwrite another app's shared merchant contact.
+2. Sign candidate1.0.13/code14 with the existing upload key and upload to the
+   existing internal Play track after release approval. The current production
+   build13 does not gain native billing from the web deployment.
+3. Complete a licensed zero-real-money purchase, pending/cancel/retry, restore on
+   another isolated device/account, entitlement and revocation checks.
+   Enable `SPLASHLENS_PLAY_ALLOW_TEST_PURCHASES=true` only in the isolated
+   acceptance environment. Do not charge a real card for QA.
+4. Review the exact build/test/privacy evidence, apply
+   `migrations/2026-11-17-google-play-purchases.sql` to production, and enable
+   `SPLASHLENS_PLAY_BILLING_ENABLED` only after explicit store/release approval.
+   Keep production test purchases disabled. Rollback disables the flag and
+   preserves purchase records and secrets.
 
 References: [ABH billing](https://github.com/GoogleChrome/android-browser-helper/blob/main/playbilling/README.md),
 [Google verification/security](https://developer.android.com/google/play/billing/security),
