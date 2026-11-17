@@ -52,8 +52,13 @@ tokens are sent to analytics. The existing iOS native purchase guard is preserve
 The third-scan upgrade controls now pass the actual placement through delegated
 events instead of the literal nested template string. The scan API returns JSON
 400 for null, array and primitive bodies before reaching the AI provider. The app
-asset version is `20261117-play-billing-1`; the offline cache is
+asset version in PR94 was `20261117-play-billing-1`; its offline cache was
 `splashlens-v68-play-billing`, including the new public client module.
+
+The follow-up account repair opens email verification directly from the account
+dialog, without requiring camera permission or captured evidence. It also renews
+expired account sessions for locally paid users without consuming a scan. Its
+asset version is `20261117-account-signin-1`, cache `splashlens-v69-account-signin`.
 
 ## Validation
 
@@ -83,11 +88,31 @@ screenshots are retained in the task's local `outputs/play-billing-20261117`.
 
 ## Activation and release gate
 
+PR94 was merged as `7ef189562cb5e0c29991783032abacfd2430909b`. Post-merge CI
+passed and the merged release was deployed at `https://bb8ec7f6.poolens.pages.dev`
+and verified on `https://app.splashlens.com`.
+
 On Nov17 the Cloudflare Pages secret-name inventory contained no
 `SPLASHLENS_PLAY_SERVICE_ACCOUNT` or `SPLASHLENS_PLAY_LEDGER_SECRET`. Local process
 environment contained no Google Play credentials. Pages deploy access is valid;
-its current OAuth scopes do not include D1 migration access. Billing must remain
-disabled. No remote billing migration or activation was performed.
+D1 access was restored through owner-approved device OAuth with `d1:write`.
+The additive migration was applied and read back in the isolated preview D1
+binding, then repeated successfully to verify idempotence. Production D1 has not
+been migrated, and billing remains disabled.
+
+The live Play subscriptions page is blocked by the requirement to create a
+Google Payments merchant profile. The owner must complete that financial setup
+at [Play payments settings](https://play.google.com/console/u/1/developers/7017771963942604688/paymentssettings).
+The prepared service identity is `splashlens-play-billing@below-zero-media.iam.gserviceaccount.com`;
+creation, API enablement, credential generation and app-only Play permissions
+await explicit owner security approval. No identity, credential or grant has
+been created. Do not reuse other products' service accounts.
+
+Use `frost@belowzeromedia.com` for SplashLens QA and new setup. This is a Google
+Workspace mailbox; the connected Gmail account received the verification mail.
+Its connector masks one-time codes, so the owner must enter the current code
+directly in the isolated app. Do not extract codes through another representation.
+Existing hosting/store ownership and public support addresses were not migrated.
 
 1. In the existing developer account owning `com.splashlens.fieldtools`, provide
    the existing approved service-account credential with scoped subscription

@@ -3105,9 +3105,22 @@ async function openSplashLensAccount() {
           <button type="button" onclick="document.getElementById('splashlens-account-modal')?.remove()" aria-label="Close" style="border:0;background:#f1f5f9;color:#334155;border-radius:8px;width:36px;height:36px;font-size:20px;font-weight:900;cursor:pointer;">x</button>
         </div>
         <p style="color:#64748b;font-size:13px;line-height:1.45;margin-bottom:12px;">${escHtml(error.message || 'Open PartSnap and verify your email with a scanner code first.')}</p>
-        <button type="button" onclick="document.getElementById('splashlens-account-modal')?.remove();enterSplashLensApp('scan','parts')" style="width:100%;border:0;border-radius:10px;background:#0369a1;color:#fff;font-size:13px;font-weight:950;padding:12px;cursor:pointer;">Verify in PartSnap</button>
+        <button type="button" data-app-action="verify-account" style="width:100%;border:0;border-radius:10px;background:#0369a1;color:#fff;font-size:13px;font-weight:950;padding:12px;cursor:pointer;">Verify email</button>
       </section>`;
     trackSplashLensEvent('account_dashboard_blocked', { error: String(error.message || error).slice(0, 120) });
+  }
+}
+
+let accountSignInPending = false;
+async function signInSplashLensAccount() {
+  if (accountSignInPending) return;
+  accountSignInPending = true;
+  document.getElementById('splashlens-account-modal')?.remove();
+  try {
+    await ensureFreeScanProfile('account');
+    await openSplashLensAccount();
+  } finally {
+    accountSignInPending = false;
   }
 }
 
@@ -3274,11 +3287,12 @@ document.addEventListener('DOMContentLoaded', installStoreShellDialogFallbacks);
 
 async function createFieldSaveProfile(feature = 'saved_job') {
   const scanGate = feature.startsWith('scan_gate');
+  const accountOnly = feature === 'scan_gate_account';
   trackSplashLensEvent('free_save_profile_sheet_shown', { feature });
   const values = await openSplashLensSheet({
     eyebrow: scanGate ? 'Free to start' : 'Free save profile',
-    title: scanGate ? `${SCAN_LIMIT_FREE} free AI scans. Just your email.` : 'Save this job with a free profile.',
-    body: scanGate
+    title: accountOnly ? 'Verify your SplashLens email.' : scanGate ? `${SCAN_LIMIT_FREE} free AI scans. Just your email.` : 'Save this job with a free profile.',
+    body: accountOnly ? 'We email a 6-digit code to open your scanner account. No card, no password. Taking a photo is not required.' : scanGate
       ? 'We email a 6-digit code so your free scans stay yours. No card, no password. Manual lookup stays free without it.'
       : 'Add your email so saved job history and proof stay tied to you. No card, no password. Manual lookup stays free without it.',
     fields: [
@@ -3316,8 +3330,9 @@ async function createFieldSaveProfile(feature = 'saved_job') {
 
 async function ensureFreeScanProfile(mode = 'ai_scan', result = null, status = null) {
   const generation = captureAndAnalyze.generation || 0;
-  const playAccountRequired = mode === 'google_play' || (isPartSnapPro() && decodeScanEntitlementToken(getScanEntitlementToken())?.source === 'google_play');
-  if (isPartSnapPro() && !playAccountRequired) return true;
+  const accountOnly = mode === 'google_play' || mode === 'account';
+  const freshAccountRequired = accountOnly || (isPartSnapPro() && decodeScanEntitlementToken(getScanEntitlementToken())?.source === 'google_play');
+  if (isPartSnapPro() && !freshAccountRequired) return true;
   let profile = getFieldSaveAccount();
   const feature = `scan_gate_${mode}`;
 
@@ -3340,7 +3355,7 @@ async function ensureFreeScanProfile(mode = 'ai_scan', result = null, status = n
 
   profile = getFieldSaveAccount();
   if (!profile) return false;
-  if (!isVerifiedFieldProfile(profile) || (playAccountRequired && !hasAccountSession(profile))) {
+  if (!isVerifiedFieldProfile(profile) || (freshAccountRequired && !hasAccountSession(profile))) {
     if (!navigator.onLine) {
       if (status) status.textContent = 'INTERNET REQUIRED TO VERIFY FREE PROFILE';
       if (result) {
@@ -3367,7 +3382,7 @@ async function ensureFreeScanProfile(mode = 'ai_scan', result = null, status = n
         fields: [
           { name: 'code', label: '6-digit code', type: 'text', inputmode: 'numeric', autocomplete: 'one-time-code', maxlength: 6, placeholder: '123456' },
         ],
-        primaryLabel: mode === 'google_play' ? 'Verify account' : 'Verify and scan',
+        primaryLabel: accountOnly ? 'Verify account' : 'Verify and scan',
         busyLabel: 'Verifying...',
         secondaryLabel: 'Not now',
         tertiaryLabel: 'Wrong email? Start over',
@@ -3378,9 +3393,9 @@ async function ensureFreeScanProfile(mode = 'ai_scan', result = null, status = n
           await requestFreeProfileCode(pendingProfile, feature);
           lastCodeSentAt = Date.now();
           trackSplashLensEvent('free_scan_profile_code_resent', { feature });
-          return mode === 'google_play' ? 'A new code was sent. Use the newest email.' : 'A new code was sent. Use the newest email; your captured evidence is still here.';
+          return accountOnly ? 'A new code was sent. Use the newest email.' : 'A new code was sent. Use the newest email; your captured evidence is still here.';
         },
-        footnote: mode === 'google_play' ? 'Codes expire after 10 minutes. Sign in with the SplashLens account used for your purchase.' : 'Keep this screen open while you check your email. Captured evidence is held in this session. Codes expire after 10 minutes.',
+        footnote: accountOnly ? (mode === 'google_play' ? 'Codes expire after 10 minutes. Sign in with the SplashLens account used for your purchase.' : 'Keep this screen open while you check your email. Codes expire after 10 minutes.') : 'Keep this screen open while you check your email. Captured evidence is held in this session. Codes expire after 10 minutes.',
         onTertiary: () => {
           localStorage.removeItem(FIELD_SAVE_ACCOUNT_KEY);
           trackSplashLensEvent('free_scan_profile_email_reset', { mode, feature });
@@ -3406,6 +3421,7 @@ async function ensureFreeScanProfile(mode = 'ai_scan', result = null, status = n
       trackSplashLensEvent('free_scan_profile_verification_completed', { mode, feature });
     } catch (error) {
       if (generation !== (captureAndAnalyze.generation || 0)) return false;
+      if (accountOnly) showSplashLensNotice(error.message || 'Email verification is unavailable. Please try again.');
       if (status) status.textContent = 'EMAIL VERIFICATION NEEDED';
       if (result) {
         result.innerHTML = `<div style="background:#451a03;border:1px solid #f59e0b;border-radius:12px;padding:16px;text-align:center;">
@@ -8025,6 +8041,7 @@ function handleAppDataEvent(event) {
     case 'voice-note': toggleVoiceNote(data.micTarget, control); break;
     case 'copy-text': copyText(data.arg0, control); break;
     case 'verify-free-profile': resumePendingAIScan(data.arg0); break;
+    case 'verify-account': signInSplashLensAccount(); break;
     case 'pool-new-report': loadReportFromPool(data.arg0); showTab('report'); break;
     case 'pool-form-back': if (data.arg0) renderPoolDetail(data.arg0); else renderPoolList(); break;
     case 'pump-decision': event.stopPropagation(); window.SplashLensFieldSignals?.openPumpDecisionFromEquipment(data.arg0, data.arg1); break;
