@@ -6,7 +6,7 @@ const source = readFileSync(new URL('../js/play-billing.js', import.meta.url), '
 function fixture(overrides = {}) {
   const window = {}; vm.runInNewContext(source, { window, setTimeout, clearTimeout });
   const products = [{ plan: 'monthly', productId: 'qa_monthly', label: 'Monthly' }, { plan: 'yearly', productId: 'qa_yearly', label: 'Annual' }];
-  let identity = 'account-fixture'; let fail = ''; let active = 0; let shows = 0; let cancel = false;
+  let identity = 'account-fixture'; let fail = ''; let failureName = 'Error'; let active = 0; let shows = 0; let cancel = false;
   let paymentResolve;
   const calls = []; const completions = [];
   const service = { getDetails: async () => products.map((p, i) => ({ itemId: p.productId, subscriptionPeriod: i ? 'P1Y' : 'P1M', price: { currency: 'USD', value: i ? '149' : '19' } })), listPurchases: async () => [] };
@@ -17,11 +17,11 @@ function fixture(overrides = {}) {
   const api = async (method, body) => {
     calls.push({ method, body });
     if (method === 'GET') return { enabled: true, products };
-    if (fail) { const error = new Error('Verification unavailable. Use Restore.'); error.code = fail; throw error; }
+    if (fail) { const error = new Error('Verification unavailable. Use Restore.'); error.code = fail; error.name = failureName; throw error; }
     return { ok: true, token: 'sl_scan_v1.fixture.signature', entitlement: { source: 'google_play' } };
   };
   const client = window.SplashLensPlayBilling.createClient({ host, api: overrides.api || api, accountToken: () => identity, activate: () => { active++; }, timeoutMs: 8 });
-  return { client, host, service, calls, completions, setAccount: value => { identity = value; }, fail: value => { fail = value; }, cancel: value => { cancel = value; }, state: () => ({ active, shows }), resume: () => paymentResolve() };
+  return { client, host, service, calls, completions, setAccount: value => { identity = value; }, fail: (value, name = 'Error') => { fail = value; failureName = name; }, cancel: value => { cancel = value; }, state: () => ({ active, shows }), resume: () => paymentResolve() };
 }
 test('native purchase uses Google price/SKU and unlocks only after server verification', async () => {
   const f = fixture(); await f.client.prepare(); await f.client.buy('yearly');
@@ -38,6 +38,33 @@ test('cancellation and verification failure release the lock without unlocking',
   assert.equal(f.state().active, 0); assert.deepEqual(f.completions, ['fail']);
   const before = f.state().shows;
   await assert.rejects(f.client.buy('yearly'), /already have/); assert.equal(f.state().shows, before);
+  f.fail(''); await f.client.restore(); assert.equal(f.state().active, 1);
+});
+
+test('a returned payment without a usable receipt requires restore before another purchase', async () => {
+  const f = fixture(); await f.client.prepare();
+  let shows = 0;
+  f.host.PaymentRequest = class {
+    async show() { shows++; return { details: {}, complete: async () => {} }; }
+  };
+  f.fail('invalid_purchase_token');
+  await assert.rejects(f.client.buy('monthly'), /Restore/);
+  await assert.rejects(f.client.buy('yearly'), /already have.*Restore/);
+  assert.equal(shows, 1);
+  assert.equal(f.state().active, 0);
+  f.fail(''); await f.client.restore(); assert.equal(f.state().active, 1);
+});
+
+test('verification abort after a payment response is uncertain payment, not purchase cancellation', async () => {
+  const f = fixture(); await f.client.prepare(); f.fail('google_unavailable', 'AbortError');
+  await assert.rejects(f.client.buy('monthly'), error => {
+    assert.equal(error.restoreRequired, true);
+    assert.match(error.message, /verification timed out.*Restore/);
+    assert.doesNotMatch(error.message, /canceled/i);
+    return true;
+  });
+  await assert.rejects(f.client.buy('yearly'), /already have/);
+  assert.equal(f.state().shows, 1); assert.equal(f.state().active, 0);
   f.fail(''); await f.client.restore(); assert.equal(f.state().active, 1);
 });
 test('overlapping buy, prepare and restore requests cannot start another payment', async () => {

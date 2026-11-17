@@ -54,12 +54,20 @@
         payment = await request.show();
         // A returned receipt may represent a real/pending payment even if our
         // verification request fails. Require Restore instead of a second buy.
-        if (payment.details?.purchaseToken) prepared.purchases.push({ itemId: item.productId });
+        prepared.purchases.push({ itemId: item.productId });
+        if (typeof payment.details?.purchaseToken !== 'string' || !payment.details.purchaseToken.trim()) throw new Error('Google Play returned no usable receipt. Use Restore before trying again.');
         const result = await verify(payment.details?.purchaseToken, identity);
         try { await payment.complete('success'); } catch {} // Receipt already verified; a closed payment sheet cannot undo the grant.
         return result;
       } catch (error) {
-        if (payment) { try { await payment.complete('fail'); } catch {} }
+        if (payment) {
+          try { await payment.complete('fail'); } catch {}
+          const failure = new Error(['AbortError', 'TimeoutError'].includes(error.name)
+            ? 'Google Play returned a payment, but verification timed out. Use Restore before trying again.'
+            : error.message || 'Google Play access could not be confirmed. Use Restore before trying again.');
+          failure.code = error.code; failure.restoreRequired = true;
+          throw failure;
+        }
         if (error.name === 'AbortError') throw new Error('Purchase canceled. You can keep using the free tools.');
         throw error;
       } finally { busy = false; }

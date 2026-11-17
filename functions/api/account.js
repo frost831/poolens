@@ -204,13 +204,27 @@ export async function onRequestGet({ request, env }) {
     FROM free_profiles
     WHERE email = ?
   `, auth.email);
+  // Match a complete identity field. The actor takes precedence over an invited
+  // recipient; malformed legacy props must not hide valid activity or leak it.
   const events = await safeAll(db, `
+    WITH account_events AS (
+      SELECT event, mode, path, created_at,
+        CASE WHEN json_valid(props) THEN props ELSE '{}' END AS identity_props
+      FROM events
+    )
     SELECT event, mode, path, created_at
-    FROM events
-    WHERE props LIKE ?
+    FROM account_events
+    WHERE lower(trim(COALESCE(
+      json_extract(identity_props, '$.actor_email'),
+      json_extract(identity_props, '$.known_email'),
+      json_extract(identity_props, '$.email'),
+      json_extract(identity_props, '$.customer_email'),
+      json_extract(identity_props, '$.free_profile_email'),
+      ''
+    ))) = ?
     ORDER BY created_at DESC
     LIMIT 20
-  `, `%${auth.email.replace(/[%_]/g, '')}%`);
+  `, auth.email);
   const usage = await freeScanUsage(env, auth.email);
 
   return json({

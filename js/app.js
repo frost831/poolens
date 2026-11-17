@@ -10669,7 +10669,10 @@ async function openAndroidPlayAccess() {
       try {
         await action(); status.textContent = 'Google Play scanner access is active on this device.';
         wrap.querySelector('[data-play-plans]').replaceChildren();
-      } catch (error) { status.textContent = error.message || 'Please try Restore again or contact support.'; }
+      } catch (error) {
+        status.textContent = error.message || 'Please try Restore again or contact support.';
+        if (error.restoreRequired) wrap.querySelector('[data-play-plans]').replaceChildren();
+      }
       finally { controls.forEach(el => { el.disabled = false; }); }
     };
     wrap.querySelectorAll('[data-play-plan]').forEach(button => button.addEventListener('click', () => run(() => androidPlayClient.buy(button.dataset.playPlan))));

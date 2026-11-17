@@ -46,6 +46,7 @@ for (const width of [1365, 390]) test(`Google Play dialog purchase, failure, res
     const monthly = dialog.getByRole('button', { name: /Monthly Pro: USD 19/ });
     await monthly.click();
     await dialog.getByRole('status').filter({ hasText: 'Verification unavailable' }).waitFor();
+    assert.equal(await dialog.locator('[data-play-plan]').count(), 0, 'uncertain payments offer restore instead of another purchase');
     assert.equal(await page.evaluate(() => localStorage.getItem(SCAN_ENTITLEMENT_TOKEN_KEY)), null);
     assert.equal(await page.evaluate(() => __paymentShows), 1);
     verifyFail = false;
