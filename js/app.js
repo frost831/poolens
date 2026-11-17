@@ -2767,6 +2767,7 @@ function renderSplashLensCommercialSection(commercialPayload = {}) {
         </div>
       </div>
       <div style="display:grid;grid-template-columns:${storeShell ? '1fr' : '1fr 1fr'};gap:7px;margin-bottom:10px;">
+        ${getStoreShellMode() === 'android' ? '<button type="button" data-app-action="google-play-access" style="min-height:44px;background:#0284c7;color:#fff;border:0;border-radius:9px;padding:12px;font-weight:900;">Google Play access / Restore</button>' : ''}
         ${storeShell ? '' : `<a data-checkout-intent="account" data-app-action="checkout-link" data-checkout-plan="monthly" data-checkout-placement="account_dashboard" href="${escAttr(getCheckoutUrl('monthly', 'account_dashboard'))}" style="display:block;text-align:center;text-decoration:none;border-radius:9px;background:#0f766e;color:#fff;font-size:12px;font-weight:950;padding:11px 8px;">Get Pro</a>`}
         <button type="button" onclick="requestSplashLensCommercialAccess('teams')" style="border:1px solid #0369a1;border-radius:9px;background:#fff;color:#0369a1;font-size:12px;font-weight:950;padding:11px 8px;cursor:pointer;">Request team</button>
       </div>
@@ -3315,7 +3316,8 @@ async function createFieldSaveProfile(feature = 'saved_job') {
 
 async function ensureFreeScanProfile(mode = 'ai_scan', result = null, status = null) {
   const generation = captureAndAnalyze.generation || 0;
-  if (isPartSnapPro()) return true;
+  const playAccountRequired = mode === 'google_play' || (isPartSnapPro() && decodeScanEntitlementToken(getScanEntitlementToken())?.source === 'google_play');
+  if (isPartSnapPro() && !playAccountRequired) return true;
   let profile = getFieldSaveAccount();
   const feature = `scan_gate_${mode}`;
 
@@ -3338,7 +3340,7 @@ async function ensureFreeScanProfile(mode = 'ai_scan', result = null, status = n
 
   profile = getFieldSaveAccount();
   if (!profile) return false;
-  if (!isVerifiedFieldProfile(profile)) {
+  if (!isVerifiedFieldProfile(profile) || (playAccountRequired && !hasAccountSession(profile))) {
     if (!navigator.onLine) {
       if (status) status.textContent = 'INTERNET REQUIRED TO VERIFY FREE PROFILE';
       if (result) {
@@ -3365,7 +3367,7 @@ async function ensureFreeScanProfile(mode = 'ai_scan', result = null, status = n
         fields: [
           { name: 'code', label: '6-digit code', type: 'text', inputmode: 'numeric', autocomplete: 'one-time-code', maxlength: 6, placeholder: '123456' },
         ],
-        primaryLabel: 'Verify and scan',
+        primaryLabel: mode === 'google_play' ? 'Verify account' : 'Verify and scan',
         busyLabel: 'Verifying...',
         secondaryLabel: 'Not now',
         tertiaryLabel: 'Wrong email? Start over',
@@ -3376,9 +3378,9 @@ async function ensureFreeScanProfile(mode = 'ai_scan', result = null, status = n
           await requestFreeProfileCode(pendingProfile, feature);
           lastCodeSentAt = Date.now();
           trackSplashLensEvent('free_scan_profile_code_resent', { feature });
-          return 'A new code was sent. Use the newest email; your captured evidence is still here.';
+          return mode === 'google_play' ? 'A new code was sent. Use the newest email.' : 'A new code was sent. Use the newest email; your captured evidence is still here.';
         },
-        footnote: 'Keep this screen open while you check your email. Captured evidence is held in this session. Codes expire after 10 minutes.',
+        footnote: mode === 'google_play' ? 'Codes expire after 10 minutes. Sign in with the SplashLens account used for your purchase.' : 'Keep this screen open while you check your email. Captured evidence is held in this session. Codes expire after 10 minutes.',
         onTertiary: () => {
           localStorage.removeItem(FIELD_SAVE_ACCOUNT_KEY);
           trackSplashLensEvent('free_scan_profile_email_reset', { mode, feature });
@@ -8029,6 +8031,7 @@ function handleAppDataEvent(event) {
     case 'cancel-next-visit': { const form = document.getElementById(`next-visit-form-${data.arg0}`); if (form) form.innerHTML = ''; break; }
     case 'post-value-checkout': control.href = trackPostValueUpgrade(data.arg0, data.arg1); break;
     case 'checkout-link': startWebCheckout(data.checkoutPlan, data.checkoutPlacement); break;
+    case 'google-play-access': openAndroidPlayAccess(); break;
     case 'copy-partner-card': { const text = partSnapPartnerCardText(data.arg0); navigator.clipboard.writeText(text).then(() => alert('Card copied.')).catch(() => alert(text)); break; }
     case 'savePartSnapToPool': savePartSnapToPool(); break;
     case 'startPartSnapApprenticeMode': startPartSnapApprenticeMode(); break;
@@ -10575,7 +10578,82 @@ function unlockPartSnapProLocal() {
   }
 }
 
+let androidPlayClient = null;
+let androidPlayPanelPending = false;
+async function openAndroidPlayAccess() {
+  if (getStoreShellMode() !== 'android' || androidPlayPanelPending) return;
+  androidPlayPanelPending = true;
+  const priorFocus = document.activeElement;
+  try {
+    if (!await ensureFreeScanProfile('google_play')) return;
+    if (!hasAccountSession()) throw new Error('Verify your SplashLens account before restoring Google Play access.');
+    if (!window.SplashLensPlayBilling) throw new Error('Google Play access is unavailable offline. Connect and reopen the app.');
+    const accountToken = () => getFieldSaveAccount()?.accountToken || '';
+    if (!androidPlayClient) androidPlayClient = window.SplashLensPlayBilling.createClient({
+      accountToken,
+      api: async (method, body, token) => {
+        const response = await fetchSplashLensWithTimeout('/api/play-billing', {
+          method, headers: { 'Content-Type': 'application/json', 'X-SplashLens-Account-Token': token },
+          ...(body ? { body: JSON.stringify(body) } : {}), cache: 'no-store',
+        }, 45000);
+        const result = await response.json();
+        if (!response.ok) { const error = new Error(result.error || 'Google Play could not be reached.'); error.code = result.code; throw error; }
+        return result;
+      },
+      activate: payload => {
+        localStorage.setItem(SCAN_ENTITLEMENT_TOKEN_KEY, payload.token);
+        localStorage.setItem(SCAN_ENTITLEMENT_META_KEY, JSON.stringify(decodeScanEntitlementToken(payload.token) || payload.entitlement));
+        localStorage.setItem(SCAN_PRO_KEY, '1');
+        updateAIStatusBar();
+      },
+    });
+    let plans = null; let availability = '';
+    try { plans = await androidPlayClient.prepare(); } catch (error) { availability = error.message; }
+    document.getElementById('splashlens-play-dialog')?.remove();
+    const wrap = document.createElement('div');
+    wrap.id = 'splashlens-play-dialog'; wrap.setAttribute('role', 'dialog'); wrap.setAttribute('aria-modal', 'true'); wrap.setAttribute('aria-labelledby', 'splashlens-play-title');
+    wrap.style.cssText = 'position:fixed;inset:0;z-index:10001;background:#0f172acc;display:flex;align-items:center;justify-content:center;padding:12px;';
+    wrap.innerHTML = `<section style="width:min(480px,100%);max-height:88vh;overflow:auto;background:#0f172a;color:#f8fafc;border:1px solid #0284c7;border-radius:16px;padding:20px;">
+      <h2 id="splashlens-play-title">Google Play access</h2>
+      <p>Purchases renew automatically until canceled in Google Play. Review the price and terms in Google's payment screen. Manual tools stay free.</p>
+      <p role="status" data-play-status>${escHtml(availability || (plans.hasPurchase ? 'An existing purchase was found. Use Restore or manage your subscription.' : 'Choose a subscription to review with Google Play.'))}</p>
+      <div data-play-plans>${plans && !plans.hasPurchase ? plans.items.map(item => `<button type="button" data-play-plan="${escAttr(item.plan)}" style="display:block;width:100%;min-height:44px;margin:10px 0;background:#0284c7;color:#fff;border:0;border-radius:8px;padding:12px;font-weight:800;">${escHtml(item.label)}: ${escHtml(item.price.currency)} ${escHtml(item.price.value)} / ${item.plan === 'monthly' ? 'month' : 'year'}</button>`).join('') : ''}</div>
+      <button type="button" data-play-restore style="min-height:44px;padding:12px;margin:8px;">Restore Google Play purchase</button>
+      <a href="https://play.google.com/store/account/subscriptions?package=com.splashlens.fieldtools" target="_blank" rel="noopener" style="display:block;color:#7dd3fc;padding:12px;min-height:44px;">Manage or cancel in Google Play</a>
+      <a href="mailto:hello@splashlens.com" style="display:block;color:#7dd3fc;padding:12px;">Contact SplashLens support</a>
+      <button type="button" data-play-close style="min-height:44px;padding:12px;">Close</button>
+    </section>`;
+    const close = () => { wrap.remove(); if (priorFocus?.isConnected) priorFocus.focus(); };
+    wrap.querySelector('[data-play-close]').addEventListener('click', close);
+    wrap.addEventListener('click', event => { if (event.target === wrap) close(); });
+    wrap.addEventListener('keydown', event => {
+      if (event.key === 'Escape') { event.preventDefault(); close(); }
+      if (event.key === 'Tab') {
+        const controls = [...wrap.querySelectorAll('button,a[href]')].filter(el => !el.disabled && el.offsetParent !== null);
+        const first = controls[0], last = controls[controls.length - 1];
+        if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus(); }
+        else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
+      }
+    });
+    const run = async (action) => {
+      const controls = [...wrap.querySelectorAll('[data-play-plan],[data-play-restore]')];
+      controls.forEach(el => { el.disabled = true; });
+      const status = wrap.querySelector('[data-play-status]'); status.textContent = 'Checking Google Play…';
+      try {
+        await action(); status.textContent = 'Google Play scanner access is active on this device.';
+        wrap.querySelector('[data-play-plans]').replaceChildren();
+      } catch (error) { status.textContent = error.message || 'Please try Restore again or contact support.'; }
+      finally { controls.forEach(el => { el.disabled = false; }); }
+    };
+    wrap.querySelectorAll('[data-play-plan]').forEach(button => button.addEventListener('click', () => run(() => androidPlayClient.buy(button.dataset.playPlan))));
+    wrap.querySelector('[data-play-restore]').addEventListener('click', () => run(() => androidPlayClient.restore()));
+    document.body.appendChild(wrap); wrap.querySelector('button')?.focus();
+  } catch (error) { showSplashLensNotice(error.message || 'Google Play access is unavailable.'); }
+  finally { androidPlayPanelPending = false; }
+}
+
 async function restorePartSnapPro() {
+  if (getStoreShellMode() === 'android') return openAndroidPlayAccess();
   const result = document.getElementById('scan-result');
   try {
     let profile = getFieldSaveAccount();
@@ -10635,6 +10713,7 @@ function showScanLimitModal(result, status) {
           <p style="color:#f1f5f9;font-size:19px;font-weight:900;margin-bottom:6px;">You've used ${usage.count} of ${SCAN_LIMIT_FREE} free AI scans this month.</p>
           <p style="color:#94a3b8;font-size:13px;line-height:1.5;margin-bottom:14px;">Manual code lookup, dosing, reports, filters, and checklists stay free.</p>
           <div style="display:grid;grid-template-columns:1fr;gap:8px;">
+            ${getStoreShellMode() === 'android' ? '<button type="button" data-app-action="google-play-access" style="background:#0284c7;color:#fff;border:0;border-radius:10px;padding:12px;min-height:44px;font-size:13px;font-weight:900;cursor:pointer;">Google Play access / Restore</button>' : ''}
             <button onclick="setScanMode('lookup');document.getElementById('scan-result').innerHTML=''" style="background:#334155;color:#fff;border:0;border-radius:10px;padding:11px 14px;font-size:12px;font-weight:800;cursor:pointer;width:100%;">Use Manual Lookup</button>
             <button type="button" onclick="openStoreProLinkCapture()" style="background:#0f766e;color:#fff;border:0;border-radius:10px;padding:11px 14px;font-size:12px;font-weight:800;cursor:pointer;width:100%;">Email me my Pro link</button>
           </div>
@@ -11769,8 +11848,8 @@ function showThirdScanSoftGate(result, mode) {
         <button type="button" aria-label="${escAttr(a3Text('upgrade.softGateDismiss'))}" title="${escAttr(a3Text('upgrade.softGateDismiss'))}" onclick="dismissThirdScanSoftGate()" style="background:transparent;border:0;color:#cbd5e1;font-size:22px;line-height:1;cursor:pointer;">&times;</button>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-        <a data-checkout-intent="post-value" data-app-action="post-value-checkout" data-arg0="${escAttr('monthly')}" data-arg1="${escAttr('${escAttr(placement)}')}" data-checkout-plan="monthly" data-checkout-placement="${escAttr(placement)}" href="${escAttr(getCheckoutUrl('monthly', placement))}" target="_blank" rel="noopener" style="background:#0ea5e9;color:#082f49;text-decoration:none;text-align:center;border-radius:8px;padding:10px 7px;font-size:12px;font-weight:900;">${a3Text('upgrade.monthly')}</a>
-        <a data-checkout-intent="post-value" data-app-action="post-value-checkout" data-arg0="${escAttr('yearly')}" data-arg1="${escAttr('${escAttr(placement)}')}" data-checkout-plan="yearly" data-checkout-placement="${escAttr(placement)}" href="${escAttr(getCheckoutUrl('yearly', placement))}" target="_blank" rel="noopener" style="background:#22c55e;color:#052e16;text-decoration:none;text-align:center;border-radius:8px;padding:10px 7px;font-size:12px;font-weight:900;">${a3Text('upgrade.yearly')}</a>
+        <a data-checkout-intent="post-value" data-app-action="post-value-checkout" data-arg0="${escAttr('monthly')}" data-arg1="${escAttr(placement)}" data-checkout-plan="monthly" data-checkout-placement="${escAttr(placement)}" href="${escAttr(getCheckoutUrl('monthly', placement))}" target="_blank" rel="noopener" style="background:#0ea5e9;color:#082f49;text-decoration:none;text-align:center;border-radius:8px;padding:10px 7px;font-size:12px;font-weight:900;">${a3Text('upgrade.monthly')}</a>
+        <a data-checkout-intent="post-value" data-app-action="post-value-checkout" data-arg0="${escAttr('yearly')}" data-arg1="${escAttr(placement)}" data-checkout-plan="yearly" data-checkout-placement="${escAttr(placement)}" href="${escAttr(getCheckoutUrl('yearly', placement))}" target="_blank" rel="noopener" style="background:#22c55e;color:#052e16;text-decoration:none;text-align:center;border-radius:8px;padding:10px 7px;font-size:12px;font-weight:900;">${a3Text('upgrade.yearly')}</a>
       </div>
       ${typeof renderClosingProUpgradeLink === 'function' ? renderClosingProUpgradeLink(placement) : ''}
       <button type="button" onclick="dismissThirdScanSoftGate();setScanMode('lookup')" style="background:transparent;border:0;color:#cbd5e1;padding:10px 0 0;font-size:12px;font-weight:800;cursor:pointer;">${a3Text('upgrade.softGateManual')}</button>

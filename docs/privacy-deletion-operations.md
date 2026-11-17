@@ -37,6 +37,18 @@ The privacy operator must process each notice by its recorded deadline:
 5. Confirm actual completion to the verified email, then remove the intake
    record's personal data. Do not mark a queued request as a completed deletion.
 
+Google Play rollout adds `google_play_purchases` only when its reviewed migration
+is applied. The account identifier is HMAC-SHA256 of `play-account:<normalized
+verified email>` using `SPLASHLENS_PLAY_LEDGER_SECRET`; this is still associated
+personal data. Resolve that identifier before erasing an account and include its
+purchase-ledger records, `google_play_request_windows` abuse-limit row, and
+encrypted purchase tokens in access/export/deletion
+processing, subject to the same documented retention exceptions above. Never
+export service credentials, ledger encryption keys, or another account's tokens.
+Removing ledger data does not cancel a Google subscription; direct cancellation
+to Google's official subscription management workflow. Keep this feature disabled
+until provider setup, operational review and installed-Play acceptance are done.
+
 Production smoke checks must not submit test requests or send real email. Use
 the SQLite/provider fixtures for success, retry and failure cases. An unauthenticated
 production POST can verify rejection without creating records or sending mail.

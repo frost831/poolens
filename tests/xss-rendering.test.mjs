@@ -267,6 +267,14 @@ test('full app preserves saved-pool actions and captured checkout attribution af
     const clicks = await page.evaluate(() => __events.filter(event => event.name === 'post_value_upgrade_clicked'));
     assert.equal(clicks.length, 1);
     assert.equal(clicks[0].props.placement, 'first_value_dose_calculator');
+    await page.evaluate(() => {
+      document.getElementById('pools-content').innerHTML = '';
+      showThirdScanSoftGate.shown = false; sessionStorage.clear();
+      window.__checkoutCalls = [];
+      showThirdScanSoftGate(document.getElementById('pools-content'), 'parts_snap');
+    });
+    await page.locator('#third-scan-soft-gate a[data-checkout-plan="yearly"]').click();
+    assert.deepEqual(await page.evaluate(() => __checkoutCalls), [['yearly', 'soft_gate_scan3']]);
     assert.deepEqual(errors, []);
   } finally { await browser.close(); }
 });
