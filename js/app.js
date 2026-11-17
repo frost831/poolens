@@ -3169,15 +3169,17 @@ function closeSplashLensSheet(value = null) {
 // Resolves with the submitted values (or whatever config.submit returns), or null when dismissed.
 function openSplashLensSheet(config) {
   closeSplashLensSheet(null);
+  const priorFocus = document.activeElement;
   return new Promise((resolve) => {
     const wrap = document.createElement('div');
     wrap.id = 'splashlens-sheet';
     wrap.setAttribute('role', 'dialog');
     wrap.setAttribute('aria-modal', 'true');
     wrap.setAttribute('aria-label', config.title || 'SplashLens');
-    wrap.style.cssText = 'position:fixed;inset:0;z-index:10000;background:rgba(15,23,42,.72);display:flex;align-items:flex-end;justify-content:center;padding:12px;';
+    wrap.style.cssText = 'position:fixed;left:0;right:0;top:0;height:100dvh;box-sizing:border-box;z-index:10000;background:rgba(15,23,42,.72);display:flex;align-items:flex-end;justify-content:center;padding:12px;overflow:hidden;';
     wrap.innerHTML = `
-      <form novalidate style="width:min(480px,100%);max-height:88vh;overflow:auto;background:#0f172a;border:1px solid #334155;border-top:4px solid #14b8a6;border-radius:16px 16px 12px 12px;box-shadow:0 22px 70px rgba(2,6,23,.6);padding:18px;">
+      <form novalidate style="width:min(480px,100%);max-height:100%;min-height:0;box-sizing:border-box;display:flex;flex-direction:column;overflow:hidden;background:#0f172a;border:1px solid #334155;border-top:4px solid #14b8a6;border-radius:16px 16px 12px 12px;box-shadow:0 22px 70px rgba(2,6,23,.6);padding:18px;">
+        <div data-sheet-content style="min-height:0;overflow:auto;overscroll-behavior:contain;">
         ${config.eyebrow ? `<p style="color:#5eead4;font-size:10px;font-weight:950;letter-spacing:.11em;text-transform:uppercase;margin:0 0 6px;">${escHtml(config.eyebrow)}</p>` : ''}
         <h2 style="color:#f8fafc;font-size:20px;font-weight:950;line-height:1.15;margin:0 0 8px;">${escHtml(config.title || '')}</h2>
         ${config.body ? `<p style="color:#cbd5e1;font-size:13px;line-height:1.5;margin:0 0 14px;">${escHtml(config.body)}</p>` : ''}
@@ -3190,15 +3192,43 @@ function openSplashLensSheet(config) {
             style="width:100%;box-sizing:border-box;background:#020617;color:#f8fafc;border:1px solid #475569;border-radius:10px;padding:13px 12px;font-size:16px;margin:0 0 12px;">`).join('')}
         <p data-sheet-error role="alert" style="color:#fca5a5;font-size:12px;font-weight:800;line-height:1.4;min-height:0;margin:0 0 10px;"></p>
         <p data-sheet-status role="status" style="color:#5eead4;font-size:12px;line-height:1.4;margin:0 0 10px;"></p>
-        <button type="submit" style="width:100%;background:#14b8a6;color:#042f2e;border:0;border-radius:10px;padding:14px 10px;font-size:14px;font-weight:950;cursor:pointer;">${escHtml(config.primaryLabel || 'Continue')}</button>
-        <button type="button" data-sheet-cancel style="width:100%;background:transparent;color:#94a3b8;border:0;padding:12px 10px 4px;font-size:13px;font-weight:800;cursor:pointer;">${escHtml(config.secondaryLabel || 'Not now')}</button>
+        </div>
+        <div data-sheet-controls style="flex-shrink:0;max-height:60%;overflow:auto;padding-top:6px;">
+        <button type="submit" style="width:100%;min-height:44px;background:#14b8a6;color:#042f2e;border:0;border-radius:10px;padding:14px 10px;font-size:14px;font-weight:950;cursor:pointer;">${escHtml(config.primaryLabel || 'Continue')}</button>
+        <button type="button" data-sheet-cancel style="width:100%;min-height:44px;background:transparent;color:#94a3b8;border:0;padding:12px 10px;font-size:13px;font-weight:800;cursor:pointer;">${escHtml(config.secondaryLabel || 'Not now')}</button>
         ${config.tertiaryLabel ? `<button type="button" data-sheet-tertiary style="width:100%;background:transparent;color:#64748b;border:0;padding:8px 10px 0;font-size:12px;font-weight:800;text-decoration:underline;cursor:pointer;">${escHtml(config.tertiaryLabel)}</button>` : ''}
         ${config.actionLabel ? `<button type="button" data-sheet-action style="width:100%;background:transparent;color:#5eead4;border:0;padding:12px 10px 0;font-size:13px;font-weight:800;text-decoration:underline;cursor:pointer;">${escHtml(config.actionLabel)}</button>` : ''}
         ${config.footnote ? `<p style="color:#64748b;font-size:11px;line-height:1.45;margin:10px 0 0;text-align:center;">${escHtml(config.footnote)}</p>` : ''}
+        </div>
       </form>`;
 
-    _splashLensSheetFinish = resolve;
     const form = wrap.querySelector('form');
+    const content = wrap.querySelector('[data-sheet-content]');
+    const viewport = window.visualViewport;
+    // Android keyboards can shrink/pan only the visual viewport; vh and the
+    // layout viewport still extend behind the keyboard in a custom tab.
+    const fitViewport = () => {
+      if (!wrap.isConnected) return;
+      const height = viewport?.height > 0 ? viewport.height : window.innerHeight;
+      wrap.style.top = `${Math.max(0, viewport?.offsetTop || 0)}px`;
+      wrap.style.height = `${height}px`;
+      const active = document.activeElement;
+      if (content.contains(active)) {
+        const field = active.getBoundingClientRect(), area = content.getBoundingClientRect();
+        if (field.bottom > area.bottom) content.scrollTop += field.bottom - area.bottom;
+        else if (field.top < area.top) content.scrollTop -= area.top - field.top;
+      }
+    };
+    viewport?.addEventListener('resize', fitViewport);
+    viewport?.addEventListener('scroll', fitViewport);
+    window.addEventListener('resize', fitViewport);
+    _splashLensSheetFinish = (value) => {
+      viewport?.removeEventListener('resize', fitViewport);
+      viewport?.removeEventListener('scroll', fitViewport);
+      window.removeEventListener('resize', fitViewport);
+      if (priorFocus?.isConnected) priorFocus.focus({ preventScroll: true });
+      resolve(value);
+    };
     const errorEl = wrap.querySelector('[data-sheet-error]');
     const submitBtn = wrap.querySelector('button[type="submit"]');
     const actionBtn = wrap.querySelector('[data-sheet-action]');
@@ -3260,7 +3290,12 @@ function openSplashLensSheet(config) {
       }
     });
     document.body.appendChild(wrap);
-    setTimeout(() => form.querySelector('input')?.focus(), 80);
+    fitViewport();
+    setTimeout(() => {
+      if (!wrap.isConnected) return;
+      form.querySelector('input')?.focus({ preventScroll: true });
+      fitViewport();
+    }, 80);
   });
 }
 
