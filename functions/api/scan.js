@@ -7,6 +7,7 @@
 
 import { attachPartSnapCorpusCandidates } from '../lib/partsnap-corpus.mjs';
 import { CLOSING_PASS_LABEL } from '../_shared/closing-pass.mjs';
+import { verifyPlayScan } from '../_shared/google-play-billing.mjs';
 
 const CLAUDE_API = 'https://api.anthropic.com/v1/messages';
 const DEFAULT_ORIGIN = 'https://app.splashlens.com';
@@ -256,6 +257,8 @@ async function verifyEntitlementToken(request, env, body) {
   if (!scopeAllowed(payload.scopes, 'scan')) {
     return { present: true, ok: false, status: 403, error: 'Scan entitlement does not include scanner access.' };
   }
+
+  if (payload.source === 'google_play') return verifyPlayScan(request, env, payload);
 
   const subject = String(payload.sub || '').trim().toLowerCase().slice(0, 160);
   if (env.SCAN_USAGE_KV && typeof env.SCAN_USAGE_KV.get === 'function') {
@@ -681,7 +684,7 @@ async function enforceScanAccess(request, env, headers, body) {
     if (!entitlement.ok) {
       return {
         ok: false,
-        response: json({ error: entitlement.error }, entitlement.status || 401, headers),
+        response: json({ error: entitlement.error, ...(entitlement.profileRequired ? { profileRequired: true } : {}) }, entitlement.status || 401, headers),
       };
     }
 
@@ -796,6 +799,7 @@ export async function onRequestPost({ request, env }) {
     return json({ error: 'Invalid request body', scanId }, 400, headers);
   }
 
+  if (!body || typeof body !== 'object' || Array.isArray(body)) return json({ error: 'Request body must be an object.', scanId }, 400, headers);
   const { image, mode = 'error_code' } = body;
   if (!PROMPTS[mode]) {
     await recordScanStage(request, env, body, { scanId, stage: 'validation_failed', status: 'blocked', errorCode: 'unknown_mode', mode });

@@ -8,7 +8,7 @@ public class DelegationService extends
     public void onCreate() {
         super.onCreate();
 
-        
+        registerExtraCommandHandler(new com.google.androidbrowserhelper.playbilling.digitalgoods.DigitalGoodsRequestHandler(getApplicationContext()));
     }
 }
 
