@@ -37,12 +37,19 @@ for (const width of [390, 1365]) test(`sheet actions remain tappable when the ke
     await cancel.click();
     await page.waitForFunction(() => window.__sheetOutcome === null);
     await page.evaluate(() => {
-      document.getElementById('qa-keyboard').style.top = '244px';
-      __qaViewport.height = 220; __qaViewport.offsetTop = 24;
+      document.getElementById('qa-keyboard').style.top = '192px';
+      __qaViewport.height = 168; __qaViewport.offsetTop = 24;
       window.__sheetOutcome = 'pending';
       openSplashLensSheet({ title: 'Verify', fields: [{ name: 'email', label: 'Work email', type: 'email' }], primaryLabel: 'Continue' }).then(value => { window.__sheetOutcome = value; });
       __qaViewport.dispatchEvent(new Event('resize'));
     });
+    await page.evaluate(() => { document.getElementById('splashlens-sheet-email').focus(); __qaViewport.dispatchEvent(new Event('resize')); });
+    const fieldFits = await page.evaluate(() => {
+      const field = document.getElementById('splashlens-sheet-email').getBoundingClientRect();
+      const area = document.querySelector('[data-sheet-content]').getBoundingClientRect();
+      return field.top >= area.top - 1 && field.bottom <= area.bottom + 1 && field.height >= 44;
+    });
+    assert.equal(fieldFits, true, 'the email field remains fully readable on the shortest Android keyboard viewport');
     await page.getByLabel('Work email', { exact: true }).fill('qa@example.com');
     await page.getByRole('button', { name: 'Continue', exact: true }).click();
     await page.waitForFunction(() => window.__sheetOutcome?.email === 'qa@example.com');

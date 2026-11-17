@@ -3193,17 +3193,18 @@ function openSplashLensSheet(config) {
         <p data-sheet-error role="alert" style="color:#fca5a5;font-size:12px;font-weight:800;line-height:1.4;min-height:0;margin:0 0 10px;"></p>
         <p data-sheet-status role="status" style="color:#5eead4;font-size:12px;line-height:1.4;margin:0 0 10px;"></p>
         </div>
-        <div data-sheet-controls style="flex-shrink:0;max-height:60%;overflow:auto;padding-top:6px;">
+        <div data-sheet-controls style="flex-shrink:0;max-height:60%;overflow:auto;padding-top:6px;gap:8px;">
         <button type="submit" style="width:100%;min-height:44px;background:#14b8a6;color:#042f2e;border:0;border-radius:10px;padding:14px 10px;font-size:14px;font-weight:950;cursor:pointer;">${escHtml(config.primaryLabel || 'Continue')}</button>
         <button type="button" data-sheet-cancel style="width:100%;min-height:44px;background:transparent;color:#94a3b8;border:0;padding:12px 10px;font-size:13px;font-weight:800;cursor:pointer;">${escHtml(config.secondaryLabel || 'Not now')}</button>
-        ${config.tertiaryLabel ? `<button type="button" data-sheet-tertiary style="width:100%;background:transparent;color:#64748b;border:0;padding:8px 10px 0;font-size:12px;font-weight:800;text-decoration:underline;cursor:pointer;">${escHtml(config.tertiaryLabel)}</button>` : ''}
-        ${config.actionLabel ? `<button type="button" data-sheet-action style="width:100%;background:transparent;color:#5eead4;border:0;padding:12px 10px 0;font-size:13px;font-weight:800;text-decoration:underline;cursor:pointer;">${escHtml(config.actionLabel)}</button>` : ''}
-        ${config.footnote ? `<p style="color:#64748b;font-size:11px;line-height:1.45;margin:10px 0 0;text-align:center;">${escHtml(config.footnote)}</p>` : ''}
+        ${config.tertiaryLabel ? `<button type="button" data-sheet-tertiary style="grid-column:1/-1;width:100%;background:transparent;color:#64748b;border:0;padding:8px 10px 0;font-size:12px;font-weight:800;text-decoration:underline;cursor:pointer;">${escHtml(config.tertiaryLabel)}</button>` : ''}
+        ${config.actionLabel ? `<button type="button" data-sheet-action style="grid-column:1/-1;width:100%;background:transparent;color:#5eead4;border:0;padding:12px 10px 0;font-size:13px;font-weight:800;text-decoration:underline;cursor:pointer;">${escHtml(config.actionLabel)}</button>` : ''}
+        ${config.footnote ? `<p style="grid-column:1/-1;color:#64748b;font-size:11px;line-height:1.45;margin:10px 0 0;text-align:center;">${escHtml(config.footnote)}</p>` : ''}
         </div>
       </form>`;
 
     const form = wrap.querySelector('form');
     const content = wrap.querySelector('[data-sheet-content]');
+    const controls = wrap.querySelector('[data-sheet-controls]');
     const viewport = window.visualViewport;
     // Android keyboards can shrink/pan only the visual viewport; vh and the
     // layout viewport still extend behind the keyboard in a custom tab.
@@ -3212,6 +3213,11 @@ function openSplashLensSheet(config) {
       const height = viewport?.height > 0 ? viewport.height : window.innerHeight;
       wrap.style.top = `${Math.max(0, viewport?.offsetTop || 0)}px`;
       wrap.style.height = `${height}px`;
+      const compact = height < 420;
+      wrap.style.padding = compact ? '8px' : '12px';
+      form.style.padding = compact ? '12px' : '18px';
+      controls.style.display = compact ? 'grid' : 'block';
+      controls.style.gridTemplateColumns = compact ? 'repeat(2,minmax(0,1fr))' : '';
       const active = document.activeElement;
       if (content.contains(active)) {
         const field = active.getBoundingClientRect(), area = content.getBoundingClientRect();
