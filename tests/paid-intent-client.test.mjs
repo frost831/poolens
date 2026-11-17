@@ -29,6 +29,8 @@ function harness(names, overrides = {}) {
     crypto: webcrypto, URLSearchParams, URL, Uint8Array, Uint32Array,
     setTimeout, clearTimeout, AbortController,
     captureAndAnalyze: () => {},
+    partSnapCheckoutRestoring: false, S: { tab: 'errors' }, _scanMode: 'parts', _lastPartSnapResult: null,
+    getSplashLensAttribution: () => ({}), rememberPartSnapCheckoutReturn: () => false,
     localStorage: storage({ 'splashlens-scan-client-id': uuid }),
     sessionStorage: storage({ 'splashlens-session-id': 'session-abc123-01234567' }),
     getSplashLensRole: () => 'tech', getWorkflowStyle: () => 'steps',

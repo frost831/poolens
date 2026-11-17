@@ -15,6 +15,7 @@ function harness(extra = {}) {
   const posted = [];
   const events = [];
   const context = vm.createContext({
+    partSnapCheckoutRestoring: false,
     URLSearchParams,
     window: { location: { search: '?utm_source=qa' } },
     navigator: { webdriver: false },

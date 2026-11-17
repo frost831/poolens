@@ -27,7 +27,7 @@ function scanner(previousMode){
     cameraFallbackCopy:(_key,fallback)=>fallback,
     setTimeout(){},requestAnimationFrame:callback=>callback(),
   });
-  vm.runInContext('let partSnapCameraExplained=false;let cameraRequestPending=false;let cameraRequestGeneration=0;'+[
+  vm.runInContext('let partSnapCameraExplained=false;let partSnapCheckoutRestoring=false;let cameraRequestPending=false;let cameraRequestGeneration=0;'+[
     'showTab','initScanTab','setScanMode','startCamera','stopCamera','revealNoCameraFallback',
     'openCounterTool','openFirstStart','openLivePartSnap','openFieldCodeLookup','enterSplashLensApp',
   ].map(functionSource).join('\n'),context);
