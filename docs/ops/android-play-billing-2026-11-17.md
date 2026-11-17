@@ -58,7 +58,35 @@ asset version in PR94 was `20261117-play-billing-1`; its offline cache was
 The follow-up account repair opens email verification directly from the account
 dialog, without requiring camera permission or captured evidence. It also renews
 expired account sessions for locally paid users without consuming a scan. Its
-asset version is `20261117-account-signin-1`, cache `splashlens-v69-account-signin`.
+asset version is `20261117-checkout-return-1`, cache `splashlens-v70-checkout-return`.
+
+After the owner verified `frost@belowzeromedia.com` directly in the isolated app,
+production PartSnap processed the public Hayward brochure fixture and returned
+a conservative Super Pump family candidate. The account endpoint agreed that
+one free scan was used and two remained. Buying links stayed locked for missing
+dimensions/identifying proof. This repeated brochure fixture proves live
+transport, processing, rendering and metering; it is not four-view field evidence
+or image-accuracy/native Android acceptance.
+
+The result's monthly checkout opened on Stripe at USD19/month without payment.
+Cancellation exposed an unsaved-result loss and a repeated camera explanation.
+The follow-up preserves a bounded checkout draft in same-tab sessionStorage,
+checks its account and 30-minute age on return, renders through the existing
+escaped renderer, and deletes the draft after restoration. No account/profile
+tokens enter the draft, and photos are not sent to analytics or another service.
+This is local device storage under the existing privacy policy's local field-data
+description, not an account-backed save or new server data collection. The age
+limit is enforced on app access; clearing site data removes it. Session restore
+by the browser may retain tab storage until the next app access.
+
+Photo storage is capped at three million serialized characters. Quota-limited
+browsers fall back to the answer without photos, with explicit reattachment
+instructions and an incomplete evidence/order hold. If even that cannot be kept,
+checkout stays in the app with an actionable storage error instead of silently
+discarding the answer. Stale, future, malformed and different-account drafts
+are discarded. A return never invokes AI, consumes quota or re-emits result/
+activation/review events. A second checkout preserves QA traffic classification
+from saved attribution even though Stripe's return URL has no campaign query.
 
 ## Validation
 

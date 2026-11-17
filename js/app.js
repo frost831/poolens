@@ -655,6 +655,8 @@ const DOSE_NEED_LABELS = {
 // BOOT
 // ═══════════════════════════════════════════
 document.addEventListener('DOMContentLoaded', () => {
+  const checkoutReturn = readPartSnapCheckoutReturn();
+  partSnapCheckoutRestoring = Boolean(checkoutReturn);
   const counterStart = getCounterStartState();
   initLanguageLayer(counterStart);
   initMarketingGate();
@@ -674,8 +676,11 @@ document.addEventListener('DOMContentLoaded', () => {
   initPools();
   initRoute();
   checkOfflineStatus();
-  initDeepLink();
-  initCounterModeHome(counterStart);
+  if (checkoutReturn) restorePartSnapCheckoutReturn(checkoutReturn);
+  else {
+    initDeepLink();
+    initCounterModeHome(counterStart);
+  }
   initProductIntelligenceTracking();
   trackReferralLandingOpen();
   trackSplashLensAppOpen();
@@ -8876,6 +8881,9 @@ let _scanBrand     = null;   // null = all brands
 let _flashOn       = false;
 let _flashTrack    = null;
 let _lastPartSnapResult = null;
+let partSnapCheckoutRestoring = false;
+const PARTSNAP_CHECKOUT_RETURN_KEY = 'splashlens-partsnap-checkout-return-v1';
+const PARTSNAP_CHECKOUT_RETURN_TTL = 30 * 60 * 1000;
 const PARTSNAP_EVIDENCE_STEPS = [
   { key: 'equipment', label: 'Full equipment', hint: 'Step back. Show the complete unit and plumbing.' },
   { key: 'plate', label: 'Data plate', hint: 'Fill the frame with model, serial, voltage, and ratings.' },
@@ -8935,6 +8943,8 @@ function getPartSnapEvidenceSummary() {
 }
 
 function startPartSnapEvidenceSession(source = 'partsnap_open') {
+  _lastPartSnapResult = null;
+  try { sessionStorage.removeItem(PARTSNAP_CHECKOUT_RETURN_KEY); } catch {}
   captureAndAnalyze.generation = (captureAndAnalyze.generation || 0) + 1;
   captureAndAnalyze.pendingCapture = null;
   _partSnapEvidenceSession = createPartSnapEvidenceSession(source);
@@ -9158,7 +9168,7 @@ function setScanMode(mode) {
     if (capBtn) capBtn.textContent = 'CAPTURE';
   }
 
-  if (isCameraMode) startCamera();
+  if (isCameraMode && !partSnapCheckoutRestoring) startCamera();
   else              stopCamera();
   if (mode === 'lookup') renderScanBrandFilter();
   if (mode === 'chem')   renderChemCatalogHome();
@@ -10777,6 +10787,7 @@ function sanitizeAnalyticsProps(props = {}) {
 }
 
 function trackSplashLensEvent(name, props = {}) {
+  if (typeof partSnapCheckoutRestoring !== 'undefined' && partSnapCheckoutRestoring) return;
   if (isInternalAnalyticsSession(name, props)) return;
   const clientId = getScanClientId();
   const attribution = getSplashLensAttribution();
@@ -11417,7 +11428,7 @@ function renderPartsSnapResult(ai, result, status) {
     low_risk: orderGate.lowRisk,
     hold_reasons: orderGate.reasons.join('|'),
   });
-  if (showGuidedRetry) {
+  if (showGuidedRetry && !partSnapCheckoutRestoring) {
     const recovery = savePartSnapRecoveryContext({
       lastSummary: [manufacturer, component, model || partNumber].filter(Boolean).join(' / ') || 'Unknown PartSnap result',
       lastMissingProof: compactPartSnapList(missingProof.length ? missingProof : ladder.missing),
@@ -11440,7 +11451,7 @@ function renderPartsSnapResult(ai, result, status) {
         result_summary: [manufacturer, component, model || partNumber].filter(Boolean).join(' / ') || 'Unknown PartSnap result',
       });
     }
-  } else if (recoveryBefore?.active && isPartSnapRecoveryImproved(_lastPartSnapResult, corpusCandidates, visibleEvidence, missingProof)) {
+  } else if (!partSnapCheckoutRestoring && recoveryBefore?.active && isPartSnapRecoveryImproved(_lastPartSnapResult, corpusCandidates, visibleEvidence, missingProof)) {
     const recovery = clearPartSnapRecoveryContext('improved_result');
     trackSplashLensEvent('partsnap_guided_retry_completed', {
       recovery_attempts: recovery?.attempts || 1,
@@ -11510,7 +11521,7 @@ function renderPartsSnapResult(ai, result, status) {
     </div>
     <div id="partsnap-feedback-panel"></div>
   `;
-  window.SplashLensFieldSignals?.onPartSnapResult({
+  if (!partSnapCheckoutRestoring) window.SplashLensFieldSignals?.onPartSnapResult({
     manufacturer,
     model,
     component,
@@ -11520,22 +11531,24 @@ function renderPartsSnapResult(ai, result, status) {
     missingProof: missingProof.length ? missingProof : ladder.missing,
   });
   if (!showGuidedRetry && !low && (knownPartSnapComponent(ai) || corpusCandidates.length > 0)) {
-    trackSplashLensEvent('partsnap_result_success', {
-      source: 'app', workflow: 'partsnap_result', confidence: confidence || 'unknown',
-      result_count: Math.max(1, corpusCandidates.length), verification_ready: orderGate.verificationReady,
-    });
-    trackFirstUsefulResult('partsnap_result', result, {
-      role: getSplashLensRole(),
-      confidence: confidence || 'unknown',
-      risk: risk.level,
-      result_count: 1,
-      proof_visible_count: visibleEvidence.length,
-      proof_missing_count: missingProof.length || (ladder.missing || []).length,
-      time_back_message: 'Part path, missing proof, and packet actions are visible.',
-    });
-    window.SplashLensStopFlow?.onPartIdentified?.(_lastPartSnapResult);
-    window.SplashLensSoftGate?.noteSuccessfulFreeId?.(_lastPartSnapResult, result);
-    window.SplashLensReview?.afterSuccessfulId?.();
+    if (!partSnapCheckoutRestoring) {
+      trackSplashLensEvent('partsnap_result_success', {
+        source: 'app', workflow: 'partsnap_result', confidence: confidence || 'unknown',
+        result_count: Math.max(1, corpusCandidates.length), verification_ready: orderGate.verificationReady,
+      });
+      trackFirstUsefulResult('partsnap_result', result, {
+        role: getSplashLensRole(),
+        confidence: confidence || 'unknown',
+        risk: risk.level,
+        result_count: 1,
+        proof_visible_count: visibleEvidence.length,
+        proof_missing_count: missingProof.length || (ladder.missing || []).length,
+        time_back_message: 'Part path, missing proof, and packet actions are visible.',
+      });
+      window.SplashLensStopFlow?.onPartIdentified?.(_lastPartSnapResult);
+      window.SplashLensSoftGate?.noteSuccessfulFreeId?.(_lastPartSnapResult, result);
+      window.SplashLensReview?.afterSuccessfulId?.();
+    }
     if (getScanUsage().count < SCAN_LIMIT_FREE) {
       result.insertAdjacentHTML('beforeend', renderPartSnapResultUpgradeOffer('partsnap_result'));
     }
@@ -11561,6 +11574,7 @@ function renderPartsSnapResult(ai, result, status) {
 }
 
 function trackPartSnapResultFailure(reason, props = {}) {
+  if (partSnapCheckoutRestoring) return;
   trackSplashLensEvent('partsnap_result_fail', {
     source: 'app',
     workflow: 'partsnap_result',
@@ -11902,12 +11916,90 @@ function trackPostValueUpgrade(plan, placement = 'partsnap_result') {
   return url;
 }
 
+function rememberPartSnapCheckoutReturn() {
+  try {
+    sessionStorage.removeItem(PARTSNAP_CHECKOUT_RETURN_KEY);
+    if (S.tab !== 'scan' || _scanMode !== 'parts' || !_lastPartSnapResult) return false;
+    const ai = JSON.parse(JSON.stringify(_lastPartSnapResult));
+    if (JSON.stringify(ai).length > 100000) return false;
+    const snapshot = {
+      savedAt: Date.now(), accountEmail: getFieldSaveAccount()?.email || '', ai,
+      evidence: JSON.parse(JSON.stringify(_partSnapEvidenceSession)),
+    };
+    let serialized = JSON.stringify(snapshot);
+    if (serialized.length <= 3000000) {
+      try { sessionStorage.setItem(PARTSNAP_CHECKOUT_RETURN_KEY, serialized); return true; } catch {}
+    }
+    // Quota-limited browsers can keep the answer without retaining the photos.
+    snapshot.evidence = createPartSnapEvidenceSession('checkout_return');
+    snapshot.photosOmitted = true;
+    snapshot.ai.guidedEvidence = { captureCount: 0, dimensionStatus: 'missing' };
+    serialized = JSON.stringify(snapshot);
+    sessionStorage.setItem(PARTSNAP_CHECKOUT_RETURN_KEY, serialized);
+    return true;
+  } catch { return false; }
+}
+
+function readPartSnapCheckoutReturn() {
+  try {
+    const raw = sessionStorage.getItem(PARTSNAP_CHECKOUT_RETURN_KEY);
+    if (!raw) return null;
+    if (raw.length > 3000000) throw new Error('oversized draft');
+    const snapshot = JSON.parse(raw);
+    const age = Date.now() - Number(snapshot.savedAt);
+    if (!Number.isFinite(age) || age < 0 || age > PARTSNAP_CHECKOUT_RETURN_TTL
+      || snapshot.accountEmail !== (getFieldSaveAccount()?.email || '')
+      || !snapshot.ai || typeof snapshot.ai !== 'object' || Array.isArray(snapshot.ai)
+      || JSON.stringify(snapshot.ai).length > 100000) throw new Error('invalid draft');
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('checkout') !== 'cancelled' && !params.has('activate_scan')) return null;
+    const evidence = createPartSnapEvidenceSession('checkout_return');
+    evidence.dimensions = String(snapshot.evidence?.dimensions || '').slice(0, 160);
+    evidence.dimensionsUnavailable = snapshot.evidence?.dimensionsUnavailable === true;
+    for (const step of PARTSNAP_EVIDENCE_STEPS) {
+      const image = snapshot.evidence?.captures?.[step.key];
+      if (typeof image === 'string' && image.length <= 1000000 && /^data:image\/jpeg;base64,[A-Za-z0-9+/=]+$/.test(image)) evidence.captures[step.key] = image;
+    }
+    snapshot.evidence = evidence;
+    const captureCount = Object.keys(evidence.captures).length;
+    snapshot.photosOmitted = snapshot.photosOmitted === true || captureCount < Number(snapshot.ai.guidedEvidence?.captureCount || 0);
+    snapshot.ai.guidedEvidence = {
+      ...snapshot.ai.guidedEvidence, captureCount,
+      complete: snapshot.ai.guidedEvidence?.complete === true && captureCount === PARTSNAP_EVIDENCE_STEPS.length,
+      dimensionStatus: evidence.dimensions ? 'provided' : evidence.dimensionsUnavailable ? 'unavailable' : 'missing',
+    };
+    return snapshot;
+  } catch {
+    try { sessionStorage.removeItem(PARTSNAP_CHECKOUT_RETURN_KEY); } catch {}
+    return null;
+  }
+}
+
+function restorePartSnapCheckoutReturn(snapshot) {
+  partSnapCheckoutRestoring = true;
+  try {
+    _partSnapEvidenceSession = snapshot.evidence;
+    revealSplashLensApp();
+    showTab('scan', 'parts');
+    revealNoCameraFallback(document.getElementById('scan-no-camera'), document.getElementById('scan-viewfinder-wrap'), 'camera_skipped');
+    renderPartsSnapResult(snapshot.ai, document.getElementById('scan-result'), document.getElementById('scan-camera-status'));
+    sessionStorage.removeItem(PARTSNAP_CHECKOUT_RETURN_KEY);
+    showSplashLensNotice(snapshot.photosOmitted
+      ? 'Your PartSnap answer is restored. Reattach proof photos before ordering or sharing; this device could not retain them.'
+      : 'Your PartSnap result and proof photos are restored. No additional scan was used.');
+  } catch {
+    try { sessionStorage.removeItem(PARTSNAP_CHECKOUT_RETURN_KEY); } catch {}
+    showTab('scan', 'lookup');
+    showSplashLensNotice('The saved checkout result could not be reopened. Manual lookup is available; no new scan was used.');
+  } finally { partSnapCheckoutRestoring = false; }
+}
+
 let checkoutPending = false;
 async function startWebCheckout(plan, placement) {
   if (isStoreShellMode() || checkoutPending) return false;
   const url = trackCheckoutIntent(plan, placement);
   const body = Object.fromEntries(new URL(url, window.location.origin).searchParams);
-  if (['qa', 'codex', 'codex_smoke', 'launch-gate-test'].includes(new URLSearchParams(window.location.search || '').get('utm_source'))) {
+  if (['qa', 'codex', 'codex_smoke', 'launch-gate-test'].includes(new URLSearchParams(window.location.search || '').get('utm_source') || getSplashLensAttribution().source)) {
     body.traffic_class = 'qa';
   }
   checkoutPending = true;
@@ -11922,6 +12014,10 @@ async function startWebCheckout(plan, placement) {
     const target = new URL(result.url || '', window.location.origin);
     if (!response.ok || !['checkout.stripe.com', 'buy.stripe.com'].includes(target.hostname) || target.protocol !== 'https:') {
       throw new Error(result.error || 'Secure checkout is unavailable. Please try again.');
+    }
+    const keepPartSnap = S.tab === 'scan' && _scanMode === 'parts' && Boolean(_lastPartSnapResult);
+    if (!rememberPartSnapCheckoutReturn() && keepPartSnap) {
+      throw new Error('This device could not keep your PartSnap result during checkout. Save this stop before leaving, or allow site storage and try again.');
     }
     window.location.assign(target.href);
     return true;
