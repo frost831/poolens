@@ -25,7 +25,7 @@ if (Test-Path $deploy) {
 
 New-Item -ItemType Directory -Force -Path $deploy | Out-Null
 
-foreach ($file in @("index.html", "landing.html", "dashboard.html", "owner-dashboard.html", "privacy.html", "data-deletion.html", "manifest.json", "favicon.svg", "robots.txt", "llms.txt", "sw.js", "_headers", "_redirects", "_routes.json")) {
+foreach ($file in @("index.html", "landing.html", "dashboard.html", "owner-dashboard.html", "privacy.html", "data-deletion.html", "manifest.json", "favicon.svg", "robots.txt", "sitemap.xml", "llms.txt", "sw.js", "_headers", "_redirects", "_routes.json")) {
   $source = Join-Path $root $file
   if (Test-Path $source) {
     $item = Get-Item -LiteralPath $source -Force
