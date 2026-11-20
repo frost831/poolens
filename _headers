@@ -9,6 +9,10 @@
 /sw.js
   Cache-Control: no-cache
 
+/sitemap.xml
+  Content-Type: application/xml; charset=UTF-8
+  Cache-Control: public, max-age=300
+
 /sw-partsnap-corpus.js
   Cache-Control: no-cache
 
