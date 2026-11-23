@@ -1,11 +1,11 @@
-const CACHE = 'splashlens-v74-hinge-safe';
+const CACHE = 'splashlens-v75-partsnap-library';
 const ASSETS = [
   '/',
   '/js/errors.js?v=20261010-hayward-safety',
   '/js/data.js?v=20261013-crew',
   '/js/i18n.js?v=20261030-closing-short',
   '/js/play-billing.js?v=20261123-hinge-safe-1',
-  '/js/app.js?v=20261123-hinge-safe-1',
+  '/js/app.js?v=20261123-partsnap-library',
   '/js/stop-flow.js?v=20261012-stop-flow',
   '/js/day-recap.js?v=20261012-day-recap',
   '/js/morning-route.js?v=20261012-morning-route',
