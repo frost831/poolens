@@ -18,10 +18,13 @@ This packet continues the approved PC web/backend/Android work and Mac iOS lane.
 - 478 app tests passed with browser fixtures enabled, zero failures and zero skips. Two tests assert actual viewport-segment media queries and critical control bounds. Direct CDP screenshots preserve the simulated hinge.
 - WebKit engine checks passed at 320, 390 and 430 CSS pixels, including a 300-pixel keyboard-height viewport. These are browser-engine checks, not physical iPhone or shipping WKWebView proof.
 - Debug APK and unsigned release AAB built successfully. Merged APK inspection confirms BILLING permission, resizing and orientation `any`.
-- AAB SHA-256: `A869D914337E6BF6FE959C3DE4454A9494DD69EEBB5966B9EC109D64DAD3996D` (unsigned).
-- Debug APK SHA-256: `A4DC9F689E08DBD616F8294CDBCEFB4924F13911A7CDC52822672F3A52AB4885`.
+- A follow-up native parity regression caught the bundled web manifest still declaring portrait. It now agrees with the hosted/TWA manifests and launcher; the rebuilt APK's packaged JSON was inspected directly and reports orientation `any`.
+- Current AAB SHA-256: `697E7E0C5868140DB41D10B9D2E1F4D97C9711C602791CBA06BEA802A8DE0ED9` (unsigned).
+- Current debug APK SHA-256: `82CDFDA75C3CEE91788DEC60A0D4FE7903020BDD1D31D85F04A562DF40516A81`.
 - Live Stripe checkout review and cancellation passed for monthly $19, annual $149, Closing $29 and Crew $39. No payment was submitted.
 - The 120-case PartSnap metadata benchmark passes but contains zero image-proven cases. It is not camera identification accuracy evidence.
+
+PR #100 is merged as `65d5dc92a6de73f6958208463aeda919e668ae64` with passing PR and post-merge CI. Production deployed at `https://302df8fc.poolens.pages.dev` and the custom domain `https://app.splashlens.com`. Final production checks passed XSS/protected APIs/manual recovery, offline v74 cache activation, eight viewport sizes, two actual segmented-display cases and three WebKit sizes. The first immediate post-deploy cache probe saw an old worker; a fresh readback confirmed v74 and the full offline check passed. The site FAQ JavaScript/CSS matches canonical source and its home/FAQ/support/privacy/sitemap/robots URLs return 200. The native parity follow-up does not change public runtime assets.
 
 ## Play configuration and remaining acceptance
 

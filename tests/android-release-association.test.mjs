@@ -24,3 +24,16 @@ test('camera and autofocus remain optional for manual lookup devices', () => {
     assert.match(manifest, new RegExp(`<uses-feature android:name="${feature.replaceAll('.', '\\.')}" android:required="false"\\s*/>`));
   }
 });
+
+test('hosted and bundled Android manifests preserve rotation and resizable activities', () => {
+  const hosted = JSON.parse(read('manifest.json'));
+  const bundled = JSON.parse(read('android-twa', 'app', 'src', 'main', 'res', 'raw', 'web_app_manifest.json'));
+  const wrapper = JSON.parse(read('android-twa', 'twa-manifest.json'));
+  assert.equal(hosted.orientation, 'any');
+  assert.equal(bundled.orientation, hosted.orientation);
+  assert.equal(wrapper.orientation, hosted.orientation);
+  const manifest = read('android-twa', 'app', 'src', 'main', 'AndroidManifest.xml');
+  assert.match(manifest, /<activity android:name="LauncherActivity"[^>]*android:resizeableActivity="true"/);
+  const launcher = read('android-twa', 'app', 'src', 'main', 'java', 'com', 'splashlens', 'fieldtools', 'LauncherActivity.java');
+  assert.doesNotMatch(launcher, /setRequestedOrientation\(ActivityInfo\.SCREEN_ORIENTATION_PORTRAIT\)/);
+});
