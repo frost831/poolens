@@ -11402,6 +11402,67 @@ function renderPartSnapOrderGate(gate = {}) {
     </div>`;
 }
 
+function partSnapLibraryBrand(value) {
+  if (typeof value !== 'string') return '';
+  const brand = value.toLowerCase().replace(/[^a-z0-9]/g, '');
+  if (['hayward', 'haywardpoolproducts', 'haywardgoldline', 'goldline'].includes(brand)) return 'Hayward';
+  if (['jandy', 'jandyzodiac', 'jandyproseries'].includes(brand)) return 'Jandy';
+  if (['maytronics', 'dolphin', 'maytronicsdolphin', 'dolphinmaytronics'].includes(brand)) return 'Maytronics Dolphin';
+  return ['Aiper', 'Beatbot', 'Pentair', 'Polaris', 'WYBOT', 'iGarden']
+    .find(name => name.toLowerCase() === brand) || '';
+}
+
+function partSnapLibraryModel(value) {
+  if (typeof value !== 'string') return '';
+  const model = value.trim().replace(/\s+/g, ' ');
+  return /^[a-z0-9][a-z0-9 .+&/®™-]{0,79}$/i.test(model) &&
+    !/^(?:unknown|unreadable|not visible|none|null|n\/?a|unsure)$/i.test(model) ? model : '';
+}
+
+function renderPartSnapEquipmentLibrary(ai, corpusCandidates, alternates) {
+  const url = new URL('https://splashlens.com/equipment-library/');
+  const brand = partSnapLibraryBrand(ai.manufacturer);
+  const model = partSnapLibraryModel(ai.model);
+  const params = new URLSearchParams();
+  const hasReadableModel = Boolean(brand && model && ai.modelVisible === true && ai.confidence === 'high');
+  let label = 'Browse equipment library';
+  if (hasReadableModel) {
+    params.set('scan', 'model');
+    params.set('brand', brand);
+    params.set('q', model);
+    label = 'Open model references';
+  } else {
+    const choices = new Map();
+    const add = (manufacturer, name) => {
+      const candidate = partSnapLibraryModel(name);
+      if (!candidate || choices.size >= 8) return;
+      const make = manufacturer ? partSnapLibraryBrand(manufacturer) : brand;
+      if (manufacturer && !make) return;
+      if (!make && !/[0-9]|\s/.test(candidate)) return;
+      const key = make + ':' + candidate.toLowerCase().replace(/[^a-z0-9]/g, '');
+      if (!choices.has(key)) choices.set(key, JSON.stringify([make, candidate]));
+    };
+    add(brand, model);
+    for (const alternate of alternates) add(alternate.manufacturer, alternate.model || alternate.name);
+    for (const match of corpusCandidates) {
+      const families = Array.isArray(match.modelFamilies) ? match.modelFamilies : [];
+      for (const family of families.slice(0, 3)) add(match.manufacturer, family);
+    }
+    if (brand || choices.size) {
+      params.set('scan', 'possible');
+      if (brand) params.set('brand', brand);
+      for (const candidate of choices.values()) params.append('candidate', candidate);
+      label = choices.size ? 'Compare possible equipment matches' : 'Browse brand references';
+    }
+  }
+  url.hash = params.toString();
+  return `
+    <div style="margin:10px 0;padding:11px;background:#0f172a;border:1px solid #475569;border-radius:8px;">
+      <a href="${escAttr(url.href)}" target="_blank" rel="noopener noreferrer" style="display:flex;align-items:center;min-height:44px;color:#bae6fd;font-size:14px;font-weight:800;text-underline-offset:3px;">${label}</a>
+      <p style="color:#cbd5e1;font-size:12px;line-height:1.45;">Match the equipment label before choosing a manufacturer manual or parts diagram.</p>
+    </div>`;
+}
+
 function renderPartsSnapResult(ai, result, status) {
   if (!result) return;
   _lastPartSnapResult = ai || {};
@@ -11528,6 +11589,7 @@ function renderPartsSnapResult(ai, result, status) {
       ` : ''}
       ${replacementNotes ? `<p style="color:#fbbf24;font-size:12px;font-weight:600;margin-bottom:10px;">⚠ ${safe.replacementNotes}</p>` : ''}
       ${verificationNotes ? `<p style="color:#fbbf24;font-size:12px;font-weight:600;margin-bottom:10px;">Check: ${safe.verificationNotes}</p>` : ''}
+      ${renderPartSnapEquipmentLibrary(_lastPartSnapResult, corpusCandidates, alternates)}
       ${renderPartSnapOrderGate(orderGate)}
       ${showGuidedRetry ? renderPartSnapGuidedRetry(_lastPartSnapResult, ladder, risk, missingProof) : ''}
       ${renderPartSnapFastWorkflow(_lastPartSnapResult, corpusCandidates, ladder, missingProof)}
