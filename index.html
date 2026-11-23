@@ -641,6 +641,22 @@
       nav[aria-label="SplashLens field tools"] .nav-btn span { font-size:9px; white-space:nowrap; }
       #nav-counter { position:static; flex-basis:0; min-width:0; background:#fff; border-right:1px solid #e2e8f0; }
     }
+    /* A separating hardware hinge needs a safe interaction pane, including fixed sheets. */
+    @media (horizontal-viewport-segments: 2) {
+      .app-shell { width:env(viewport-segment-width 0 0); max-width:100%; margin-left:env(viewport-segment-left 0 0); }
+      #tab-errors.active { display:block; }
+      main { width:env(viewport-segment-width 0 0); max-width:100%; margin-left:env(viewport-segment-left 0 0); margin-right:auto; padding-bottom:calc(150px + env(safe-area-inset-bottom)) !important; }
+      nav[aria-label="SplashLens field tools"] { left:env(viewport-segment-left 0 0) !important; right:auto !important; width:env(viewport-segment-width 0 0); display:grid !important; grid-template-columns:repeat(5,minmax(0,1fr)); }
+      nav[aria-label="SplashLens field tools"] .nav-btn { min-width:0; }
+      [role="dialog"] { justify-content:flex-start !important; padding-left:12px !important; padding-right:calc(100vw - env(viewport-segment-width 0 0) + 12px) !important; box-sizing:border-box; }
+      [role="dialog"] > * { max-width:calc(env(viewport-segment-width 0 0) - 24px) !important; min-width:0; }
+    }
+    @media (vertical-viewport-segments: 2) {
+      .app-shell { height:env(viewport-segment-height 0 0); overflow:auto; }
+      nav[aria-label="SplashLens field tools"] { bottom:calc(100dvh - env(viewport-segment-bottom 0 0)) !important; }
+      [role="dialog"] { align-items:flex-start !important; }
+      [role="dialog"] > * { max-height:min(100%,calc(env(viewport-segment-height 0 0) - 24px)) !important; overflow:auto; }
+    }
     .field-signal-header-actions { display:flex; align-items:center; gap:8px; }
     .field-signal-bell { width:38px; height:38px; border:1px solid rgba(255,255,255,.36); border-radius:8px; background:rgba(255,255,255,.15); color:#fff; display:grid; place-items:center; cursor:pointer; position:relative; }
     .field-signal-bell:focus-visible { outline:3px solid #fef08a; outline-offset:2px; }
@@ -1817,8 +1833,8 @@
   <script src="/js/errors.js?v=20261010-hayward-safety"></script>
   <script src="/js/data.js?v=20261013-crew"></script>
   <script type="module" src="/js/i18n.js?v=20261030-closing-short"></script>
-  <script src="/js/play-billing.js?v=20261117-keyboard-sheet-2"></script>
-  <script src="/js/app.js?v=20261117-keyboard-sheet-2"></script>
+  <script src="/js/play-billing.js?v=20261123-hinge-safe-1"></script>
+  <script src="/js/app.js?v=20261123-hinge-safe-1"></script>
   <script type="module" src="/js/stop-flow.js?v=20261012-stop-flow"></script>
   <script type="module" src="/js/day-recap.js?v=20261012-day-recap"></script>
   <script type="module" src="/js/morning-route.js?v=20261012-morning-route"></script>
