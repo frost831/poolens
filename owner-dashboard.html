@@ -110,6 +110,8 @@
       <div class="card"><p class="label">Learning modules</p><div id="learning"></div></div>
       <div class="card dark"><p class="label">Audit trail</p><div id="audit"></div></div>
     </section>
+    <section class="section-title"><h2>PartSnap learning pilot</h2><button type="button" class="secondary" onclick="loadLearningPilot()">Load learning review</button></section>
+    <section class="card" id="learning-pilot"><p class="tiny">Review equipment feedback and compare the candidate against held-out real cases. No feedback changes answers automatically.</p></section>
   </main>
   <script>
     const storageKey = 'splashlens-dashboard-secret-v1';
@@ -328,5 +330,6 @@
       }
     }
   </script>
+  <script src="/js/learning-owner.js?v=20261123-learning-pilot"></script>
 </body>
 </html>

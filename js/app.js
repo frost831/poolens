@@ -11594,6 +11594,7 @@ function renderPartsSnapResult(ai, result, status) {
       ${showGuidedRetry ? renderPartSnapGuidedRetry(_lastPartSnapResult, ladder, risk, missingProof) : ''}
       ${renderPartSnapFastWorkflow(_lastPartSnapResult, corpusCandidates, ladder, missingProof)}
       ${renderPartSnapFeedbackTrap(_lastPartSnapResult, corpusCandidates, ladder, missingProof, risk)}
+      ${renderLearningGuidance(_lastPartSnapResult.learning)}
       ${renderPartSnapPrimaryAction(risk, missingProof.length ? missingProof : ladder.missing)}
       ${renderPartSnapProofSnapshot(ladder, risk, visibleEvidence, missingProof, orderGate)}
       ${renderPartConfidenceLadder(ladder)}
@@ -11744,6 +11745,10 @@ function renderPartSnapFeedbackTrap(ai = {}, candidates = [], ladder = {}, missi
 
 function capturePartSnapOutcome(outcome = 'helpful') {
   const ai = _lastPartSnapResult || {};
+  if (ai.learning?.receipt) {
+    renderLearningFeedback(outcome);
+    return;
+  }
   const visibleEvidence = Array.isArray(ai.visibleEvidence) ? ai.visibleEvidence.filter(Boolean).slice(0, 4) : [];
   const missingProof = Array.isArray(ai.missingProof) ? ai.missingProof.filter(Boolean).slice(0, 4) : [];
   const summary = [ai.manufacturer, ai.component, ai.model || ai.partNumber].filter(Boolean).join(' / ') || 'PartSnap result';
@@ -12918,6 +12923,10 @@ function requestPartSnapSecondProof() {
 }
 
 function renderMysteryPartForm() {
+  if (_lastPartSnapResult?.learning?.receipt) {
+    renderLearningFeedback('missing');
+    return;
+  }
   const panel = document.getElementById('partsnap-feedback-panel');
   if (!panel) return;
   panel.innerHTML = `
