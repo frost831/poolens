@@ -6,6 +6,8 @@
 // Production scanner traffic must have SCAN_USAGE_KV so free and entitled monthly limits are server-enforced.
 
 import { attachPartSnapCorpusCandidates } from '../lib/partsnap-corpus.mjs';
+import { issueSplashLearning } from '../lib/learning-store.mjs';
+import { classifyTraffic } from '../_shared/traffic-class.mjs';
 import { CLOSING_PASS_LABEL } from '../_shared/closing-pass.mjs';
 import { verifyPlayScan } from '../_shared/google-play-billing.mjs';
 
@@ -911,6 +913,13 @@ export async function onRequestPost({ request, env }) {
 
     if (mode === 'parts_snap') {
       parsed = attachPartSnapCorpusCandidates(parsed);
+      try {
+        const learning = await issueSplashLearning(request, env, parsed, scanId, classifyTraffic({
+          source: body.source, utmSource: body.utm_source, userAgent: request.headers.get('User-Agent'),
+          webdriver: body.webdriver === true,
+        }));
+        if (learning) parsed.learning = learning;
+      } catch { /* Optional feedback must never consume or fail an otherwise successful scan. */ }
       await recordScanStage(request, env, body, {
         scanId,
         stage: 'corpus_completed',

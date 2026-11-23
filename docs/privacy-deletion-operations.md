@@ -55,6 +55,18 @@ production POST can verify rejection without creating records or sending mail.
 
 ## Release and rollback
 
+### PartSnap learning contributions
+
+Learning uses HMAC-SHA256(`learning-owner:<normalized verified email>`) with
+`FLAGSHIP_LEARNING_SIGNING_SECRET` (fallback: the existing stats/admin secret).
+Resolve this identifier before erasing the account. Remove matching SplashLens
+rows from `learning_cases`. Retire and clear `knowledge` and `report` for all
+SplashLens `learning_versions` in the same transaction, because snapshots can
+contain contributions and case IDs. Rebuild only from remaining contributions.
+The signed-in `POST /api/learning` action `forget` performs these operations.
+Do not remove another product's cases. A key rotation requires retaining the old
+HMAC key for deletion lookup or migrating the pseudonymous identifiers first.
+
 The live production baseline is Cloudflare deployment
 `ffa236af-7f5f-41a0-8790-8d015fee8e75`, source
 `62dc49682907e604b9c0ffd215332c769db3a9e7`. Base the repair on this deployed
