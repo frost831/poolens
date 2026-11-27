@@ -64,7 +64,9 @@ function scoreFamily(result, row, text) {
 
   const brandMatch = manufacturer && rowManufacturer !== 'multi brand'
     && (manufacturer === rowManufacturer || manufacturer.includes(rowManufacturer) || rowManufacturer.includes(manufacturer));
-  const modelHits = row.modelFamilies.filter((model) => hasPhrase(text, model));
+  const modelHits = row.modelFamilies.filter((model) => row.requireModel
+    ? ` ${text} `.includes(` ${normalize(model)} `)
+    : hasPhrase(text, model));
   const aliasHits = row.aliases.filter((alias) => hasPhrase(text, alias));
   const clueHits = row.visualClues.filter((clue) => hasPhrase(text, clue));
   const categoryMatch = category && category === normalize(row.category);
@@ -78,7 +80,8 @@ function scoreFamily(result, row, text) {
 
   const multiBrandModel = rowManufacturer === 'multi brand' && modelHits.length > 0;
   const independentlySupported = modelHits.length > 0 || (brandMatch && aliasHits.length > 0);
-  const eligible = score >= 12 && (independentlySupported || multiBrandModel);
+  const eligible = score >= 12 && (!row.requireModel || modelHits.length > 0)
+    && (independentlySupported || multiBrandModel);
   return { score, reasons, eligible };
 }
 

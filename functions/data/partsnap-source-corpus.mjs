@@ -1,6 +1,22 @@
-export const PARTSNAP_CORPUS_VERSION = 'official-family-sources-2026-10-06';
+export const PARTSNAP_CORPUS_VERSION = 'official-family-sources-2026-11-26';
 
 export const PARTSNAP_SOURCES = Object.freeze({
+  'pentair-intelliflo3-parts-manual': Object.freeze({
+    title: 'Pentair IntelliFlo3 / IntelliPro3 VSF guide 356231.F: Replacement Parts, pp. 24–25',
+    publisher: 'Pentair',
+    sourceType: 'official-parts-manual',
+    url: 'https://www.pentair.com/content/dam/extranet/nam/pentair-pool/residential/pumps/intelliflo3-vsf/manuals/install-guide/intelliflo3-pro3-vsf-install-guide.pdf#page=29',
+    reviewedOn: '2026-11-26',
+    scope: 'Separate 1.5 HP and 3 HP parts lists; exact model and variant remain unconfirmed.',
+  }),
+  'maytronics-liberty-user-manual': Object.freeze({
+    title: 'Maytronics LIBERTY 100 / 200 / 300 / 400 instructions 8151995-EN: sections 1–3, 10–11',
+    publisher: 'Maytronics',
+    sourceType: 'official-user-manual',
+    url: 'https://brand.maytronics.com/m/4affee30fc37cb11/original/User-Manual-8151995-EN.pdf#page=5',
+    reviewedOn: '2026-11-26',
+    scope: 'Model-specific accessories, charger and indicators; not a LIBERTY 600 reference or parts-fit approval.',
+  }),
   'pentair-replacement-parts': Object.freeze({
     title: 'Pentair official replacement parts catalog',
     publisher: 'Pentair',
@@ -63,7 +79,7 @@ export const PARTSNAP_SOURCES = Object.freeze({
   }),
 });
 
-function family({ id, sources, manufacturer, category, component, models, aliases, visualClues, requiredProof, warnings }) {
+function family({ id, sources, manufacturer, category, component, models, aliases, visualClues, requiredProof, warnings, requireModel = false }) {
   return Object.freeze({
     id,
     sources: Object.freeze(sources),
@@ -71,6 +87,7 @@ function family({ id, sources, manufacturer, category, component, models, aliase
     category,
     component,
     modelFamilies: Object.freeze(models),
+    requireModel,
     aliases: Object.freeze(aliases),
     visualClues: Object.freeze(visualClues),
     requiredProof: Object.freeze(requiredProof),
@@ -79,6 +96,22 @@ function family({ id, sources, manufacturer, category, component, models, aliase
 }
 
 export const PARTSNAP_FAMILIES = Object.freeze([
+  family({
+    id: 'pentair-intelliflo3-variant-parts', sources: ['pentair-intelliflo3-parts-manual'], manufacturer: 'Pentair', category: 'pump',
+    component: 'IntelliFlo3 / IntelliPro3 variant-specific pump parts reference', models: ['IntelliFlo3 VSF', 'IntelliPro3 VSF'], requireModel: true,
+    aliases: ['intelliflo3', 'intellipro3', 'wet end', 'impeller', 'strainer basket', 'diffuser'],
+    visualClues: ['pump label', 'motor rating', 'molded marking'],
+    requiredProof: ['full pump model and serial label', '1.5 HP or 3 HP variant proof', 'visible component marking', 'applicable current parts-list section'],
+    warnings: ['The two variant lists contain different entries. A family match or horsepower alone does not confirm a replacement; obtain manufacturer or supplier verification.'],
+  }),
+  family({
+    id: 'maytronics-liberty-cordless-family', sources: ['maytronics-liberty-user-manual'], manufacturer: 'Maytronics', category: 'robot',
+    component: 'LIBERTY 100 / 200 / 300 / 400 cordless cleaner evidence and support family', models: ['LIBERTY 100', 'LIBERTY 200', 'LIBERTY 300', 'LIBERTY 400'], requireModel: true,
+    aliases: ['liberty', 'cordless cleaner', 'inductive charger', 'battery indicator', 'clickup'],
+    visualClues: ['inductive charger connection', 'battery indicators', 'settings indicator'],
+    requiredProof: ['exact LIBERTY model label', 'charger label and connector view', 'cleaner indicator pattern and capture time', 'app version and exact message when applicable'],
+    warnings: ['Accessories and app support differ by model. Do not apply this manual to LIBERTY 600 or infer battery, charger or part compatibility from appearance. Do not open a battery enclosure to obtain proof.'],
+  }),
   family({
     id: 'pentair-pump-lid-basket-oring', sources: ['pentair-replacement-parts'], manufacturer: 'Pentair', category: 'pump',
     component: 'Pump lid, basket, and O-ring family', models: ['SuperFlo', 'SuperMax', 'WhisperFlo', 'IntelliFlo'],
