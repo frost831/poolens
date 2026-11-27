@@ -48,12 +48,16 @@ export async function allCases(db, product) {
 export function evidenceAllowed(product, url, kind) {
   try {
     const parsed = new URL(url);
-    if (parsed.protocol !== 'https:' || parsed.username || parsed.password || parsed.search || parsed.hash) return false;
+    if (parsed.protocol !== 'https:' || parsed.username || parsed.password || parsed.search) return false;
     if (product === 'splashlens') {
-      const hosts = new Set(Object.values(PARTSNAP_SOURCES).map(s => new URL(s.url).hostname));
+      const sources = Object.values(PARTSNAP_SOURCES).map(s => new URL(s.url));
+      // Preserve precise manual-page citations only when that entire URL is
+      // explicitly in the reviewed corpus. Arbitrary fragments remain forbidden.
+      if (parsed.hash && !sources.some(source => source.href === parsed.href)) return false;
+      const hosts = new Set(sources.map(source => source.hostname));
       return kind === 'manufacturer_reference' && hosts.has(parsed.hostname);
     }
-    return product === 'throttleshare' && kind === 'confirmed_outcome' && ['throttleshare.com', 'www.throttleshare.com'].includes(parsed.hostname);
+    return !parsed.hash && product === 'throttleshare' && kind === 'confirmed_outcome' && ['throttleshare.com', 'www.throttleshare.com'].includes(parsed.hostname);
   } catch { return false; }
 }
 

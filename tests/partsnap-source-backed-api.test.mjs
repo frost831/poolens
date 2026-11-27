@@ -15,8 +15,8 @@ import {
 if (!globalThis.crypto) Object.defineProperty(globalThis, 'crypto', { value: webcrypto });
 
 test('PartSnap corpus contains official sources and broad field categories', () => {
-  assert.equal(partsnapCorpusStats.sourceCount, 10);
-  assert.equal(partsnapCorpusStats.familyCount, 17);
+  assert.equal(partsnapCorpusStats.sourceCount, 12);
+  assert.equal(partsnapCorpusStats.familyCount, 19);
   for (const source of Object.values(PARTSNAP_SOURCES)) {
     const url = new URL(source.url);
     assert.equal(url.protocol, 'https:');
